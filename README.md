@@ -2,7 +2,7 @@
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/theantichris/assistant-go.svg)](https://pkg.go.dev/github.com/theantichris/assistant-go) [![CI](https://github.com/theantichris/assistant-go/actions/workflows/ci.yml/badge.svg)](https://github.com/theantichris/assistant-go/actions/workflows/ci.yml)
 
-A local conversational AI assistant and orchestrator built in Go, powered by Ollama. The idea for this project is an all capable AI assistant inspired by cyberpunk media like Shadowrun, Cyberpunk 2077, the Matrix, etc.
+This project is a local, general-purpose AI assistant and orchestrator built in Go and powered by Ollama. Designed for research, chat, and task automation, it runs on your own machine with hybrid connectivity. The vision is inspired by cyberpunk media such as Shadowrun, Cyberpunk 2077, and The Matrix — bringing a versatile, always-on AI companion into a terminal-first experience.
 
 Requirements:
 
