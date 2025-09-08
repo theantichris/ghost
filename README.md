@@ -1,8 +1,7 @@
 # assistant-go
 
-A local conversational AI assistant and orchestrator built in Go, powered by Ollama.
-
-Status: MVP CLI named `assistant` that sends a single user message to a locally running Ollama `/api/chat` endpoint and prints the assistant response. Streaming is enabled by default.
+[![Go Reference](https://pkg.go.dev/badge/github.com/theantichris/assistant-go.svg)](https://pkg.go.dev/github.com/theantichris/assistant-go) [![CI](https://github.com/theantichris/assistant-go/actions/workflows/ci.yml/badge.svg)](https://github.com/theantichris/assistant-go/actions/workflows/ci.yml)
+A local conversational AI assistant and orchestrator built in Go, powered by Ollama. The idea for this project is an all capable AI assistant inspired by cyberpunk media like Shadowrun, Cyberpunk 2077, the Matrix, etc.
 
 Requirements:
 
