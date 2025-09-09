@@ -70,10 +70,10 @@ These additions reflect clarified project preferences (solo dev, MVP first tag).
 
 ### Interfaces & Testing
 
+- Test-Driven Development (TDD) is preferred: write tests before or alongside implementation. This means writing a failing test first ('red'), then implementing code to make it pass ('green'), and finally refactoring while keeping tests passing.
 - Every package that is consumed by another defines an interface + a mock/fake in a `_test.go` file or a dedicated `testutil` subpackage.
 - Fakes should avoid network calls (e.g., fake Ollama client returns scripted token streams).
 - Wrap errors with `%w` for reliable `errors.Is`/`errors.As` use.
-- Golden tests only for stable serialization boundaries (request payloads, card parsing output).
 
 ### Logging
 

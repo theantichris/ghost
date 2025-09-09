@@ -135,6 +135,8 @@ Planned (not active yet): `GHOST_CARD` for persona selection.
 
 ## Testing & Quality
 
+Test-Driven Development (TDD) is preferred: write tests before or alongside implementation. This means writing a failing test first ('red'), then implementing code to make it pass ('green'), and finally refactoring while keeping tests passing.
+
 Run all tests:
 
 ```bash
