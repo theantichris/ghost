@@ -22,8 +22,6 @@ The vision for Ghost is inspired by cyberpunk media such as _Shadowrun_, _Cyberp
 
 - Specification: [SPEC.md](SPEC.md)
 - Roadmap: [ROADMAP.md](ROADMAP.md)
-- LLM integration details: [LLMS.md](LLMS.md)
-- Agents, tools, and memory: [AGENTS.md](AGENTS.md)
 
 ## Requirements
 
