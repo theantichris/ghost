@@ -1,6 +1,9 @@
 package app
 
-import "testing"
+import (
+	"errors"
+	"testing"
+)
 
 func TestNew(t *testing.T) {
 	t.Run("creates a new app instance", func(t *testing.T) {
@@ -26,8 +29,8 @@ func TestNew(t *testing.T) {
 			t.Fatal("expected error for empty model, got nil")
 		}
 
-		if err.Error() != "app init: model cannot be empty" {
-			t.Errorf("expected error message to be 'app init: model cannot be empty', got '%s'", err.Error())
+		if !errors.Is(err, ErrModelEmpty) {
+			t.Errorf("expected ErrModelEmpty, got %v", err)
 		}
 	})
 }

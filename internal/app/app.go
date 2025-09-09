@@ -1,7 +1,6 @@
 package app
 
 import (
-	"errors"
 	"fmt"
 )
 
@@ -12,7 +11,7 @@ type App struct {
 
 func New(model string, stream bool) (*App, error) {
 	if model == "" {
-		return nil, fmt.Errorf("app init: %w", errors.New("model cannot be empty"))
+		return nil, fmt.Errorf("app init: %w", ErrModelEmpty)
 	}
 
 	app := &App{
