@@ -3,9 +3,13 @@
     "appname",
     "cursorrules",
     "dylib",
+    "keymap",
     "LLMS",
     "Ollama",
     "parseable",
+    "sandboxed",
+    "scrollback",
+    "SDXL",
     "Shadowrun"
   ]
 }

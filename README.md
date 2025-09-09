@@ -22,8 +22,6 @@ Usage:
 Flags:
 
 - -model string (required unless env `OLLAMA_MODEL` is set)
-- -host string (default from env `OLLAMA_HOST` or `http://localhost:11434`)
-- -timeout dur (default `2m`)
 - -stream bool (default `true`)
 
 Environment variables:
