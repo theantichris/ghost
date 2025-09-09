@@ -11,6 +11,7 @@
     "LLMS",
     "Ollama",
     "parseable",
+    "qwen",
     "retryable",
     "sandboxed",
     "scrollback",
