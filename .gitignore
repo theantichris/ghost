@@ -20,7 +20,3 @@ go.work.sum
 
 # env file
 .env
-
-# Gen AI files
-AGENTS.md
-LLMS.md
