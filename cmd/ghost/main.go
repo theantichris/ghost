@@ -1,6 +1,9 @@
 package main
 
-import "github.com/joho/godotenv"
+import (
+	"github.com/joho/godotenv"
+	"github.com/theantichris/ghost/internal/app"
+)
 
 func main() {
 	// Load environment variables from .env file if it exists
@@ -11,6 +14,7 @@ func main() {
 	// Create llm client
 
 	// Create app
+	_ = app.New()
 
 	// Run app
 }
