@@ -4,7 +4,7 @@ This file provides guidance to Warp (warp.dev) when working with code in this re
 
 Overview
 
-- assistant-go is a local conversational AI assistant and orchestrator built in Go, powered by a locally running Ollama instance.
+- **Ghost** is a local, general-purpose AI assistant and orchestrator built in Go and powered by Ollama. It is designed for research, chat, and task automation, running entirely on your own machine with hybrid connectivity.
 
 Prerequisites
 

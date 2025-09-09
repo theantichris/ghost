@@ -1,4 +1,4 @@
-module github.com/theantichris/assistant-go
+module github.com/theantichris/ghost
 
 go 1.24
 

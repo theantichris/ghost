@@ -1,14 +1,16 @@
 # Spec
 
-This project is a local, general-purpose AI assistant and orchestrator built in Go and powered by Ollama. Designed for research, chat, and task automation, it runs on your own machine with hybrid connectivity. The vision is inspired by cyberpunk media such as Shadowrun, Cyberpunk 2077, and The Matrix — bringing a versatile, always-on AI companion into a terminal-first experience.
+**Ghost** is a local, general-purpose AI assistant and orchestrator built in Go and powered by Ollama. It is designed for research, chat, and task automation, running entirely on your own machine with hybrid connectivity.
 
-Capabilities should include research, web searching, helping with code, generating images, executing tasks, setting up reminders, chatting.
+The vision for Ghost is inspired by cyberpunk media such as _Shadowrun_, _Cyberpunk 2077_, and _The Matrix_, bringing a versatile, always on AI companion into a terminal-first experience.
+
+Capabilities should include research, web searching, helping with code, generating images, executing tasks, setting up reminders, and chatting.
 
 Prompts and character personalities will be loaded via a **Card system**.
 
-Initially the project will use the **Ollama API** as the backend to access LLMs.
+Initially Ghost will use the **Ollama API** as the backend to access LLMs.
 
-Initially interaction with the system will be through **CLI** and **TUI**.
+Initial interaction will be through **CLI** and **TUI**.
 
 ---
 
