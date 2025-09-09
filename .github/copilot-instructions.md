@@ -74,6 +74,7 @@ These additions reflect clarified project preferences (solo dev, MVP first tag).
 - Every package that is consumed by another defines an interface + a mock/fake in a `_test.go` file or a dedicated `testutil` subpackage.
 - Fakes should avoid network calls (e.g., fake Ollama client returns scripted token streams).
 - Wrap errors with `%w` for reliable `errors.Is`/`errors.As` use.
+- Use sentinel errors (package-level variables, e.g., `var ErrModelEmpty = errors.New("model cannot be empty")`) for robust error handling and testing. Always wrap sentinel errors with `%w` and use `errors.Is` for assertions in tests and error checks in consumers.
 
 ### Logging
 

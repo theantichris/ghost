@@ -137,6 +137,8 @@ Planned (not active yet): `GHOST_CARD` for persona selection.
 
 Test-Driven Development (TDD) is preferred: write tests before or alongside implementation. This means writing a failing test first ('red'), then implementing code to make it pass ('green'), and finally refactoring while keeping tests passing.
 
+Use sentinel errors (package-level variables, e.g., `var ErrModelEmpty = errors.New("model cannot be empty")`) for robust error handling and testing. Wrap sentinel errors with `%w` and use `errors.Is` for assertions in tests.
+
 Run all tests:
 
 ```bash

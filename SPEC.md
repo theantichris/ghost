@@ -173,6 +173,8 @@ Codes may expand; backward compatibility will be maintained after first tag.
 - All operations accept `context.Context` for cancellation and trace correlation (future: add request IDs).
 - Avoid panics outside `main`; return errors with `%w` for wrapping.
 
+Use sentinel errors (package-level variables, e.g., `var ErrModelEmpty = errors.New("model cannot be empty")`) for robust error matching and propagation. Wrap sentinel errors with `%w` when returning from functions, and prefer `errors.Is` for error checks in tests and consumers.
+
 Log levels (guideline):
 
 - DEBUG: token streaming internals (suppressed by default)
@@ -187,6 +189,7 @@ Log levels (guideline):
 - Each internal package defines an interface to enable mocking in dependents (e.g., `llm.Client`).
 - Provide a lightweight fake Ollama client for deterministic tests (no network).
 - Golden tests (commit stable expected outputs) only at boundaries that are stable and low-churn (e.g., request serialization, tool manifest formatting).
+  Use sentinel errors and `errors.Is` for error assertions in tests, rather than string matching. Golden tests (commit stable expected outputs) only at boundaries that are stable and low-churn (e.g., request serialization, tool manifest formatting).
 - Run: `go test ./...`; optional: `go vet ./...`; later: integrate `golangci-lint`.
 - Race checks: `go test -race` (periodic / CI optional early on).
 
