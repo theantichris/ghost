@@ -1,15 +1,21 @@
 {
   "cSpell.words": [
     "appname",
+    "Backpressure",
     "cursorrules",
     "dylib",
+    "Errorf",
+    "golangci",
+    "goroutines",
     "keymap",
     "LLMS",
     "Ollama",
     "parseable",
+    "retryable",
     "sandboxed",
     "scrollback",
     "SDXL",
-    "Shadowrun"
+    "Shadowrun",
+    "testutil"
   ]
 }
