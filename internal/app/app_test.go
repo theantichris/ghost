@@ -26,8 +26,8 @@ func TestNew(t *testing.T) {
 			t.Fatal("expected error for empty model, got nil")
 		}
 
-		if err.Error() != "model cannot be empty" {
-			t.Errorf("expected error message 'model cannot be empty', got '%s'", err.Error())
+		if err.Error() != "app init: model cannot be empty" {
+			t.Errorf("expected error message to be 'app init: model cannot be empty', got '%s'", err.Error())
 		}
 	})
 }
