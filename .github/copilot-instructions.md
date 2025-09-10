@@ -76,6 +76,32 @@ These additions reflect clarified project preferences (solo dev, MVP first tag).
 - Wrap errors with `%w` for reliable `errors.Is`/`errors.As` use.
 - Use sentinel errors (package-level variables, e.g., `var ErrModelEmpty = errors.New("model cannot be empty")`) for robust error handling and testing. Always wrap sentinel errors with `%w` and use `errors.Is` for assertions in tests and error checks in consumers.
 
+Example:
+
+```go
+// internal/llm/errors.go
+package llm
+import "errors"
+var ErrModelUnavailable = errors.New("model unavailable")
+
+// internal/app/app.go
+if model == "" {
+    return nil, fmt.Errorf("app init: %w", ErrModelEmpty)
+}
+
+// internal/llm/ollama.go
+if !modelAvailable {
+    return nil, fmt.Errorf("llm: %w", ErrModelUnavailable)
+}
+
+// cmd/ghost/main.go
+_, err := app.New("", true)
+if err != nil {
+    fmt.Fprintf(os.Stderr, "error: %v\n", err)
+    os.Exit(2)
+}
+```
+
 ### Logging
 
 - Use `log/slog` exclusively; no ad-hoc fmt logging in library code.

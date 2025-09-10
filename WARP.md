@@ -139,6 +139,25 @@ Test-Driven Development (TDD) is preferred: write tests before or alongside impl
 
 Use sentinel errors (package-level variables, e.g., `var ErrModelEmpty = errors.New("model cannot be empty")`) for robust error handling and testing. Wrap sentinel errors with `%w` and use `errors.Is` for assertions in tests.
 
+Example:
+
+```go
+// internal/llm/errors.go
+package llm
+import "errors"
+var ErrModelUnavailable = errors.New("model unavailable")
+
+// internal/app/app.go
+if model == "" {
+  return nil, fmt.Errorf("app init: %w", ErrModelEmpty)
+}
+
+// internal/llm/ollama.go
+if !modelAvailable {
+  return nil, fmt.Errorf("llm: %w", ErrModelUnavailable)
+}
+```
+
 Run all tests:
 
 ```bash

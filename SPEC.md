@@ -175,6 +175,25 @@ Codes may expand; backward compatibility will be maintained after first tag.
 
 Use sentinel errors (package-level variables, e.g., `var ErrModelEmpty = errors.New("model cannot be empty")`) for robust error matching and propagation. Wrap sentinel errors with `%w` when returning from functions, and prefer `errors.Is` for error checks in tests and consumers.
 
+Example:
+
+```go
+// internal/llm/errors.go
+package llm
+import "errors"
+var ErrModelUnavailable = errors.New("model unavailable")
+
+// internal/app/app.go
+if model == "" {
+  return nil, fmt.Errorf("app init: %w", ErrModelEmpty)
+}
+
+// internal/llm/ollama.go
+if !modelAvailable {
+  return nil, fmt.Errorf("llm: %w", ErrModelUnavailable)
+}
+```
+
 Log levels (guideline):
 
 - DEBUG: token streaming internals (suppressed by default)
