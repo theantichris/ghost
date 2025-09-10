@@ -9,6 +9,7 @@ import (
 type OllamaClient struct {
 	baseURL      string // Base Ollama server URL
 	defaultModel string // Default model to use
+	stream       bool   // Whether to use streaming responses
 }
 
 // Chat sends a chat request to the Ollama API.
@@ -27,5 +28,6 @@ func NewOllamaClient(baseURL, defaultModel string) (*OllamaClient, error) {
 	return &OllamaClient{
 		baseURL:      baseURL,
 		defaultModel: defaultModel,
+		stream:       true,
 	}, nil
 }

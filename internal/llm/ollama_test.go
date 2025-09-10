@@ -6,7 +6,7 @@ import (
 )
 
 func TestNewOllamaClient(t *testing.T) {
-	t.Run("creates new Ollama client", func(t *testing.T) {
+	t.Run("creates new Ollama client with default", func(t *testing.T) {
 		t.Parallel()
 
 		client, err := NewOllamaClient("http://test.dev", "llama2")
@@ -21,6 +21,10 @@ func TestNewOllamaClient(t *testing.T) {
 
 		if client.defaultModel != "llama2" {
 			t.Errorf("expected defaultModel to be 'llama2', got '%s'", client.defaultModel)
+		}
+
+		if !client.stream {
+			t.Error("expected stream to be true")
 		}
 	})
 
