@@ -1,15 +1,27 @@
-# assistant-go
+# ghost
+
+```text
+   ▄████  ██░ ██  ▒█████   ██████  ████████
+  ██▒ ▀█▒▓██░ ██▒▒██▒  ██▒ ██    ▒    ██
+ ▒██░▄▄▄░▒██▀▀██░▒██░  ██▒ ▓██▄       ██
+ ░▓█  ██▓░▓█ ░██ ▒██   ██░  ▒   ██▒   ██
+ ░▒▓███▀▒░▓█▒░██▓░ ████▓▒░▒██████▒▒   ██
+  ░▒   ▒   ▒ ░░▒░▒░ ▒░▒░▒░ ▒ ▒▓▒ ▒ ░   ░
+   ░   ░   ▒ ░▒░ ░  ░ ▒ ▒░ ░ ░▒  ░ ░
+ ░ ░   ░   ░  ░░ ░░ ░ ░ ▒  ░  ░  ░
+       ░   ░  ░  ░    ░ ░        ░
+```
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/theantichris/assistant-go.svg)](https://pkg.go.dev/github.com/theantichris/assistant-go) [![CI](https://github.com/theantichris/assistant-go/actions/workflows/ci.yml/badge.svg)](https://github.com/theantichris/assistant-go/actions/workflows/ci.yml)
 
-assistant-go is a local, general-purpose AI assistant and orchestrator written in Go and powered by a locally running Ollama instance. It is designed for research, chat, and task automation with optional, explicit opt-in connectivity. It has a UI/UX based on classic cyberpunk media like Shadowrun, Cyberpunk 2077, and the Matrix.
+**Ghost** is a local, general-purpose AI assistant and orchestrator built in Go and powered by Ollama. It is designed for research, chat, and task automation, running entirely on your own machine with hybrid connectivity.
+
+The vision for Ghost is inspired by cyberpunk media such as _Shadowrun_, _Cyberpunk 2077_, and _The Matrix_, bringing a versatile, always on AI companion into a terminal-first experience.
 
 ## Documents
 
 - Specification: [SPEC.md](SPEC.md)
 - Roadmap: [ROADMAP.md](ROADMAP.md)
-- LLM integration details: [LLMS.md](LLMS.md)
-- Agents, tools, and memory: [AGENTS.md](AGENTS.md)
 
 ## Requirements
 
@@ -19,13 +31,14 @@ assistant-go is a local, general-purpose AI assistant and orchestrator written i
 
 ## Environment variables
 
-- OLLAMA_MODEL
-- OLLAMA_HOST
+- OLLAMA_BASE_URL
+- DEFAULT_MODEL
 
 ## Examples
 
 ```go
+echo "Hello" | go run ./cmd/assistant -model llama3.1
 go run ./cmd/assistant -model llama3.1 "Hello"
 echo "Hello" | go run ./cmd/assistant -model llama3.1
-export OLLAMA_MODEL=llama3.1; export OLLAMA_HOST=http://localhost:11434; go run ./cmd/assistant "Hello from env"
+export DEFAULT_MODEL=llama3.1; export OLLAMA_BASE_URL=http://localhost:11434; go run ./cmd/assistant "Hello from env"
 ```

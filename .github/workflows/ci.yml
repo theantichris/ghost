@@ -2,25 +2,97 @@ name: CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
-  build-test:
+  lint:
+    name: Lint & Static Analysis
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.24.x'
+          go-version: "1.24.x"
+          cache: true
+      - name: Verify Formatting
+        run: |
+          set -e
+          CHANGED=$(gofmt -l . || true)
+          if [ -n "$CHANGED" ]; then
+            echo "The following files are not gofmt formatted:" >&2
+            echo "$CHANGED" >&2
+            exit 1
+          fi
+      - name: Vet
+        run: go vet ./...
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+          args: --timeout=3m
 
+  build-test:
+    name: Build & Test
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.24.x"
+          cache: true
       - name: Build
         run: go build ./...
-
       - name: Test
-        run: go test ./...
+        run: go test -count=1 -coverprofile=coverage.out ./...
+      - name: Upload Coverage Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage.out
 
+  race:
+    name: Race Detector
+    needs: build-test
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.24.x"
+          cache: true
+      - name: Race Tests
+        run: go test -race -count=1 ./...
+
+  vuln:
+    name: Vulnerability Scan
+    needs: build-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.24.x"
+          cache: true
+      - name: Run govulncheck
+        run: go run golang.org/x/vuln/cmd/govulncheck@latest ./...
+
+  # Placeholder for future OS matrix build once platform-specific code is added
+  # matrix-build:
+  #   strategy:
+  #     matrix:
+  #       os: [ubuntu-latest, macos-latest, windows-latest]
+  #   runs-on: ${{ matrix.os }}
+  #   steps: [...]
