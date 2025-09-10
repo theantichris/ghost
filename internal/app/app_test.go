@@ -3,16 +3,14 @@ package app
 import (
 	"context"
 	"errors"
+	"io"
 	"log/slog"
-	"os"
 	"testing"
 
 	"github.com/theantichris/ghost/internal/llm"
 )
 
-var logger *slog.Logger = slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
-	Level: slog.LevelInfo,
-}))
+var logger *slog.Logger = slog.New(slog.NewTextHandler(io.Discard, nil))
 
 func TestNew(t *testing.T) {
 	t.Run("creates a new app instance", func(t *testing.T) {
@@ -56,6 +54,28 @@ func TestRun(t *testing.T) {
 		err = app.Run()
 		if err != nil {
 			t.Fatalf("expected no error running app, got %v", err)
+		}
+	})
+
+	t.Run("returns error if llmClient.Chat fails", func(t *testing.T) {
+		t.Parallel()
+
+		llmClient := &llm.MockLLMClient{
+			ReturnError: true,
+		}
+
+		app, err := New(context.Background(), llmClient, logger)
+		if err != nil {
+			t.Fatalf("expected no error creating app, got %v", err)
+		}
+
+		err = app.Run()
+		if err == nil {
+			t.Fatal("expected error running app, got nil")
+		}
+
+		if !errors.Is(err, llm.ErrMessageEmpty) {
+			t.Errorf("expected ErrMessageEmpty, got %v", err)
 		}
 	})
 }
