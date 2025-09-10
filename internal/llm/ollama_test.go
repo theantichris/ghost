@@ -2,14 +2,12 @@ package llm
 
 import (
 	"errors"
+	"io"
 	"log/slog"
-	"os"
 	"testing"
 )
 
-var logger *slog.Logger = slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
-	Level: slog.LevelInfo,
-}))
+var logger *slog.Logger = slog.New(slog.NewTextHandler(io.Discard, nil))
 
 func TestNewOllamaClient(t *testing.T) {
 	t.Run("creates new Ollama client with default", func(t *testing.T) {
@@ -59,6 +57,40 @@ func TestNewOllamaClient(t *testing.T) {
 
 		if !errors.Is(err, ErrModelEmpty) {
 			t.Errorf("expected ErrModelEmpty, got %v", err)
+		}
+	})
+}
+
+func TestChat(t *testing.T) {
+	t.Run("calls Chat method without error", func(t *testing.T) {
+		t.Parallel()
+
+		client, err := NewOllamaClient("http://test.dev", "llama2", logger)
+		if err != nil {
+			t.Fatalf("expected no error creating client, got %v", err)
+		}
+
+		err = client.Chat("Hello, there!")
+		if err != nil {
+			t.Fatalf("expected no error calling Chat, got %v", err)
+		}
+	})
+
+	t.Run("returns error for missing message", func(t *testing.T) {
+		t.Parallel()
+
+		app, err := NewOllamaClient("http://test.dev", "llama2", logger)
+		if err != nil {
+			t.Fatal("expected no error creating client, got", err)
+		}
+
+		err = app.Chat("")
+		if err == nil {
+			t.Fatal("expected error for empty message, got nil")
+		}
+
+		if !errors.Is(err, ErrMessageEmpty) {
+			t.Errorf("expected ErrMessageEmpty, got %v", err)
 		}
 	})
 }
