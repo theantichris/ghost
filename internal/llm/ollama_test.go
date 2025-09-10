@@ -1,9 +1,12 @@
 package llm
 
 import (
+	"context"
 	"errors"
 	"io"
 	"log/slog"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 )
 
@@ -13,7 +16,13 @@ func TestNewOllamaClient(t *testing.T) {
 	t.Run("creates new Ollama client with default", func(t *testing.T) {
 		t.Parallel()
 
-		client, err := NewOllamaClient("http://test.dev", "llama2", logger)
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(`{"response": "Hello, user!"}`))
+		}))
+		defer server.Close()
+
+		client, err := NewOllamaClient("http://test.dev", "llama2", http.DefaultClient, logger)
 
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
@@ -31,7 +40,7 @@ func TestNewOllamaClient(t *testing.T) {
 	t.Run("returns error for empty baseURL", func(t *testing.T) {
 		t.Parallel()
 
-		_, err := NewOllamaClient("", "llama2", logger)
+		_, err := NewOllamaClient("", "llama2", http.DefaultClient, logger)
 
 		if err == nil {
 			t.Fatal("expected error for empty baseURL, got nil")
@@ -45,7 +54,7 @@ func TestNewOllamaClient(t *testing.T) {
 	t.Run("returns error for empty defaultModel", func(t *testing.T) {
 		t.Parallel()
 
-		_, err := NewOllamaClient("http://test.dev", "", logger)
+		_, err := NewOllamaClient("http://test.dev", "", http.DefaultClient, logger)
 
 		if err == nil {
 			t.Fatal("expected error for empty defaultModel, got nil")
@@ -58,35 +67,50 @@ func TestNewOllamaClient(t *testing.T) {
 }
 
 func TestChat(t *testing.T) {
-	t.Run("calls Chat method without error", func(t *testing.T) {
-		t.Parallel()
-
-		client, err := NewOllamaClient("http://test.dev", "llama2", logger)
-		if err != nil {
-			t.Fatalf("expected no error creating client, got %v", err)
-		}
-
-		err = client.Chat("Hello, there!")
-		if err != nil {
-			t.Fatalf("expected no error calling Chat, got %v", err)
-		}
-	})
-
 	t.Run("returns error for missing message", func(t *testing.T) {
 		t.Parallel()
 
-		app, err := NewOllamaClient("http://test.dev", "llama2", logger)
+		app, err := NewOllamaClient("http://test.dev", "llama2", http.DefaultClient, logger)
 		if err != nil {
 			t.Fatal("expected no error creating client, got", err)
 		}
 
-		err = app.Chat("")
+		_, err = app.Chat(context.Background(), "")
 		if err == nil {
 			t.Fatal("expected error for empty message, got nil")
 		}
 
 		if !errors.Is(err, ErrMessageEmpty) {
 			t.Errorf("expected ErrMessageEmpty, got %v", err)
+		}
+	})
+
+	t.Run("returns the response from Ollama", func(t *testing.T) {
+		t.Parallel()
+
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(`{"message": {"role": "assistant", "content": "Hello, user!"}}`))
+		}))
+		defer server.Close()
+
+		httpClient := &http.Client{
+			Transport: server.Client().Transport,
+		}
+
+		client, err := NewOllamaClient(server.URL, "llama2", httpClient, logger)
+		if err != nil {
+			t.Fatalf("expected no error creating client, got %v", err)
+		}
+
+		response, err := client.Chat(context.Background(), "Hello, there!")
+		if err != nil {
+			t.Fatalf("expected no error calling Chat, got %v", err)
+		}
+
+		expectedResponse := "Hello, user!"
+		if response != expectedResponse {
+			t.Errorf("expected response '%s', got '%s'", expectedResponse, response)
 		}
 	})
 }

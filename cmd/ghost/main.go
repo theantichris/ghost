@@ -5,7 +5,9 @@ import (
 	"flag"
 	"fmt"
 	"log/slog"
+	"net/http"
 	"os"
+	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/theantichris/ghost/internal/app"
@@ -30,8 +32,11 @@ func main() {
 	defaultModel := flag.String("model", os.Getenv("DEFAULT_MODEL"), "LLM model to use (overrides DEFAULT_MODEL env var)")
 	flag.Parse()
 
+	// Set up HTTP client with timeout
+	httpClient := &http.Client{Timeout: 30 * time.Second}
+
 	// Initialize Ollama LLM client
-	llmClient, err := llm.NewOllamaClient(ollamaBaseURL, *defaultModel, logger)
+	llmClient, err := llm.NewOllamaClient(ollamaBaseURL, *defaultModel, httpClient, logger)
 	if err != nil {
 		logger.Error("failed to create Ollama client", slog.Any("error", err.Error()))
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)

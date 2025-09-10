@@ -1,8 +1,10 @@
 package app
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
+	"os"
 
 	"github.com/theantichris/ghost/internal/llm"
 )
@@ -27,10 +29,17 @@ func New(llmClient llm.LLMClient, logger *slog.Logger) (*App, error) {
 	}, nil
 }
 
+// Run starts the application logic.
 func (app *App) Run() error {
 	// Send message to Ollama
+	response, err := app.llmClient.Chat(context.Background(), "Hello, Ollama!")
+	if err != nil {
+		app.logger.Error("failed to chat with Ollama", slog.String("component", "app"), slog.String("error", err.Error()))
+		return fmt.Errorf("app run: %w", err)
+	}
 
 	// Display response from Ollama
+	fmt.Fprintf(os.Stdout, "Ollama response: %s\n", response)
 
 	return nil
 }
