@@ -12,39 +12,42 @@ Prerequisites
 - Ollama installed and running locally
 - At least one model pulled (e.g., `ollama pull llama3.1`)
 
-Core commands (when implemented)
+Core commands (current)
 
 - Build CLI binary
-  - go build -o ./bin/assistant ./cmd/assistant
+  - go build -o ./bin/ghost ./cmd/ghost
 - Build all packages (used by CI)
   - go build ./...
 - Run without building
-  - go run ./cmd/assistant -model MODEL "PROMPT"
-  - echo "Hello" | go run ./cmd/assistant -model MODEL
+  - go run ./cmd/ghost -model MODEL
 - Tests
   - Run all tests: go test ./...
   - Run a single test by name (example): go test ./... -run '^TestName$' -v
 
-Configuration (flags and env; planned)
+Configuration (flags and env - current)
 
 - Flags
-  - -model string (required unless env OLLAMA_MODEL is set)
-  - -stream bool (default true)
+  - -model string (overrides DEFAULT_MODEL env var; required if DEFAULT_MODEL is not set)
 - Environment variables
-  - OLLAMA_MODEL
-  - OLLAMA_HOST
+  - OLLAMA_BASE_URL (required)
+  - DEFAULT_MODEL (required unless -model is provided)
 
 Big-picture architecture (high level)
 
 - See [SPEC.md](SPEC.md) for architecture and [ROADMAP.md](ROADMAP.md) for milestones.
-- Initial entry point will be a CLI at ./cmd/assistant. Input via CLI args or stdin, a chat call to Ollama’s /api/chat with streaming output. A TUI (Bubble Tea) is planned for an interactive chat view.
+- Entry point is a CLI at ./cmd/ghost. The LLM client (internal/llm) and app scaffold (internal/app) are in place; chat execution is stubbed (to be implemented). A TUI (Bubble Tea) is still planned for an interactive chat view.
 
 CI
 
 - GitHub Actions workflow (.github/workflows/ci.yml) runs on push/PR to main:
   - Sets up Go 1.24.x
+  - gofmt formatting check
+  - go vet ./...
+  - golangci-lint (v1.59.0)
   - go build ./...
-  - go test ./...
+  - go test -count=1 -coverprofile=coverage.out ./...
+  - go test -race -count=1 ./...
+  - govulncheck ./...
 
 Tooling/Rules
 
@@ -58,7 +61,7 @@ Notes
 
 ---
 
-## Quick Start (Planned MVP)
+## Quick Start (Current)
 
 Build all:
 
@@ -69,67 +72,61 @@ go build ./...
 Build binary explicitly:
 
 ```bash
-go build -o ./bin/assistant ./cmd/assistant
+go build -o ./bin/ghost ./cmd/ghost
 ```
 
-Run with argument vs stdin:
+Run (initial scaffold):
 
 ```bash
-go run ./cmd/assistant -model llama3.1 "Hello"
-echo "Hello via stdin" | go run ./cmd/assistant -model llama3.1
+go run ./cmd/ghost -model llama3.1
 ```
 
 PowerShell equivalents:
 
 ```powershell
-go run ./cmd/assistant -model llama3.1 "Hello"
-"Hello via stdin" | go run ./cmd/assistant -model llama3.1
+go run ./cmd/ghost -model llama3.1
 ```
 
-Set environment (PowerShell vs POSIX):
+Set environment and run:
 
 ```powershell
-$env:OLLAMA_MODEL = "llama3.1"; go run ./cmd/assistant "Hi"
+$env:DEFAULT_MODEL = "llama3.1"; $env:OLLAMA_BASE_URL = "http://localhost:11434"; go run ./cmd/ghost
 ```
 
 ```bash
-export OLLAMA_MODEL=llama3.1; go run ./cmd/assistant "Hi"
+export DEFAULT_MODEL=llama3.1; export OLLAMA_BASE_URL=http://localhost:11434; go run ./cmd/ghost
 ```
-
-Streaming enabled by default (future `-stream=false` to disable).
 
 ---
 
 ## Environment Variables
 
-| Variable     | Purpose               | Required                   | Default                  |
-| ------------ | --------------------- | -------------------------- | ------------------------ |
-| OLLAMA_MODEL | Model name for Ollama | Yes (unless flag provided) | None                     |
-| OLLAMA_HOST  | Base URL for Ollama   | No                         | <http://localhost:11434> |
-| LOG_FORMAT   | `json` for JSON logs  | No                         | `http://localhost:11434` |
-| LOG_FORMAT   | `json` for JSON logs  | No                         | text                     |
+| Variable        | Purpose               | Required                 | Default |
+| --------------- | --------------------- | ------------------------ | ------- |
+| OLLAMA_BASE_URL | Base URL for Ollama   | Yes                      | None    |
+| DEFAULT_MODEL   | Model name for Ollama | Yes (or via -model flag) | None    |
 
 Planned (not active yet): `GHOST_CARD` for persona selection.
 
 ---
 
-## Exit Codes (Planned)
+## Exit Codes (Current)
 
-| Code | Meaning                |
-| ---- | ---------------------- |
-| 0    | Success                |
-| 1    | Runtime error          |
-| 2    | Invalid usage / config |
-| 3    | Model unavailable      |
-| 4    | Tool failure / denied  |
-| 5    | Canceled / timeout     |
+| Code | Meaning                                    |
+| ---- | ------------------------------------------ |
+| 0    | Success                                    |
+| 1    | Runtime error                              |
+| 2    | Invalid usage / config / validation errors |
+| 3    | Model unavailable                          |
+| 4    | Tool failure / denied                      |
+| 5    | Canceled / timeout                         |
 
 ---
 
 ## Logging
 
-- Uses `slog` (text by default; JSON when `LOG_FORMAT=json`).
-- Model output to stdout; logs to stderr (enables piping output cleanly).
+- Uses slog with text output to stderr.
+- JSON logging toggle is not yet implemented.
 
 ---
 
@@ -201,14 +198,20 @@ echo $env:OLLAMA_MODEL
 
 ---
 
-## Planned Structure (Subject to Change)
+## Project Structure (Current)
 
 ```text
-cmd/assistant/main.go        # CLI entrypoint (MVP)
-internal/llm                 # Ollama client + streaming interfaces
+cmd/ghost/main.go            # CLI entrypoint (scaffold)
+internal/app                 # Application wiring
+internal/llm                 # Ollama client and interfaces (Chat stub)
+```
+
+Planned additions (subject to change):
+
+```text
 internal/tools               # Tool interface + (MVP) web search tool
-internal/memory              # Added in later phases (session, long-term)
-internal/config              # Flag/env resolution
+internal/memory              # Session/long-term memory (Phase 2)
+internal/config              # Flag/env/config resolution
 cards/                       # Persona Markdown cards
 ```
 
@@ -260,4 +263,4 @@ cards/                       # Persona Markdown cards
 
 - Add TUI (Bubble Tea) streaming interface.
 - Introduce memory persistence path (likely user config directory).
-- Add `golangci-lint` config.
+- golangci-lint configured via .golangci.yml; expand rules as the codebase grows.
