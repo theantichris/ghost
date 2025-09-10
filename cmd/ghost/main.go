@@ -52,7 +52,7 @@ func main() {
 	}
 
 	// Initialize the main application
-	_, err = app.New(llmClient, logger)
+	app, err := app.New(llmClient, logger)
 	if err != nil {
 		logger.Error("failed to create app", slog.String("error", err.Error()))
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
@@ -60,4 +60,5 @@ func main() {
 	}
 
 	// TODO: Run app
+	app.Run()
 }

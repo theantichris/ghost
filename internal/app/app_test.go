@@ -42,3 +42,19 @@ func TestNew(t *testing.T) {
 		}
 	})
 }
+
+func TestRun(t *testing.T) {
+	t.Run("runs the app without error", func(t *testing.T) {
+		t.Parallel()
+
+		app, err := New(&llm.MockLLMClient{}, logger)
+		if err != nil {
+			t.Fatalf("expected no error creating app, got %v", err)
+		}
+
+		err = app.Run()
+		if err != nil {
+			t.Fatalf("expected no error running app, got %v", err)
+		}
+	})
+}

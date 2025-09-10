@@ -26,3 +26,11 @@ func New(llmClient llm.LLMClient, logger *slog.Logger) (*App, error) {
 		logger:    logger,
 	}, nil
 }
+
+func (app *App) Run() error {
+	// Send message to Ollama
+
+	// Display response from Ollama
+
+	return nil
+}
