@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"flag"
 	"fmt"
@@ -56,8 +57,11 @@ func main() {
 		os.Exit(1)
 	}
 
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	// Initialize the main application
-	app, err := app.New(llmClient, logger)
+	app, err := app.New(ctx, llmClient, logger)
 	if err != nil {
 		logger.Error("failed to create app", slog.String("error", err.Error()))
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
