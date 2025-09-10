@@ -13,7 +13,7 @@ Capabilities should include research, web searching, helping with code, generati
 The first tagged release (MVP) intentionally limits scope for fast iteration and stability:
 
 - CLI only (no TUI yet) at `./cmd/assistant`
-- Streaming chat with a single Ollama model (flag or env configured)
+- Streaming chat with a single Ollama model (flag or environment variable configured: `OLLAMA_BASE_URL`, `DEFAULT_MODEL`)
 - Basic web search tool (agent can decide to use tools without confirmation)
 - Simple tool execution framework (just enough to support web search & future expansion)
 - Basic logging (structured via `slog`) to stderr; model output to stdout
@@ -141,11 +141,11 @@ Tool permission gating is deferred until tools beyond web search are added.
 
 Flags override environment variables, which override internal defaults.
 
-| Concern | Flag             | Env                   | Default (MVP)         |
-| ------- | ---------------- | --------------------- | --------------------- |
-| Model   | `-model`         | `OLLAMA_MODEL`        | (required if not set) |
-| Stream  | `-stream` (bool) | N/A                   | true                  |
-| Card    | (future `-card`) | `GHOST_CARD` (future) | built‑in basic        |
+| Concern | Flag             | Env                                | Default (MVP)         |
+| ------- | ---------------- | ---------------------------------- | --------------------- |
+| Model   | `-model`         | `OLLAMA_BASE_URL`, `DEFAULT_MODEL` | (required if not set) |
+| Stream  | `-stream` (bool) | N/A                                | true                  |
+| Card    | (future `-card`) | `GHOST_CARD` (future)              | built‑in basic        |
 
 Config file (TOML/YAML) deliberately deferred.
 
@@ -274,6 +274,7 @@ Initial mitigations:
 - Strict separation between system prompt and user content
 - No shell execution or file system writes in MVP
 - Environment variables only read; never logged verbatim
+- Environment variables only read; never logged verbatim. Supported: `OLLAMA_BASE_URL`, `DEFAULT_MODEL`.
 
 Deferred mitigations:
 

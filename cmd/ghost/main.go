@@ -11,12 +11,13 @@ import (
 )
 
 func main() {
-	godotenv.Load() // load .env file if it exists
+	godotenv.Load()
+	ollamaBaseURL := os.Getenv("OLLAMA_BASE_URL")
+	defaultModel := os.Getenv("DEFAULT_MODEL")
 
-	// Load CLI flags
+	// TODO: load CLI flags
 
-	// Create llm client
-	llmClient, err := llm.NewOllamaClient("http://localhost:11434", "llama2")
+	llmClient, err := llm.NewOllamaClient(ollamaBaseURL, defaultModel)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 
@@ -31,12 +32,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Create app
 	_, err = app.New(llmClient)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
 
-	// Run app
+	// TODO: Run app
 }
