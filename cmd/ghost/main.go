@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"flag"
 	"fmt"
 	"os"
 
@@ -13,11 +14,11 @@ import (
 func main() {
 	godotenv.Load()
 	ollamaBaseURL := os.Getenv("OLLAMA_BASE_URL")
-	defaultModel := os.Getenv("DEFAULT_MODEL")
 
-	// TODO: load CLI flags
+	defaultModel := flag.String("model", os.Getenv("DEFAULT_MODEL"), "LLM model to use (overrides DEFAULT_MODEL env var)")
+	flag.Parse()
 
-	llmClient, err := llm.NewOllamaClient(ollamaBaseURL, defaultModel)
+	llmClient, err := llm.NewOllamaClient(ollamaBaseURL, *defaultModel)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 
