@@ -18,12 +18,12 @@ const (
 
 // ChatRequest represents a request to the Ollama chat API.
 type ChatRequest struct {
-	Model    string     `json:"model"`    // Required. The model name.
-	Messages *[]Message `json:"messages"` // The messages of the chat, this can be used to keep a chat memory
+	Model    string         `json:"model"`    // Required. The model name.
+	Messages *[]ChatMessage `json:"messages"` // The messages of the chat, this can be used to keep a chat memory
 }
 
-// Message represents a single message in the chat.
-type Message struct {
+// ChatMessage represents a single message in the chat.
+type ChatMessage struct {
 	Role    Role   `json:"role"`    // The role of the message, either system, user, assistant, or tool
 	Content string `json:"content"` // The content of the message
 }
