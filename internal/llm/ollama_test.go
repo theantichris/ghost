@@ -2,14 +2,20 @@ package llm
 
 import (
 	"errors"
+	"log/slog"
+	"os"
 	"testing"
 )
+
+var logger *slog.Logger = slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
+	Level: slog.LevelInfo,
+}))
 
 func TestNewOllamaClient(t *testing.T) {
 	t.Run("creates new Ollama client with default", func(t *testing.T) {
 		t.Parallel()
 
-		client, err := NewOllamaClient("http://test.dev", "llama2")
+		client, err := NewOllamaClient("http://test.dev", "llama2", logger)
 
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
@@ -31,7 +37,7 @@ func TestNewOllamaClient(t *testing.T) {
 	t.Run("returns error for empty baseURL", func(t *testing.T) {
 		t.Parallel()
 
-		_, err := NewOllamaClient("", "llama2")
+		_, err := NewOllamaClient("", "llama2", logger)
 
 		if err == nil {
 			t.Fatal("expected error for empty baseURL, got nil")
@@ -45,7 +51,7 @@ func TestNewOllamaClient(t *testing.T) {
 	t.Run("returns error for empty defaultModel", func(t *testing.T) {
 		t.Parallel()
 
-		_, err := NewOllamaClient("http://test.dev", "")
+		_, err := NewOllamaClient("http://test.dev", "", logger)
 
 		if err == nil {
 			t.Fatal("expected error for empty defaultModel, got nil")
