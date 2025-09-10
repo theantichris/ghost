@@ -1,7 +1,6 @@
 package llm
 
 import (
-	"encoding/json"
 	"fmt"
 	"log/slog"
 	"strings"
@@ -17,16 +16,13 @@ const (
 )
 
 type OllamaChatRequest struct {
-	Model    string               `json:"model"`           // Required. The model name.
-	Messages *[]OllamaChatMessage `json:"message"`         // The messages of the chat, this can be used to keep a chat memory
-	Tools    json.RawMessage      `json:"tools,omitempty"` //  List of tools in JSON for the model to use if supported
+	Model    string               `json:"model"`    // Required. The model name.
+	Messages *[]OllamaChatMessage `json:"messages"` // The messages of the chat, this can be used to keep a chat memory
 }
 
 type OllamaChatMessage struct {
-	Role      Role            `json:"role"`                 // The role of the message, either system, user, assistant, or tool
-	Content   string          `json:"content"`              // The content of the message
-	ToolCalls json.RawMessage `json:"tool_calls,omitempty"` // A list of tools in JSON that the model wants to use
-	ToolName  string          `json:"tool_name,omitempty"`  // Add the name of the tool that was executed to inform the model of the result
+	Role    Role   `json:"role"`    // The role of the message, either system, user, assistant, or tool
+	Content string `json:"content"` // The content of the message
 }
 
 // OllamaClient is a client for interacting with the Ollama API.
