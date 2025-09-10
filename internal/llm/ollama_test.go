@@ -26,10 +26,6 @@ func TestNewOllamaClient(t *testing.T) {
 		if client.defaultModel != "llama2" {
 			t.Errorf("expected defaultModel to be 'llama2', got '%s'", client.defaultModel)
 		}
-
-		if !client.stream {
-			t.Error("expected stream to be true")
-		}
 	})
 
 	t.Run("returns error for empty baseURL", func(t *testing.T) {

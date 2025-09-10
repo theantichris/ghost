@@ -6,6 +6,7 @@ import (
 	"strings"
 )
 
+// Role defines the role of a message in the chat.
 type Role string
 
 const (
@@ -15,12 +16,14 @@ const (
 	Tool      Role = "tool"
 )
 
-type OllamaChatRequest struct {
-	Model    string               `json:"model"`    // Required. The model name.
-	Messages *[]OllamaChatMessage `json:"messages"` // The messages of the chat, this can be used to keep a chat memory
+// ChatRequest represents a request to the Ollama chat API.
+type ChatRequest struct {
+	Model    string     `json:"model"`    // Required. The model name.
+	Messages *[]Message `json:"messages"` // The messages of the chat, this can be used to keep a chat memory
 }
 
-type OllamaChatMessage struct {
+// Message represents a single message in the chat.
+type Message struct {
 	Role    Role   `json:"role"`    // The role of the message, either system, user, assistant, or tool
 	Content string `json:"content"` // The content of the message
 }
@@ -29,7 +32,6 @@ type OllamaChatMessage struct {
 type OllamaClient struct {
 	baseURL      string       // Base Ollama server URL
 	defaultModel string       // Default model to use
-	stream       bool         // Whether to use streaming responses
 	logger       *slog.Logger // Logger for structured logging
 }
 
@@ -48,7 +50,6 @@ func NewOllamaClient(baseURL, defaultModel string, logger *slog.Logger) (*Ollama
 	return &OllamaClient{
 		baseURL:      baseURL,
 		defaultModel: defaultModel,
-		stream:       true,
 		logger:       logger,
 	}, nil
 }
