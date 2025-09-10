@@ -25,7 +25,7 @@ Project structure (recommended)
 
 CLI expectations (planned)
 
-- Flags: -model, -stream; env: OLLAMA_MODEL, OLLAMA_HOST; precedence flag > env > default.
+- Flags: -model, -stream; env: OLLAMA_BASE_URL, DEFAULT_MODEL; precedence flag > env > default.
 - Input via args or stdin; detect TTY vs stdin; graceful cancel via context.
 - Stream tokens to stdout when -stream is true; meaningful exit codes and errors.
 
