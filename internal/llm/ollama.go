@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -105,7 +106,7 @@ func (ollama OllamaClient) Chat(ctx context.Context, message string) (string, er
 	// Handle response from Ollama API
 	clientResponse, err := ollama.httpClient.Do(clientRequest)
 	if err != nil {
-		if err == context.DeadlineExceeded {
+		if errors.Is(err, context.DeadlineExceeded) {
 			ollama.logger.Error("request to Ollama API timed out", slog.String("component", "ollama client"), slog.String("error", err.Error()))
 			return "", fmt.Errorf("ollama client chat: request to Ollama API timed out: %w", err)
 		}
