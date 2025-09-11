@@ -9,6 +9,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strings"
+	"time"
 )
 
 // Role defines the role of a message in the chat.
@@ -94,8 +95,10 @@ func (ollama OllamaClient) Chat(ctx context.Context, message string) (string, er
 		return "", fmt.Errorf("ollama client chat: %w", err)
 	}
 
-	// Send request to Ollama API
-	clientRequest, err := http.NewRequestWithContext(ctx, http.MethodPost, ollama.baseURL+"/api/chat", bytes.NewReader(requestBody))
+	requestCTX, cancel := context.WithTimeout(ctx, 2*time.Minute)
+	defer cancel()
+
+	clientRequest, err := http.NewRequestWithContext(requestCTX, http.MethodPost, ollama.baseURL+"/api/chat", bytes.NewReader(requestBody))
 	if err != nil {
 		ollama.logger.Error("failed to create HTTP request", slog.String("component", "ollama client"), slog.String("error", err.Error()))
 		return "", fmt.Errorf("ollama client chat: %w", err)

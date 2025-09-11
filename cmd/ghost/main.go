@@ -32,7 +32,7 @@ func main() {
 
 	logger.Info("ghost CLI starting", slog.String("model", *defaultModel), slog.String("baseURL", ollamaBaseURL))
 
-	httpClient := &http.Client{Timeout: 30 * time.Second}
+	httpClient := &http.Client{Timeout: 0 * time.Second}
 	llmClient := createLLMClient(ollamaBaseURL, *defaultModel, httpClient, logger)
 
 	logger.Info("Ollama client initialized", slog.String("model", *defaultModel), slog.String("base_url", ollamaBaseURL))
