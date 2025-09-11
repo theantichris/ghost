@@ -32,6 +32,8 @@ func NewOllamaClient(baseURL, defaultModel string, httpClient *http.Client, logg
 		return nil, fmt.Errorf("ollama client init: %w", ErrModelEmpty)
 	}
 
+	logger.Info("Ollama client initialized", slog.String("component", "ollama client"), slog.String("baseURL", baseURL), slog.String("defaultModel", defaultModel))
+
 	return &OllamaClient{
 		baseURL:      baseURL,
 		defaultModel: defaultModel,
@@ -42,14 +44,11 @@ func NewOllamaClient(baseURL, defaultModel string, httpClient *http.Client, logg
 
 // Chat sends a message to the Ollama API.
 func (ollama OllamaClient) Chat(ctx context.Context, message string) (string, error) {
-	// TODO: Info logging
-	// Validate message to LLM
 	if strings.TrimSpace(message) == "" {
 		ollama.logger.Error("message is empty", slog.String("component", "ollama client"))
 		return "", fmt.Errorf("ollama client chat: %w", ErrMessageEmpty)
 	}
 
-	// Create request payload
 	chatRequest := ChatRequest{
 		Model: ollama.defaultModel,
 		Messages: &[]ChatMessage{
@@ -60,6 +59,8 @@ func (ollama OllamaClient) Chat(ctx context.Context, message string) (string, er
 		},
 		Stream: false,
 	}
+
+	ollama.logger.Info("sending chat request to Ollama API", slog.String("component", "ollama client"), slog.String("model", chatRequest.Model), slog.String("message", message))
 
 	requestBody, err := json.Marshal(chatRequest)
 	if err != nil {
@@ -78,7 +79,6 @@ func (ollama OllamaClient) Chat(ctx context.Context, message string) (string, er
 
 	clientRequest.Header.Set("Content-Type", "application/json")
 
-	// Handle response from Ollama API
 	clientResponse, err := ollama.httpClient.Do(clientRequest)
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
@@ -89,13 +89,13 @@ func (ollama OllamaClient) Chat(ctx context.Context, message string) (string, er
 		ollama.logger.Error("failed to send request to Ollama API", slog.String("component", "ollama client"), slog.String("error", err.Error()))
 		return "", fmt.Errorf("ollama client chat: %w", err)
 	}
+	defer clientResponse.Body.Close()
 
 	if clientResponse.StatusCode/100 != 2 {
 		ollama.logger.Error("received non-2xx response from Ollama API", slog.String("component", "ollama client"), slog.Int("status_code", clientResponse.StatusCode))
 		return "", fmt.Errorf("ollama client chat: received non-2xx response from Ollama API: %d", clientResponse.StatusCode)
 	}
 
-	// Get message.content from response
 	var chatResponse ChatResponse
 	err = json.NewDecoder(clientResponse.Body).Decode(&chatResponse)
 	if err != nil {
@@ -103,6 +103,7 @@ func (ollama OllamaClient) Chat(ctx context.Context, message string) (string, er
 		return "", fmt.Errorf("ollama client chat: %w", err)
 	}
 
-	// Return response or error
+	ollama.logger.Info("received response from Ollama API", slog.String("component", "ollama client"), slog.String("response", chatResponse.Message.Content))
+
 	return chatResponse.Message.Content, nil
 }

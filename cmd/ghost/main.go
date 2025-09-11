@@ -35,8 +35,6 @@ func main() {
 	httpClient := &http.Client{Timeout: 0 * time.Second}
 	llmClient := createLLMClient(ollamaBaseURL, *defaultModel, httpClient, logger)
 
-	logger.Info("Ollama client initialized", slog.String("model", *defaultModel), slog.String("baseURL", ollamaBaseURL))
-
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 

@@ -37,15 +37,12 @@ func New(ctx context.Context, llmClient llm.LLMClient, logger *slog.Logger) (*Ap
 func (app *App) Run() error {
 	// TODO: Get user input from CLI for message
 
-	app.logger.Info("starting chat with Ollama", slog.String("component", "app"), slog.String("message", "Hello, Ollama!"))
-
 	response, err := app.llmClient.Chat(app.ctx, "Hello, Ollama!")
 	if err != nil {
 		app.logger.Error("failed to chat with Ollama", slog.String("component", "app"), slog.String("error", err.Error()))
 		return fmt.Errorf("app run: %w", err)
 	}
 
-	app.logger.Info("received response from Ollama", slog.String("component", "app"), slog.String("response", response))
 	fmt.Fprintf(os.Stdout, "Ollama response: %s\n", response)
 
 	return nil
