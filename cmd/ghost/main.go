@@ -21,9 +21,9 @@ func main() {
 
 	err := godotenv.Load()
 	if err != nil {
-		slog.Info(".env file not found, proceeding with existing environment variables")
+		logger.Info(".env file not found, proceeding with existing environment variables")
 	} else {
-		slog.Info(".env file loaded successfully")
+		logger.Info(".env file loaded successfully")
 	}
 
 	ollamaBaseURL := os.Getenv("OLLAMA_BASE_URL")
@@ -40,16 +40,16 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	app, err := app.New(ctx, llmClient, logger)
+	ghostApp, err := app.New(ctx, llmClient, logger)
 	if err != nil {
 		logger.Error("failed to create app", slog.String("error", err.Error()))
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
 
-	logger.Info("app initialized successfully")
+	logger.Info("ghost CLI initialized successfully")
 
-	app.Run()
+	ghostApp.Run()
 }
 
 // createLogger initializes and returns a structured logger.
@@ -66,7 +66,7 @@ func createLogger() *slog.Logger {
 func createLLMClient(ollamaBaseURL, defaultModel string, httpClient *http.Client, logger *slog.Logger) *llm.OllamaClient {
 	llmClient, err := llm.NewOllamaClient(ollamaBaseURL, defaultModel, httpClient, logger)
 	if err != nil {
-		logger.Error("failed to create Ollama client", slog.Any("error", err.Error()))
+		logger.Error("failed to create Ollama client", slog.String("error", err.Error()))
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 
 		if errors.Is(err, llm.ErrURLEmpty) {
