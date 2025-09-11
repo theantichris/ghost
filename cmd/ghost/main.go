@@ -30,12 +30,12 @@ func main() {
 	defaultModel := flag.String("model", os.Getenv("DEFAULT_MODEL"), "LLM model to use (overrides DEFAULT_MODEL env var)")
 	flag.Parse()
 
-	logger.Info("ghost CLI starting", slog.String("model", *defaultModel), slog.String("baseURL", ollamaBaseURL))
+	logger.Info("ghost CLI starting")
 
 	httpClient := &http.Client{Timeout: 0 * time.Second}
 	llmClient := createLLMClient(ollamaBaseURL, *defaultModel, httpClient, logger)
 
-	logger.Info("Ollama client initialized", slog.String("model", *defaultModel), slog.String("base_url", ollamaBaseURL))
+	logger.Info("Ollama client initialized", slog.String("model", *defaultModel), slog.String("baseURL", ollamaBaseURL))
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
