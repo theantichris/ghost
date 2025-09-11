@@ -144,7 +144,6 @@ Flags override environment variables, which override internal defaults.
 | Concern | Flag             | Env                                | Default (MVP)         |
 | ------- | ---------------- | ---------------------------------- | --------------------- |
 | Model   | `-model`         | `OLLAMA_BASE_URL`, `DEFAULT_MODEL` | (required if not set) |
-| Stream  | `-stream` (bool) | N/A                                | true                  |
 | Card    | (future `-card`) | `GHOST_CARD` (future)              | built‑in basic        |
 
 Config file (TOML/YAML) deliberately deferred.
@@ -168,7 +167,6 @@ Codes may expand; backward compatibility will be maintained after first tag.
 
 ## Logging Strategy
 
-- Use `log/slog` with JSON handler when `LOG_FORMAT=json`, otherwise text.
 - Logs to stderr; model/token output to stdout (enables piping).
 - All operations accept `context.Context` for cancellation and trace correlation (future: add request IDs).
 - Avoid panics outside `main`; return errors with `%w` for wrapping.
