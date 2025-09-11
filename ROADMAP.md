@@ -3,6 +3,9 @@
 ## Phase 1: Foundation (Current)
 
 - [ ] Basic CLI chat with streaming
+  - [x] Send single message from app to Ollama
+  - [ ] Send single message from CLI to Ollama
+  - [ ] Start and handle chat loop
 - [ ] TUI scaffolding (Bubble Tea): single-window chat view with streaming render, input line, scrollback, basic keymap
 
 ## Phase 2: Core Tools
