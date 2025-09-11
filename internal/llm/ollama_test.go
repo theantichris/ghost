@@ -14,6 +14,12 @@ import (
 
 var logger *slog.Logger = slog.New(slog.NewTextHandler(io.Discard, nil))
 
+type errorTransport struct{}
+
+func (e *errorTransport) RoundTrip(*http.Request) (*http.Response, error) {
+	return nil, errors.New("forced transport error")
+}
+
 func TestNewOllamaClient(t *testing.T) {
 	t.Run("creates new Ollama client with default", func(t *testing.T) {
 		t.Parallel()
@@ -161,6 +167,82 @@ func TestChat(t *testing.T) {
 
 		if !errors.Is(err, context.DeadlineExceeded) {
 			t.Errorf("expected context.DeadlineExceeded error, got %v", err)
+		}
+	})
+
+	t.Run("returns error for failed HTTP request", func(t *testing.T) {
+		t.Parallel()
+
+		httpClient := &http.Client{Transport: &errorTransport{}}
+
+		client, err := NewOllamaClient("http://test.dev", "llama2", httpClient, logger)
+		if err != nil {
+			t.Fatalf("expected no error creating client, got %v", err)
+		}
+
+		_, err = client.Chat(context.Background(), "Hello, there!")
+		if err == nil {
+			t.Fatal("expected error for failed HTTP request, got nil")
+		}
+
+		if !strings.Contains(err.Error(), "forced transport error") {
+			t.Errorf("expected error containing 'forced transport error', got %v", err)
+		}
+	})
+
+	t.Run("returns error for non-200 HTTP response", func(t *testing.T) {
+		t.Parallel()
+
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(`{"error": "Internal Server Error"}`))
+		}))
+		defer server.Close()
+
+		httpClient := &http.Client{
+			Transport: server.Client().Transport,
+		}
+
+		client, err := NewOllamaClient(server.URL, "llama2", httpClient, logger)
+		if err != nil {
+			t.Fatalf("expected no error creating client, got %v", err)
+		}
+
+		_, err = client.Chat(context.Background(), "Hello, there!")
+		if err == nil {
+			t.Fatal("expected error for non-200 HTTP response, got nil")
+		}
+
+		if !strings.Contains(err.Error(), "ollama client chat: received non-2xx response from Ollama API: 500") {
+			t.Errorf("expected error containing 'ollama client chat: received non-2xx response from Ollama API: 500', got %v", err)
+		}
+	})
+
+	t.Run("returns error for invalid JSON response", func(t *testing.T) {
+		t.Parallel()
+
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(`invalid json`))
+		}))
+		defer server.Close()
+
+		httpClient := &http.Client{
+			Transport: server.Client().Transport,
+		}
+
+		client, err := NewOllamaClient(server.URL, "llama2", httpClient, logger)
+		if err != nil {
+			t.Fatalf("expected no error creating client, got %v", err)
+		}
+
+		_, err = client.Chat(context.Background(), "Hello, there!")
+		if err == nil {
+			t.Fatal("expected error for invalid JSON response, got nil")
+		}
+
+		if !strings.Contains(err.Error(), "ollama client chat: invalid character 'i' looking for beginning of value") {
+			t.Errorf("expected error containing 'ollama client chat: invalid character 'i' looking for beginning of value', got %v", err)
 		}
 	})
 }
