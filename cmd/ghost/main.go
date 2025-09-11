@@ -15,29 +15,56 @@ import (
 	"github.com/theantichris/ghost/internal/llm"
 )
 
+// main is the entry point for the ghost CLI application.
 func main() {
-	// Set up structured logging
+	logger := createLogger()
+
+	err := godotenv.Load()
+	if err != nil {
+		slog.Info(".env file not found, proceeding with existing environment variables")
+	} else {
+		slog.Info(".env file loaded successfully")
+	}
+
+	ollamaBaseURL := os.Getenv("OLLAMA_BASE_URL")
+	defaultModel := flag.String("model", os.Getenv("DEFAULT_MODEL"), "LLM model to use (overrides DEFAULT_MODEL env var)")
+	flag.Parse()
+
+	logger.Info("ghost CLI starting", slog.String("model", *defaultModel), slog.String("baseURL", ollamaBaseURL))
+
+	httpClient := &http.Client{Timeout: 30 * time.Second}
+	llmClient := createLLMClient(ollamaBaseURL, *defaultModel, httpClient, logger)
+
+	logger.Info("Ollama client initialized", slog.String("model", *defaultModel), slog.String("base_url", ollamaBaseURL))
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	app, err := app.New(ctx, llmClient, logger)
+	if err != nil {
+		logger.Error("failed to create app", slog.String("error", err.Error()))
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		os.Exit(1)
+	}
+
+	logger.Info("app initialized successfully")
+
+	app.Run()
+}
+
+// createLogger initializes and returns a structured logger.
+func createLogger() *slog.Logger {
 	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
 		Level: slog.LevelInfo,
 	}))
 	slog.SetDefault(logger)
 
-	// Load environment variables from .env file if it exists
-	err := godotenv.Load()
-	if err != nil {
-		slog.Info(".env file not found, proceeding with existing environment variables")
-	}
-	ollamaBaseURL := os.Getenv("OLLAMA_BASE_URL")
+	return logger
+}
 
-	// Parse command-line flags
-	defaultModel := flag.String("model", os.Getenv("DEFAULT_MODEL"), "LLM model to use (overrides DEFAULT_MODEL env var)")
-	flag.Parse()
-
-	// Set up HTTP client with timeout
-	httpClient := &http.Client{Timeout: 30 * time.Second}
-
-	// Initialize Ollama LLM client
-	llmClient, err := llm.NewOllamaClient(ollamaBaseURL, *defaultModel, httpClient, logger)
+// createLLMClient initializes and returns an Ollama LLM client.
+func createLLMClient(ollamaBaseURL, defaultModel string, httpClient *http.Client, logger *slog.Logger) *llm.OllamaClient {
+	llmClient, err := llm.NewOllamaClient(ollamaBaseURL, defaultModel, httpClient, logger)
 	if err != nil {
 		logger.Error("failed to create Ollama client", slog.Any("error", err.Error()))
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
@@ -57,17 +84,5 @@ func main() {
 		os.Exit(1)
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	// Initialize the main application
-	app, err := app.New(ctx, llmClient, logger)
-	if err != nil {
-		logger.Error("failed to create app", slog.String("error", err.Error()))
-		fmt.Fprintf(os.Stderr, "error: %v\n", err)
-		os.Exit(1)
-	}
-
-	// TODO: Run app
-	app.Run()
+	return llmClient
 }
