@@ -24,6 +24,8 @@ func New(ctx context.Context, llmClient llm.LLMClient, logger *slog.Logger) (*Ap
 		return nil, fmt.Errorf("app init: %w", ErrLLMClientNil)
 	}
 
+	logger.Info("ghost app initialized", slog.String("component", "app"))
+
 	return &App{
 		ctx:       ctx,
 		llmClient: llmClient,
@@ -33,14 +35,15 @@ func New(ctx context.Context, llmClient llm.LLMClient, logger *slog.Logger) (*Ap
 
 // Run starts the application logic.
 func (app *App) Run() error {
-	// Send message to Ollama
+	app.logger.Info("starting chat with Ollama", slog.String("component", "app"), slog.String("message", "Hello, Ollama!"))
+
 	response, err := app.llmClient.Chat(app.ctx, "Hello, Ollama!")
 	if err != nil {
 		app.logger.Error("failed to chat with Ollama", slog.String("component", "app"), slog.String("error", err.Error()))
 		return fmt.Errorf("app run: %w", err)
 	}
 
-	// Display response from Ollama
+	app.logger.Info("received response from Ollama", slog.String("component", "app"), slog.String("response", response))
 	fmt.Fprintf(os.Stdout, "Ollama response: %s\n", response)
 
 	return nil

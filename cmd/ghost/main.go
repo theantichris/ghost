@@ -47,8 +47,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	logger.Info("ghost CLI initialized successfully")
-
 	ghostApp.Run()
 }
 
