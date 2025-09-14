@@ -6,8 +6,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -95,14 +97,20 @@ func (ollama OllamaClient) Chat(ctx context.Context, message string) (string, er
 		return "", fmt.Errorf("ollama client chat: received non-2xx response from Ollama API: %d", clientResponse.StatusCode)
 	}
 
+	responseBody, err := io.ReadAll(clientResponse.Body)
+	if err != nil {
+		ollama.logger.Error("failed to read response body", slog.String("component", "ollama client"), slog.String("error", err.Error()))
+		return "", fmt.Errorf("ollama client chat: %w", err)
+	}
+
+	ollama.logger.Info("received response from Ollama API", slog.String("component", "ollama client"), slog.String("status code", strconv.Itoa(clientResponse.StatusCode)), slog.String("response", string(responseBody)))
+
 	var chatResponse ChatResponse
-	err = json.NewDecoder(clientResponse.Body).Decode(&chatResponse)
+	err = json.Unmarshal(responseBody, &chatResponse)
 	if err != nil {
 		ollama.logger.Error("failed to decode response body", slog.String("component", "ollama client"), slog.String("error", err.Error()))
 		return "", fmt.Errorf("ollama client chat: %w", err)
 	}
-
-	ollama.logger.Info("received response from Ollama API", slog.String("component", "ollama client"), slog.String("response", chatResponse.Message.Content))
 
 	return chatResponse.Message.Content, nil
 }
