@@ -53,7 +53,7 @@ func (ollama OllamaClient) Chat(ctx context.Context, message string) (string, er
 		Model: ollama.defaultModel,
 		Messages: &[]ChatMessage{
 			{
-				Role:    System,
+				Role:    User,
 				Content: message,
 			},
 		},
@@ -77,7 +77,7 @@ func (ollama OllamaClient) Chat(ctx context.Context, message string) (string, er
 
 	clientRequest.Header.Set("Content-Type", "application/json")
 
-	ollama.logger.Info("sending chat request to Ollama API", slog.String("component", "ollama client"), slog.String("body", string(requestBody)))
+	ollama.logger.Info("sending chat request to Ollama API", slog.String("component", "ollama client"), slog.String("url", ollama.baseURL+"/api/chat"), slog.String("method", http.MethodPost), slog.String("body", string(requestBody)))
 	clientResponse, err := ollama.httpClient.Do(clientRequest)
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
