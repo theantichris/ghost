@@ -41,7 +41,7 @@ func (app *App) Run(userInput string) error {
 		return fmt.Errorf("app run: %w", err)
 	}
 
-	fmt.Fprintf(os.Stdout, "Ollama response: %s\n", response)
+	fmt.Fprintf(os.Stdout, "\nOllama response: %s\n", response)
 
 	return nil
 }
