@@ -1,6 +1,7 @@
 package app
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"io"
@@ -51,7 +52,7 @@ func TestRun(t *testing.T) {
 			t.Fatalf("expected no error creating app, got %v", err)
 		}
 
-		err = app.Run("test")
+		err = app.Run(bytes.NewBufferString("/bye\n"))
 		if err != nil {
 			t.Fatalf("expected no error running app, got %v", err)
 		}
@@ -69,7 +70,7 @@ func TestRun(t *testing.T) {
 			t.Fatalf("expected no error creating app, got %v", err)
 		}
 
-		err = app.Run("test")
+		err = app.Run(bytes.NewBufferString("/bye\n"))
 		if err == nil {
 			t.Fatal("expected error running app, got nil")
 		}

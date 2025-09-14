@@ -45,14 +45,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	if len(os.Args) < 2 {
-		logger.Error("no user input provided", slog.String("component", "main"))
-		fmt.Fprintf(os.Stderr, "error: no user input provided\n")
-		os.Exit(2)
+	err = ghostApp.Run(os.Stdin)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 	}
-	userInput := os.Args[1]
-
-	ghostApp.Run(userInput)
 }
 
 // createLogger initializes and returns a structured logger.

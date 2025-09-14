@@ -5,6 +5,7 @@
 - [ ] Basic CLI chat with streaming
   - [x] Send single message from app to Ollama
   - [x] Send single message from CLI to Ollama
+  - [ ] Disable lots for production
   - [ ] Start and handle chat loop
 - [ ] TUI scaffolding (Bubble Tea): single-window chat view with streaming render, input line, scrollback, basic keymap
 
