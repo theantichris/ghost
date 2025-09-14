@@ -51,7 +51,7 @@ func TestRun(t *testing.T) {
 			t.Fatalf("expected no error creating app, got %v", err)
 		}
 
-		err = app.Run()
+		err = app.Run("test")
 		if err != nil {
 			t.Fatalf("expected no error running app, got %v", err)
 		}
@@ -69,7 +69,7 @@ func TestRun(t *testing.T) {
 			t.Fatalf("expected no error creating app, got %v", err)
 		}
 
-		err = app.Run()
+		err = app.Run("test")
 		if err == nil {
 			t.Fatal("expected error running app, got nil")
 		}

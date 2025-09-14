@@ -34,10 +34,8 @@ func New(ctx context.Context, llmClient llm.LLMClient, logger *slog.Logger) (*Ap
 }
 
 // Run starts the application logic.
-func (app *App) Run() error {
-	// TODO: Get user input from CLI for message
-
-	response, err := app.llmClient.Chat(app.ctx, "Hello, Ollama!")
+func (app *App) Run(userInput string) error {
+	response, err := app.llmClient.Chat(app.ctx, userInput)
 	if err != nil {
 		app.logger.Error("failed to chat with Ollama", slog.String("component", "app"), slog.String("error", err.Error()))
 		return fmt.Errorf("app run: %w", err)
