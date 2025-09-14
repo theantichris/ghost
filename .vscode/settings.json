@@ -9,6 +9,8 @@
     "goroutines",
     "keymap",
     "LLMS",
+    "Matus",
+    "Ollah",
     "Ollama",
     "parseable",
     "qwen",
@@ -17,6 +19,7 @@
     "scrollback",
     "SDXL",
     "Shadowrun",
+    "slogcolor",
     "testutil"
   ]
 }

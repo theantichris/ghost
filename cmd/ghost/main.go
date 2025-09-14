@@ -10,6 +10,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/MatusOllah/slogcolor"
 	"github.com/joho/godotenv"
 	"github.com/theantichris/ghost/internal/app"
 	"github.com/theantichris/ghost/internal/llm"
@@ -18,19 +19,18 @@ import (
 // main is the entry point for the ghost CLI application.
 func main() {
 	logger := createLogger()
+	logger.Info("ghost CLI starting", slog.String("component", "main"))
 
 	err := godotenv.Load()
 	if err != nil {
-		logger.Info(".env file not found, proceeding with existing environment variables")
+		logger.Info(".env file not found, proceeding with existing environment variables", slog.String("component", "main"))
 	} else {
-		logger.Info(".env file loaded successfully")
+		logger.Info(".env file loaded successfully", slog.String("component", "main"))
 	}
 
 	ollamaBaseURL := os.Getenv("OLLAMA_BASE_URL")
 	defaultModel := flag.String("model", os.Getenv("DEFAULT_MODEL"), "LLM model to use (overrides DEFAULT_MODEL env var)")
 	flag.Parse()
-
-	logger.Info("ghost CLI starting")
 
 	httpClient := &http.Client{Timeout: 0 * time.Second}
 	llmClient := createLLMClient(ollamaBaseURL, *defaultModel, httpClient, logger)
@@ -40,7 +40,7 @@ func main() {
 
 	ghostApp, err := app.New(ctx, llmClient, logger)
 	if err != nil {
-		logger.Error("failed to create app", slog.String("error", err.Error()))
+		logger.Error("failed to create app", slog.String("component", "main"), slog.String("error", err.Error()))
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
@@ -50,8 +50,9 @@ func main() {
 
 // createLogger initializes and returns a structured logger.
 func createLogger() *slog.Logger {
-	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
-		Level: slog.LevelInfo,
+	logger := slog.New(slogcolor.NewHandler(os.Stderr, &slogcolor.Options{
+		Level:      slog.LevelInfo,
+		TimeFormat: time.RFC3339,
 	}))
 	slog.SetDefault(logger)
 
