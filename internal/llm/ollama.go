@@ -60,8 +60,6 @@ func (ollama OllamaClient) Chat(ctx context.Context, message string) (string, er
 		Stream: false,
 	}
 
-	ollama.logger.Info("sending chat request to Ollama API", slog.String("component", "ollama client"), slog.String("model", chatRequest.Model), slog.String("message", message))
-
 	requestBody, err := json.Marshal(chatRequest)
 	if err != nil {
 		ollama.logger.Error("failed to marshal request body", slog.String("component", "ollama client"), slog.String("error", err.Error()))
@@ -79,6 +77,7 @@ func (ollama OllamaClient) Chat(ctx context.Context, message string) (string, er
 
 	clientRequest.Header.Set("Content-Type", "application/json")
 
+	ollama.logger.Info("sending chat request to Ollama API", slog.String("component", "ollama client"), slog.String("body", string(requestBody)))
 	clientResponse, err := ollama.httpClient.Do(clientRequest)
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
