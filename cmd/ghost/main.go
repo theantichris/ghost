@@ -17,21 +17,26 @@ import (
 
 // main is the entry point for the ghost CLI application.
 func main() {
-	logger := createLogger()
+	defaultModel := flag.String("model", "", "LLM model to use (overrides DEFAULT_MODEL env var)")
+	isDebugMode := flag.Bool("debug", false, "Enable debug mode")
+	flag.Parse()
+
+	logger := createLogger(*isDebugMode)
 	logger.Info("ghost CLI starting", slog.String("component", "main"))
 
 	loadEnv(logger)
 
 	ollamaBaseURL := os.Getenv("OLLAMA_BASE_URL")
-	defaultModel := flag.String("model", os.Getenv("DEFAULT_MODEL"), "LLM model to use (overrides DEFAULT_MODEL env var)")
-	flag.Parse()
+
+	if defaultModel == nil || *defaultModel == "" {
+		val := os.Getenv("DEFAULT_MODEL")
+		defaultModel = &val
+	}
 
 	httpClient := &http.Client{Timeout: 0 * time.Second}
 
 	llmClient, err := llm.NewOllamaClient(ollamaBaseURL, *defaultModel, httpClient, logger)
 	if err != nil {
-		logger.Error(err.Error(), slog.String("component", "main"))
-
 		if errors.Is(err, llm.ErrURLEmpty) {
 			logger.Error("OLLAMA_BASE_URL environment variable is not set", slog.String("component", "main"))
 			os.Exit(2)
@@ -72,11 +77,18 @@ func loadEnv(logger *slog.Logger) {
 }
 
 // createLogger initializes and returns a structured logger.
-func createLogger() *slog.Logger {
+func createLogger(debugMode bool) *slog.Logger {
+	var logLevel = slog.LevelInfo
+
+	if debugMode {
+		logLevel = slog.LevelDebug
+	}
+
 	logger := slog.New(slogcolor.NewHandler(os.Stderr, &slogcolor.Options{
-		Level:      slog.LevelInfo,
+		Level:      logLevel,
 		TimeFormat: time.RFC3339,
 	}))
+
 	slog.SetDefault(logger)
 
 	return logger
