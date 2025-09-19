@@ -70,7 +70,7 @@ func TestRun(t *testing.T) {
 			t.Fatalf("expected no error creating app, got %v", err)
 		}
 
-		err = app.Run(bytes.NewBufferString("/bye\n"))
+		err = app.Run(bytes.NewBufferString("Hello\n"))
 		if err == nil {
 			t.Fatal("expected error running app, got nil")
 		}

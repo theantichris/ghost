@@ -38,7 +38,7 @@ func New(ctx context.Context, llmClient llm.LLMClient, logger *slog.Logger) (*Ap
 
 // Run starts the application logic.
 func (app *App) Run(input io.Reader) error {
-	// TODO: Add prompt
+	// TODO: Add prompt for user input
 	// TODO: Add chat labels
 	// TODO: Fix tests
 	app.logger.Info("starting chat loop", slog.String("component", "app"))
@@ -52,6 +52,7 @@ func (app *App) Run(input io.Reader) error {
 		userInput = strings.TrimSpace(scanner.Text())
 
 		if userInput == "/bye" {
+			// TODO: Add goodbye message from LLM
 			app.logger.Info("exiting chat loop", slog.String("component", "app"))
 			break
 		}
