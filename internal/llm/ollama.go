@@ -74,7 +74,7 @@ func (ollama OllamaClient) Chat(ctx context.Context, message string) (string, er
 
 	clientRequest.Header.Set("Content-Type", "application/json")
 
-	ollama.logger.Info("sending chat request to Ollama API", slog.String("component", "ollama client"), slog.String("url", ollama.baseURL+"/api/chat"), slog.String("method", http.MethodPost), slog.String("body", string(requestBody)))
+	ollama.logger.Info("sending chat request to Ollama API", slog.String("component", "ollama client"), slog.String("url", ollama.baseURL+"/api/chat"), slog.String("method", http.MethodPost))
 
 	clientResponse, err := ollama.httpClient.Do(clientRequest)
 	if err != nil {
@@ -102,7 +102,7 @@ func (ollama OllamaClient) Chat(ctx context.Context, message string) (string, er
 		return "", fmt.Errorf("%w: %s", ErrResponseBody, err)
 	}
 
-	ollama.logger.Info("received response from Ollama API", slog.String("component", "ollama client"), slog.String("status code", strconv.Itoa(clientResponse.StatusCode)), slog.String("response", string(responseBody)))
+	ollama.logger.Info("received response from Ollama API", slog.String("component", "ollama client"), slog.String("status code", strconv.Itoa(clientResponse.StatusCode)))
 
 	var chatResponse ChatResponse
 	err = json.Unmarshal(responseBody, &chatResponse)
