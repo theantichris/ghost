@@ -21,7 +21,6 @@ type App struct {
 // New initializes a new App instance with the provided LLM client.
 func New(llmClient llm.LLMClient, logger *slog.Logger) (*App, error) {
 	if llmClient == nil {
-
 		return nil, ErrLLMClientNil
 	}
 
@@ -44,12 +43,20 @@ func (app *App) Run(ctx context.Context, input io.Reader) error {
 	var userInput string
 
 	for {
-		scanner.Scan()
+		if ok := scanner.Scan(); !ok {
+			if err := scanner.Err(); err != nil {
+				return fmt.Errorf("%w: %s", ErrReadingInput, err)
+			}
+
+			// EOF reached
+			break
+		}
+
 		userInput = strings.TrimSpace(scanner.Text())
 
 		if userInput == "/bye" {
 			// TODO: Add goodbye message from LLM
-			app.logger.Info("exiting chat loop", slog.String("component", "app"))
+			app.logger.Info("stopping chat loop", slog.String("component", "app"))
 			break
 		}
 
@@ -59,7 +66,7 @@ func (app *App) Run(ctx context.Context, input io.Reader) error {
 
 		response, err := app.llmClient.Chat(ctx, userInput)
 		if err != nil {
-			return fmt.Errorf("%w: %w", ErrChatFailed, err)
+			return fmt.Errorf("%w: %s", ErrChatFailed, err)
 		}
 
 		fmt.Fprintf(os.Stdout, "\nOllama response: %s\n", response)
