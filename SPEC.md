@@ -115,10 +115,9 @@ Tool permission gating is deferred until tools beyond web search are added.
 
 Flags override environment variables, which override internal defaults.
 
-| Concern | Flag     | Env                                | Default (MVP)         |
-| ------- | -------- | ---------------------------------- | --------------------- |
-| Model   | `-model` | `OLLAMA_BASE_URL`, `DEFAULT_MODEL` | (required if not set) |
-| Card    | `-card`  | `GHOST_CARD`                       | built‑in basic        |
+| Concern | Flag     | Env             | Default (MVP)         |
+| ------- | -------- | --------------- | --------------------- |
+| Model   | `-model` | `DEFAULT_MODEL` | (required if not set) |
 
 ---
 

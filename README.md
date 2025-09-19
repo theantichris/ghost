@@ -33,12 +33,3 @@ The vision for Ghost is inspired by cyberpunk media such as _Shadowrun_, _Cyberp
 
 - OLLAMA_BASE_URL
 - DEFAULT_MODEL
-
-## Examples
-
-```go
-echo "Hello" | go run ./cmd/assistant -model llama3.1
-go run ./cmd/assistant -model llama3.1 "Hello"
-echo "Hello" | go run ./cmd/assistant -model llama3.1
-export DEFAULT_MODEL=llama3.1; export OLLAMA_BASE_URL=http://localhost:11434; go run ./cmd/assistant "Hello from env"
-```
