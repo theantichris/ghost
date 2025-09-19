@@ -17,7 +17,7 @@ func TestNew(t *testing.T) {
 	t.Run("creates a new app instance", func(t *testing.T) {
 		t.Parallel()
 
-		app, err := New(context.Background(), &llm.MockLLMClient{}, logger)
+		app, err := New(&llm.MockLLMClient{}, logger)
 
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
@@ -31,7 +31,7 @@ func TestNew(t *testing.T) {
 	t.Run("returns error for nil llmClient", func(t *testing.T) {
 		t.Parallel()
 
-		_, err := New(context.Background(), nil, logger)
+		_, err := New(nil, logger)
 
 		if err == nil {
 			t.Fatalf("expected error for nil llmClient, got nil")
@@ -47,12 +47,12 @@ func TestRun(t *testing.T) {
 	t.Run("runs the app without error", func(t *testing.T) {
 		t.Parallel()
 
-		app, err := New(context.Background(), &llm.MockLLMClient{}, logger)
+		app, err := New(&llm.MockLLMClient{}, logger)
 		if err != nil {
 			t.Fatalf("expected no error creating app, got %v", err)
 		}
 
-		err = app.Run(bytes.NewBufferString("/bye\n"))
+		err = app.Run(context.Background(), bytes.NewBufferString("/bye\n"))
 		if err != nil {
 			t.Fatalf("expected no error running app, got %v", err)
 		}
@@ -65,12 +65,12 @@ func TestRun(t *testing.T) {
 			ReturnError: true,
 		}
 
-		app, err := New(context.Background(), llmClient, logger)
+		app, err := New(llmClient, logger)
 		if err != nil {
 			t.Fatalf("expected no error creating app, got %v", err)
 		}
 
-		err = app.Run(bytes.NewBufferString("Hello\n"))
+		err = app.Run(context.Background(), bytes.NewBufferString("Hello\n"))
 		if err == nil {
 			t.Fatal("expected error running app, got nil")
 		}

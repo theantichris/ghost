@@ -14,13 +14,12 @@ import (
 
 // App represents the main application structure
 type App struct {
-	ctx       context.Context
 	llmClient llm.LLMClient
 	logger    *slog.Logger
 }
 
 // New initializes a new App instance with the provided LLM client.
-func New(ctx context.Context, llmClient llm.LLMClient, logger *slog.Logger) (*App, error) {
+func New(llmClient llm.LLMClient, logger *slog.Logger) (*App, error) {
 	if llmClient == nil {
 		logger.Error("llmClient is nil", slog.String("component", "app"))
 
@@ -30,14 +29,13 @@ func New(ctx context.Context, llmClient llm.LLMClient, logger *slog.Logger) (*Ap
 	logger.Info("ghost app initialized", slog.String("component", "app"))
 
 	return &App{
-		ctx:       ctx, // TODO: Should probably be passing context instead of adding it to app.
 		llmClient: llmClient,
 		logger:    logger,
 	}, nil
 }
 
 // Run starts the application logic.
-func (app *App) Run(input io.Reader) error {
+func (app *App) Run(ctx context.Context, input io.Reader) error {
 	// TODO: Add prompt for user input
 	// TODO: Add chat labels
 	app.logger.Info("starting chat loop", slog.String("component", "app"))
@@ -60,7 +58,7 @@ func (app *App) Run(input io.Reader) error {
 			continue
 		}
 
-		response, err := app.llmClient.Chat(app.ctx, userInput)
+		response, err := app.llmClient.Chat(ctx, userInput)
 		if err != nil {
 			app.logger.Error("failed to chat with Ollama", slog.String("component", "app"), slog.String("error", err.Error()))
 			return fmt.Errorf("app run: %w", err)

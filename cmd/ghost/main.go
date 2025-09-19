@@ -38,14 +38,14 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	ghostApp, err := app.New(ctx, llmClient, logger)
+	ghostApp, err := app.New(llmClient, logger)
 	if err != nil {
 		logger.Error("failed to create app", slog.String("component", "main"), slog.String("error", err.Error()))
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
 
-	err = ghostApp.Run(os.Stdin)
+	err = ghostApp.Run(ctx, os.Stdin)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 	}
