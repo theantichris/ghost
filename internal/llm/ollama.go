@@ -47,6 +47,7 @@ func (ollama OllamaClient) Chat(ctx context.Context, message string) (string, er
 		return "", ErrMessageEmpty
 	}
 
+	// TODO: LLM is returning think response.
 	chatRequest := ChatRequest{
 		Model: ollama.defaultModel,
 		Messages: &[]ChatMessage{
