@@ -1,6 +1,6 @@
 # Implementation Roadmap
 
-## Phase 1: Foundation (Current)
+## Phase 1: Chat
 
 - [ ] Basic CLI chat with streaming
   - [x] Send single message from app to Ollama
@@ -10,18 +10,23 @@
   - [ ] Stream LLM response
 - [ ] TUI scaffolding (Bubble Tea): single-window chat view with streaming render, input line, scrollback, basic keymap
 
-## Phase 2: Core Tools
+## Phase 2: Card Management
 
-- [ ] Card system for prompts
-- [ ] Tool framework architecture
+- [ ] Card manager
+- [ ] System prompt
+- [ ] Character cards
 - [ ] Card runner
+
+## Phase 2: Tool System
+
+- [ ] Tool framework architecture
 - [ ] Web search capability
 - [ ] Personal assistant; calendar, email, task, reminders
 - [ ] Image generation (txt2img, simple img2img) via local engine
 - [ ] TUI: command palette & status bar (e.g., / commands, tool-call progress, error toasts)
-  - e.g., SDXL/FLUX running locally (InvokeAI/ComfyUI API or direct lib)
-  - Minimal params: prompt, negative, steps, guidance, seed, size
-  - Save outputs to a local gallery + metadata (prompt, seed)
+  - [ ] e.g., SDXL/FLUX running locally (InvokeAI/ComfyUI API or direct lib)
+  - [ ] Minimal params: prompt, negative, steps, guidance, seed, size
+  - [ ] Save outputs to a local gallery + metadata (prompt, seed)
 
 ## Phase 3: Memory & Knowledge
 
