@@ -70,7 +70,7 @@ The assistant should demonstrate:
 
 ### Security
 
-- Sandboxed code execution for safety
+- Sandboxes code execution for safety
 - Secure storage of sensitive information
 - Safe handling of external API keys
 
@@ -147,14 +147,22 @@ Use sentinel errors (package-level variables, e.g., `var ErrModelEmpty = errors.
 Example:
 
 ```go
-// internal/llm/errors.go
-package llm
-import "errors"
-var ErrModelUnavailable = errors.New("model unavailable")
+// Sentinel error definition
+var ErrClientResponse = errors.New("failed to get response from Ollama API")
 
-// internal/llm/ollama.go
-if err := ollama.Chat(); err != nil {
-  return fmt.Errorf("%w: %v", ErrModelUnavailable, err)
+// Wrapping at boundary
+if err != nil {
+    return "", fmt.Errorf("%w: %s", ErrClientResponse, err)
+}
+
+// Wrapping with extra context
+if statusCode/100 != 2 {
+    return "", fmt.Errorf("%w: status=%d %s body=%q", ErrNon2xxResponse, statusCode, http.StatusText(statusCode), string(responseBody))
+}
+
+// Checking in consumer
+if errors.Is(err, llm.ErrClientResponse) {
+    // handle error
 }
 ```
 

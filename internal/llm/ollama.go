@@ -60,7 +60,7 @@ func (ollama OllamaClient) Chat(ctx context.Context, message string) (string, er
 
 	requestBody, err := json.Marshal(chatRequest)
 	if err != nil {
-		return "", fmt.Errorf("%w: %w", ErrMarshalRequest, err)
+		return "", fmt.Errorf("%w: %s", ErrMarshalRequest, err)
 	}
 
 	requestCTX, cancel := context.WithTimeout(ctx, 2*time.Minute)
@@ -68,7 +68,7 @@ func (ollama OllamaClient) Chat(ctx context.Context, message string) (string, er
 
 	clientRequest, err := http.NewRequestWithContext(requestCTX, http.MethodPost, ollama.baseURL+"/api/chat", bytes.NewReader(requestBody))
 	if err != nil {
-		return "", fmt.Errorf("%w: %w", ErrCreateRequest, err)
+		return "", fmt.Errorf("%w: %s", ErrCreateRequest, err)
 	}
 
 	clientRequest.Header.Set("Content-Type", "application/json")
@@ -77,7 +77,7 @@ func (ollama OllamaClient) Chat(ctx context.Context, message string) (string, er
 
 	clientResponse, err := ollama.httpClient.Do(clientRequest)
 	if err != nil {
-		return "", fmt.Errorf("%w: %w", ErrClientResponse, err)
+		return "", fmt.Errorf("%w: %s", ErrClientResponse, err)
 	}
 
 	defer clientResponse.Body.Close()
@@ -85,20 +85,20 @@ func (ollama OllamaClient) Chat(ctx context.Context, message string) (string, er
 	if clientResponse.StatusCode/100 != 2 {
 		responseBody, err := io.ReadAll(clientResponse.Body)
 		if err != nil {
-			return "", fmt.Errorf("%w: failed to read non-2xx response body: status=%d %s: %v", ErrResponseBody, clientResponse.StatusCode, http.StatusText(clientResponse.StatusCode), err)
+			return "", fmt.Errorf("%w: status=%d %s: %s", ErrResponseBody, clientResponse.StatusCode, http.StatusText(clientResponse.StatusCode), err)
 		}
 
 		var apiError apiError
 		if err := json.Unmarshal(responseBody, &apiError); err == nil && apiError.Error != "" {
-			return "", fmt.Errorf("%w: status=%d %s api_error=%q", ErrNon2xxResponse, clientResponse.StatusCode, http.StatusText(clientResponse.StatusCode), apiError.Error)
+			return "", fmt.Errorf("%w: status=%d %s api_error=%s", ErrNon2xxResponse, clientResponse.StatusCode, http.StatusText(clientResponse.StatusCode), apiError.Error)
 		}
 
-		return "", fmt.Errorf("%w: status=%d %s body=%q", ErrNon2xxResponse, clientResponse.StatusCode, http.StatusText(clientResponse.StatusCode), string(responseBody))
+		return "", fmt.Errorf("%w: status=%d %s body=%s", ErrNon2xxResponse, clientResponse.StatusCode, http.StatusText(clientResponse.StatusCode), string(responseBody))
 	}
 
 	responseBody, err := io.ReadAll(clientResponse.Body)
 	if err != nil {
-		return "", fmt.Errorf("%w: %w", ErrResponseBody, err)
+		return "", fmt.Errorf("%w: %s", ErrResponseBody, err)
 	}
 
 	ollama.logger.Info("received response from Ollama API", slog.String("component", "ollama client"), slog.String("status code", strconv.Itoa(clientResponse.StatusCode)), slog.String("response", string(responseBody)))
@@ -106,7 +106,7 @@ func (ollama OllamaClient) Chat(ctx context.Context, message string) (string, er
 	var chatResponse ChatResponse
 	err = json.Unmarshal(responseBody, &chatResponse)
 	if err != nil {
-		return "", fmt.Errorf("%w: %w", ErrUnmarshalResponse, err)
+		return "", fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
 	}
 
 	return chatResponse.Message.Content, nil

@@ -78,17 +78,22 @@ pkg/                 Only if stable external API needed
 Example error pattern:
 
 ```go
-// Define sentinel errors
-var ErrModelUnavailable = errors.New("model unavailable")
+// Sentinel error definition
+var ErrClientResponse = errors.New("failed to get response from Ollama API")
 
-// Wrap at boundaries
-if !modelAvailable {
-    return nil, fmt.Errorf("llm: %w", ErrModelUnavailable)
+// Wrapping at boundary
+if err != nil {
+    return "", fmt.Errorf("%w: %s", ErrClientResponse, err)
 }
 
-// Test with errors.Is
-if errors.Is(err, llm.ErrModelUnavailable) {
-    // handle
+// Wrapping with extra context
+if statusCode/100 != 2 {
+    return "", fmt.Errorf("%w: status=%d %s body=%q", ErrNon2xxResponse, statusCode, http.StatusText(statusCode), string(responseBody))
+}
+
+// Checking in consumer
+if errors.Is(err, llm.ErrClientResponse) {
+    // handle error
 }
 ```
 

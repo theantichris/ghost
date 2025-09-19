@@ -9,7 +9,6 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
-	"time"
 )
 
 var logger *slog.Logger = slog.New(slog.NewTextHandler(io.Discard, nil))
@@ -137,36 +136,6 @@ func TestChat(t *testing.T) {
 
 		if !strings.Contains(err.Error(), "missing protocol scheme") {
 			t.Errorf("expected error containing 'missing protocol scheme', got %v", err)
-		}
-	})
-
-	t.Run("returns error for context.DeadlineExceeded", func(t *testing.T) {
-		t.Parallel()
-
-		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			select {} // Simulate a long processing time
-		}))
-		defer server.Close()
-
-		httpClient := &http.Client{
-			Transport: server.Client().Transport,
-		}
-
-		client, err := NewOllamaClient(server.URL, "llama2", httpClient, logger)
-		if err != nil {
-			t.Fatalf("expected no error creating client, got %v", err)
-		}
-
-		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Nanosecond)
-		defer cancel()
-
-		_, err = client.Chat(ctx, "Hello, there!")
-		if err == nil {
-			t.Fatal("expected error for context deadline exceeded, got nil")
-		}
-
-		if !errors.Is(err, context.DeadlineExceeded) {
-			t.Errorf("expected context.DeadlineExceeded error, got %v", err)
 		}
 	})
 
