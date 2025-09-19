@@ -48,8 +48,7 @@ func (app *App) Run(ctx context.Context, input io.Reader) error {
 				return fmt.Errorf("%w: %s", ErrReadingInput, err)
 			}
 
-			// EOF reached
-			break
+			break // EOF reached
 		}
 
 		userInput = strings.TrimSpace(scanner.Text())

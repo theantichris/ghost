@@ -13,6 +13,21 @@ import (
 
 var logger *slog.Logger = slog.New(slog.NewTextHandler(io.Discard, nil))
 
+type faultyReader struct {
+	data []byte
+	err  error
+}
+
+func (reader *faultyReader) Read(p []byte) (n int, err error) {
+	if len(reader.data) > 0 {
+		n = copy(p, reader.data)
+		reader.data = reader.data[n:]
+		return n, nil
+	}
+
+	return 0, err
+}
+
 func TestNew(t *testing.T) {
 	t.Run("creates a new app instance", func(t *testing.T) {
 		t.Parallel()
@@ -77,6 +92,52 @@ func TestRun(t *testing.T) {
 
 		if !errors.Is(err, ErrChatFailed) {
 			t.Errorf("expected ErrChatFailed, got %v", err)
+		}
+	})
+
+	t.Run("handles empty input gracefully", func(t *testing.T) {
+		t.Parallel()
+
+		app, err := New(&llm.MockLLMClient{}, logger)
+		if err != nil {
+			t.Fatalf("expected no error creating app, got %v", err)
+		}
+
+		err = app.Run(context.Background(), bytes.NewBufferString("\n\n/bye\n"))
+		if err != nil {
+			t.Errorf("expected no error running app with empty input, got %v", err)
+		}
+	})
+
+	t.Run("returns error if reading input fails", func(t *testing.T) {
+		t.Parallel()
+
+		app, err := New(&llm.MockLLMClient{}, logger)
+		if err != nil {
+			t.Fatalf("expected no error creating app, got %v", err)
+		}
+
+		err = app.Run(context.Background(), &faultyReader{})
+		if err == nil {
+			t.Fatal("expected error running app with faulty reader, got nil")
+		}
+
+		if !errors.Is(err, ErrReadingInput) {
+			t.Errorf("expected ErrReadingInput, got %v", err)
+		}
+	})
+
+	t.Run("exits gracefully when EOF is reached", func(t *testing.T) {
+		t.Parallel()
+
+		app, err := New(&llm.MockLLMClient{}, logger)
+		if err != nil {
+			t.Fatalf("expected no error creating app, got %v", err)
+		}
+
+		err = app.Run(context.Background(), bytes.NewBufferString("Hello\n"))
+		if err != nil {
+			t.Errorf("expected no error running app until EOF, got %v", err)
 		}
 	})
 }
