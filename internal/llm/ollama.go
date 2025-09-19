@@ -93,8 +93,14 @@ func (ollama OllamaClient) Chat(ctx context.Context, message string) (string, er
 	defer clientResponse.Body.Close()
 
 	if clientResponse.StatusCode/100 != 2 {
-		ollama.logger.Error("received non-2xx response from Ollama API", slog.String("component", "ollama client"), slog.Int("status_code", clientResponse.StatusCode))
-		return "", fmt.Errorf("ollama client chat: received non-2xx response from Ollama API: %d", clientResponse.StatusCode)
+		responseBody, err := io.ReadAll(clientResponse.Body)
+		if err != nil {
+			ollama.logger.Error("failed to read error response body", slog.String("component", "ollama client"), slog.String("error", err.Error()))
+			return "", fmt.Errorf("ollama client chat: received non-2xx response from Ollama API: %d", clientResponse.StatusCode)
+		}
+
+		ollama.logger.Error("Ollama API error response", slog.String("component", "ollama client"), slog.Int("status_code", clientResponse.StatusCode), slog.String("response_body", string(responseBody)))
+		return "", fmt.Errorf("ollama client chat: received %d response from Ollama API: %q", clientResponse.StatusCode, string(responseBody))
 	}
 
 	responseBody, err := io.ReadAll(clientResponse.Body)
