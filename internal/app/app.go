@@ -40,7 +40,6 @@ func New(ctx context.Context, llmClient llm.LLMClient, logger *slog.Logger) (*Ap
 func (app *App) Run(input io.Reader) error {
 	// TODO: Add prompt for user input
 	// TODO: Add chat labels
-	// TODO: Fix tests
 	app.logger.Info("starting chat loop", slog.String("component", "app"))
 
 	scanner := bufio.NewScanner(input)
