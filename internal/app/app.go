@@ -34,15 +34,14 @@ func New(llmClient llm.LLMClient, logger *slog.Logger) (*App, error) {
 
 // Run starts the application logic.
 func (app *App) Run(ctx context.Context, input io.Reader) error {
-	// TODO: Add prompt for user input
-	// TODO: Add chat labels
 	app.logger.Info("starting chat loop", slog.String("component", "app"))
 
 	scanner := bufio.NewScanner(input)
-
 	var userInput string
 
 	for {
+		fmt.Print("User: ")
+
 		if ok := scanner.Scan(); !ok {
 			if err := scanner.Err(); err != nil {
 				return fmt.Errorf("%w: %s", ErrReadingInput, err)
@@ -68,7 +67,7 @@ func (app *App) Run(ctx context.Context, input io.Reader) error {
 			return fmt.Errorf("%w: %s", ErrChatFailed, err)
 		}
 
-		fmt.Fprintf(os.Stdout, "\nOllama response: %s\n", response)
+		fmt.Fprintf(os.Stdout, "\nGhost: %s\n", response)
 	}
 
 	return nil
