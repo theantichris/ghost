@@ -28,3 +28,8 @@ type ChatMessage struct {
 type ChatResponse struct {
 	Message ChatMessage `json:"message"` // The response message from the assistant
 }
+
+// apiError represents an error response from the Ollama API.
+type apiError struct {
+	Error string `json:"error"`
+}
