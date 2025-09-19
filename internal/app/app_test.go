@@ -75,8 +75,8 @@ func TestRun(t *testing.T) {
 			t.Fatal("expected error running app, got nil")
 		}
 
-		if !errors.Is(err, llm.ErrMessageEmpty) {
-			t.Errorf("expected ErrMessageEmpty, got %v", err)
+		if !errors.Is(err, ErrChatFailed) {
+			t.Errorf("expected ErrChatFailed, got %v", err)
 		}
 	})
 }

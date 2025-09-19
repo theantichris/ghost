@@ -64,6 +64,7 @@ func createLogger() *slog.Logger {
 
 // createLLMClient initializes and returns an Ollama LLM client.
 func createLLMClient(ollamaBaseURL, defaultModel string, httpClient *http.Client, logger *slog.Logger) *llm.OllamaClient {
+	// TODO: Should return error and let main handle it
 	llmClient, err := llm.NewOllamaClient(ollamaBaseURL, defaultModel, httpClient, logger)
 	if err != nil {
 		logger.Error("failed to create Ollama client", slog.String("error", err.Error()))

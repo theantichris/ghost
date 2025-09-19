@@ -21,9 +21,8 @@ type App struct {
 // New initializes a new App instance with the provided LLM client.
 func New(llmClient llm.LLMClient, logger *slog.Logger) (*App, error) {
 	if llmClient == nil {
-		logger.Error("llmClient is nil", slog.String("component", "app"))
 
-		return nil, fmt.Errorf("app init: %w", ErrLLMClientNil)
+		return nil, ErrLLMClientNil
 	}
 
 	logger.Info("ghost app initialized", slog.String("component", "app"))
@@ -60,8 +59,7 @@ func (app *App) Run(ctx context.Context, input io.Reader) error {
 
 		response, err := app.llmClient.Chat(ctx, userInput)
 		if err != nil {
-			app.logger.Error("failed to chat with Ollama", slog.String("component", "app"), slog.String("error", err.Error()))
-			return fmt.Errorf("app run: %w", err)
+			return fmt.Errorf("%w: %w", ErrChatFailed, err)
 		}
 
 		fmt.Fprintf(os.Stdout, "\nOllama response: %s\n", response)
