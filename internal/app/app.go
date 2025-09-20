@@ -158,30 +158,19 @@ func (app *App) Run(ctx context.Context, input io.Reader) error {
 
 // handleLLMResponseError shows a system message for recoverable errors and returns unrecoverable errors.
 func (app *App) handleLLMResponseError(err error) error {
-	// TODO: Can I clean this up?
-
-	if errors.Is(err, llm.ErrClientResponse) {
-		fmt.Fprintf(app.output, "\n%s\n", msgClientResponse)
-
-		return nil
+	errorMap := map[error]string{
+		llm.ErrClientResponse:    msgClientResponse,
+		llm.ErrNon2xxResponse:    msgNon2xxResponse,
+		llm.ErrResponseBody:      msgResponseBody,
+		llm.ErrUnmarshalResponse: msgUnmarshalResponse,
 	}
 
-	if errors.Is(err, llm.ErrNon2xxResponse) {
-		fmt.Fprintf(app.output, "\n%s\n", msgNon2xxResponse)
+	for error, msg := range errorMap {
+		if errors.Is(err, error) {
+			fmt.Fprintf(app.output, "\n%s\n", msg)
 
-		return nil
-	}
-
-	if errors.Is(err, llm.ErrResponseBody) {
-		fmt.Fprintf(app.output, "\n%s\n", msgResponseBody)
-
-		return nil
-	}
-
-	if errors.Is(err, llm.ErrUnmarshalResponse) {
-		fmt.Fprintf(app.output, "\n%s\n", msgUnmarshalResponse)
-
-		return nil
+			return nil
+		}
 	}
 
 	return fmt.Errorf("%w: %s", ErrChatFailed, err)
