@@ -70,6 +70,8 @@ func (app *App) Run(ctx context.Context, input io.Reader) error {
 			return fmt.Errorf("%w: %s", ErrChatFailed, err)
 		}
 
+		chatHistory = append(chatHistory, response)
+
 		fmt.Fprintf(os.Stdout, "\nGhost: %s\n", response)
 	}
 
