@@ -48,15 +48,10 @@ func (app *App) Run(ctx context.Context, input io.Reader) error {
 		{Role: llm.System, Content: systemPrompt},
 	}
 
-	llmResponse, err := app.llmClient.Chat(ctx, chatHistory)
+	chatHistory, err := app.handleLLMResponse(ctx, chatHistory)
 	if err != nil {
-		return fmt.Errorf("%w: %s", ErrChatFailed, err)
+		return err
 	}
-
-	chatHistory = append(chatHistory, llmResponse)
-
-	response := stripThinkBlock(llmResponse.Content)
-	fmt.Fprintf(os.Stdout, "\nGhost: %s\n", response)
 
 	for {
 		endChat := false
@@ -83,15 +78,10 @@ func (app *App) Run(ctx context.Context, input io.Reader) error {
 		userMessage := llm.ChatMessage{Role: llm.User, Content: userInput}
 		chatHistory = append(chatHistory, userMessage)
 
-		llmResponse, err := app.llmClient.Chat(ctx, chatHistory)
+		chatHistory, err = app.handleLLMResponse(ctx, chatHistory)
 		if err != nil {
-			return fmt.Errorf("%w: %s", ErrChatFailed, err)
+			return err
 		}
-
-		chatHistory = append(chatHistory, llmResponse)
-
-		response := stripThinkBlock(llmResponse.Content)
-		fmt.Fprintf(os.Stdout, "\nGhost: %s\n", response)
 
 		if endChat {
 			break
@@ -105,6 +95,21 @@ func (app *App) Run(ctx context.Context, input io.Reader) error {
 	}
 
 	return nil
+}
+
+// handleLLMResponse gets the response from the LLMClient, adds it to the chat history and prints the content.
+func (app *App) handleLLMResponse(ctx context.Context, chatHistory []llm.ChatMessage) ([]llm.ChatMessage, error) {
+	llmResponse, err := app.llmClient.Chat(ctx, chatHistory)
+	if err != nil {
+		return chatHistory, fmt.Errorf("%w: %s", ErrChatFailed, err)
+	}
+
+	chatHistory = append(chatHistory, llmResponse)
+
+	response := stripThinkBlock(llmResponse.Content)
+	fmt.Fprintf(os.Stdout, "\nGhost: %s\n", response)
+
+	return chatHistory, nil
 }
 
 // stripThinkBlock removes any <think>...</think> blocks from the message.
