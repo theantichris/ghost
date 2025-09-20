@@ -3,6 +3,7 @@ package app
 import (
 	"bufio"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -101,6 +102,30 @@ func (app *App) Run(ctx context.Context, input io.Reader) error {
 func (app *App) handleLLMResponse(ctx context.Context, chatHistory []llm.ChatMessage) ([]llm.ChatMessage, error) {
 	llmResponse, err := app.llmClient.Chat(ctx, chatHistory)
 	if err != nil {
+		if errors.Is(err, llm.ErrClientResponse) {
+			fmt.Fprintf(os.Stdout, "\n%s\n", "(system) I couldn't reach the LLM. Check your network or make sure the host is running then try again")
+
+			return chatHistory, nil
+		}
+
+		if errors.Is(err, llm.ErrNon2xxResponse) {
+			fmt.Fprintf(os.Stdout, "\n%s\n", "(system) The LLM response with an error. Verify the model is pulled and the server is healthy before retrying.")
+
+			return chatHistory, nil
+		}
+
+		if errors.Is(err, llm.ErrResponseBody) {
+			fmt.Fprintf(os.Stdout, "\n%s\n", "(system) I couldn't read the LLM's reply. This might be a transient issue, please try again in a moment.")
+
+			return chatHistory, nil
+		}
+
+		if errors.Is(err, llm.ErrUnmarshalResponse) {
+			fmt.Fprintf(os.Stdout, "\n%s\n", "(system) The LLM sent back something I couldn't parse. It may be busy, try your request again shortly.")
+
+			return chatHistory, nil
+		}
+
 		return chatHistory, fmt.Errorf("%w: %s", ErrChatFailed, err)
 	}
 

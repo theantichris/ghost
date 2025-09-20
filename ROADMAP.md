@@ -10,7 +10,7 @@
   - [x] Strip out thinking block from response
   - [x] Send system prompt
   - [x] Have LLM greet user
-  - [ ] Have the LLM respond for recoverable errors
+  - [x] Handle recoverable errors
 - [ ] Stream LLM response
 - [ ] TUI scaffolding (Bubble Tea): single-window chat view with streaming render, input line, scrollback, basic keymap
 

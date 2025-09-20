@@ -41,8 +41,6 @@ func NewOllamaClient(baseURL, defaultModel string, httpClient *http.Client, logg
 	}, nil
 }
 
-// TODO: Can some error messages be returned as if from the API and recovered?
-
 // Chat sends a message to the Ollama API.
 func (ollama OllamaClient) Chat(ctx context.Context, chatHistory []ChatMessage) (ChatMessage, error) {
 	if len(chatHistory) == 0 {
@@ -75,7 +73,7 @@ func (ollama OllamaClient) Chat(ctx context.Context, chatHistory []ChatMessage) 
 
 	clientResponse, err := ollama.httpClient.Do(clientRequest)
 	if err != nil {
-		return ChatMessage{}, fmt.Errorf("%w: %s", ErrClientResponse, err)
+		return ChatMessage{}, fmt.Errorf("%w: %s", ErrClientResponse, err) // TODO: Recoverable
 	}
 
 	defer clientResponse.Body.Close()
@@ -83,20 +81,20 @@ func (ollama OllamaClient) Chat(ctx context.Context, chatHistory []ChatMessage) 
 	if clientResponse.StatusCode/100 != 2 {
 		responseBody, err := io.ReadAll(clientResponse.Body)
 		if err != nil {
-			return ChatMessage{}, fmt.Errorf("%w: status=%d %s: %s", ErrResponseBody, clientResponse.StatusCode, http.StatusText(clientResponse.StatusCode), err)
+			return ChatMessage{}, fmt.Errorf("%w: status=%d %s: %s", ErrResponseBody, clientResponse.StatusCode, http.StatusText(clientResponse.StatusCode), err) // TODO: Recoverable
 		}
 
 		var apiError apiError
 		if err := json.Unmarshal(responseBody, &apiError); err == nil && apiError.Error != "" {
-			return ChatMessage{}, fmt.Errorf("%w: status=%d %s api_error=%s", ErrNon2xxResponse, clientResponse.StatusCode, http.StatusText(clientResponse.StatusCode), apiError.Error)
+			return ChatMessage{}, fmt.Errorf("%w: status=%d %s api_error=%s", ErrNon2xxResponse, clientResponse.StatusCode, http.StatusText(clientResponse.StatusCode), apiError.Error) // TODO: Recoverable
 		}
 
-		return ChatMessage{}, fmt.Errorf("%w: status=%d %s body=%s", ErrNon2xxResponse, clientResponse.StatusCode, http.StatusText(clientResponse.StatusCode), string(responseBody))
+		return ChatMessage{}, fmt.Errorf("%w: status=%d %s body=%s", ErrNon2xxResponse, clientResponse.StatusCode, http.StatusText(clientResponse.StatusCode), string(responseBody)) // TODO: Recoverable
 	}
 
 	responseBody, err := io.ReadAll(clientResponse.Body)
 	if err != nil {
-		return ChatMessage{}, fmt.Errorf("%w: %s", ErrResponseBody, err)
+		return ChatMessage{}, fmt.Errorf("%w: %s", ErrResponseBody, err) // TODO: Recoverable
 	}
 
 	ollama.logger.Info("received response from Ollama API", slog.String("component", "ollama client"), slog.String("status code", strconv.Itoa(clientResponse.StatusCode)))
@@ -105,7 +103,7 @@ func (ollama OllamaClient) Chat(ctx context.Context, chatHistory []ChatMessage) 
 	var chatResponse ChatResponse
 	err = json.Unmarshal(responseBody, &chatResponse)
 	if err != nil {
-		return ChatMessage{}, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
+		return ChatMessage{}, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err) // TODO: Recoverable
 	}
 
 	return chatResponse.Message, nil
