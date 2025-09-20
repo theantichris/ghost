@@ -10,7 +10,7 @@
   - [ ] Strip out thinking block from response
   - [ ] Send system prompt
   - [ ] Have LLM greet user
-  - [ ] Stream LLM response
+- [ ] Stream LLM response
 - [ ] TUI scaffolding (Bubble Tea): single-window chat view with streaming render, input line, scrollback, basic keymap
 
 ## Phase 2: Card Management
