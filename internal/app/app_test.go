@@ -32,7 +32,7 @@ func TestNew(t *testing.T) {
 	t.Run("creates a new app instance", func(t *testing.T) {
 		t.Parallel()
 
-		app, err := New(&llm.MockLLMClient{}, logger)
+		app, err := New(&llm.MockLLMClient{}, false, logger)
 
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
@@ -46,7 +46,7 @@ func TestNew(t *testing.T) {
 	t.Run("returns error for nil llmClient", func(t *testing.T) {
 		t.Parallel()
 
-		_, err := New(nil, logger)
+		_, err := New(nil, false, logger)
 
 		if err == nil {
 			t.Fatalf("expected error for nil llmClient, got nil")
@@ -62,7 +62,7 @@ func TestRun(t *testing.T) {
 	t.Run("runs the app without error", func(t *testing.T) {
 		t.Parallel()
 
-		app, err := New(&llm.MockLLMClient{}, logger)
+		app, err := New(&llm.MockLLMClient{}, false, logger)
 		if err != nil {
 			t.Fatalf("expected no error creating app, got %v", err)
 		}
@@ -80,7 +80,7 @@ func TestRun(t *testing.T) {
 			ReturnError: true,
 		}
 
-		app, err := New(llmClient, logger)
+		app, err := New(llmClient, false, logger)
 		if err != nil {
 			t.Fatalf("expected no error creating app, got %v", err)
 		}
@@ -98,7 +98,7 @@ func TestRun(t *testing.T) {
 	t.Run("handles empty input gracefully", func(t *testing.T) {
 		t.Parallel()
 
-		app, err := New(&llm.MockLLMClient{}, logger)
+		app, err := New(&llm.MockLLMClient{}, false, logger)
 		if err != nil {
 			t.Fatalf("expected no error creating app, got %v", err)
 		}
@@ -112,7 +112,7 @@ func TestRun(t *testing.T) {
 	t.Run("returns error if reading input fails", func(t *testing.T) {
 		t.Parallel()
 
-		app, err := New(&llm.MockLLMClient{}, logger)
+		app, err := New(&llm.MockLLMClient{}, false, logger)
 		if err != nil {
 			t.Fatalf("expected no error creating app, got %v", err)
 		}
@@ -130,7 +130,7 @@ func TestRun(t *testing.T) {
 	t.Run("exits gracefully when EOF is reached", func(t *testing.T) {
 		t.Parallel()
 
-		app, err := New(&llm.MockLLMClient{}, logger)
+		app, err := New(&llm.MockLLMClient{}, false, logger)
 		if err != nil {
 			t.Fatalf("expected no error creating app, got %v", err)
 		}

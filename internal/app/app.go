@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/theantichris/ghost/internal/llm"
 )
 
@@ -16,10 +17,11 @@ import (
 type App struct {
 	llmClient llm.LLMClient
 	logger    *slog.Logger
+	debug     bool
 }
 
 // New initializes a new App instance with the provided LLM client.
-func New(llmClient llm.LLMClient, logger *slog.Logger) (*App, error) {
+func New(llmClient llm.LLMClient, debug bool, logger *slog.Logger) (*App, error) {
 	if llmClient == nil {
 		return nil, ErrLLMClientNil
 	}
@@ -29,6 +31,7 @@ func New(llmClient llm.LLMClient, logger *slog.Logger) (*App, error) {
 	return &App{
 		llmClient: llmClient,
 		logger:    logger,
+		debug:     debug,
 	}, nil
 }
 
@@ -58,6 +61,7 @@ func (app *App) Run(ctx context.Context, input io.Reader) error {
 		if userInput == "/bye" {
 			// TODO: Add goodbye message from LLM
 			app.logger.Info("stopping chat loop", slog.String("component", "app"))
+
 			break
 		}
 
@@ -73,6 +77,10 @@ func (app *App) Run(ctx context.Context, input io.Reader) error {
 		chatHistory = append(chatHistory, llmResponse)
 
 		fmt.Fprintf(os.Stdout, "\nGhost: %s\n", llmResponse.Content)
+	}
+
+	if app.debug {
+		spew.Dump(chatHistory)
 	}
 
 	return nil

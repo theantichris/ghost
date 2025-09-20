@@ -18,10 +18,10 @@ import (
 // main is the entry point for the ghost CLI application.
 func main() {
 	defaultModel := flag.String("model", "", "LLM model to use (overrides DEFAULT_MODEL env var)")
-	isDebugMode := flag.Bool("debug", false, "Enable debug mode")
+	debug := flag.Bool("debug", false, "Enable debug mode")
 	flag.Parse()
 
-	logger := createLogger(*isDebugMode)
+	logger := createLogger(*debug)
 	logger.Info("ghost CLI starting", slog.String("component", "main"))
 
 	loadEnv(logger)
@@ -50,7 +50,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	ghostApp, err := app.New(llmClient, logger)
+	ghostApp, err := app.New(llmClient, *debug, logger)
 	if err != nil {
 		logger.Error(err.Error(), slog.String("component", "main"))
 		os.Exit(1)
