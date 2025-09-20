@@ -61,6 +61,7 @@ pkg/                 Only if stable external API needed
 - Standard imports grouping: stdlib / third-party / internal
 - Keep functions small; avoid premature abstraction
 - Sentinel errors (`ErrURLEmpty`, etc.) + `%w` wrapping at boundaries
+- Avoid magic strings; promote shared literals (messages, prompts, flags) to constants for reuse across code, tests, and docs.
 - Prefer explicit error handling over cleverness
 - Avoid new dependencies unless essential
 

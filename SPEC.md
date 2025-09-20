@@ -181,6 +181,7 @@ Log levels (guideline):
 - Separate test cases for a function using `test.Run()`.
 - Run tests in parallel when possible using `t.Parallel()`.
 - Use sentinel errors and `errors.Is` for error assertions in tests, rather than string matching.
+- Avoid magic strings by hoisting shared literals (messages, prompts, keys) into constants shared across code and tests.
 - Run: `go test ./...`; optional: `go vet ./...`; later: integrate `golangci-lint`.
 - Race checks: `go test -race` (periodic / CI optional early on).
 
