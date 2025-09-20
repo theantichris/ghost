@@ -17,7 +17,7 @@ import (
 
 // main is the entry point for the ghost CLI application.
 func main() {
-	defaultModel := flag.String("model", "", "LLM model to use (overrides DEFAULT_MODEL env var)")
+	model := flag.String("model", "", "LLM model to use (overrides DEFAULT_MODEL env var)")
 	debug := flag.Bool("debug", false, "Enable debug mode")
 	flag.Parse()
 
@@ -28,14 +28,14 @@ func main() {
 
 	ollamaBaseURL := os.Getenv("OLLAMA_BASE_URL")
 
-	if defaultModel == nil || *defaultModel == "" {
+	if model == nil || *model == "" {
 		val := os.Getenv("DEFAULT_MODEL")
-		defaultModel = &val
+		model = &val
 	}
 
 	httpClient := &http.Client{Timeout: 0 * time.Second}
 
-	llmClient, err := llm.NewOllamaClient(ollamaBaseURL, *defaultModel, httpClient, logger)
+	llmClient, err := llm.NewOllamaClient(ollamaBaseURL, *model, httpClient, logger)
 	if err != nil {
 		if errors.Is(err, llm.ErrURLEmpty) {
 			logger.Error("OLLAMA_BASE_URL environment variable is not set", slog.String("component", "main"))
