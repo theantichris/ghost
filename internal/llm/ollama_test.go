@@ -9,6 +9,8 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 var logger *slog.Logger = slog.New(slog.NewTextHandler(io.Discard, nil))
@@ -92,18 +94,29 @@ func TestChat(t *testing.T) {
 			t.Fatalf("expected no error creating client, got %v", err)
 		}
 
-		response, err := client.Chat(context.Background(), "Hello, there!")
+		userMessage := ChatMessage{Role: User, Content: "Hello, there!"}
+		llmMessage := ChatMessage{Role: Assistant, Content: "Hello, user!"}
+
+		chatHistory := []ChatMessage{
+			userMessage,
+		}
+
+		expected := []ChatMessage{
+			userMessage,
+			llmMessage,
+		}
+
+		actual, err := client.Chat(context.Background(), chatHistory)
 		if err != nil {
 			t.Fatalf("expected no error calling Chat, got %v", err)
 		}
 
-		expectedResponse := "Hello, user!"
-		if response != expectedResponse {
-			t.Errorf("expected response '%s', got '%s'", expectedResponse, response)
+		if !cmp.Equal(actual, expected) {
+			t.Errorf("expected response to be %v, got %v", expected, actual)
 		}
 	})
 
-	t.Run("returns error for missing message", func(t *testing.T) {
+	t.Run("returns error for empty chat history", func(t *testing.T) {
 		t.Parallel()
 
 		app, err := NewOllamaClient("http://test.dev", "llama2", http.DefaultClient, logger)
@@ -111,13 +124,13 @@ func TestChat(t *testing.T) {
 			t.Fatal("expected no error creating client, got", err)
 		}
 
-		_, err = app.Chat(context.Background(), "")
+		_, err = app.Chat(context.Background(), []ChatMessage{})
 		if err == nil {
 			t.Fatal("expected error for empty message, got nil")
 		}
 
-		if !errors.Is(err, ErrMessageEmpty) {
-			t.Errorf("expected ErrMessageEmpty, got %v", err)
+		if !errors.Is(err, ErrChatHistoryEmpty) {
+			t.Errorf("expected ErrChatHistoryEmpty, got %v", err)
 		}
 	})
 
@@ -129,7 +142,11 @@ func TestChat(t *testing.T) {
 			t.Fatalf("expected no error creating client, got %v", err)
 		}
 
-		_, err = client.Chat(context.Background(), "Hello, there!")
+		chatHistory := []ChatMessage{
+			{Role: User, Content: "Hello, there!"},
+		}
+
+		_, err = client.Chat(context.Background(), chatHistory)
 		if err == nil {
 			t.Fatal("expected error for invalid URL, got nil")
 		}
@@ -149,7 +166,11 @@ func TestChat(t *testing.T) {
 			t.Fatalf("expected no error creating client, got %v", err)
 		}
 
-		_, err = client.Chat(context.Background(), "Hello, there!")
+		chatHistory := []ChatMessage{
+			{Role: User, Content: "Hello, there!"},
+		}
+
+		_, err = client.Chat(context.Background(), chatHistory)
 		if err == nil {
 			t.Fatal("expected error for failed HTTP request, got nil")
 		}
@@ -177,7 +198,11 @@ func TestChat(t *testing.T) {
 			t.Fatalf("expected no error creating client, got %v", err)
 		}
 
-		_, err = client.Chat(context.Background(), "Hello, there!")
+		chatHistory := []ChatMessage{
+			{Role: User, Content: "Hello, there!"},
+		}
+
+		_, err = client.Chat(context.Background(), chatHistory)
 		if err == nil {
 			t.Fatal("expected error for non-200 HTTP response, got nil")
 		}
@@ -205,7 +230,11 @@ func TestChat(t *testing.T) {
 			t.Fatalf("expected no error creating client, got %v", err)
 		}
 
-		_, err = client.Chat(context.Background(), "Hello, there!")
+		chatHistory := []ChatMessage{
+			{Role: User, Content: "Hello, there!"},
+		}
+
+		_, err = client.Chat(context.Background(), chatHistory)
 		if err == nil {
 			t.Fatal("expected error for invalid JSON response, got nil")
 		}

@@ -19,7 +19,7 @@ type MockLLMClient struct {
 // Chat is a mock implementation of the Chat method.
 func (mock MockLLMClient) Chat(ctx context.Context, message string) (string, error) {
 	if mock.ReturnError {
-		return "", fmt.Errorf("ollama client chat: %w", ErrMessageEmpty)
+		return "", fmt.Errorf("ollama client chat: %w", ErrChatHistoryEmpty)
 	}
 
 	return "", nil

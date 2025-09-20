@@ -4,7 +4,7 @@ import "errors"
 
 var ErrURLEmpty = errors.New("baseURL cannot be empty")
 var ErrModelEmpty = errors.New("defaultModel cannot be empty")
-var ErrMessageEmpty = errors.New("message cannot be empty")
+var ErrChatHistoryEmpty = errors.New("chat history cannot be empty")
 var ErrMarshalRequest = errors.New("failed to marshal request body")
 var ErrCreateRequest = errors.New("failed to create HTTP request")
 var ErrClientResponse = errors.New("failed to get response from Ollama API")

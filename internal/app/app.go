@@ -39,6 +39,11 @@ func (app *App) Run(ctx context.Context, input io.Reader) error {
 	scanner := bufio.NewScanner(input)
 	var userInput string
 
+	// Create chat history slice
+	// Append user input as chat message
+	// Append LLM response as chat message
+	// Send entire chat history with each request to maintain context
+
 	for {
 		fmt.Print("User: ")
 
