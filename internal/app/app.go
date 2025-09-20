@@ -16,6 +16,7 @@ import (
 
 const systemPrompt string = "You are Ghost, a concise terminal assistant. Greet the user warmly once at the start of the conversation, then answer their requests directly and briefly. Ask for clarification only when needed."
 
+// Config holds the optional configuration options for App.
 type Config struct {
 	Output io.Writer
 	Debug  bool
@@ -67,7 +68,7 @@ func (app *App) Run(ctx context.Context, input io.Reader) error {
 
 	for {
 		endChat := false
-		fmt.Print("User: ")
+		fmt.Fprint(app.output, "User: ")
 
 		if ok := scanner.Scan(); !ok {
 			if err := scanner.Err(); err != nil {

@@ -6,12 +6,10 @@ import (
 )
 
 func TestMockLLMClientChat(t *testing.T) {
-	t.Run("returns no error when ReturnError is false", func(t *testing.T) {
+	t.Run("returns no error when Error is not set", func(t *testing.T) {
 		t.Parallel()
 
-		client := &MockLLMClient{
-			ReturnError: false,
-		}
+		client := &MockLLMClient{}
 
 		messageHistory := []ChatMessage{
 			{Role: User, Content: "Hello"},
@@ -23,11 +21,11 @@ func TestMockLLMClientChat(t *testing.T) {
 		}
 	})
 
-	t.Run("returns error when ReturnError is true", func(t *testing.T) {
+	t.Run("returns error when Error is set", func(t *testing.T) {
 		t.Parallel()
 
 		client := &MockLLMClient{
-			ReturnError: true,
+			Error: ErrChatHistoryEmpty,
 		}
 
 		messageHistory := []ChatMessage{

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"io"
 	"log/slog"
+	"strings"
 	"testing"
 
 	"github.com/theantichris/ghost/internal/llm"
@@ -25,21 +26,17 @@ func (reader *faultyReader) Read(p []byte) (n int, err error) {
 		return n, nil
 	}
 
-	return 0, err
+	return 0, reader.err
 }
 
 func TestNew(t *testing.T) {
 	t.Run("creates a new app instance", func(t *testing.T) {
 		t.Parallel()
 
-		config := Config{
-			Debug: false,
-		}
-
+		config := Config{Debug: false}
 		llmClient := &llm.MockLLMClient{}
 
 		app, err := New(llmClient, logger, config)
-
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}
@@ -53,11 +50,11 @@ func TestNew(t *testing.T) {
 		}
 
 		if app.debug != config.Debug {
-			t.Errorf("expected debug to be false, got true")
+			t.Errorf("expected debug to equal %v", config.Debug)
 		}
 
 		if app.logger != logger {
-			t.Errorf("unexpected logger %v, gto %v", logger, app.logger)
+			t.Errorf("unexpected logger %v, got %v", logger, app.logger)
 		}
 	})
 
@@ -65,7 +62,6 @@ func TestNew(t *testing.T) {
 		t.Parallel()
 
 		_, err := New(nil, logger, Config{})
-
 		if err == nil {
 			t.Fatalf("expected error for nil llmClient, got nil")
 		}
@@ -80,7 +76,7 @@ func TestRun(t *testing.T) {
 	t.Run("runs the app without error", func(t *testing.T) {
 		t.Parallel()
 
-		app, err := New(&llm.MockLLMClient{}, logger, Config{})
+		app, err := New(&llm.MockLLMClient{}, logger, Config{Output: &bytes.Buffer{}})
 		if err != nil {
 			t.Fatalf("expected no error creating app, got %v", err)
 		}
@@ -94,11 +90,8 @@ func TestRun(t *testing.T) {
 	t.Run("returns error if llmClient.Chat fails", func(t *testing.T) {
 		t.Parallel()
 
-		llmClient := &llm.MockLLMClient{
-			ReturnError: true,
-		}
-
-		app, err := New(llmClient, logger, Config{})
+		llmClient := &llm.MockLLMClient{Error: ErrChatFailed}
+		app, err := New(llmClient, logger, Config{Output: &bytes.Buffer{}})
 		if err != nil {
 			t.Fatalf("expected no error creating app, got %v", err)
 		}
@@ -116,7 +109,7 @@ func TestRun(t *testing.T) {
 	t.Run("handles empty input gracefully", func(t *testing.T) {
 		t.Parallel()
 
-		app, err := New(&llm.MockLLMClient{}, logger, Config{})
+		app, err := New(&llm.MockLLMClient{}, logger, Config{Output: &bytes.Buffer{}})
 		if err != nil {
 			t.Fatalf("expected no error creating app, got %v", err)
 		}
@@ -130,12 +123,12 @@ func TestRun(t *testing.T) {
 	t.Run("returns error if reading input fails", func(t *testing.T) {
 		t.Parallel()
 
-		app, err := New(&llm.MockLLMClient{}, logger, Config{})
+		app, err := New(&llm.MockLLMClient{}, logger, Config{Output: &bytes.Buffer{}})
 		if err != nil {
 			t.Fatalf("expected no error creating app, got %v", err)
 		}
 
-		err = app.Run(context.Background(), &faultyReader{})
+		err = app.Run(context.Background(), &faultyReader{err: errors.New("boom")})
 		if err == nil {
 			t.Fatal("expected error running app with faulty reader, got nil")
 		}
@@ -148,7 +141,7 @@ func TestRun(t *testing.T) {
 	t.Run("exits gracefully when EOF is reached", func(t *testing.T) {
 		t.Parallel()
 
-		app, err := New(&llm.MockLLMClient{}, logger, Config{})
+		app, err := New(&llm.MockLLMClient{}, logger, Config{Output: &bytes.Buffer{}})
 		if err != nil {
 			t.Fatalf("expected no error creating app, got %v", err)
 		}
@@ -156,6 +149,108 @@ func TestRun(t *testing.T) {
 		err = app.Run(context.Background(), bytes.NewBufferString("Hello\n"))
 		if err != nil {
 			t.Errorf("expected no error running app until EOF, got %v", err)
+		}
+	})
+}
+
+func TestHandleLLMResponse(t *testing.T) {
+	t.Run("prints message for ErrClientResponse", func(t *testing.T) {
+		t.Parallel()
+
+		llmClient := &llm.MockLLMClient{Error: llm.ErrClientResponse}
+		buffer := &bytes.Buffer{}
+
+		app, err := New(llmClient, logger, Config{Output: buffer})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+
+		chatHistory := []llm.ChatMessage{{Role: llm.System, Content: "test"}}
+		_, err = app.handleLLMResponse(context.Background(), chatHistory)
+		if err != nil {
+			t.Fatalf("expected handleLLMResponse to recover, got %v", err)
+		}
+
+		expected := "(system) I couldn't reach the LLM. Check your network or make sure the host is running then try again"
+		actual := strings.TrimSpace(buffer.String())
+
+		if actual != expected {
+			t.Errorf("expected system message %q, got %q", expected, actual)
+		}
+	})
+
+	t.Run("prints message for ErrNon2xxResponse", func(t *testing.T) {
+		t.Parallel()
+
+		llmClient := &llm.MockLLMClient{Error: llm.ErrNon2xxResponse}
+		buffer := &bytes.Buffer{}
+
+		app, err := New(llmClient, logger, Config{Output: buffer})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+
+		chatHistory := []llm.ChatMessage{{Role: llm.System, Content: "test"}}
+		_, err = app.handleLLMResponse(context.Background(), chatHistory)
+		if err != nil {
+			t.Fatalf("expected handleLLMResponse to recover, got %v", err)
+		}
+
+		expected := "(system) The LLM response with an error. Verify the model is pulled and the server is healthy before retrying."
+		actual := strings.TrimSpace(buffer.String())
+
+		if actual != expected {
+			t.Errorf("expected system message %q, got %q", expected, actual)
+		}
+	})
+
+	t.Run("prints message for ErrResponseBody", func(t *testing.T) {
+		t.Parallel()
+
+		llmClient := &llm.MockLLMClient{Error: llm.ErrResponseBody}
+		buffer := &bytes.Buffer{}
+
+		app, err := New(llmClient, logger, Config{Output: buffer})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+
+		chatHistory := []llm.ChatMessage{{Role: llm.System, Content: "test"}}
+		_, err = app.handleLLMResponse(context.Background(), chatHistory)
+		if err != nil {
+			t.Fatalf("expected handleLLMResponse to recover, got %v", err)
+		}
+
+		expected := "(system) I couldn't read the LLM's reply. This might be a transient issue, please try again in a moment."
+		actual := strings.TrimSpace(buffer.String())
+
+		if actual != expected {
+			t.Errorf("expected system message %q, got %q", expected, actual)
+		}
+	})
+
+	t.Run("prints message for ErrUnmarshalResponse", func(t *testing.T) {
+		t.Parallel()
+
+		llmClient := &llm.MockLLMClient{Error: llm.ErrUnmarshalResponse}
+		buffer := &bytes.Buffer{}
+
+		app, err := New(llmClient, logger, Config{Output: buffer})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+
+		chatHistory := []llm.ChatMessage{{Role: llm.System, Content: "test"}}
+		_, err = app.handleLLMResponse(context.Background(), chatHistory)
+		if err != nil {
+			t.Fatalf("expected handleLLMResponse to recover, got %v", err)
+		}
+
+		expected := "(system) The LLM sent back something I couldn't parse. It may be busy, try your request again shortly."
+		actual := strings.TrimSpace(buffer.String())
+
+		if actual != expected {
+			t.Errorf("expected system message %q, got %q", expected, actual)
 		}
 	})
 }
@@ -170,7 +265,7 @@ func TestStripThinkBlock(t *testing.T) {
 		actual := stripThinkBlock(input)
 
 		if actual != expected {
-			t.Errorf("expected '%q', got '%q'", expected, actual)
+			t.Errorf("expected %q, got %q", expected, actual)
 		}
 	})
 

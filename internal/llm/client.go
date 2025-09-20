@@ -12,33 +12,13 @@ type LLMClient interface {
 
 // MockLLMClient is a mock implementation of the LLMClient interface for testing purposes.
 type MockLLMClient struct {
-	ReturnError                bool
-	ReturnErrClientResponse    bool
-	ReturnErrNon2xxResponse    bool
-	ReturnErrResponseBody      bool
-	ReturnErrUnmarshalResponse bool
+	Error error
 }
 
 // Chat is a mock implementation of the Chat method.
 func (mock MockLLMClient) Chat(ctx context.Context, chatHistory []ChatMessage) (ChatMessage, error) {
-	if mock.ReturnError {
-		return ChatMessage{}, ErrChatHistoryEmpty
-	}
-
-	if mock.ReturnErrClientResponse {
-		return ChatMessage{}, ErrClientResponse
-	}
-
-	if mock.ReturnErrNon2xxResponse {
-		return ChatMessage{}, ErrNon2xxResponse
-	}
-
-	if mock.ReturnErrResponseBody {
-		return ChatMessage{}, ErrResponseBody
-	}
-
-	if mock.ReturnErrUnmarshalResponse {
-		return ChatMessage{}, ErrUnmarshalResponse
+	if mock.Error != nil {
+		return ChatMessage{}, mock.Error
 	}
 
 	return ChatMessage{}, nil
