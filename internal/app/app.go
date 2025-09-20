@@ -68,37 +68,47 @@ func New(llmClient llm.LLMClient, logger *slog.Logger, config Config) (*App, err
 
 // Run starts the application logic.
 func (app *App) Run(ctx context.Context, input io.Reader) error {
-	app.logger.Info("starting chat loop", slog.String("component", "app"))
-
-	scanner := bufio.NewScanner(input)
+	// Build chat history, send system prompt, and show greeting
 
 	chatHistory := []llm.ChatMessage{
 		{Role: llm.System, Content: systemPrompt},
 	}
 
-	llmResponse, err := app.llmClient.Chat(ctx, chatHistory)
+	fmt.Print(ghostLabel)
+	var tokens string
+	err := app.llmClient.StreamChat(ctx, chatHistory, func(token string) error {
+		fmt.Fprint(app.output, token)
+		tokens += token
+
+		return nil
+	})
+
 	if err != nil {
 		return app.handleLLMResponseError(err)
 	}
 
-	chatHistory = append(chatHistory, llmResponse)
+	message := llm.ChatMessage{Role: llm.Assistant, Content: tokens}
+	chatHistory = append(chatHistory, message)
 
-	response := stripThinkBlock(llmResponse.Content)
-	fmt.Fprintf(app.output, "%s%s\n", ghostLabel, response)
+	// Start chat loop
+
+	userInputScanner := bufio.NewScanner(input)
+
+	app.logger.Info("starting chat loop", slog.String("component", "app"))
 
 	for {
 		endChat := false
 		fmt.Fprint(app.output, userLabel)
 
-		if ok := scanner.Scan(); !ok {
-			if err := scanner.Err(); err != nil {
+		if ok := userInputScanner.Scan(); !ok {
+			if err := userInputScanner.Err(); err != nil {
 				return fmt.Errorf("%w: %s", ErrReadingInput, err)
 			}
 
 			break // EOF reached
 		}
 
-		userInput := strings.TrimSpace(scanner.Text())
+		userInput := strings.TrimSpace(userInputScanner.Text())
 		if userInput == "" {
 			continue
 		}
