@@ -81,7 +81,7 @@ func TestRun(t *testing.T) {
 			t.Fatalf("expected no error creating app, got %v", err)
 		}
 
-		err = app.Run(context.Background(), bytes.NewBufferString("/bye\n"))
+		err = app.Run(context.Background(), bytes.NewBufferString(exitCommand+"\n"))
 		if err != nil {
 			t.Errorf("expected no error running app, got %v", err)
 		}
@@ -114,7 +114,7 @@ func TestRun(t *testing.T) {
 			t.Fatalf("expected no error creating app, got %v", err)
 		}
 
-		err = app.Run(context.Background(), bytes.NewBufferString("\n\n/bye\n"))
+		err = app.Run(context.Background(), bytes.NewBufferString(" \n"))
 		if err != nil {
 			t.Errorf("expected no error running app with empty input, got %v", err)
 		}

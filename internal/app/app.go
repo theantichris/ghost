@@ -23,6 +23,15 @@ const (
 	msgUnmarshalResponse string = "(system) The LLM sent back something I couldn't parse. It may be busy, try your request again shortly."
 )
 
+const (
+	userLabel  string = "\nUser: "
+	ghostLabel string = "\nGhost: "
+)
+
+const (
+	exitCommand string = "/bye"
+)
+
 // Config holds the optional configuration options for App.
 type Config struct {
 	Output io.Writer
@@ -75,7 +84,7 @@ func (app *App) Run(ctx context.Context, input io.Reader) error {
 
 	for {
 		endChat := false
-		fmt.Fprint(app.output, "User: ")
+		fmt.Fprint(app.output, userLabel)
 
 		if ok := scanner.Scan(); !ok {
 			if err := scanner.Err(); err != nil {
@@ -90,7 +99,7 @@ func (app *App) Run(ctx context.Context, input io.Reader) error {
 			continue
 		}
 
-		if userInput == "/bye" {
+		if userInput == exitCommand {
 			endChat = true
 			userInput = "Goodbye!"
 		}
@@ -151,7 +160,7 @@ func (app *App) handleLLMResponse(ctx context.Context, chatHistory []llm.ChatMes
 	chatHistory = append(chatHistory, llmResponse)
 
 	response := stripThinkBlock(llmResponse.Content)
-	fmt.Fprintf(app.output, "\nGhost: %s\n", response)
+	fmt.Fprintf(app.output, "%s%s\n", ghostLabel, response)
 
 	return chatHistory, nil
 }

@@ -15,9 +15,14 @@ import (
 	"github.com/theantichris/ghost/internal/llm"
 )
 
+const (
+	baseURLLabel string = "OLLAMA_BASE_URL"
+	modelLabel   string = "DEFAULT_MODEL"
+)
+
 // main is the entry point for the ghost CLI application.
 func main() {
-	model := flag.String("model", "", "LLM model to use (overrides DEFAULT_MODEL env var)")
+	model := flag.String("model", "", "LLM model to use (overrides "+modelLabel+" env var)")
 	debug := flag.Bool("debug", false, "Enable debug mode")
 	flag.Parse()
 
@@ -26,10 +31,10 @@ func main() {
 
 	loadEnv(logger)
 
-	ollamaBaseURL := os.Getenv("OLLAMA_BASE_URL")
+	ollamaBaseURL := os.Getenv(baseURLLabel)
 
 	if model == nil || *model == "" {
-		val := os.Getenv("DEFAULT_MODEL")
+		val := os.Getenv(modelLabel)
 		model = &val
 	}
 
@@ -38,12 +43,12 @@ func main() {
 	llmClient, err := llm.NewOllamaClient(ollamaBaseURL, *model, httpClient, logger)
 	if err != nil {
 		if errors.Is(err, llm.ErrURLEmpty) {
-			logger.Error("OLLAMA_BASE_URL environment variable is not set", slog.String("component", "main"))
+			logger.Error(baseURLLabel+" environment variable is not set", slog.String("component", "main"))
 			os.Exit(2)
 		}
 
 		if errors.Is(err, llm.ErrModelEmpty) {
-			logger.Error("DEFAULT_MODEL environment variable is not set and -model not passed", slog.String("component", "main"))
+			logger.Error(modelLabel+" environment variable is not set and -model not passed", slog.String("component", "main"))
 			os.Exit(3)
 		}
 
