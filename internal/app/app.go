@@ -65,14 +65,14 @@ func (app *App) Run(ctx context.Context, input io.Reader) error {
 			continue
 		}
 
-		response, err := app.llmClient.Chat(ctx, chatHistory)
+		llmResponse, err := app.llmClient.Chat(ctx, chatHistory)
 		if err != nil {
 			return fmt.Errorf("%w: %s", ErrChatFailed, err)
 		}
 
-		chatHistory = append(chatHistory, response)
+		chatHistory = append(chatHistory, llmResponse)
 
-		fmt.Fprintf(os.Stdout, "\nGhost: %s\n", response)
+		fmt.Fprintf(os.Stdout, "\nGhost: %s\n", llmResponse.Content)
 	}
 
 	return nil
