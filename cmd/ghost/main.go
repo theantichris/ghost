@@ -38,7 +38,7 @@ func main() {
 		model = &val
 	}
 
-	httpClient := &http.Client{Timeout: 0 * time.Second}
+	httpClient := &http.Client{Timeout: time.Duration(0)}
 
 	llmClient, err := llm.NewOllamaClient(ollamaBaseURL, *model, httpClient, logger)
 	if err != nil {
