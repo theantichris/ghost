@@ -1,63 +1,102 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"flag"
-	"fmt"
 	"log/slog"
+	"net/http"
 	"os"
+	"time"
 
+	"github.com/MatusOllah/slogcolor"
 	"github.com/joho/godotenv"
 	"github.com/theantichris/ghost/internal/app"
 	"github.com/theantichris/ghost/internal/llm"
 )
 
+const (
+	baseURLLabel string = "OLLAMA_BASE_URL"
+	modelLabel   string = "DEFAULT_MODEL"
+)
+
+// main is the entry point for the ghost CLI application.
 func main() {
-	// Set up structured logging
-	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
-		Level: slog.LevelInfo,
-	}))
-	slog.SetDefault(logger)
-
-	// Load environment variables from .env file if it exists
-	err := godotenv.Load()
-	if err != nil {
-		slog.Info(".env file not found, proceeding with existing environment variables")
-	}
-	ollamaBaseURL := os.Getenv("OLLAMA_BASE_URL")
-
-	// Parse command-line flags
-	defaultModel := flag.String("model", os.Getenv("DEFAULT_MODEL"), "LLM model to use (overrides DEFAULT_MODEL env var)")
+	model := flag.String("model", "", "LLM model to use (overrides "+modelLabel+" env var)")
+	debug := flag.Bool("debug", false, "Enable debug mode")
 	flag.Parse()
 
-	// Initialize Ollama LLM client
-	llmClient, err := llm.NewOllamaClient(ollamaBaseURL, *defaultModel, logger)
-	if err != nil {
-		logger.Error("failed to create Ollama client", slog.Any("error", err.Error()))
-		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+	logger := createLogger(*debug)
+	logger.Info("ghost CLI starting", slog.String("component", "main"))
 
+	loadEnv(logger)
+
+	ollamaBaseURL := os.Getenv(baseURLLabel)
+
+	if model == nil || *model == "" {
+		val := os.Getenv(modelLabel)
+		model = &val
+	}
+
+	httpClient := &http.Client{Timeout: time.Duration(0)}
+
+	llmClient, err := llm.NewOllamaClient(ollamaBaseURL, *model, httpClient, logger)
+	if err != nil {
 		if errors.Is(err, llm.ErrURLEmpty) {
-			logger.Error("OLLAMA_BASE_URL is required but not set")
-			fmt.Fprintf(os.Stderr, "error: OLLAMA_BASE_URL is required but not set\n")
+			logger.Error(baseURLLabel+" environment variable is not set", slog.String("component", "main"))
 			os.Exit(2)
 		}
 
 		if errors.Is(err, llm.ErrModelEmpty) {
-			logger.Error("DEFAULT_MODEL is required but not set")
-			fmt.Fprintf(os.Stderr, "error: DEFAULT_MODEL is required but not set\n")
+			logger.Error(modelLabel+" environment variable is not set and -model not passed", slog.String("component", "main"))
 			os.Exit(3)
 		}
 
 		os.Exit(1)
 	}
 
-	// Initialize the main application
-	_, err = app.New(llmClient, logger)
+	config := app.Config{Debug: *debug}
+
+	ghostApp, err := app.New(llmClient, logger, config)
 	if err != nil {
-		logger.Error("failed to create app", slog.String("error", err.Error()))
-		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		logger.Error(err.Error(), slog.String("component", "main"))
 		os.Exit(1)
 	}
 
-	// TODO: Run app
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	err = ghostApp.Run(ctx, os.Stdin)
+	if err != nil {
+		logger.Error(err.Error(), slog.String("component", "main"))
+		os.Exit(1)
+	}
+}
+
+// loadEnv loads environment variables from a .env file if it exists.
+func loadEnv(logger *slog.Logger) {
+	err := godotenv.Load()
+	if err != nil {
+		logger.Info(".env file not found, proceeding with existing environment variables", slog.String("component", "main"))
+	} else {
+		logger.Info(".env file loaded successfully", slog.String("component", "main"))
+	}
+}
+
+// createLogger initializes and returns a structured logger.
+func createLogger(debugMode bool) *slog.Logger {
+	var logLevel = slog.LevelWarn
+
+	if debugMode {
+		logLevel = slog.LevelDebug
+	}
+
+	logger := slog.New(slogcolor.NewHandler(os.Stderr, &slogcolor.Options{
+		Level:      logLevel,
+		TimeFormat: time.RFC3339,
+	}))
+
+	slog.SetDefault(logger)
+
+	return logger
 }

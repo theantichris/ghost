@@ -6,31 +6,6 @@ The vision for Ghost is inspired by cyberpunk media such as _Shadowrun_, _Cyberp
 
 Capabilities should include research, web searching, helping with code, generating images, executing tasks, setting up reminders, and chatting.
 
----
-
-## MVP Scope (Initial Deliverable)
-
-The first tagged release (MVP) intentionally limits scope for fast iteration and stability:
-
-- CLI only (no TUI yet) at `./cmd/assistant`
-- Streaming chat with a single Ollama model (flag or environment variable configured: `OLLAMA_BASE_URL`, `DEFAULT_MODEL`)
-- Basic web search tool (agent can decide to use tools without confirmation)
-- Simple tool execution framework (just enough to support web search & future expansion)
-- Basic logging (structured via `slog`) to stderr; model output to stdout
-- No persistent long‑term memory (session context only in-process)
-- No embedding / vector store yet (deferred)
-- Persona / Prompt system loading (Markdown cards)
-
-Everything else (TUI, RAG, multi-model abstraction, automation scheduling) is expressly out of MVP scope.
-
-Prompts and character personalities will be loaded via a **Card system**.
-
-Initially Ghost will use the **Ollama API** as the backend to access LLMs.
-
-Initial interaction will be through **CLI**; a **TUI** is planned post‑MVP.
-
----
-
 ## Technical Architecture
 
 ### Core Principles
@@ -46,6 +21,7 @@ Initial interaction will be through **CLI**; a **TUI** is planned post‑MVP.
 
 - **LLM Client**: Ollama API integration with tool support
 - **Conversation Manager**: Handle chat flow, context windows, streaming
+  - Seeds CLI sessions with the Ghost system prompt, captures the initial greeting before user input, maintains in-memory turn history, and exits on the `/bye` command.
 - **Tool Orchestrator**: Execute and manage external tools/functions
 
 #### 2. Memory System (Hybrid Approach)
@@ -95,9 +71,8 @@ The assistant should demonstrate:
 
 ### Security
 
-- Sandboxed code execution for safety
+- Sandboxes code execution for safety
 - Secure storage of sensitive information
-- Access control for different assistants
 - Safe handling of external API keys
 
 ### Scalability
@@ -111,11 +86,11 @@ The assistant should demonstrate:
 
 ## Card System (Personas & System Prompts)
 
-Cards define assistant personas, prompts, system behavior, and (later) allowed tools. For MVP only system prompt + name are required.
+Cards define assistant personas, prompts, system behavior, and (later) allowed tools.
 
-Format: Markdown with optional front matter (YAML). If front matter absent, entire file (minus leading heading) is the system prompt.
+Format: Markdown with optional front matter (YAML or TOML). If front matter is absent, entire file (minus leading heading) is the system prompt.
 
-Example (`cards/researcher.md`):
+Example (`researcher.md`):
 
 ```markdown
 ---
@@ -141,17 +116,16 @@ Tool permission gating is deferred until tools beyond web search are added.
 
 Flags override environment variables, which override internal defaults.
 
-| Concern | Flag             | Env                                | Default (MVP)         |
-| ------- | ---------------- | ---------------------------------- | --------------------- |
-| Model   | `-model`         | `OLLAMA_BASE_URL`, `DEFAULT_MODEL` | (required if not set) |
-| Stream  | `-stream` (bool) | N/A                                | true                  |
-| Card    | (future `-card`) | `GHOST_CARD` (future)              | built‑in basic        |
+| Concern | Flag     | Env             | Default (MVP)         |
+| ------- | -------- | --------------- | --------------------- |
+| Model   | `-model` | `DEFAULT_MODEL` | (required if not set) |
+| Debug logging | `-debug` | — | `false` |
 
-Config file (TOML/YAML) deliberately deferred.
+- Recoverable LLM failures (transport, non-2xx, decode) surface as system messages so sessions can continue without exiting.
 
 ---
 
-## Exit Codes (MVP Baseline)
+## Exit Codes
 
 | Code | Meaning                                         |
 | ---- | ----------------------------------------------- |
@@ -168,9 +142,9 @@ Codes may expand; backward compatibility will be maintained after first tag.
 
 ## Logging Strategy
 
-- Use `log/slog` with JSON handler when `LOG_FORMAT=json`, otherwise text.
 - Logs to stderr; model/token output to stdout (enables piping).
-- All operations accept `context.Context` for cancellation and trace correlation (future: add request IDs).
+- Explicit debug tooling (e.g., spew dumps) may write structured data to stdout when gated behind a developer-only flag.
+- All operations accept `context.Context` for cancellation and trace correlation.
 - Avoid panics outside `main`; return errors with `%w` for wrapping.
 
 Use sentinel errors (package-level variables, e.g., `var ErrModelEmpty = errors.New("model cannot be empty")`) for robust error matching and propagation. Wrap sentinel errors with `%w` when returning from functions, and prefer `errors.Is` for error checks in tests and consumers.
@@ -178,19 +152,22 @@ Use sentinel errors (package-level variables, e.g., `var ErrModelEmpty = errors.
 Example:
 
 ```go
-// internal/llm/errors.go
-package llm
-import "errors"
-var ErrModelUnavailable = errors.New("model unavailable")
+// Sentinel error definition
+var ErrClientResponse = errors.New("failed to get response from Ollama API")
 
-// internal/app/app.go
-if model == "" {
-  return nil, fmt.Errorf("app init: %w", ErrModelEmpty)
+// Wrapping at boundary
+if err != nil {
+    return "", fmt.Errorf("%w: %s", ErrClientResponse, err)
 }
 
-// internal/llm/ollama.go
-if !modelAvailable {
-  return nil, fmt.Errorf("llm: %w", ErrModelUnavailable)
+// Wrapping with extra context
+if statusCode/100 != 2 {
+    return "", fmt.Errorf("%w: status=%d %s body=%q", ErrNon2xxResponse, statusCode, http.StatusText(statusCode), string(responseBody))
+}
+
+// Checking in consumer
+if errors.Is(err, llm.ErrClientResponse) {
+    // handle error
 }
 ```
 
@@ -206,37 +183,17 @@ Log levels (guideline):
 ## Testing & Quality
 
 - Each internal package defines an interface to enable mocking in dependents (e.g., `llm.Client`).
-- Provide a lightweight fake Ollama client for deterministic tests (no network).
-- Golden tests (commit stable expected outputs) only at boundaries that are stable and low-churn (e.g., request serialization, tool manifest formatting).
-  Use sentinel errors and `errors.Is` for error assertions in tests, rather than string matching. Golden tests (commit stable expected outputs) only at boundaries that are stable and low-churn (e.g., request serialization, tool manifest formatting).
+- Separate test cases for a function using `test.Run()`.
+- Run tests in parallel when possible using `t.Parallel()`.
+- Use sentinel errors and `errors.Is` for error assertions in tests, rather than string matching.
+- Avoid magic strings by hoisting shared literals (messages, prompts, keys) into constants shared across code and tests.
 - Run: `go test ./...`; optional: `go vet ./...`; later: integrate `golangci-lint`.
 - Race checks: `go test -race` (periodic / CI optional early on).
 
----
-
-## Memory System Phases
-
-| Phase   | Scope                   | Persistence                | Notes                      |
-| ------- | ----------------------- | -------------------------- | -------------------------- |
-| 0 (MVP) | In-process context only | None                       | Simple slice of messages   |
-| 1       | Session memory          | File (JSON)                | Rotated per session ID     |
-| 2       | Long-term embeddings    | SQLite + future vector ext | Lightweight indexing       |
-| 3       | Conversation analysis   | Derived metadata           | Preference extraction      |
-| 4       | Knowledge pruning       | Background job             | Age + relevance thresholds |
-
-RAG and embeddings start no earlier than Phase 2.
-
----
-
-## Tool Execution (Interactive Safety)
-
-MVP includes a web search tool (implementation detail TBD). Rules:
+## Tool Execution
 
 - The agent decides if it needs to run a tool.
 - Rejections return an error mapped to exit code 4 if fatal.
-- Future: policy config to auto-approve certain tools.
-
-Execution boundaries (planned): no arbitrary file writes until explicit opt‑in tool added.
 
 ---
 
@@ -245,44 +202,6 @@ Execution boundaries (planned): no arbitrary file writes until explicit opt‑in
 - A single streaming response pipeline per request; use channels for token delivery.
 - Cancel on context done; ensure goroutines exit (no leaks).
 - Backpressure: token writer checks context and downstream errors; do not buffer unbounded.
-- Timeouts configurable later; MVP may rely on user Ctrl+C.
-
----
-
-## Future (Deferred) Decisions
-
-| Topic                                    | Status                 |
-| ---------------------------------------- | ---------------------- |
-| Vector store (Chroma/LanceDB/SQLite FTS) | Deferred until Phase 2 |
-| Config file                              | Deferred               |
-| Multi-backend LLM abstraction            | Out of scope MVP       |
-| Tool policy DSL                          | Deferred               |
-| TUI (Bubble Tea)                         | Post-MVP milestone     |
-
----
-
-## Minimal Threat Model
-
-Attack surfaces (early):
-
-- Web search tool (external HTTP requests)
-- LLM prompt injection via user input or retrieved content
-- Future tool execution proposals
-
-Initial mitigations:
-
-- Strict separation between system prompt and user content
-- No shell execution or file system writes in MVP
-- Environment variables only read; never logged verbatim
-- Environment variables only read; never logged verbatim. Supported: `OLLAMA_BASE_URL`, `DEFAULT_MODEL`.
-
-Deferred mitigations:
-
-- Output sanitization for rendered content
-- Sandboxed execution for code tools
-- API key scoping & encryption at rest
-
----
 
 ## Style & Conventions (Summary)
 
@@ -290,13 +209,3 @@ Deferred mitigations:
 - `context.Context` as first parameter after receiver.
 - Errors wrapped with `%w`; user-facing messages composed at the edge (CLI layer).
 - Prefer standard library; introduce third-party deps only with justification.
-
----
-
-## Open Questions / TBD
-
-1. Exact web search provider & implementation details
-2. Card discovery order customization (beyond MVP defaults)
-3. Structured tracing / metrics approach (if any) post-MVP
-
-These remain intentionally unspecified to preserve flexibility.
