@@ -21,6 +21,7 @@ Capabilities should include research, web searching, helping with code, generati
 
 - **LLM Client**: Ollama API integration with tool support
 - **Conversation Manager**: Handle chat flow, context windows, streaming
+  - Seeds CLI sessions with the Ghost system prompt, captures the initial greeting before user input, maintains in-memory turn history, and exits on the `/bye` command.
 - **Tool Orchestrator**: Execute and manage external tools/functions
 
 #### 2. Memory System (Hybrid Approach)
@@ -118,6 +119,9 @@ Flags override environment variables, which override internal defaults.
 | Concern | Flag     | Env             | Default (MVP)         |
 | ------- | -------- | --------------- | --------------------- |
 | Model   | `-model` | `DEFAULT_MODEL` | (required if not set) |
+| Debug logging | `-debug` | — | `false` |
+
+- Recoverable LLM failures (transport, non-2xx, decode) surface as system messages so sessions can continue without exiting.
 
 ---
 

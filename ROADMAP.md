@@ -10,6 +10,9 @@
   - [x] Strip out thinking block from response
   - [x] Send system prompt
   - [x] Have LLM greet user
+  - [x] Maintain in-memory chat history for each session
+  - [x] Allow `/bye` command to exit cleanly
+  - [x] Add debug flag with optional chat-history dump
   - [x] Handle recoverable errors
 - [ ] Stream LLM response
 - [ ] TUI scaffolding (Bubble Tea): single-window chat view with streaming render, input line, scrollback, basic keymap

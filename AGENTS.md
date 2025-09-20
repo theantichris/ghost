@@ -39,6 +39,7 @@ pkg/                 Only if stable external API needed
 - Each boundary returns wrapped errors upward; only CLI maps to exit codes
 - Internal packages include interface + mock for testing
 - Future features add new interfaces rather than mutating existing ones
+- Constructors that need optional behavior accept a config/options struct (e.g., output writers, debug toggles) instead of long positional argument lists.
 - Keep HTTP client reuse (no per-call instantiation)
 - Context as first param (after receiver) for cancelable operations; never store in structs
 
@@ -61,6 +62,7 @@ pkg/                 Only if stable external API needed
 - Standard imports grouping: stdlib / third-party / internal
 - Keep functions small; avoid premature abstraction
 - Sentinel errors (`ErrURLEmpty`, etc.) + `%w` wrapping at boundaries
+- Hoist user-facing strings (labels, commands, prompts) into shared constants so code and tests stay aligned.
 - Avoid magic strings; promote shared literals (messages, prompts, flags) to constants for reuse across code, tests, and docs.
 - Prefer explicit error handling over cleverness
 - Avoid new dependencies unless essential
@@ -173,4 +175,5 @@ go run ./cmd/ghost -model qwen3:8b               # Run (ensure Ollama running)
 ## External Integrations
 
 - **Ollama HTTP API** (`/api/chat` endpoint)
-  - Reference: <https://github.com/ollama/ollama> (context only; don't fetch during tests)
+  - Repo: <https://github.com/ollama/ollama> (context only; don't fetch during tests)
+  - API Reference: <https://github.com/ollama/ollama/blob/main/docs/api.md> (context only; don't fetch during tests)
