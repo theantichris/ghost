@@ -150,7 +150,7 @@ func (app *App) Run(ctx context.Context, input io.Reader) error {
 	app.logger.Info("stopping chat loop", slog.String("component", "app"))
 
 	if app.debug {
-		spew.Dump(chatHistory) // TODO: Check chat history before PR.
+		spew.Dump(chatHistory)
 	}
 
 	return nil

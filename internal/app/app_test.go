@@ -73,7 +73,7 @@ func TestNew(t *testing.T) {
 }
 
 func TestRun(t *testing.T) {
-	t.Run("outputs LLM messages", func(t *testing.T) {
+	t.Run("outputs LLM messages and handles exit", func(t *testing.T) {
 		t.Parallel()
 
 		callCount := 0 // Used to simulate the two streams in Run()
