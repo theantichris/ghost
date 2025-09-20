@@ -41,10 +41,10 @@ func NewOllamaClient(baseURL, defaultModel string, httpClient *http.Client, logg
 	}, nil
 }
 
-// Chat sends a message to the Ollama API.
-func (ollama OllamaClient) Chat(ctx context.Context, chatHistory []ChatMessage) (ChatMessage, error) {
+// preparePayload takes the chat history and returns the marshaled request body.
+func (ollama OllamaClient) preparePayload(chatHistory []ChatMessage) ([]byte, error) {
 	if len(chatHistory) == 0 {
-		return ChatMessage{}, ErrChatHistoryEmpty
+		return nil, ErrChatHistoryEmpty
 	}
 
 	chatRequest := ChatRequest{
@@ -55,7 +55,17 @@ func (ollama OllamaClient) Chat(ctx context.Context, chatHistory []ChatMessage) 
 
 	requestBody, err := json.Marshal(chatRequest)
 	if err != nil {
-		return ChatMessage{}, fmt.Errorf("%w: %s", ErrMarshalRequest, err)
+		return nil, fmt.Errorf("%w: %s", ErrMarshalRequest, err)
+	}
+
+	return requestBody, nil
+}
+
+// Chat sends a message to the Ollama API.
+func (ollama OllamaClient) Chat(ctx context.Context, chatHistory []ChatMessage) (ChatMessage, error) {
+	requestBody, err := ollama.preparePayload(chatHistory)
+	if err != nil {
+		return ChatMessage{}, err
 	}
 
 	requestCTX, cancel := context.WithTimeout(ctx, 2*time.Minute)
