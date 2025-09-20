@@ -1,4 +1,4 @@
-version: "1"
+version: "2"
 
 run:
   timeout: 3m
@@ -17,4 +17,3 @@ linters:
 issues:
   max-same-issues: 0
   max-issues-per-linter: 0
-
