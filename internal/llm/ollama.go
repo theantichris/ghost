@@ -53,7 +53,7 @@ func (ollama OllamaClient) Chat(ctx context.Context, chatHistory []ChatMessage) 
 
 	clientRequest, err := ollama.createHTTPRequest(requestCTX, requestBody)
 	if err != nil {
-		return ChatMessage{}, fmt.Errorf("%w: %s", ErrCreateRequest, err)
+		return ChatMessage{}, err
 	}
 
 	ollama.logger.Info("sending chat request to Ollama API", slog.String("component", "ollama client"), slog.String("url", ollama.baseURL+"/api/chat"), slog.String("method", http.MethodPost))
@@ -70,7 +70,7 @@ func (ollama OllamaClient) Chat(ctx context.Context, chatHistory []ChatMessage) 
 		}
 	}()
 
-	err = ollama.checkForHTTPError(clientResponse.StatusCode, clientRequest.Body)
+	err = ollama.checkForHTTPError(clientResponse.StatusCode, clientResponse.Body)
 	if err != nil {
 		return ChatMessage{}, err
 	}
