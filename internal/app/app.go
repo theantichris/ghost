@@ -17,13 +17,15 @@ import (
 const systemPrompt string = "You are Ghost, a concise terminal assistant. Greet the user warmly once at the start of the conversation, then answer their requests directly and briefly. Ask for clarification only when needed."
 
 type Config struct {
-	Debug bool
+	Output io.Writer
+	Debug  bool
 }
 
 // App represents the main application structure
 type App struct {
 	llmClient llm.LLMClient
 	logger    *slog.Logger
+	output    io.Writer
 	debug     bool
 }
 
@@ -35,9 +37,14 @@ func New(llmClient llm.LLMClient, logger *slog.Logger, config Config) (*App, err
 
 	logger.Info("ghost app initialized", slog.String("component", "app"))
 
+	if config.Output == nil {
+		config.Output = os.Stdout
+	}
+
 	return &App{
 		llmClient: llmClient,
 		logger:    logger,
+		output:    config.Output,
 		debug:     config.Debug,
 	}, nil
 }
@@ -107,25 +114,25 @@ func (app *App) handleLLMResponse(ctx context.Context, chatHistory []llm.ChatMes
 	llmResponse, err := app.llmClient.Chat(ctx, chatHistory)
 	if err != nil {
 		if errors.Is(err, llm.ErrClientResponse) {
-			fmt.Fprintf(os.Stdout, "\n%s\n", "(system) I couldn't reach the LLM. Check your network or make sure the host is running then try again")
+			fmt.Fprintf(app.output, "\n%s\n", "(system) I couldn't reach the LLM. Check your network or make sure the host is running then try again")
 
 			return chatHistory, nil
 		}
 
 		if errors.Is(err, llm.ErrNon2xxResponse) {
-			fmt.Fprintf(os.Stdout, "\n%s\n", "(system) The LLM response with an error. Verify the model is pulled and the server is healthy before retrying.")
+			fmt.Fprintf(app.output, "\n%s\n", "(system) The LLM response with an error. Verify the model is pulled and the server is healthy before retrying.")
 
 			return chatHistory, nil
 		}
 
 		if errors.Is(err, llm.ErrResponseBody) {
-			fmt.Fprintf(os.Stdout, "\n%s\n", "(system) I couldn't read the LLM's reply. This might be a transient issue, please try again in a moment.")
+			fmt.Fprintf(app.output, "\n%s\n", "(system) I couldn't read the LLM's reply. This might be a transient issue, please try again in a moment.")
 
 			return chatHistory, nil
 		}
 
 		if errors.Is(err, llm.ErrUnmarshalResponse) {
-			fmt.Fprintf(os.Stdout, "\n%s\n", "(system) The LLM sent back something I couldn't parse. It may be busy, try your request again shortly.")
+			fmt.Fprintf(app.output, "\n%s\n", "(system) The LLM sent back something I couldn't parse. It may be busy, try your request again shortly.")
 
 			return chatHistory, nil
 		}
@@ -136,7 +143,7 @@ func (app *App) handleLLMResponse(ctx context.Context, chatHistory []llm.ChatMes
 	chatHistory = append(chatHistory, llmResponse)
 
 	response := stripThinkBlock(llmResponse.Content)
-	fmt.Fprintf(os.Stdout, "\nGhost: %s\n", response)
+	fmt.Fprintf(app.output, "\nGhost: %s\n", response)
 
 	return chatHistory, nil
 }
