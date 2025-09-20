@@ -7,7 +7,7 @@
   - [x] Send single message from CLI to Ollama
   - [x] Disable logs for production
   - [x] Start and handle chat loop
-  - [ ] Strip out thinking block from response
+  - [x] Strip out thinking block from response
   - [ ] Send system prompt
   - [ ] Have LLM greet user
 - [ ] Stream LLM response
