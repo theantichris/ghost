@@ -44,6 +44,7 @@ func (app *App) Run(ctx context.Context, input io.Reader) error {
 	chatHistory := []llm.ChatMessage{}
 
 	for {
+		endChat := false
 		fmt.Print("User: ")
 
 		if ok := scanner.Scan(); !ok {
@@ -55,18 +56,17 @@ func (app *App) Run(ctx context.Context, input io.Reader) error {
 		}
 
 		userInput := strings.TrimSpace(scanner.Text())
-		userMessage := llm.ChatMessage{Role: llm.User, Content: userInput}
-		chatHistory = append(chatHistory, userMessage)
-
-		if userInput == "/bye" {
-			// TODO: Add goodbye message from LLM
-
-			break
-		}
-
 		if userInput == "" {
 			continue
 		}
+
+		if userInput == "/bye" {
+			endChat = true
+			userInput = "Goodbye!"
+		}
+
+		userMessage := llm.ChatMessage{Role: llm.User, Content: userInput}
+		chatHistory = append(chatHistory, userMessage)
 
 		llmResponse, err := app.llmClient.Chat(ctx, chatHistory)
 		if err != nil {
@@ -76,6 +76,10 @@ func (app *App) Run(ctx context.Context, input io.Reader) error {
 		chatHistory = append(chatHistory, llmResponse)
 
 		fmt.Fprintf(os.Stdout, "\nGhost: %s\n", llmResponse.Content)
+
+		if endChat {
+			break
+		}
 	}
 
 	app.logger.Info("stopping chat loop", slog.String("component", "app"))
