@@ -8,8 +8,9 @@
   - [x] Disable logs for production
   - [x] Start and handle chat loop
   - [x] Strip out thinking block from response
-  - [ ] Send system prompt
-  - [ ] Have LLM greet user
+  - [x] Send system prompt
+  - [x] Have LLM greet user
+  - [ ] Have the LLM respond for recoverable errors
 - [ ] Stream LLM response
 - [ ] TUI scaffolding (Bubble Tea): single-window chat view with streaming render, input line, scrollback, basic keymap
 

@@ -13,6 +13,8 @@ import (
 	"github.com/theantichris/ghost/internal/llm"
 )
 
+const systemPrompt string = "You are Ghost, a concise terminal assistant. Greet the user warmly once at the start of the conversation, then answer their requests directly and briefly. Ask for clarification only when needed."
+
 // App represents the main application structure
 type App struct {
 	llmClient llm.LLMClient
@@ -41,7 +43,20 @@ func (app *App) Run(ctx context.Context, input io.Reader) error {
 
 	scanner := bufio.NewScanner(input)
 
-	chatHistory := []llm.ChatMessage{}
+	// Add system prompt and greeting
+	chatHistory := []llm.ChatMessage{
+		{Role: llm.System, Content: systemPrompt},
+	}
+
+	llmResponse, err := app.llmClient.Chat(ctx, chatHistory)
+	if err != nil {
+		return fmt.Errorf("%w: %s", ErrChatFailed, err)
+	}
+
+	chatHistory = append(chatHistory, llmResponse)
+
+	response := stripThinkBlock(llmResponse.Content)
+	fmt.Fprintf(os.Stdout, "\nGhost: %s\n", response)
 
 	for {
 		endChat := false
@@ -75,9 +90,7 @@ func (app *App) Run(ctx context.Context, input io.Reader) error {
 
 		chatHistory = append(chatHistory, llmResponse)
 
-		// Handle thinking block
 		response := stripThinkBlock(llmResponse.Content)
-
 		fmt.Fprintf(os.Stdout, "\nGhost: %s\n", response)
 
 		if endChat {
