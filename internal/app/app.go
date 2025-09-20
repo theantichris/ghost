@@ -66,6 +66,32 @@ func New(llmClient llm.LLMClient, logger *slog.Logger, config Config) (*App, err
 	}, nil
 }
 
+func (app *App) getUserInput(scanner *bufio.Scanner) (string, bool, error) {
+	var endChat = false
+
+	fmt.Fprint(app.output, userLabel)
+
+	if ok := scanner.Scan(); !ok {
+		if err := scanner.Err(); err != nil {
+			return "", endChat, fmt.Errorf("%w: %s", ErrReadingInput, err)
+		}
+	}
+
+	input := strings.TrimSpace(scanner.Text())
+
+	// TODO: this is being sent to the LLM
+	if input == "" {
+		return "", endChat, nil // Don't send empty user input.
+	}
+
+	if input == exitCommand {
+		endChat = true
+		input = "Goodbye!"
+	}
+
+	return input, endChat, nil
+}
+
 // Run starts the application logic.
 func (app *App) Run(ctx context.Context, input io.Reader) error {
 	chatHistory := []llm.ChatMessage{{Role: llm.System, Content: systemPrompt}}
@@ -79,24 +105,9 @@ func (app *App) Run(ctx context.Context, input io.Reader) error {
 	userInputScanner := bufio.NewScanner(input)
 
 	for {
-		endChat := false
-		fmt.Fprint(app.output, userLabel)
-
-		if ok := userInputScanner.Scan(); !ok {
-			if err := userInputScanner.Err(); err != nil {
-				return fmt.Errorf("%w: %s", ErrReadingInput, err)
-			}
-		}
-
-		userInput := strings.TrimSpace(userInputScanner.Text())
-
-		if userInput == "" {
-			continue // Don't send empty user input.
-		}
-
-		if userInput == exitCommand {
-			endChat = true
-			userInput = "Goodbye!"
+		userInput, endChat, err := app.getUserInput(userInputScanner)
+		if err != nil {
+			return err
 		}
 
 		userMessage := llm.ChatMessage{Role: llm.User, Content: userInput}
