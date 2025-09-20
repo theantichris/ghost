@@ -60,7 +60,6 @@ func (app *App) Run(ctx context.Context, input io.Reader) error {
 
 		if userInput == "/bye" {
 			// TODO: Add goodbye message from LLM
-			app.logger.Info("stopping chat loop", slog.String("component", "app"))
 
 			break
 		}
@@ -78,6 +77,8 @@ func (app *App) Run(ctx context.Context, input io.Reader) error {
 
 		fmt.Fprintf(os.Stdout, "\nGhost: %s\n", llmResponse.Content)
 	}
+
+	app.logger.Info("stopping chat loop", slog.String("component", "app"))
 
 	if app.debug {
 		spew.Dump(chatHistory)
