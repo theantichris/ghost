@@ -13,7 +13,11 @@ func TestMockLLMClientChat(t *testing.T) {
 			ReturnError: false,
 		}
 
-		_, err := client.Chat(context.Background(), "Hello")
+		messageHistory := []ChatMessage{
+			{Role: User, Content: "Hello"},
+		}
+
+		_, err := client.Chat(context.Background(), messageHistory)
 		if err != nil {
 			t.Errorf("expected no error, got %v", err)
 		}
@@ -26,7 +30,11 @@ func TestMockLLMClientChat(t *testing.T) {
 			ReturnError: true,
 		}
 
-		_, err := client.Chat(context.Background(), "Hello")
+		messageHistory := []ChatMessage{
+			{Role: User, Content: "Hello"},
+		}
+
+		_, err := client.Chat(context.Background(), messageHistory)
 		if err == nil {
 			t.Error("expected error, got nil")
 		}

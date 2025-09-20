@@ -41,6 +41,8 @@ func NewOllamaClient(baseURL, defaultModel string, httpClient *http.Client, logg
 	}, nil
 }
 
+// TODO: Can some error messages be returned as if from the API and recovered?
+
 // Chat sends a message to the Ollama API.
 func (ollama OllamaClient) Chat(ctx context.Context, chatHistory []ChatMessage) ([]ChatMessage, error) {
 	if len(chatHistory) == 0 {
