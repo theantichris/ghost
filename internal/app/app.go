@@ -66,8 +66,80 @@ func New(llmClient llm.LLMClient, logger *slog.Logger, config Config) (*App, err
 	}, nil
 }
 
-// getUserInput gets the user's input and returns a llm.ChatMessage and endChat flag.
-func (app *App) getUserInput(scanner *bufio.Scanner) (llm.ChatMessage, bool, error) {
+// Run starts the application logic.
+func (app *App) Run(ctx context.Context, input io.Reader) error {
+	chatHistory := []llm.ChatMessage{{Role: llm.System, Content: systemPrompt}}
+
+	llmMessage, err := app.getLLMMessage(ctx, chatHistory)
+	if err != nil {
+		return err
+	}
+
+	chatHistory = append(chatHistory, llmMessage)
+
+	app.logger.Info("starting chat loop", slog.String("component", "app"))
+	userInputScanner := bufio.NewScanner(input)
+
+	for {
+		userMessage, endChat, err := app.getUserMessage(userInputScanner)
+		if err != nil {
+			if errors.Is(err, ErrUserInputEmpty) {
+				continue // Don't send empty user input.
+			}
+
+			return err
+		}
+
+		chatHistory = append(chatHistory, userMessage)
+
+		llmMessage, err := app.getLLMMessage(ctx, chatHistory)
+		if err != nil {
+			return err
+		}
+
+		chatHistory = append(chatHistory, llmMessage)
+
+		if endChat {
+			break
+		}
+	}
+
+	app.logger.Info("stopping chat loop", slog.String("component", "app"))
+
+	if app.debug {
+		spew.Dump(chatHistory)
+	}
+
+	return nil
+}
+
+// getLLMMessage sends the chat history to the LLM, streams the response and returns the LLM's message.
+func (app *App) getLLMMessage(ctx context.Context, chatHistory []llm.ChatMessage) (llm.ChatMessage, error) {
+	fmt.Fprint(app.output, ghostLabel)
+
+	var tokens string
+	err := app.llmClient.StreamChat(ctx, chatHistory, func(token string) {
+		fmt.Fprint(app.output, token)
+		tokens += token
+
+		// TODO: Remove <think> blocks.
+	})
+
+	fmt.Fprint(app.output, "\n") // Add newline after LLM message.
+
+	if err != nil {
+		if err := app.handleLLMResponseError(err); err != nil {
+			return llm.ChatMessage{}, err
+		}
+	}
+
+	message := llm.ChatMessage{Role: llm.Assistant, Content: tokens}
+
+	return message, nil
+}
+
+// getUserMessage gets the user's input and returns a llm.ChatMessage and endChat flag.
+func (app *App) getUserMessage(scanner *bufio.Scanner) (llm.ChatMessage, bool, error) {
 	var endChat = false
 
 	fmt.Fprint(app.output, userLabel)
@@ -92,75 +164,6 @@ func (app *App) getUserInput(scanner *bufio.Scanner) (llm.ChatMessage, bool, err
 	message := llm.ChatMessage{Role: llm.User, Content: input}
 
 	return message, endChat, nil
-}
-
-// Run starts the application logic.
-func (app *App) Run(ctx context.Context, input io.Reader) error {
-	chatHistory := []llm.ChatMessage{{Role: llm.System, Content: systemPrompt}}
-
-	chatHistory, err := app.streamLLMResponse(ctx, chatHistory)
-	if err != nil {
-		return err
-	}
-
-	app.logger.Info("starting chat loop", slog.String("component", "app"))
-	userInputScanner := bufio.NewScanner(input)
-
-	for {
-		userMessage, endChat, err := app.getUserInput(userInputScanner)
-		if err != nil {
-			if errors.Is(err, ErrUserInputEmpty) {
-				continue // Don't send empty user input.
-			}
-
-			return err
-		}
-
-		chatHistory = append(chatHistory, userMessage)
-
-		chatHistory, err = app.streamLLMResponse(ctx, chatHistory)
-		if err != nil {
-			return err
-		}
-
-		if endChat {
-			break
-		}
-	}
-
-	app.logger.Info("stopping chat loop", slog.String("component", "app"))
-
-	if app.debug {
-		spew.Dump(chatHistory)
-	}
-
-	return nil
-}
-
-// streamLLMResponse sends chat history to the LLM, streams the response and returns updated chat history.
-func (app *App) streamLLMResponse(ctx context.Context, chatHistory []llm.ChatMessage) ([]llm.ChatMessage, error) {
-	fmt.Fprint(app.output, ghostLabel)
-
-	var tokens string
-	err := app.llmClient.StreamChat(ctx, chatHistory, func(token string) {
-		fmt.Fprint(app.output, token)
-		tokens += token
-
-		// TODO: Remove <think> blocks.
-	})
-
-	fmt.Fprint(app.output, "\n") // Add newline after LLM message.
-
-	if err != nil {
-		if err := app.handleLLMResponseError(err); err != nil {
-			return chatHistory, err
-		}
-	}
-
-	message := llm.ChatMessage{Role: llm.Assistant, Content: tokens}
-	chatHistory = append(chatHistory, message)
-
-	return chatHistory, nil
 }
 
 // handleLLMResponseError shows a system message for recoverable errors and returns unrecoverable errors.
