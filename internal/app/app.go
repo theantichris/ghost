@@ -83,6 +83,8 @@ func (app *App) Run(ctx context.Context, input io.Reader) error {
 		return nil
 	})
 
+	fmt.Print("\n")
+
 	if err != nil {
 		return app.handleLLMResponseError(err)
 	}
@@ -91,10 +93,9 @@ func (app *App) Run(ctx context.Context, input io.Reader) error {
 	chatHistory = append(chatHistory, message)
 
 	// Start chat loop
+	app.logger.Info("starting chat loop", slog.String("component", "app"))
 
 	userInputScanner := bufio.NewScanner(input)
-
-	app.logger.Info("starting chat loop", slog.String("component", "app"))
 
 	for {
 		endChat := false
