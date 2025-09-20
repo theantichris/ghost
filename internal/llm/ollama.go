@@ -41,6 +41,57 @@ func NewOllamaClient(baseURL, defaultModel string, httpClient *http.Client, logg
 	}, nil
 }
 
+// Chat sends a message to the Ollama API.
+func (ollama OllamaClient) Chat(ctx context.Context, chatHistory []ChatMessage) (ChatMessage, error) {
+	requestBody, err := ollama.preparePayload(chatHistory)
+	if err != nil {
+		return ChatMessage{}, err
+	}
+
+	requestCTX, cancel := context.WithTimeout(ctx, 2*time.Minute)
+	defer cancel()
+
+	clientRequest, err := ollama.createHTTPRequest(requestCTX, requestBody)
+	if err != nil {
+		return ChatMessage{}, fmt.Errorf("%w: %s", ErrCreateRequest, err)
+	}
+
+	ollama.logger.Info("sending chat request to Ollama API", slog.String("component", "ollama client"), slog.String("url", ollama.baseURL+"/api/chat"), slog.String("method", http.MethodPost))
+	ollama.logger.Debug("request payload", slog.String("component", "ollama client"), slog.String("payload", string(requestBody)))
+
+	clientResponse, err := ollama.httpClient.Do(clientRequest)
+	if err != nil {
+		return ChatMessage{}, fmt.Errorf("%w: %s", ErrClientResponse, err)
+	}
+
+	defer func() {
+		if err := clientResponse.Body.Close(); err != nil {
+			ollama.logger.Error("failed to close response body", slog.String("component", "ollama client"), slog.String("error", err.Error()))
+		}
+	}()
+
+	err = ollama.checkForHTTPError(clientResponse.StatusCode, clientRequest.Body)
+	if err != nil {
+		return ChatMessage{}, err
+	}
+
+	responseBody, err := io.ReadAll(clientResponse.Body)
+	if err != nil {
+		return ChatMessage{}, fmt.Errorf("%w: %s", ErrResponseBody, err)
+	}
+
+	ollama.logger.Info("received response from Ollama API", slog.String("component", "ollama client"), slog.String("status code", strconv.Itoa(clientResponse.StatusCode)))
+	ollama.logger.Debug("response payload", slog.String("component", "ollama client"), slog.String("payload", string(responseBody)))
+
+	var chatResponse ChatResponse
+	err = json.Unmarshal(responseBody, &chatResponse)
+	if err != nil {
+		return ChatMessage{}, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
+	}
+
+	return chatResponse.Message, nil
+}
+
 // preparePayload takes the chat history and returns the marshaled request body.
 func (ollama OllamaClient) preparePayload(chatHistory []ChatMessage) ([]byte, error) {
 	if len(chatHistory) == 0 {
@@ -61,60 +112,33 @@ func (ollama OllamaClient) preparePayload(chatHistory []ChatMessage) ([]byte, er
 	return requestBody, nil
 }
 
-// Chat sends a message to the Ollama API.
-func (ollama OllamaClient) Chat(ctx context.Context, chatHistory []ChatMessage) (ChatMessage, error) {
-	requestBody, err := ollama.preparePayload(chatHistory)
+// createHTTPRequest creates the HTTP request with timeout and headers.
+func (ollama OllamaClient) createHTTPRequest(ctx context.Context, requestBody []byte) (*http.Request, error) {
+	clientRequest, err := http.NewRequestWithContext(ctx, http.MethodPost, ollama.baseURL+"/api/chat", bytes.NewReader(requestBody))
 	if err != nil {
-		return ChatMessage{}, err
-	}
-
-	requestCTX, cancel := context.WithTimeout(ctx, 2*time.Minute)
-	defer cancel()
-
-	clientRequest, err := http.NewRequestWithContext(requestCTX, http.MethodPost, ollama.baseURL+"/api/chat", bytes.NewReader(requestBody))
-	if err != nil {
-		return ChatMessage{}, fmt.Errorf("%w: %s", ErrCreateRequest, err)
+		return nil, fmt.Errorf("%w: %s", ErrCreateRequest, err)
 	}
 
 	clientRequest.Header.Set("Content-Type", "application/json")
 
-	ollama.logger.Info("sending chat request to Ollama API", slog.String("component", "ollama client"), slog.String("url", ollama.baseURL+"/api/chat"), slog.String("method", http.MethodPost))
-	ollama.logger.Debug("request payload", slog.String("component", "ollama client"), slog.String("payload", string(requestBody)))
+	return clientRequest, nil
+}
 
-	clientResponse, err := ollama.httpClient.Do(clientRequest)
-	if err != nil {
-		return ChatMessage{}, fmt.Errorf("%w: %s", ErrClientResponse, err)
-	}
-
-	defer clientResponse.Body.Close()
-
-	if clientResponse.StatusCode/100 != 2 {
-		responseBody, err := io.ReadAll(clientResponse.Body)
+// checkForHTTPError returns the correct error for the HTTP status code.
+func (ollama OllamaClient) checkForHTTPError(statusCode int, body io.ReadCloser) error {
+	if statusCode/100 != 2 {
+		responseBody, err := io.ReadAll(body)
 		if err != nil {
-			return ChatMessage{}, fmt.Errorf("%w: status=%d %s: %s", ErrResponseBody, clientResponse.StatusCode, http.StatusText(clientResponse.StatusCode), err)
+			return fmt.Errorf("%w: status=%d %s: %s", ErrResponseBody, statusCode, http.StatusText(statusCode), err)
 		}
 
 		var apiError apiError
 		if err := json.Unmarshal(responseBody, &apiError); err == nil && apiError.Error != "" {
-			return ChatMessage{}, fmt.Errorf("%w: status=%d %s api_error=%s", ErrNon2xxResponse, clientResponse.StatusCode, http.StatusText(clientResponse.StatusCode), apiError.Error)
+			return fmt.Errorf("%w: status=%d %s api_error=%s", ErrNon2xxResponse, statusCode, http.StatusText(statusCode), apiError.Error)
 		}
 
-		return ChatMessage{}, fmt.Errorf("%w: status=%d %s body=%s", ErrNon2xxResponse, clientResponse.StatusCode, http.StatusText(clientResponse.StatusCode), string(responseBody))
+		return fmt.Errorf("%w: status=%d %s body=%s", ErrNon2xxResponse, statusCode, http.StatusText(statusCode), string(responseBody))
 	}
 
-	responseBody, err := io.ReadAll(clientResponse.Body)
-	if err != nil {
-		return ChatMessage{}, fmt.Errorf("%w: %s", ErrResponseBody, err)
-	}
-
-	ollama.logger.Info("received response from Ollama API", slog.String("component", "ollama client"), slog.String("status code", strconv.Itoa(clientResponse.StatusCode)))
-	ollama.logger.Debug("response payload", slog.String("component", "ollama client"), slog.String("payload", string(responseBody)))
-
-	var chatResponse ChatResponse
-	err = json.Unmarshal(responseBody, &chatResponse)
-	if err != nil {
-		return ChatMessage{}, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
-	}
-
-	return chatResponse.Message, nil
+	return nil
 }
