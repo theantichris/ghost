@@ -32,14 +32,28 @@ func TestNew(t *testing.T) {
 	t.Run("creates a new app instance", func(t *testing.T) {
 		t.Parallel()
 
-		app, err := New(&llm.MockLLMClient{}, false, logger)
+		llmClient := &llm.MockLLMClient{}
+
+		app, err := New(llmClient, false, logger)
 
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}
 
 		if app == nil {
-			t.Error("expected app to be non-nil")
+			t.Fatal("expected app to be non-nil")
+		}
+
+		if app.llmClient != llmClient {
+			t.Errorf("unexpected llmClient %v", app.llmClient)
+		}
+
+		if app.debug {
+			t.Errorf("expected debug to be false, got true")
+		}
+
+		if app.logger != logger {
+			t.Errorf("unexpected logger %v", app.logger)
 		}
 	})
 
