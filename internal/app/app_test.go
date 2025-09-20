@@ -121,6 +121,83 @@ func TestRun(t *testing.T) {
 			t.Errorf("expected response %q, got %q", expected, actual)
 		}
 	})
+
+	t.Run("returns error when chat fails at LLM greeting", func(t *testing.T) {
+		t.Parallel()
+
+		llmClient := &llm.MockLLMClient{
+			StreamChatFunc: func(ctx context.Context, chatHistory []llm.ChatMessage,
+				onToken func(string)) error {
+
+				return ErrChatFailed
+			},
+		}
+
+		var outputBuff bytes.Buffer
+
+		app, err := New(llmClient, logger, Config{Output: &outputBuff})
+		if err != nil {
+			t.Fatalf("expected no error creating app, got %v", err)
+		}
+
+		err = app.Run(context.Background(), bytes.NewBufferString(exitCommand+"\n"))
+		if err == nil {
+			t.Fatalf("received no error when expecting one")
+		}
+
+		if !errors.Is(err, ErrChatFailed) {
+			t.Errorf("expected error %v, got %v", ErrChatFailed, err)
+		}
+	})
+
+	t.Run("returns error when chat fails in chat loop", func(t *testing.T) {
+		t.Parallel()
+
+		callCount := 0 // Used to simulate the two streams in Run()
+
+		llmClient := &llm.MockLLMClient{
+			StreamChatFunc: func(ctx context.Context, chatHistory []llm.ChatMessage,
+				onToken func(string)) error {
+				callCount++
+
+				switch callCount {
+				case 1:
+					tokens := []string{"Hello", ", ", "user", "!\n"}
+
+					for _, token := range tokens {
+						onToken(token)
+					}
+				case 2:
+					return ErrChatFailed
+				}
+
+				return nil
+			},
+		}
+
+		var outputBuff bytes.Buffer
+
+		app, err := New(llmClient, logger, Config{Output: &outputBuff})
+		if err != nil {
+			t.Fatalf("expected no error creating app, got %v", err)
+		}
+
+		err = app.Run(context.Background(), bytes.NewBufferString(exitCommand+"\n"))
+		if err == nil {
+			t.Fatalf("expected no error running app, got %v", err)
+		}
+
+		if !errors.Is(err, ErrChatFailed) {
+			t.Errorf("expected error %v, got %v", ErrChatFailed, err)
+		}
+
+		actual := outputBuff.String()
+		expected := "Hello, user!\n\nUser: "
+
+		if actual != expected {
+			t.Errorf("expected response %q, got %q", expected, actual)
+		}
+	})
 }
 
 func TestHandleLLMResponseError(t *testing.T) {

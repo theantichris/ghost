@@ -86,8 +86,7 @@ func (app *App) Run(ctx context.Context, input io.Reader) error {
 	fmt.Print("\n") // Add newline after LLM message.
 
 	if err != nil {
-		err := app.handleLLMResponseError(err)
-		if err != nil {
+		if err := app.handleLLMResponseError(err); err != nil {
 			return err
 		}
 	}
@@ -107,9 +106,6 @@ func (app *App) Run(ctx context.Context, input io.Reader) error {
 			if err := userInputScanner.Err(); err != nil {
 				return fmt.Errorf("%w: %s", ErrReadingInput, err)
 			}
-
-			// TODO: Do I need this with how chat works?
-			break // EOF reached.
 		}
 
 		userInput := strings.TrimSpace(userInputScanner.Text())
@@ -138,8 +134,7 @@ func (app *App) Run(ctx context.Context, input io.Reader) error {
 		fmt.Print("\n") // Add newline after LLM message.
 
 		if err != nil {
-			err := app.handleLLMResponseError(err)
-			if err != nil {
+			if err := app.handleLLMResponseError(err); err != nil {
 				return err
 			}
 		}
@@ -163,6 +158,8 @@ func (app *App) Run(ctx context.Context, input io.Reader) error {
 
 // handleLLMResponseError shows a system message for recoverable errors and returns unrecoverable errors.
 func (app *App) handleLLMResponseError(err error) error {
+	// TODO: Can I clean this up?
+
 	if errors.Is(err, llm.ErrClientResponse) {
 		fmt.Fprintf(app.output, "\n%s\n", msgClientResponse)
 
