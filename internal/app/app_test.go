@@ -198,6 +198,39 @@ func TestRun(t *testing.T) {
 			t.Errorf("expected response %q, got %q", expected, actual)
 		}
 	})
+
+	t.Run("returns error for faulty user input", func(t *testing.T) {
+		t.Parallel()
+
+		llmClient := &llm.MockLLMClient{
+			StreamChatFunc: func(ctx context.Context, chatHistory []llm.ChatMessage,
+				onToken func(string)) error {
+				tokens := []string{"Hello", ", ", "user", "!\n"}
+
+				for _, token := range tokens {
+					onToken(token)
+				}
+
+				return nil
+			},
+		}
+
+		var outputBuff bytes.Buffer
+
+		app, err := New(llmClient, logger, Config{Output: &outputBuff})
+		if err != nil {
+			t.Fatalf("expected no error creating app, got %v", err)
+		}
+
+		err = app.Run(context.Background(), &faultyReader{})
+		if err == nil {
+			t.Fatal("expected error, received nil")
+		}
+
+		if !errors.Is(err, ErrReadingInput) {
+			t.Errorf("expected error %v, got %v", ErrReadingInput, err)
+		}
+	})
 }
 
 func TestHandleLLMResponseError(t *testing.T) {
