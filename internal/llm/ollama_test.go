@@ -279,10 +279,8 @@ func TestStreamChat(t *testing.T) {
 		}
 
 		var actual []string
-		onToken := func(token string) error {
+		onToken := func(token string) {
 			actual = append(actual, token)
-
-			return nil
 		}
 
 		err = client.StreamChat(context.Background(), chatHistory, onToken)

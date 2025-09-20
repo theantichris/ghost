@@ -76,13 +76,11 @@ func (app *App) Run(ctx context.Context, input io.Reader) error {
 
 	fmt.Print(ghostLabel)
 	var tokens string
-	err := app.llmClient.StreamChat(ctx, chatHistory, func(token string) error {
+	err := app.llmClient.StreamChat(ctx, chatHistory, func(token string) {
 		fmt.Fprint(app.output, token)
 		tokens += token
 
 		// TODO: Remove <think> blocks.
-
-		return nil // TODO: Does this ever error?
 	})
 
 	fmt.Print("\n") // Add newline after LLM message.
@@ -130,13 +128,11 @@ func (app *App) Run(ctx context.Context, input io.Reader) error {
 
 		fmt.Print(ghostLabel)
 		var tokens string
-		err := app.llmClient.StreamChat(ctx, chatHistory, func(token string) error {
+		err := app.llmClient.StreamChat(ctx, chatHistory, func(token string) {
 			fmt.Fprint(app.output, token)
 			tokens += token
 
 			// TODO: Remove <think> blocks.
-
-			return nil // TODO: Does this ever error?
 		})
 
 		fmt.Print("\n") // Add newline after LLM message.
@@ -159,7 +155,7 @@ func (app *App) Run(ctx context.Context, input io.Reader) error {
 	app.logger.Info("stopping chat loop", slog.String("component", "app"))
 
 	if app.debug {
-		spew.Dump(chatHistory)
+		spew.Dump(chatHistory) // TODO: Check chat history before PR.
 	}
 
 	return nil
