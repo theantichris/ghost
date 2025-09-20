@@ -12,27 +12,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Setup Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: "1.24.x"
           cache: true
       - name: Verify Formatting
-        run: |
-          set -e
-          CHANGED=$(gofmt -l . || true)
-          if [ -n "$CHANGED" ]; then
-            echo "The following files are not gofmt formatted:" >&2
-            echo "$CHANGED" >&2
-            exit 1
-          fi
+        run: go fmt ./...
       - name: Vet
         run: go vet ./...
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v8
         with:
-          version: latest
+          version: v2.1
           args: --timeout=3m
 
   build-test:
