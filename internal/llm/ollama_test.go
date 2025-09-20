@@ -81,7 +81,7 @@ func TestChat(t *testing.T) {
 
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`{"message": {"role": "assistant", "content": "Hello, user!"}}`))
+			_, _ = w.Write([]byte(`{"message": {"role": "assistant", "content": "Hello, user!"}}`))
 		}))
 		defer server.Close()
 
@@ -235,6 +235,65 @@ func TestChat(t *testing.T) {
 
 		if !strings.Contains(err.Error(), "failed to unmarshal response body: invalid character 'i' looking for beginning of value") {
 			t.Errorf("expected error containing 'failed to unmarshal response body: invalid character 'i' looking for beginning of value', got %v", err)
+		}
+	})
+}
+
+func TestStreamChat(t *testing.T) {
+	t.Run("streams chat without error", func(t *testing.T) {
+		t.Parallel()
+
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+
+			flusher, ok := w.(http.Flusher)
+			if !ok {
+				t.Fatalf("expected response writer to support flushing")
+			}
+
+			chunks := []string{
+				`{"message":{"content":"Hello, "},"done":false}`,
+				`{"message":{"content":"user!"},"done":false}`,
+				`{"message":{"content":""},"done":true}`,
+			}
+
+			for _, chunk := range chunks {
+				w.Write([]byte(chunk + "\n"))
+				flusher.Flush()
+			}
+		}))
+
+		defer server.Close()
+
+		httpClient := &http.Client{
+			Transport: server.Client().Transport,
+		}
+
+		client, err := NewOllamaClient(server.URL, "llama2", httpClient, logger)
+		if err != nil {
+			t.Fatalf("expected no error creating client, got %v", err)
+		}
+
+		chatHistory := []ChatMessage{
+			{Role: User, Content: "Hello, there!"},
+		}
+
+		var actual []string
+		onToken := func(token string) error {
+			actual = append(actual, token)
+
+			return nil
+		}
+
+		err = client.StreamChat(context.Background(), chatHistory, onToken)
+		if err != nil {
+			t.Fatalf("expected no error calling StreamChat, got %v", err)
+		}
+
+		expected := []string{"Hello, ", "user!"}
+
+		if !cmp.Equal(actual, expected) {
+			t.Errorf("expected tokens %v, got %v", expected, actual)
 		}
 	})
 }

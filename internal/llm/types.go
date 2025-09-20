@@ -26,7 +26,8 @@ type ChatMessage struct {
 
 // ChatResponse represents a response from the Ollama chat API.
 type ChatResponse struct {
-	Message ChatMessage `json:"message"` // The response message from the assistant
+	Message ChatMessage `json:"message"`        // The response message from the assistant
+	Done    bool        `json:"done,omitempty"` // True if response is the last in the stream
 }
 
 // apiError represents an error response from the Ollama API.

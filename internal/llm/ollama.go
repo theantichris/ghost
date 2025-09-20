@@ -1,9 +1,11 @@
 package llm
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -41,9 +43,87 @@ func NewOllamaClient(baseURL, defaultModel string, httpClient *http.Client, logg
 	}, nil
 }
 
+// StreamChat sends a message to the Ollama API and streams the response.
+func (ollama OllamaClient) StreamChat(ctx context.Context, chatHistory []ChatMessage, onToken func(string) error) error {
+	// Create request body
+
+	requestBody, err := ollama.preparePayload(chatHistory, true)
+	if err != nil {
+		return err
+	}
+
+	// Create request
+
+	request, cancel, err := ollama.createHTTPRequest(ctx, requestBody)
+	if err != nil {
+		return nil
+	}
+
+	defer cancel()
+
+	// Send request
+
+	ollama.logger.Info("sending chat request to Ollama API", slog.String("component", "ollama client"), slog.String("url", ollama.baseURL+"/api/chat"), slog.String("method", http.MethodPost))
+	ollama.logger.Debug("request payload", slog.String("component", "ollama client"), slog.String("payload", string(requestBody)))
+
+	response, err := ollama.httpClient.Do(request)
+	if err != nil {
+		return fmt.Errorf("%w: %s", ErrClientResponse, err)
+	}
+
+	err = ollama.checkForHTTPError(response.StatusCode, response.Body)
+	if err != nil {
+		return err
+	}
+
+	defer response.Body.Close()
+
+	// Create buffer
+
+	scanner := bufio.NewScanner(response.Body)
+	const maxTokenBytes = 11024 * 1024
+	buffer := make([]byte, 0, 64+1024)
+	scanner.Buffer(buffer, maxTokenBytes)
+
+	// Stream response
+
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		if strings.TrimSpace(line) == "" {
+			continue
+		}
+
+		var chunk ChatResponse
+		if err := json.Unmarshal([]byte(line), &chunk); err != nil {
+			return fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
+		}
+
+		if chunk.Message.Content != "" && onToken != nil {
+			if err := onToken(chunk.Message.Content); err != nil {
+				return fmt.Errorf("%w: %s", ErrClientResponse, err)
+			}
+		}
+
+		if chunk.Done {
+			break
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+			return fmt.Errorf("%w: %s", ErrTimeout, err)
+		}
+
+		return fmt.Errorf("%w: %s", ErrResponseBody, err)
+	}
+
+	return nil
+}
+
 // Chat sends a message to the Ollama API.
 func (ollama OllamaClient) Chat(ctx context.Context, chatHistory []ChatMessage) (ChatMessage, error) {
-	requestBody, err := ollama.preparePayload(chatHistory)
+	requestBody, err := ollama.preparePayload(chatHistory, false)
 	if err != nil {
 		return ChatMessage{}, err
 	}
@@ -92,7 +172,7 @@ func (ollama OllamaClient) Chat(ctx context.Context, chatHistory []ChatMessage) 
 }
 
 // preparePayload takes the chat history and returns the marshaled request body.
-func (ollama OllamaClient) preparePayload(chatHistory []ChatMessage) ([]byte, error) {
+func (ollama OllamaClient) preparePayload(chatHistory []ChatMessage, stream bool) ([]byte, error) {
 	if len(chatHistory) == 0 {
 		return nil, ErrChatHistoryEmpty
 	}
@@ -100,7 +180,7 @@ func (ollama OllamaClient) preparePayload(chatHistory []ChatMessage) ([]byte, er
 	chatRequest := ChatRequest{
 		Model:    ollama.defaultModel,
 		Messages: chatHistory,
-		Stream:   false,
+		Stream:   stream,
 	}
 
 	requestBody, err := json.Marshal(chatRequest)
