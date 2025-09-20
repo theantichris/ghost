@@ -82,13 +82,16 @@ func (app *App) Run(ctx context.Context, input io.Reader) error {
 
 		// TODO: Remove <think> blocks.
 
-		return nil
+		return nil // TODO: Does this ever error?
 	})
 
-	fmt.Print("\n") // Add newline after LLM greeting.
+	fmt.Print("\n") // Add newline after LLM message.
 
 	if err != nil {
-		return app.handleLLMResponseError(err)
+		err := app.handleLLMResponseError(err)
+		if err != nil {
+			return err
+		}
 	}
 
 	message := llm.ChatMessage{Role: llm.Assistant, Content: tokens}
@@ -112,6 +115,7 @@ func (app *App) Run(ctx context.Context, input io.Reader) error {
 		}
 
 		userInput := strings.TrimSpace(userInputScanner.Text())
+
 		if userInput == "" {
 			continue // Don't send empty user input.
 		}
@@ -124,15 +128,28 @@ func (app *App) Run(ctx context.Context, input io.Reader) error {
 		userMessage := llm.ChatMessage{Role: llm.User, Content: userInput}
 		chatHistory = append(chatHistory, userMessage)
 
-		llmResponse, err := app.llmClient.Chat(ctx, chatHistory)
+		fmt.Print(ghostLabel)
+		var tokens string
+		err := app.llmClient.StreamChat(ctx, chatHistory, func(token string) error {
+			fmt.Fprint(app.output, token)
+			tokens += token
+
+			// TODO: Remove <think> blocks.
+
+			return nil // TODO: Does this ever error?
+		})
+
+		fmt.Print("\n") // Add newline after LLM message.
+
 		if err != nil {
-			return app.handleLLMResponseError(err)
+			err := app.handleLLMResponseError(err)
+			if err != nil {
+				return err
+			}
 		}
 
-		chatHistory = append(chatHistory, llmResponse)
-
-		response := stripThinkBlock(llmResponse.Content)
-		fmt.Fprintf(app.output, "%s%s\n", ghostLabel, response)
+		message := llm.ChatMessage{Role: llm.Assistant, Content: tokens}
+		chatHistory = append(chatHistory, message)
 
 		if endChat {
 			break
@@ -150,35 +167,31 @@ func (app *App) Run(ctx context.Context, input io.Reader) error {
 
 // handleLLMResponseError shows a system message for recoverable errors and returns unrecoverable errors.
 func (app *App) handleLLMResponseError(err error) error {
-	if err != nil {
-		if errors.Is(err, llm.ErrClientResponse) {
-			fmt.Fprintf(app.output, "\n%s\n", msgClientResponse)
+	if errors.Is(err, llm.ErrClientResponse) {
+		fmt.Fprintf(app.output, "\n%s\n", msgClientResponse)
 
-			return nil
-		}
-
-		if errors.Is(err, llm.ErrNon2xxResponse) {
-			fmt.Fprintf(app.output, "\n%s\n", msgNon2xxResponse)
-
-			return nil
-		}
-
-		if errors.Is(err, llm.ErrResponseBody) {
-			fmt.Fprintf(app.output, "\n%s\n", msgResponseBody)
-
-			return nil
-		}
-
-		if errors.Is(err, llm.ErrUnmarshalResponse) {
-			fmt.Fprintf(app.output, "\n%s\n", msgUnmarshalResponse)
-
-			return nil
-		}
-
-		return fmt.Errorf("%w: %s", ErrChatFailed, err)
+		return nil
 	}
 
-	return nil
+	if errors.Is(err, llm.ErrNon2xxResponse) {
+		fmt.Fprintf(app.output, "\n%s\n", msgNon2xxResponse)
+
+		return nil
+	}
+
+	if errors.Is(err, llm.ErrResponseBody) {
+		fmt.Fprintf(app.output, "\n%s\n", msgResponseBody)
+
+		return nil
+	}
+
+	if errors.Is(err, llm.ErrUnmarshalResponse) {
+		fmt.Fprintf(app.output, "\n%s\n", msgUnmarshalResponse)
+
+		return nil
+	}
+
+	return fmt.Errorf("%w: %s", ErrChatFailed, err)
 }
 
 // stripThinkBlock removes any <think>...</think> blocks from the message.
