@@ -76,13 +76,26 @@ func TestRun(t *testing.T) {
 	t.Run("outputs LLM messages", func(t *testing.T) {
 		t.Parallel()
 
+		callCount := 0 // Used to simulate the two streams in Run()
+
 		llmClient := &llm.MockLLMClient{
 			StreamChatFunc: func(ctx context.Context, chatHistory []llm.ChatMessage,
 				onToken func(string)) error {
-				tokens := []string{"Goodbye", ", ", "user", "!\n"}
+				callCount++
 
-				for _, token := range tokens {
-					onToken(token)
+				switch callCount {
+				case 1:
+					tokens := []string{"Hello", ", ", "user", "!\n"}
+
+					for _, token := range tokens {
+						onToken(token)
+					}
+				case 2:
+					tokens := []string{"Goodbye", ", ", "user", "!\n"}
+
+					for _, token := range tokens {
+						onToken(token)
+					}
 				}
 
 				return nil
@@ -102,7 +115,7 @@ func TestRun(t *testing.T) {
 		}
 
 		actual := outputBuff.String()
-		expected := "Goodbye, user!\n\nUser: Goodbye, user!\n"
+		expected := "Hello, user!\n\nUser: Goodbye, user!\n"
 
 		if actual != expected {
 			t.Errorf("expected response %q, got %q", expected, actual)
