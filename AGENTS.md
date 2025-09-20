@@ -104,6 +104,7 @@ if errors.Is(err, llm.ErrClientResponse) {
 - Always set `component` field: `main`, `app`, `ollama client`
 - **stdout reserved strictly for model/user chat output**
 - **Logs go to stderr** to avoid accidental leakage in pipelines
+- Personal debug dumps (e.g., spew) may write to stdout when guarded by an explicit developer-only flag.
 - Avoid logging secrets, API keys, raw env values
 
 ### Concurrency & Context

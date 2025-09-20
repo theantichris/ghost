@@ -139,6 +139,7 @@ Codes may expand; backward compatibility will be maintained after first tag.
 ## Logging Strategy
 
 - Logs to stderr; model/token output to stdout (enables piping).
+- Explicit debug tooling (e.g., spew dumps) may write structured data to stdout when gated behind a developer-only flag.
 - All operations accept `context.Context` for cancellation and trace correlation.
 - Avoid panics outside `main`; return errors with `%w` for wrapping.
 
