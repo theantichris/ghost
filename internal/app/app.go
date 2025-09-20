@@ -66,6 +66,7 @@ func New(llmClient llm.LLMClient, logger *slog.Logger, config Config) (*App, err
 	}, nil
 }
 
+// getUserInput gets, processes, and returns the users input and sets the endChat flag.
 func (app *App) getUserInput(scanner *bufio.Scanner) (string, bool, error) {
 	var endChat = false
 
@@ -79,9 +80,8 @@ func (app *App) getUserInput(scanner *bufio.Scanner) (string, bool, error) {
 
 	input := strings.TrimSpace(scanner.Text())
 
-	// TODO: this is being sent to the LLM
 	if input == "" {
-		return "", endChat, nil // Don't send empty user input.
+		return "", endChat, ErrUserInputEmpty
 	}
 
 	if input == exitCommand {
@@ -107,6 +107,10 @@ func (app *App) Run(ctx context.Context, input io.Reader) error {
 	for {
 		userInput, endChat, err := app.getUserInput(userInputScanner)
 		if err != nil {
+			if errors.Is(err, ErrUserInputEmpty) {
+				continue // Don't send empty user input.
+			}
+
 			return err
 		}
 
