@@ -78,7 +78,7 @@ func loadEnv(logger *slog.Logger) {
 
 // createLogger initializes and returns a structured logger.
 func createLogger(debugMode bool) *slog.Logger {
-	var logLevel = slog.LevelInfo
+	var logLevel = slog.LevelWarn
 
 	if debugMode {
 		logLevel = slog.LevelDebug

@@ -5,15 +5,18 @@
 - [ ] Basic CLI chat with streaming
   - [x] Send single message from app to Ollama
   - [x] Send single message from CLI to Ollama
-  - [ ] Disable logs for production
+  - [x] Disable logs for production
   - [x] Start and handle chat loop
+  - [ ] Strip out thinking block from response
+  - [ ] Send system prompt
+  - [ ] Have LLM greet user
   - [ ] Stream LLM response
 - [ ] TUI scaffolding (Bubble Tea): single-window chat view with streaming render, input line, scrollback, basic keymap
 
 ## Phase 2: Card Management
 
 - [ ] Card manager
-- [ ] System prompt
+- [ ] Move system prompt to card
 - [ ] Character cards
 - [ ] Card runner
 
