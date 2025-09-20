@@ -8,7 +8,7 @@ import (
 // LLMClient is an interface representing a client for interacting with LLM API.
 type LLMClient interface {
 	// Chat sends a chat request to the LLM API.
-	Chat(ctx context.Context, chatHistory []ChatMessage) ([]ChatMessage, error)
+	Chat(ctx context.Context, chatHistory []ChatMessage) (ChatMessage, error)
 }
 
 // MockLLMClient is a mock implementation of the LLMClient interface for testing purposes.
@@ -17,10 +17,10 @@ type MockLLMClient struct {
 }
 
 // Chat is a mock implementation of the Chat method.
-func (mock MockLLMClient) Chat(ctx context.Context, chatHistory []ChatMessage) ([]ChatMessage, error) {
+func (mock MockLLMClient) Chat(ctx context.Context, chatHistory []ChatMessage) (ChatMessage, error) {
 	if mock.ReturnError {
-		return chatHistory, fmt.Errorf("client chat: %w", ErrChatHistoryEmpty)
+		return ChatMessage{}, fmt.Errorf("client chat: %w", ErrChatHistoryEmpty)
 	}
 
-	return chatHistory, nil
+	return ChatMessage{}, nil
 }

@@ -37,12 +37,8 @@ func (app *App) Run(ctx context.Context, input io.Reader) error {
 	app.logger.Info("starting chat loop", slog.String("component", "app"))
 
 	scanner := bufio.NewScanner(input)
-	var userInput string
 
-	// Create chat history slice
-	// Append user input as chat message
-	// Append LLM response as chat message
-	// Send entire chat history with each request to maintain context
+	chatHistory := []llm.ChatMessage{}
 
 	for {
 		fmt.Print("User: ")
@@ -55,7 +51,9 @@ func (app *App) Run(ctx context.Context, input io.Reader) error {
 			break // EOF reached
 		}
 
-		userInput = strings.TrimSpace(scanner.Text())
+		userInput := strings.TrimSpace(scanner.Text())
+		userMessage := llm.ChatMessage{Role: llm.User, Content: userInput}
+		chatHistory = append(chatHistory, userMessage)
 
 		if userInput == "/bye" {
 			// TODO: Add goodbye message from LLM
@@ -67,7 +65,7 @@ func (app *App) Run(ctx context.Context, input io.Reader) error {
 			continue
 		}
 
-		response, err := app.llmClient.Chat(ctx, userInput)
+		response, err := app.llmClient.Chat(ctx, chatHistory)
 		if err != nil {
 			return fmt.Errorf("%w: %s", ErrChatFailed, err)
 		}

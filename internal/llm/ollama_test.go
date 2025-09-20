@@ -94,22 +94,16 @@ func TestChat(t *testing.T) {
 			t.Fatalf("expected no error creating client, got %v", err)
 		}
 
-		userMessage := ChatMessage{Role: User, Content: "Hello, there!"}
-		llmMessage := ChatMessage{Role: Assistant, Content: "Hello, user!"}
-
 		chatHistory := []ChatMessage{
-			userMessage,
-		}
-
-		expected := []ChatMessage{
-			userMessage,
-			llmMessage,
+			{Role: User, Content: "Hello, there!"},
 		}
 
 		actual, err := client.Chat(context.Background(), chatHistory)
 		if err != nil {
 			t.Fatalf("expected no error calling Chat, got %v", err)
 		}
+
+		expected := ChatMessage{Role: Assistant, Content: "Hello, user!"}
 
 		if !cmp.Equal(actual, expected) {
 			t.Errorf("expected response to be %v, got %v", expected, actual)

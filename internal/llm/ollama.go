@@ -44,9 +44,9 @@ func NewOllamaClient(baseURL, defaultModel string, httpClient *http.Client, logg
 // TODO: Can some error messages be returned as if from the API and recovered?
 
 // Chat sends a message to the Ollama API.
-func (ollama OllamaClient) Chat(ctx context.Context, chatHistory []ChatMessage) ([]ChatMessage, error) {
+func (ollama OllamaClient) Chat(ctx context.Context, chatHistory []ChatMessage) (ChatMessage, error) {
 	if len(chatHistory) == 0 {
-		return chatHistory, ErrChatHistoryEmpty
+		return ChatMessage{}, ErrChatHistoryEmpty
 	}
 
 	chatRequest := ChatRequest{
@@ -57,7 +57,7 @@ func (ollama OllamaClient) Chat(ctx context.Context, chatHistory []ChatMessage) 
 
 	requestBody, err := json.Marshal(chatRequest)
 	if err != nil {
-		return chatHistory, fmt.Errorf("%w: %s", ErrMarshalRequest, err)
+		return ChatMessage{}, fmt.Errorf("%w: %s", ErrMarshalRequest, err)
 	}
 
 	requestCTX, cancel := context.WithTimeout(ctx, 2*time.Minute)
@@ -65,7 +65,7 @@ func (ollama OllamaClient) Chat(ctx context.Context, chatHistory []ChatMessage) 
 
 	clientRequest, err := http.NewRequestWithContext(requestCTX, http.MethodPost, ollama.baseURL+"/api/chat", bytes.NewReader(requestBody))
 	if err != nil {
-		return chatHistory, fmt.Errorf("%w: %s", ErrCreateRequest, err)
+		return ChatMessage{}, fmt.Errorf("%w: %s", ErrCreateRequest, err)
 	}
 
 	clientRequest.Header.Set("Content-Type", "application/json")
@@ -75,7 +75,7 @@ func (ollama OllamaClient) Chat(ctx context.Context, chatHistory []ChatMessage) 
 
 	clientResponse, err := ollama.httpClient.Do(clientRequest)
 	if err != nil {
-		return chatHistory, fmt.Errorf("%w: %s", ErrClientResponse, err)
+		return ChatMessage{}, fmt.Errorf("%w: %s", ErrClientResponse, err)
 	}
 
 	defer clientResponse.Body.Close()
@@ -83,20 +83,20 @@ func (ollama OllamaClient) Chat(ctx context.Context, chatHistory []ChatMessage) 
 	if clientResponse.StatusCode/100 != 2 {
 		responseBody, err := io.ReadAll(clientResponse.Body)
 		if err != nil {
-			return chatHistory, fmt.Errorf("%w: status=%d %s: %s", ErrResponseBody, clientResponse.StatusCode, http.StatusText(clientResponse.StatusCode), err)
+			return ChatMessage{}, fmt.Errorf("%w: status=%d %s: %s", ErrResponseBody, clientResponse.StatusCode, http.StatusText(clientResponse.StatusCode), err)
 		}
 
 		var apiError apiError
 		if err := json.Unmarshal(responseBody, &apiError); err == nil && apiError.Error != "" {
-			return chatHistory, fmt.Errorf("%w: status=%d %s api_error=%s", ErrNon2xxResponse, clientResponse.StatusCode, http.StatusText(clientResponse.StatusCode), apiError.Error)
+			return ChatMessage{}, fmt.Errorf("%w: status=%d %s api_error=%s", ErrNon2xxResponse, clientResponse.StatusCode, http.StatusText(clientResponse.StatusCode), apiError.Error)
 		}
 
-		return chatHistory, fmt.Errorf("%w: status=%d %s body=%s", ErrNon2xxResponse, clientResponse.StatusCode, http.StatusText(clientResponse.StatusCode), string(responseBody))
+		return ChatMessage{}, fmt.Errorf("%w: status=%d %s body=%s", ErrNon2xxResponse, clientResponse.StatusCode, http.StatusText(clientResponse.StatusCode), string(responseBody))
 	}
 
 	responseBody, err := io.ReadAll(clientResponse.Body)
 	if err != nil {
-		return chatHistory, fmt.Errorf("%w: %s", ErrResponseBody, err)
+		return ChatMessage{}, fmt.Errorf("%w: %s", ErrResponseBody, err)
 	}
 
 	ollama.logger.Info("received response from Ollama API", slog.String("component", "ollama client"), slog.String("status code", strconv.Itoa(clientResponse.StatusCode)))
@@ -105,10 +105,8 @@ func (ollama OllamaClient) Chat(ctx context.Context, chatHistory []ChatMessage) 
 	var chatResponse ChatResponse
 	err = json.Unmarshal(responseBody, &chatResponse)
 	if err != nil {
-		return chatHistory, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
+		return ChatMessage{}, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
 	}
 
-	chatHistory = append(chatHistory, chatResponse.Message)
-
-	return chatHistory, nil
+	return chatResponse.Message, nil
 }
