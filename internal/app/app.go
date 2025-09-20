@@ -74,7 +74,7 @@ func (app *App) Run(ctx context.Context, input io.Reader) error {
 		{Role: llm.System, Content: systemPrompt},
 	}
 
-	fmt.Print(ghostLabel)
+	fmt.Fprint(app.output, ghostLabel)
 	var tokens string
 	err := app.llmClient.StreamChat(ctx, chatHistory, func(token string) {
 		fmt.Fprint(app.output, token)
@@ -83,7 +83,7 @@ func (app *App) Run(ctx context.Context, input io.Reader) error {
 		// TODO: Remove <think> blocks.
 	})
 
-	fmt.Print("\n") // Add newline after LLM message.
+	fmt.Fprint(app.output, "\n") // Add newline after LLM message.
 
 	if err != nil {
 		if err := app.handleLLMResponseError(err); err != nil {
@@ -122,7 +122,7 @@ func (app *App) Run(ctx context.Context, input io.Reader) error {
 		userMessage := llm.ChatMessage{Role: llm.User, Content: userInput}
 		chatHistory = append(chatHistory, userMessage)
 
-		fmt.Print(ghostLabel)
+		fmt.Fprint(app.output, ghostLabel)
 		var tokens string
 		err := app.llmClient.StreamChat(ctx, chatHistory, func(token string) {
 			fmt.Fprint(app.output, token)
@@ -131,7 +131,7 @@ func (app *App) Run(ctx context.Context, input io.Reader) error {
 			// TODO: Remove <think> blocks.
 		})
 
-		fmt.Print("\n") // Add newline after LLM message.
+		fmt.Fprint(app.output, "\n") // Add newline after LLM message.
 
 		if err != nil {
 			if err := app.handleLLMResponseError(err); err != nil {

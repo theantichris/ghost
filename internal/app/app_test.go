@@ -33,7 +33,7 @@ func TestNew(t *testing.T) {
 	t.Run("creates a new app instance", func(t *testing.T) {
 		t.Parallel()
 
-		config := Config{Debug: false}
+		config := Config{Debug: false, Output: &bytes.Buffer{}}
 		llmClient := &llm.MockLLMClient{}
 
 		app, err := New(llmClient, logger, config)
@@ -61,7 +61,7 @@ func TestNew(t *testing.T) {
 	t.Run("returns error for nil llmClient", func(t *testing.T) {
 		t.Parallel()
 
-		_, err := New(nil, logger, Config{})
+		_, err := New(nil, logger, Config{Output: &bytes.Buffer{}})
 		if err == nil {
 			t.Fatalf("expected error for nil llmClient, got nil")
 		}
@@ -115,7 +115,7 @@ func TestRun(t *testing.T) {
 		}
 
 		actual := outputBuff.String()
-		expected := "Hello, user!\n\nUser: Goodbye, user!\n"
+		expected := "\nGhost: Hello, user!\n\n\nUser: \nGhost: Goodbye, user!\n\n"
 
 		if actual != expected {
 			t.Errorf("expected response %q, got %q", expected, actual)
@@ -192,7 +192,7 @@ func TestRun(t *testing.T) {
 		}
 
 		actual := outputBuff.String()
-		expected := "Hello, user!\n\nUser: "
+		expected := "\nGhost: Hello, user!\n\n\nUser: \nGhost: \n"
 
 		if actual != expected {
 			t.Errorf("expected response %q, got %q", expected, actual)
