@@ -32,9 +32,13 @@ func TestNew(t *testing.T) {
 	t.Run("creates a new app instance", func(t *testing.T) {
 		t.Parallel()
 
+		config := Config{
+			Debug: false,
+		}
+
 		llmClient := &llm.MockLLMClient{}
 
-		app, err := New(llmClient, false, logger)
+		app, err := New(llmClient, logger, config)
 
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
@@ -48,19 +52,19 @@ func TestNew(t *testing.T) {
 			t.Errorf("unexpected llmClient %v", app.llmClient)
 		}
 
-		if app.debug {
+		if app.debug != config.Debug {
 			t.Errorf("expected debug to be false, got true")
 		}
 
 		if app.logger != logger {
-			t.Errorf("unexpected logger %v", app.logger)
+			t.Errorf("unexpected logger %v, gto %v", logger, app.logger)
 		}
 	})
 
 	t.Run("returns error for nil llmClient", func(t *testing.T) {
 		t.Parallel()
 
-		_, err := New(nil, false, logger)
+		_, err := New(nil, logger, Config{})
 
 		if err == nil {
 			t.Fatalf("expected error for nil llmClient, got nil")
@@ -76,7 +80,7 @@ func TestRun(t *testing.T) {
 	t.Run("runs the app without error", func(t *testing.T) {
 		t.Parallel()
 
-		app, err := New(&llm.MockLLMClient{}, false, logger)
+		app, err := New(&llm.MockLLMClient{}, logger, Config{})
 		if err != nil {
 			t.Fatalf("expected no error creating app, got %v", err)
 		}
@@ -94,7 +98,7 @@ func TestRun(t *testing.T) {
 			ReturnError: true,
 		}
 
-		app, err := New(llmClient, false, logger)
+		app, err := New(llmClient, logger, Config{})
 		if err != nil {
 			t.Fatalf("expected no error creating app, got %v", err)
 		}
@@ -112,7 +116,7 @@ func TestRun(t *testing.T) {
 	t.Run("handles empty input gracefully", func(t *testing.T) {
 		t.Parallel()
 
-		app, err := New(&llm.MockLLMClient{}, false, logger)
+		app, err := New(&llm.MockLLMClient{}, logger, Config{})
 		if err != nil {
 			t.Fatalf("expected no error creating app, got %v", err)
 		}
@@ -126,7 +130,7 @@ func TestRun(t *testing.T) {
 	t.Run("returns error if reading input fails", func(t *testing.T) {
 		t.Parallel()
 
-		app, err := New(&llm.MockLLMClient{}, false, logger)
+		app, err := New(&llm.MockLLMClient{}, logger, Config{})
 		if err != nil {
 			t.Fatalf("expected no error creating app, got %v", err)
 		}
@@ -144,7 +148,7 @@ func TestRun(t *testing.T) {
 	t.Run("exits gracefully when EOF is reached", func(t *testing.T) {
 		t.Parallel()
 
-		app, err := New(&llm.MockLLMClient{}, false, logger)
+		app, err := New(&llm.MockLLMClient{}, logger, Config{})
 		if err != nil {
 			t.Fatalf("expected no error creating app, got %v", err)
 		}

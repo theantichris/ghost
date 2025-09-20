@@ -50,7 +50,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	ghostApp, err := app.New(llmClient, *debug, logger)
+	config := app.Config{Debug: *debug}
+
+	ghostApp, err := app.New(llmClient, logger, config)
 	if err != nil {
 		logger.Error(err.Error(), slog.String("component", "main"))
 		os.Exit(1)

@@ -16,6 +16,10 @@ import (
 
 const systemPrompt string = "You are Ghost, a concise terminal assistant. Greet the user warmly once at the start of the conversation, then answer their requests directly and briefly. Ask for clarification only when needed."
 
+type Config struct {
+	Debug bool
+}
+
 // App represents the main application structure
 type App struct {
 	llmClient llm.LLMClient
@@ -24,7 +28,7 @@ type App struct {
 }
 
 // New initializes a new App instance with the provided LLM client.
-func New(llmClient llm.LLMClient, debug bool, logger *slog.Logger) (*App, error) {
+func New(llmClient llm.LLMClient, logger *slog.Logger, config Config) (*App, error) {
 	if llmClient == nil {
 		return nil, ErrLLMClientNil
 	}
@@ -34,7 +38,7 @@ func New(llmClient llm.LLMClient, debug bool, logger *slog.Logger) (*App, error)
 	return &App{
 		llmClient: llmClient,
 		logger:    logger,
-		debug:     debug,
+		debug:     config.Debug,
 	}, nil
 }
 
