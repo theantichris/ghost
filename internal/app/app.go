@@ -68,7 +68,7 @@ func New(llmClient llm.LLMClient, logger *slog.Logger, config Config) (*App, err
 
 // Run starts the application logic.
 func (app *App) Run(ctx context.Context, input io.Reader) error {
-	// Build chat history, send system prompt, and show greeting
+	// TODO: Build chat history, send system prompt, and show greeting.
 
 	chatHistory := []llm.ChatMessage{
 		{Role: llm.System, Content: systemPrompt},
@@ -80,10 +80,12 @@ func (app *App) Run(ctx context.Context, input io.Reader) error {
 		fmt.Fprint(app.output, token)
 		tokens += token
 
+		// TODO: Remove <think> blocks.
+
 		return nil
 	})
 
-	fmt.Print("\n")
+	fmt.Print("\n") // Add newline after LLM greeting.
 
 	if err != nil {
 		return app.handleLLMResponseError(err)
@@ -92,11 +94,10 @@ func (app *App) Run(ctx context.Context, input io.Reader) error {
 	message := llm.ChatMessage{Role: llm.Assistant, Content: tokens}
 	chatHistory = append(chatHistory, message)
 
-	// Start chat loop
+	// TODO: Start chat loop.
+
 	app.logger.Info("starting chat loop", slog.String("component", "app"))
-
 	userInputScanner := bufio.NewScanner(input)
-
 	for {
 		endChat := false
 		fmt.Fprint(app.output, userLabel)
@@ -106,12 +107,13 @@ func (app *App) Run(ctx context.Context, input io.Reader) error {
 				return fmt.Errorf("%w: %s", ErrReadingInput, err)
 			}
 
-			break // EOF reached
+			// TODO: Do I need this with how chat works?
+			break // EOF reached.
 		}
 
 		userInput := strings.TrimSpace(userInputScanner.Text())
 		if userInput == "" {
-			continue
+			continue // Don't send empty user input.
 		}
 
 		if userInput == exitCommand {
