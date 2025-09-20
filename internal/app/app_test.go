@@ -171,11 +171,10 @@ func TestHandleLLMResponse(t *testing.T) {
 			t.Fatalf("expected handleLLMResponse to recover, got %v", err)
 		}
 
-		expected := "(system) I couldn't reach the LLM. Check your network or make sure the host is running then try again"
 		actual := strings.TrimSpace(buffer.String())
 
-		if actual != expected {
-			t.Errorf("expected system message %q, got %q", expected, actual)
+		if actual != msgClientResponse {
+			t.Errorf("expected system message %q, got %q", msgClientResponse, actual)
 		}
 	})
 
@@ -196,11 +195,10 @@ func TestHandleLLMResponse(t *testing.T) {
 			t.Fatalf("expected handleLLMResponse to recover, got %v", err)
 		}
 
-		expected := "(system) The LLM response with an error. Verify the model is pulled and the server is healthy before retrying."
 		actual := strings.TrimSpace(buffer.String())
 
-		if actual != expected {
-			t.Errorf("expected system message %q, got %q", expected, actual)
+		if actual != msgNon2xxResponse {
+			t.Errorf("expected system message %q, got %q", msgNon2xxResponse, actual)
 		}
 	})
 
@@ -221,11 +219,10 @@ func TestHandleLLMResponse(t *testing.T) {
 			t.Fatalf("expected handleLLMResponse to recover, got %v", err)
 		}
 
-		expected := "(system) I couldn't read the LLM's reply. This might be a transient issue, please try again in a moment."
 		actual := strings.TrimSpace(buffer.String())
 
-		if actual != expected {
-			t.Errorf("expected system message %q, got %q", expected, actual)
+		if actual != msgResponseBody {
+			t.Errorf("expected system message %q, got %q", msgResponseBody, actual)
 		}
 	})
 
@@ -246,11 +243,10 @@ func TestHandleLLMResponse(t *testing.T) {
 			t.Fatalf("expected handleLLMResponse to recover, got %v", err)
 		}
 
-		expected := "(system) The LLM sent back something I couldn't parse. It may be busy, try your request again shortly."
 		actual := strings.TrimSpace(buffer.String())
 
-		if actual != expected {
-			t.Errorf("expected system message %q, got %q", expected, actual)
+		if actual != msgUnmarshalResponse {
+			t.Errorf("expected system message %q, got %q", msgUnmarshalResponse, actual)
 		}
 	})
 }

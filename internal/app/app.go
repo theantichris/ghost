@@ -16,6 +16,13 @@ import (
 
 const systemPrompt string = "You are Ghost, a concise terminal assistant. Greet the user warmly once at the start of the conversation, then answer their requests directly and briefly. Ask for clarification only when needed."
 
+const (
+	msgClientResponse    string = "(system) I couldn't reach the LLM. Check your network or make sure the host is running then try again"
+	msgNon2xxResponse    string = "(system) The LLM response with an error. Verify the model is pulled and the server is healthy before retrying."
+	msgResponseBody      string = "(system) I couldn't read the LLM's reply. This might be a transient issue, please try again in a moment."
+	msgUnmarshalResponse string = "(system) The LLM sent back something I couldn't parse. It may be busy, try your request again shortly."
+)
+
 // Config holds the optional configuration options for App.
 type Config struct {
 	Output io.Writer
@@ -115,25 +122,25 @@ func (app *App) handleLLMResponse(ctx context.Context, chatHistory []llm.ChatMes
 	llmResponse, err := app.llmClient.Chat(ctx, chatHistory)
 	if err != nil {
 		if errors.Is(err, llm.ErrClientResponse) {
-			fmt.Fprintf(app.output, "\n%s\n", "(system) I couldn't reach the LLM. Check your network or make sure the host is running then try again")
+			fmt.Fprintf(app.output, "\n%s\n", msgClientResponse)
 
 			return chatHistory, nil
 		}
 
 		if errors.Is(err, llm.ErrNon2xxResponse) {
-			fmt.Fprintf(app.output, "\n%s\n", "(system) The LLM response with an error. Verify the model is pulled and the server is healthy before retrying.")
+			fmt.Fprintf(app.output, "\n%s\n", msgNon2xxResponse)
 
 			return chatHistory, nil
 		}
 
 		if errors.Is(err, llm.ErrResponseBody) {
-			fmt.Fprintf(app.output, "\n%s\n", "(system) I couldn't read the LLM's reply. This might be a transient issue, please try again in a moment.")
+			fmt.Fprintf(app.output, "\n%s\n", msgResponseBody)
 
 			return chatHistory, nil
 		}
 
 		if errors.Is(err, llm.ErrUnmarshalResponse) {
-			fmt.Fprintf(app.output, "\n%s\n", "(system) The LLM sent back something I couldn't parse. It may be busy, try your request again shortly.")
+			fmt.Fprintf(app.output, "\n%s\n", msgUnmarshalResponse)
 
 			return chatHistory, nil
 		}
