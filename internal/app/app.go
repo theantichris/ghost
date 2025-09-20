@@ -72,15 +72,19 @@ func (app *App) Run(ctx context.Context, input io.Reader) error {
 
 	scanner := bufio.NewScanner(input)
 
-	// Add system prompt and greeting
 	chatHistory := []llm.ChatMessage{
 		{Role: llm.System, Content: systemPrompt},
 	}
 
-	chatHistory, err := app.handleLLMResponse(ctx, chatHistory)
+	llmResponse, err := app.llmClient.Chat(ctx, chatHistory)
 	if err != nil {
-		return err
+		return app.handleLLMResponseError(err)
 	}
+
+	chatHistory = append(chatHistory, llmResponse)
+
+	response := stripThinkBlock(llmResponse.Content)
+	fmt.Fprintf(app.output, "%s%s\n", ghostLabel, response)
 
 	for {
 		endChat := false
@@ -107,10 +111,15 @@ func (app *App) Run(ctx context.Context, input io.Reader) error {
 		userMessage := llm.ChatMessage{Role: llm.User, Content: userInput}
 		chatHistory = append(chatHistory, userMessage)
 
-		chatHistory, err = app.handleLLMResponse(ctx, chatHistory)
+		llmResponse, err := app.llmClient.Chat(ctx, chatHistory)
 		if err != nil {
-			return err
+			return app.handleLLMResponseError(err)
 		}
+
+		chatHistory = append(chatHistory, llmResponse)
+
+		response := stripThinkBlock(llmResponse.Content)
+		fmt.Fprintf(app.output, "%s%s\n", ghostLabel, response)
 
 		if endChat {
 			break
@@ -126,43 +135,37 @@ func (app *App) Run(ctx context.Context, input io.Reader) error {
 	return nil
 }
 
-// handleLLMResponse gets the response from the LLMClient, adds it to the chat history and prints the content.
-func (app *App) handleLLMResponse(ctx context.Context, chatHistory []llm.ChatMessage) ([]llm.ChatMessage, error) {
-	llmResponse, err := app.llmClient.Chat(ctx, chatHistory)
+// handleLLMResponseError shows a system message for recoverable errors and returns unrecoverable errors.
+func (app *App) handleLLMResponseError(err error) error {
 	if err != nil {
 		if errors.Is(err, llm.ErrClientResponse) {
 			fmt.Fprintf(app.output, "\n%s\n", msgClientResponse)
 
-			return chatHistory, nil
+			return nil
 		}
 
 		if errors.Is(err, llm.ErrNon2xxResponse) {
 			fmt.Fprintf(app.output, "\n%s\n", msgNon2xxResponse)
 
-			return chatHistory, nil
+			return nil
 		}
 
 		if errors.Is(err, llm.ErrResponseBody) {
 			fmt.Fprintf(app.output, "\n%s\n", msgResponseBody)
 
-			return chatHistory, nil
+			return nil
 		}
 
 		if errors.Is(err, llm.ErrUnmarshalResponse) {
 			fmt.Fprintf(app.output, "\n%s\n", msgUnmarshalResponse)
 
-			return chatHistory, nil
+			return nil
 		}
 
-		return chatHistory, fmt.Errorf("%w: %s", ErrChatFailed, err)
+		return fmt.Errorf("%w: %s", ErrChatFailed, err)
 	}
 
-	chatHistory = append(chatHistory, llmResponse)
-
-	response := stripThinkBlock(llmResponse.Content)
-	fmt.Fprintf(app.output, "%s%s\n", ghostLabel, response)
-
-	return chatHistory, nil
+	return nil
 }
 
 // stripThinkBlock removes any <think>...</think> blocks from the message.

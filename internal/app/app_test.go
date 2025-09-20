@@ -153,20 +153,18 @@ func TestRun(t *testing.T) {
 	})
 }
 
-func TestHandleLLMResponse(t *testing.T) {
+func TestHandleLLMResponseError(t *testing.T) {
 	t.Run("prints message for ErrClientResponse", func(t *testing.T) {
 		t.Parallel()
 
-		llmClient := &llm.MockLLMClient{Error: llm.ErrClientResponse}
 		buffer := &bytes.Buffer{}
 
-		app, err := New(llmClient, logger, Config{Output: buffer})
+		app, err := New(&llm.MockLLMClient{}, logger, Config{Output: buffer})
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
 
-		chatHistory := []llm.ChatMessage{{Role: llm.System, Content: "test"}}
-		_, err = app.handleLLMResponse(context.Background(), chatHistory)
+		err = app.handleLLMResponseError(llm.ErrClientResponse)
 		if err != nil {
 			t.Fatalf("expected handleLLMResponse to recover, got %v", err)
 		}
@@ -181,16 +179,14 @@ func TestHandleLLMResponse(t *testing.T) {
 	t.Run("prints message for ErrNon2xxResponse", func(t *testing.T) {
 		t.Parallel()
 
-		llmClient := &llm.MockLLMClient{Error: llm.ErrNon2xxResponse}
 		buffer := &bytes.Buffer{}
 
-		app, err := New(llmClient, logger, Config{Output: buffer})
+		app, err := New(&llm.MockLLMClient{}, logger, Config{Output: buffer})
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
 
-		chatHistory := []llm.ChatMessage{{Role: llm.System, Content: "test"}}
-		_, err = app.handleLLMResponse(context.Background(), chatHistory)
+		err = app.handleLLMResponseError(llm.ErrNon2xxResponse)
 		if err != nil {
 			t.Fatalf("expected handleLLMResponse to recover, got %v", err)
 		}
@@ -205,16 +201,14 @@ func TestHandleLLMResponse(t *testing.T) {
 	t.Run("prints message for ErrResponseBody", func(t *testing.T) {
 		t.Parallel()
 
-		llmClient := &llm.MockLLMClient{Error: llm.ErrResponseBody}
 		buffer := &bytes.Buffer{}
 
-		app, err := New(llmClient, logger, Config{Output: buffer})
+		app, err := New(&llm.MockLLMClient{}, logger, Config{Output: buffer})
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
 
-		chatHistory := []llm.ChatMessage{{Role: llm.System, Content: "test"}}
-		_, err = app.handleLLMResponse(context.Background(), chatHistory)
+		err = app.handleLLMResponseError(llm.ErrResponseBody)
 		if err != nil {
 			t.Fatalf("expected handleLLMResponse to recover, got %v", err)
 		}
@@ -229,16 +223,14 @@ func TestHandleLLMResponse(t *testing.T) {
 	t.Run("prints message for ErrUnmarshalResponse", func(t *testing.T) {
 		t.Parallel()
 
-		llmClient := &llm.MockLLMClient{Error: llm.ErrUnmarshalResponse}
 		buffer := &bytes.Buffer{}
 
-		app, err := New(llmClient, logger, Config{Output: buffer})
+		app, err := New(llm.MockLLMClient{}, logger, Config{Output: buffer})
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
 
-		chatHistory := []llm.ChatMessage{{Role: llm.System, Content: "test"}}
-		_, err = app.handleLLMResponse(context.Background(), chatHistory)
+		err = app.handleLLMResponseError(llm.ErrUnmarshalResponse)
 		if err != nil {
 			t.Fatalf("expected handleLLMResponse to recover, got %v", err)
 		}
