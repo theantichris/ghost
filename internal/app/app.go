@@ -74,7 +74,6 @@ func (app *App) Run(ctx context.Context, input io.Reader) error {
 	if err != nil {
 		return err
 	}
-
 	chatHistory = append(chatHistory, llmMessage)
 
 	app.logger.Info("starting chat loop", slog.String("component", "app"))
@@ -89,14 +88,12 @@ func (app *App) Run(ctx context.Context, input io.Reader) error {
 
 			return err
 		}
-
 		chatHistory = append(chatHistory, userMessage)
 
 		llmMessage, err := app.getLLMMessage(ctx, chatHistory)
 		if err != nil {
 			return err
 		}
-
 		chatHistory = append(chatHistory, llmMessage)
 
 		if endChat {
