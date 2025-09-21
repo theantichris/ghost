@@ -44,7 +44,7 @@ func NewOllamaClient(baseURL, defaultModel string, httpClient *http.Client, logg
 }
 
 // StreamChat sends a message to the Ollama API and streams the response.
-func (ollama OllamaClient) StreamChat(ctx context.Context, chatHistory []ChatMessage, onToken func(string)) error {
+func (ollama *OllamaClient) StreamChat(ctx context.Context, chatHistory []ChatMessage, onToken func(string)) error {
 	// Create request body
 
 	requestBody, err := ollama.preparePayload(chatHistory, true)
@@ -120,7 +120,7 @@ func (ollama OllamaClient) StreamChat(ctx context.Context, chatHistory []ChatMes
 }
 
 // Chat sends a message to the Ollama API.
-func (ollama OllamaClient) Chat(ctx context.Context, chatHistory []ChatMessage) (ChatMessage, error) {
+func (ollama *OllamaClient) Chat(ctx context.Context, chatHistory []ChatMessage) (ChatMessage, error) {
 	requestBody, err := ollama.preparePayload(chatHistory, false)
 	if err != nil {
 		return ChatMessage{}, err
@@ -170,7 +170,7 @@ func (ollama OllamaClient) Chat(ctx context.Context, chatHistory []ChatMessage) 
 }
 
 // preparePayload takes the chat history and returns the marshaled request body.
-func (ollama OllamaClient) preparePayload(chatHistory []ChatMessage, stream bool) ([]byte, error) {
+func (ollama *OllamaClient) preparePayload(chatHistory []ChatMessage, stream bool) ([]byte, error) {
 	if len(chatHistory) == 0 {
 		return nil, ErrChatHistoryEmpty
 	}
@@ -190,7 +190,7 @@ func (ollama OllamaClient) preparePayload(chatHistory []ChatMessage, stream bool
 }
 
 // createHTTPRequest creates the HTTP request with timeout and headers.
-func (ollama OllamaClient) createHTTPRequest(ctx context.Context, requestBody []byte) (*http.Request, context.CancelFunc, error) {
+func (ollama *OllamaClient) createHTTPRequest(ctx context.Context, requestBody []byte) (*http.Request, context.CancelFunc, error) {
 	requestCTX, cancel := context.WithTimeout(ctx, 2*time.Minute)
 
 	clientRequest, err := http.NewRequestWithContext(requestCTX, http.MethodPost, ollama.baseURL+"/api/chat", bytes.NewReader(requestBody))
@@ -205,7 +205,7 @@ func (ollama OllamaClient) createHTTPRequest(ctx context.Context, requestBody []
 }
 
 // checkForHTTPError returns the correct error for the HTTP status code.
-func (ollama OllamaClient) checkForHTTPError(statusCode int, body io.ReadCloser) error {
+func (ollama *OllamaClient) checkForHTTPError(statusCode int, body io.ReadCloser) error {
 	if statusCode/100 != 2 {
 		responseBody, err := io.ReadAll(body)
 		if err != nil {

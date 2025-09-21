@@ -19,7 +19,7 @@ type MockLLMClient struct {
 }
 
 // Chat is a mock implementation of the Chat method.
-func (mock MockLLMClient) Chat(ctx context.Context, chatHistory []ChatMessage) (ChatMessage, error) {
+func (mock *MockLLMClient) Chat(ctx context.Context, chatHistory []ChatMessage) (ChatMessage, error) {
 	if mock.Error != nil {
 		return ChatMessage{}, mock.Error
 	}
@@ -28,7 +28,7 @@ func (mock MockLLMClient) Chat(ctx context.Context, chatHistory []ChatMessage) (
 }
 
 // StreamChat is a mock implementation of the StreamChat method.
-func (mock MockLLMClient) StreamChat(ctx context.Context, chatHistory []ChatMessage, onToken func(string)) error {
+func (mock *MockLLMClient) StreamChat(ctx context.Context, chatHistory []ChatMessage, onToken func(string)) error {
 	if mock.Error != nil {
 		return mock.Error
 	}

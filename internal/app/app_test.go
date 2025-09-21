@@ -305,7 +305,7 @@ func TestHandleLLMResponseError(t *testing.T) {
 
 		buffer := &bytes.Buffer{}
 
-		app, err := New(llm.MockLLMClient{}, logger, Config{Output: buffer})
+		app, err := New(&llm.MockLLMClient{}, logger, Config{Output: buffer})
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
