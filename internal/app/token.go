@@ -17,6 +17,7 @@ type tokenHandler struct {
 	insideThink bool            // True if inside a <think> block.
 	buffer      strings.Builder // Buffers the tokens to check for <think> blocks.
 	passThrough bool            // True if no possible <think> blocks.
+	hasOutput   bool
 }
 
 // handle updates the tokens then filters out the think and writes the output.
@@ -24,7 +25,20 @@ func (handler *tokenHandler) handle(token string) {
 	*handler.tokens += token
 
 	if handler.passThrough {
-		handler.output.Write([]byte(token))
+		outputContent := token
+
+		if !handler.hasOutput {
+			outputContent = strings.TrimLeft(outputContent, " \n\r\t")
+
+			if outputContent != "" {
+				handler.hasOutput = true
+			}
+		}
+
+		if outputContent != "" {
+			handler.output.Write([]byte(outputContent))
+		}
+
 		return
 	}
 
@@ -35,7 +49,9 @@ func (handler *tokenHandler) handle(token string) {
 		if strings.HasPrefix(bufferContent, openTag) {
 			handler.insideThink = true
 		} else if noThinkBlocks(bufferContent) {
+			bufferContent = strings.TrimLeft(bufferContent, " \n\r\t")
 			handler.output.Write([]byte(bufferContent))
+
 			handler.buffer.Reset()
 			handler.passThrough = true
 		}
@@ -43,8 +59,13 @@ func (handler *tokenHandler) handle(token string) {
 
 	if handler.insideThink {
 		if idx := strings.Index(bufferContent, closeTag); idx != -1 {
-			afterThink := bufferContent[idx+len(closeTag):]
-			handler.output.Write([]byte(afterThink))
+			content := bufferContent[idx+len(closeTag):]
+			content = strings.TrimLeft(content, " \n\r\t")
+
+			if content != "" {
+				handler.output.Write([]byte(content))
+			}
+
 			handler.buffer.Reset()
 			handler.passThrough = true
 		}
