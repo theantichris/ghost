@@ -12,7 +12,7 @@
        ░   ░  ░  ░    ░ ░        ░
 ```
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/theantichris/assistant-go.svg)](https://pkg.go.dev/github.com/theantichris/assistant-go) [![CI](https://github.com/theantichris/assistant-go/actions/workflows/ci.yml/badge.svg)](https://github.com/theantichris/assistant-go/actions/workflows/ci.yml)
+[![Go Reference](https://pkg.go.dev/badge/github.com/theantichris/ghost.svg)](https://pkg.go.dev/github.com/theantichris/ghost) [![Build Status](https://github.com/theantichris/ghost/actions/workflows/go.yml/badge.svg)](https://github.com/theantichris/ghost/actions) [![Build Status](https://github.com/theantichris/ghost/actions/workflows/markdown.yml/badge.svg)](https://github.com/theantichris/ghost/actions) [![Go ReportCard](https://goreportcard.com/badge/theantichris/ghost)](https://goreportcard.com/report/theantichris/ghost) ![license](https://img.shields.io/badge/license-MIT-informational?style=flat)
 
 **Ghost** is a local, general-purpose AI assistant and orchestrator built in Go and powered by Ollama. It is designed for research, chat, and task automation, running entirely on your own machine with hybrid connectivity.
 
@@ -21,7 +21,7 @@ The vision for Ghost is inspired by cyberpunk media such as _Shadowrun_, _Cyberp
 ## Documents
 
 - Specification: [SPEC.md](SPEC.md)
-- Roadmap: [ROADMAP.md](ROADMAP.md)
+- Agents: [AGENTS.md](AGENTS.md)
 
 ## Requirements
 
@@ -56,7 +56,3 @@ Temporary issues (network hiccups, Ollama downtime, malformed responses) surface
 - **Streaming Responses**: Real-time token-by-token output as the model generates responses
 - **Think Block Filtering**: Automatically filters out `<think>` blocks from thinking models while preserving them in chat history
 - **Graceful Error Recovery**: Network issues and API errors display as system messages without ending the session
-
-## Next Steps
-
-See the [roadmap](ROADMAP.md) for upcoming work including the Bubble Tea UI, tool system, and memory systems.
