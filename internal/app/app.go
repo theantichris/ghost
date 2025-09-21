@@ -115,12 +115,12 @@ func (app *App) getLLMMessage(ctx context.Context, chatHistory []llm.ChatMessage
 	fmt.Fprint(app.output, ghostLabel)
 
 	var tokens string
-	err := app.llmClient.StreamChat(ctx, chatHistory, func(token string) {
-		fmt.Fprint(app.output, token)
-		tokens += token
+	tokenHandler := &tokenHandler{
+		output: app.output,
+		tokens: &tokens,
+	}
 
-		// TODO: Remove <think> blocks.
-	})
+	err := app.llmClient.StreamChat(ctx, chatHistory, tokenHandler.handle)
 
 	fmt.Fprint(app.output, "\n") // Add newline after LLM message.
 

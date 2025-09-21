@@ -85,13 +85,13 @@ func TestRun(t *testing.T) {
 
 				switch callCount {
 				case 1:
-					tokens := []string{"Hello", ", ", "user", "!\n"}
+					tokens := []string{"<think>thinking</think>Hello", ", ", "user", "!\n"}
 
 					for _, token := range tokens {
 						onToken(token)
 					}
 				case 2:
-					tokens := []string{"Goodbye", ", ", "user", "!\n"}
+					tokens := []string{"<think>thinking</think>Goodbye", ", ", "user", "!\n"}
 
 					for _, token := range tokens {
 						onToken(token)
