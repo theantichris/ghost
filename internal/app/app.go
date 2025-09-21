@@ -182,27 +182,3 @@ func (app *App) handleLLMResponseError(err error) error {
 
 	return fmt.Errorf("%w: %s", ErrChatFailed, err)
 }
-
-// stripThinkBlock removes any <think>...</think> blocks from the message.
-func stripThinkBlock(message string) string {
-	openTag := "<think>"
-	closeTag := "</think>"
-
-	for {
-		start := strings.Index(message, openTag)
-		if start == -1 {
-			break
-		}
-
-		end := strings.Index(message[start+len(openTag):], closeTag)
-		if end == -1 {
-			break
-		}
-
-		blockEnd := start + len(openTag) + end + len(closeTag)
-
-		message = message[:start] + message[blockEnd:]
-	}
-
-	return strings.TrimSpace(message)
-}
