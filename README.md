@@ -32,10 +32,10 @@ The vision for Ghost is inspired by cyberpunk media such as _Shadowrun_, _Cyberp
 ## Usage
 
 ```bash
-go run ./cmd/ghost -model llama3:8b
+go run ./cmd/ghost
 ```
 
-Ghost seeds every session with its system prompt, greets you on startup, and maintains in-memory chat history for context. Type messages directly into the terminal; send `/bye` to end the session.
+Ghost seeds every session with its system prompt, greets you on startup, and maintains in-memory chat history for context. Responses stream in real-time as tokens are generated. Type messages directly into the terminal; send `/bye` to end the session.
 
 ### Flags
 
@@ -51,6 +51,12 @@ Ghost seeds every session with its system prompt, greets you on startup, and mai
 
 Temporary issues (network hiccups, Ollama downtime, malformed responses) surface as system messages inside the chat instead of exiting immediately, so you can retry once the condition clears.
 
+## Features
+
+- **Streaming Responses**: Real-time token-by-token output as the model generates responses
+- **Think Block Filtering**: Automatically filters out `<think>` blocks from thinking models while preserving them in chat history
+- **Graceful Error Recovery**: Network issues and API errors display as system messages without ending the session
+
 ## Next Steps
 
-See the [roadmap](ROADMAP.md) for upcoming work including streaming responses, the Bubble Tea UI, and the tool and memory systems.
+See the [roadmap](ROADMAP.md) for upcoming work including the Bubble Tea UI, tool system, and memory systems.

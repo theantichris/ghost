@@ -10,9 +10,11 @@
 
 # Code coverage profiles and other test artifacts
 *.out
+coverage
 coverage.*
 *.coverprofile
 profile.cov
+coverage/
 
 # Go workspace file
 go.work
@@ -23,3 +25,6 @@ go.work.sum
 
 # IDEs and editors
 .vscode/
+
+# LLMs
+.claude/

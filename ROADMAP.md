@@ -14,7 +14,7 @@
   - [x] Allow `/bye` command to exit cleanly
   - [x] Add debug flag with optional chat-history dump
   - [x] Handle recoverable errors
-- [ ] Stream LLM response
+- [x] Stream LLM response
 - [ ] TUI scaffolding (Bubble Tea): single-window chat view with streaming render, input line, scrollback, basic keymap
 
 ## Phase 2: Card Management

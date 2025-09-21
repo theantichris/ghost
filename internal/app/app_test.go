@@ -33,7 +33,7 @@ func TestNew(t *testing.T) {
 	t.Run("creates a new app instance", func(t *testing.T) {
 		t.Parallel()
 
-		config := Config{Debug: false}
+		config := Config{Debug: false, Output: &bytes.Buffer{}}
 		llmClient := &llm.MockLLMClient{}
 
 		app, err := New(llmClient, logger, config)
@@ -61,7 +61,7 @@ func TestNew(t *testing.T) {
 	t.Run("returns error for nil llmClient", func(t *testing.T) {
 		t.Parallel()
 
-		_, err := New(nil, logger, Config{})
+		_, err := New(nil, logger, Config{Output: &bytes.Buffer{}})
 		if err == nil {
 			t.Fatalf("expected error for nil llmClient, got nil")
 		}
@@ -73,107 +73,185 @@ func TestNew(t *testing.T) {
 }
 
 func TestRun(t *testing.T) {
-	t.Run("runs the app without error", func(t *testing.T) {
+	t.Run("outputs LLM messages and handles exit", func(t *testing.T) {
 		t.Parallel()
 
-		app, err := New(&llm.MockLLMClient{}, logger, Config{Output: &bytes.Buffer{}})
+		callCount := 0 // Used to simulate the two streams in Run()
+
+		llmClient := &llm.MockLLMClient{
+			StreamChatFunc: func(ctx context.Context, chatHistory []llm.ChatMessage,
+				onToken func(string)) error {
+				callCount++
+
+				switch callCount {
+				case 1:
+					tokens := []string{"<think>thinking</think>Hello", ", ", "user", "!\n"}
+
+					for _, token := range tokens {
+						onToken(token)
+					}
+				case 2:
+					tokens := []string{"<think>thinking</think>Goodbye", ", ", "user", "!\n"}
+
+					for _, token := range tokens {
+						onToken(token)
+					}
+				}
+
+				return nil
+			},
+		}
+
+		var outputBuff bytes.Buffer
+
+		app, err := New(llmClient, logger, Config{Output: &outputBuff})
 		if err != nil {
 			t.Fatalf("expected no error creating app, got %v", err)
 		}
 
 		err = app.Run(context.Background(), bytes.NewBufferString(exitCommand+"\n"))
 		if err != nil {
-			t.Errorf("expected no error running app, got %v", err)
+			t.Fatalf("expected no error running app, got %v", err)
+		}
+
+		actual := outputBuff.String()
+		expected := "\nGhost: Hello, user!\n\n\nUser: \nGhost: Goodbye, user!\n\n"
+
+		if actual != expected {
+			t.Errorf("expected response %q, got %q", expected, actual)
 		}
 	})
 
-	t.Run("returns error if llmClient.Chat fails", func(t *testing.T) {
+	t.Run("returns error when chat fails at LLM greeting", func(t *testing.T) {
 		t.Parallel()
 
-		llmClient := &llm.MockLLMClient{Error: ErrChatFailed}
-		app, err := New(llmClient, logger, Config{Output: &bytes.Buffer{}})
+		llmClient := &llm.MockLLMClient{
+			StreamChatFunc: func(ctx context.Context, chatHistory []llm.ChatMessage,
+				onToken func(string)) error {
+
+				return ErrChatFailed
+			},
+		}
+
+		var outputBuff bytes.Buffer
+
+		app, err := New(llmClient, logger, Config{Output: &outputBuff})
 		if err != nil {
 			t.Fatalf("expected no error creating app, got %v", err)
 		}
 
-		err = app.Run(context.Background(), bytes.NewBufferString("Hello\n"))
+		err = app.Run(context.Background(), bytes.NewBufferString(exitCommand+"\n"))
 		if err == nil {
-			t.Fatal("expected error running app, got nil")
+			t.Fatalf("received no error when expecting one")
 		}
 
 		if !errors.Is(err, ErrChatFailed) {
-			t.Errorf("expected ErrChatFailed, got %v", err)
+			t.Errorf("expected error %v, got %v", ErrChatFailed, err)
 		}
 	})
 
-	t.Run("handles empty input gracefully", func(t *testing.T) {
+	t.Run("returns error when chat fails in chat loop", func(t *testing.T) {
 		t.Parallel()
 
-		app, err := New(&llm.MockLLMClient{}, logger, Config{Output: &bytes.Buffer{}})
+		callCount := 0 // Used to simulate the two streams in Run()
+
+		llmClient := &llm.MockLLMClient{
+			StreamChatFunc: func(ctx context.Context, chatHistory []llm.ChatMessage,
+				onToken func(string)) error {
+				callCount++
+
+				switch callCount {
+				case 1:
+					tokens := []string{"Hello", ", ", "user", "!\n"}
+
+					for _, token := range tokens {
+						onToken(token)
+					}
+				case 2:
+					return ErrChatFailed
+				}
+
+				return nil
+			},
+		}
+
+		var outputBuff bytes.Buffer
+
+		app, err := New(llmClient, logger, Config{Output: &outputBuff})
 		if err != nil {
 			t.Fatalf("expected no error creating app, got %v", err)
 		}
 
-		err = app.Run(context.Background(), bytes.NewBufferString(" \n"))
-		if err != nil {
-			t.Errorf("expected no error running app with empty input, got %v", err)
-		}
-	})
-
-	t.Run("returns error if reading input fails", func(t *testing.T) {
-		t.Parallel()
-
-		app, err := New(&llm.MockLLMClient{}, logger, Config{Output: &bytes.Buffer{}})
-		if err != nil {
-			t.Fatalf("expected no error creating app, got %v", err)
-		}
-
-		err = app.Run(context.Background(), &faultyReader{err: errors.New("boom")})
+		err = app.Run(context.Background(), bytes.NewBufferString(exitCommand+"\n"))
 		if err == nil {
-			t.Fatal("expected error running app with faulty reader, got nil")
+			t.Fatalf("expected no error running app, got %v", err)
+		}
+
+		if !errors.Is(err, ErrChatFailed) {
+			t.Errorf("expected error %v, got %v", ErrChatFailed, err)
+		}
+
+		actual := outputBuff.String()
+		expected := "\nGhost: Hello, user!\n\n\nUser: \nGhost: \n"
+
+		if actual != expected {
+			t.Errorf("expected response %q, got %q", expected, actual)
+		}
+	})
+
+	t.Run("returns error for faulty user input", func(t *testing.T) {
+		t.Parallel()
+
+		llmClient := &llm.MockLLMClient{
+			StreamChatFunc: func(ctx context.Context, chatHistory []llm.ChatMessage,
+				onToken func(string)) error {
+				tokens := []string{"Hello", ", ", "user", "!\n"}
+
+				for _, token := range tokens {
+					onToken(token)
+				}
+
+				return nil
+			},
+		}
+
+		var outputBuff bytes.Buffer
+
+		app, err := New(llmClient, logger, Config{Output: &outputBuff})
+		if err != nil {
+			t.Fatalf("expected no error creating app, got %v", err)
+		}
+
+		err = app.Run(context.Background(), &faultyReader{})
+		if err == nil {
+			t.Fatal("expected error, received nil")
 		}
 
 		if !errors.Is(err, ErrReadingInput) {
-			t.Errorf("expected ErrReadingInput, got %v", err)
-		}
-	})
-
-	t.Run("exits gracefully when EOF is reached", func(t *testing.T) {
-		t.Parallel()
-
-		app, err := New(&llm.MockLLMClient{}, logger, Config{Output: &bytes.Buffer{}})
-		if err != nil {
-			t.Fatalf("expected no error creating app, got %v", err)
-		}
-
-		err = app.Run(context.Background(), bytes.NewBufferString("Hello\n"))
-		if err != nil {
-			t.Errorf("expected no error running app until EOF, got %v", err)
+			t.Errorf("expected error %v, got %v", ErrReadingInput, err)
 		}
 	})
 }
 
-func TestHandleLLMResponse(t *testing.T) {
+func TestHandleLLMResponseError(t *testing.T) {
 	t.Run("prints message for ErrClientResponse", func(t *testing.T) {
 		t.Parallel()
 
-		llmClient := &llm.MockLLMClient{Error: llm.ErrClientResponse}
 		buffer := &bytes.Buffer{}
 
-		app, err := New(llmClient, logger, Config{Output: buffer})
+		app, err := New(&llm.MockLLMClient{}, logger, Config{Output: buffer})
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
 
-		chatHistory := []llm.ChatMessage{{Role: llm.System, Content: "test"}}
-		_, err = app.handleLLMResponse(context.Background(), chatHistory)
+		err = app.handleLLMResponseError(llm.ErrClientResponse)
 		if err != nil {
 			t.Fatalf("expected handleLLMResponse to recover, got %v", err)
 		}
 
 		actual := strings.TrimSpace(buffer.String())
 
-		if actual != msgClientResponse {
+		if actual != msgClientResponse.String() {
 			t.Errorf("expected system message %q, got %q", msgClientResponse, actual)
 		}
 	})
@@ -181,23 +259,21 @@ func TestHandleLLMResponse(t *testing.T) {
 	t.Run("prints message for ErrNon2xxResponse", func(t *testing.T) {
 		t.Parallel()
 
-		llmClient := &llm.MockLLMClient{Error: llm.ErrNon2xxResponse}
 		buffer := &bytes.Buffer{}
 
-		app, err := New(llmClient, logger, Config{Output: buffer})
+		app, err := New(&llm.MockLLMClient{}, logger, Config{Output: buffer})
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
 
-		chatHistory := []llm.ChatMessage{{Role: llm.System, Content: "test"}}
-		_, err = app.handleLLMResponse(context.Background(), chatHistory)
+		err = app.handleLLMResponseError(llm.ErrNon2xxResponse)
 		if err != nil {
 			t.Fatalf("expected handleLLMResponse to recover, got %v", err)
 		}
 
 		actual := strings.TrimSpace(buffer.String())
 
-		if actual != msgNon2xxResponse {
+		if actual != msgNon2xxResponse.String() {
 			t.Errorf("expected system message %q, got %q", msgNon2xxResponse, actual)
 		}
 	})
@@ -205,23 +281,21 @@ func TestHandleLLMResponse(t *testing.T) {
 	t.Run("prints message for ErrResponseBody", func(t *testing.T) {
 		t.Parallel()
 
-		llmClient := &llm.MockLLMClient{Error: llm.ErrResponseBody}
 		buffer := &bytes.Buffer{}
 
-		app, err := New(llmClient, logger, Config{Output: buffer})
+		app, err := New(&llm.MockLLMClient{}, logger, Config{Output: buffer})
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
 
-		chatHistory := []llm.ChatMessage{{Role: llm.System, Content: "test"}}
-		_, err = app.handleLLMResponse(context.Background(), chatHistory)
+		err = app.handleLLMResponseError(llm.ErrResponseBody)
 		if err != nil {
 			t.Fatalf("expected handleLLMResponse to recover, got %v", err)
 		}
 
 		actual := strings.TrimSpace(buffer.String())
 
-		if actual != msgResponseBody {
+		if actual != msgResponseBody.String() {
 			t.Errorf("expected system message %q, got %q", msgResponseBody, actual)
 		}
 	})
@@ -229,61 +303,22 @@ func TestHandleLLMResponse(t *testing.T) {
 	t.Run("prints message for ErrUnmarshalResponse", func(t *testing.T) {
 		t.Parallel()
 
-		llmClient := &llm.MockLLMClient{Error: llm.ErrUnmarshalResponse}
 		buffer := &bytes.Buffer{}
 
-		app, err := New(llmClient, logger, Config{Output: buffer})
+		app, err := New(&llm.MockLLMClient{}, logger, Config{Output: buffer})
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
 
-		chatHistory := []llm.ChatMessage{{Role: llm.System, Content: "test"}}
-		_, err = app.handleLLMResponse(context.Background(), chatHistory)
+		err = app.handleLLMResponseError(llm.ErrUnmarshalResponse)
 		if err != nil {
 			t.Fatalf("expected handleLLMResponse to recover, got %v", err)
 		}
 
 		actual := strings.TrimSpace(buffer.String())
 
-		if actual != msgUnmarshalResponse {
+		if actual != msgUnmarshalResponse.String() {
 			t.Errorf("expected system message %q, got %q", msgUnmarshalResponse, actual)
-		}
-	})
-}
-
-func TestStripThinkBlock(t *testing.T) {
-	t.Run("strips thinking block from response", func(t *testing.T) {
-		t.Parallel()
-
-		input := "<think>I need to think of a good joke.</think> Why did the chicken cross the road?"
-
-		expected := "Why did the chicken cross the road?"
-		actual := stripThinkBlock(input)
-
-		if actual != expected {
-			t.Errorf("expected %q, got %q", expected, actual)
-		}
-	})
-
-	t.Run("breaks if <think> is not found", func(t *testing.T) {
-		t.Parallel()
-
-		input := "Why did the chicken cross the road?</think>"
-		actual := stripThinkBlock(input)
-
-		if actual != input {
-			t.Errorf("expected %q, got %q", input, actual)
-		}
-	})
-
-	t.Run("breaks if </think> is not found", func(t *testing.T) {
-		t.Parallel()
-
-		input := "<think>Why did the chicken cross the road?"
-		actual := stripThinkBlock(input)
-
-		if actual != input {
-			t.Errorf("expected %q, got %q", input, actual)
 		}
 	})
 }
