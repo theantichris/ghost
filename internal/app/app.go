@@ -16,18 +16,13 @@ import (
 
 const systemPrompt string = "You are Ghost, a concise terminal assistant. Greet the user warmly once at the start of the conversation, then answer their requests directly and briefly. Ask for clarification only when needed."
 
-const (
-	msgClientResponse    string = "(system) I couldn't reach the LLM. Check your network or make sure the host is running then try again"
-	msgNon2xxResponse    string = "(system) The LLM response with an error. Verify the model is pulled and the server is healthy before retrying."
-	msgResponseBody      string = "(system) I couldn't read the LLM's reply. This might be a transient issue, please try again in a moment."
-	msgUnmarshalResponse string = "(system) The LLM sent back something I couldn't parse. It may be busy, try your request again shortly."
-)
-
+// Chat labels.
 const (
 	userLabel  string = "\nUser: "
 	ghostLabel string = "\nGhost: "
 )
 
+// Command constants.
 const (
 	exitCommand string = "/bye"
 )
@@ -165,7 +160,7 @@ func (app *App) getUserMessage(scanner *bufio.Scanner) (llm.ChatMessage, bool, e
 
 // handleLLMResponseError shows a system message for recoverable errors and returns unrecoverable errors.
 func (app *App) handleLLMResponseError(err error) error {
-	errorMap := map[error]string{
+	errorMap := map[error]systemMessage{
 		llm.ErrClientResponse:    msgClientResponse,
 		llm.ErrNon2xxResponse:    msgNon2xxResponse,
 		llm.ErrResponseBody:      msgResponseBody,

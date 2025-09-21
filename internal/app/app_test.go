@@ -251,7 +251,7 @@ func TestHandleLLMResponseError(t *testing.T) {
 
 		actual := strings.TrimSpace(buffer.String())
 
-		if actual != msgClientResponse {
+		if actual != msgClientResponse.String() {
 			t.Errorf("expected system message %q, got %q", msgClientResponse, actual)
 		}
 	})
@@ -273,7 +273,7 @@ func TestHandleLLMResponseError(t *testing.T) {
 
 		actual := strings.TrimSpace(buffer.String())
 
-		if actual != msgNon2xxResponse {
+		if actual != msgNon2xxResponse.String() {
 			t.Errorf("expected system message %q, got %q", msgNon2xxResponse, actual)
 		}
 	})
@@ -295,7 +295,7 @@ func TestHandleLLMResponseError(t *testing.T) {
 
 		actual := strings.TrimSpace(buffer.String())
 
-		if actual != msgResponseBody {
+		if actual != msgResponseBody.String() {
 			t.Errorf("expected system message %q, got %q", msgResponseBody, actual)
 		}
 	})
@@ -317,7 +317,7 @@ func TestHandleLLMResponseError(t *testing.T) {
 
 		actual := strings.TrimSpace(buffer.String())
 
-		if actual != msgUnmarshalResponse {
+		if actual != msgUnmarshalResponse.String() {
 			t.Errorf("expected system message %q, got %q", msgUnmarshalResponse, actual)
 		}
 	})
