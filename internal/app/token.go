@@ -12,12 +12,12 @@ const (
 
 // tokenHandler handles the response tokens from the LLM.
 type tokenHandler struct {
-	output      io.Writer
-	tokens      *string
+	output      io.Writer       // The output writer.
+	tokens      *string         // Tokens to be output.
 	insideThink bool            // True if inside a <think> block.
 	buffer      strings.Builder // Buffers the tokens to check for <think> blocks.
 	passThrough bool            // True if no possible <think> blocks.
-	hasOutput   bool
+	hasOutput   bool            // Used to trim newlines from the beginning of output.
 }
 
 // handle updates the tokens then filters out the think and writes the output.
