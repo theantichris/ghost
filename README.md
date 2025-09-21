@@ -21,7 +21,7 @@ The vision for Ghost is inspired by cyberpunk media such as _Shadowrun_, _Cyberp
 ## Documents
 
 - Specification: [SPEC.md](SPEC.md)
-- Roadmap: [ROADMAP.md](ROADMAP.md)
+- Agents: [AGENTS.md](AGENTS.md)
 
 ## Requirements
 
@@ -56,7 +56,3 @@ Temporary issues (network hiccups, Ollama downtime, malformed responses) surface
 - **Streaming Responses**: Real-time token-by-token output as the model generates responses
 - **Think Block Filtering**: Automatically filters out `<think>` blocks from thinking models while preserving them in chat history
 - **Graceful Error Recovery**: Network issues and API errors display as system messages without ending the session
-
-## Next Steps
-
-See the [roadmap](ROADMAP.md) for upcoming work including the Bubble Tea UI, tool system, and memory systems.

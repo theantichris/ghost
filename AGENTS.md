@@ -5,7 +5,6 @@ Purpose: Help automated coding agents make correct, minimal, forward-compatible 
 Always align generated code and docs with:
 
 - [SPEC.md](SPEC.md)
-- [ROADMAP.md](ROADMAP.md)
 
 ## Project Overview
 
