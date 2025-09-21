@@ -28,7 +28,8 @@ This repo also serves as the maintainer's personal sandbox for relearning modern
 
 ```text
 cmd/ghost/           CLI entrypoint
-internal/llm/        Ollama client, streaming
+internal/app/        Application core, chat loop, token handling
+internal/llm/        Ollama client with streaming implementation
 internal/tui/        Bubble Tea chat view (planned)
 internal/tools/      Tool framework and built-ins (planned)
 internal/memory/     Session/history, RAG integration (planned)
@@ -39,11 +40,13 @@ pkg/                 Only if stable external API needed
 ### Key Patterns
 
 - Each boundary returns wrapped errors upward; only CLI maps to exit codes
-- Internal packages include interface + mock for testing
+- Internal packages include interface + mock for testing (e.g., `LLMClient` interface with `MockLLMClient`)
 - Future features add new interfaces rather than mutating existing ones
 - Constructors that need optional behavior accept a config/options struct (e.g., output writers, debug toggles) instead of long positional argument lists.
 - Keep HTTP client reuse (no per-call instantiation)
 - Context as first param (after receiver) for cancelable operations; never store in structs
+- Streaming responses use callback functions (`onToken func(string)`) for real-time output
+- Stateful operations (like token filtering) use dedicated handler types with clear state management
 
 ## Technology Stack
 

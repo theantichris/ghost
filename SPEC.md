@@ -22,6 +22,7 @@ Capabilities should include research, web searching, helping with code, generati
 - **LLM Client**: Ollama API integration with tool support
 - **Conversation Manager**: Handle chat flow, context windows, streaming
   - Seeds CLI sessions with the Ghost system prompt, captures the initial greeting before user input, maintains in-memory turn history, and exits on the `/bye` command.
+  - Streaming responses implemented with real-time token output and think block filtering for thinking models.
 - **Tool Orchestrator**: Execute and manage external tools/functions
 
 #### 2. Memory System (Hybrid Approach)
@@ -68,6 +69,7 @@ The assistant should demonstrate:
 - Streaming responses for better user experience
 - Context window management for long conversations
 - Resource usage optimization for local execution
+- Think block filtering preserves full context while hiding reasoning from display
 
 ### Security
 
@@ -116,10 +118,10 @@ Tool permission gating is deferred until tools beyond web search are added.
 
 Flags override environment variables, which override internal defaults.
 
-| Concern | Flag     | Env             | Default (MVP)         |
-| ------- | -------- | --------------- | --------------------- |
-| Model   | `-model` | `DEFAULT_MODEL` | (required if not set) |
-| Debug logging | `-debug` | — | `false` |
+| Concern       | Flag     | Env             | Default (MVP)         |
+| ------------- | -------- | --------------- | --------------------- |
+| Model         | `-model` | `DEFAULT_MODEL` | (required if not set) |
+| Debug logging | `-debug` | —               | `false`               |
 
 - Recoverable LLM failures (transport, non-2xx, decode) surface as system messages so sessions can continue without exiting.
 
@@ -175,7 +177,7 @@ Log levels (guideline):
 
 - DEBUG: token streaming internals (suppressed by default)
 - INFO: start/end of requests, selected model, tool invocations
-- WARN: transient recoverable issues (retryable network errors)
+- WARN: transient recoverable issues (recoverable network errors)
 - ERROR: user-visible failures or abort conditions
 
 ---
