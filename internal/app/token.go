@@ -36,7 +36,7 @@ func (handler *tokenHandler) handle(token string) {
 		}
 
 		if outputContent != "" {
-			handler.output.Write([]byte(outputContent))
+			_, _ = handler.output.Write([]byte(outputContent))
 		}
 
 		return
@@ -50,7 +50,7 @@ func (handler *tokenHandler) handle(token string) {
 			handler.insideThink = true
 		} else if noThinkBlocks(bufferContent) {
 			bufferContent = strings.TrimLeft(bufferContent, " \n\r\t")
-			handler.output.Write([]byte(bufferContent))
+			_, _ = handler.output.Write([]byte(bufferContent))
 
 			handler.buffer.Reset()
 			handler.passThrough = true
@@ -63,7 +63,7 @@ func (handler *tokenHandler) handle(token string) {
 			content = strings.TrimLeft(content, " \n\r\t")
 
 			if content != "" {
-				handler.output.Write([]byte(content))
+				_, _ = handler.output.Write([]byte(content))
 			}
 
 			handler.buffer.Reset()
