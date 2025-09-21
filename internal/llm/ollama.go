@@ -45,23 +45,17 @@ func NewOllamaClient(baseURL, defaultModel string, httpClient *http.Client, logg
 
 // StreamChat sends a message to the Ollama API and streams the response.
 func (ollama *OllamaClient) StreamChat(ctx context.Context, chatHistory []ChatMessage, onToken func(string)) error {
-	// Create request body
-
 	requestBody, err := ollama.preparePayload(chatHistory, true)
 	if err != nil {
 		return err
 	}
 
-	// Create request
-
 	request, cancel, err := ollama.createHTTPRequest(ctx, requestBody)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	defer cancel()
-
-	// Send request
 
 	ollama.logger.Info("sending chat request to Ollama API", slog.String("component", "ollama client"), slog.String("url", ollama.baseURL+"/api/chat"), slog.String("method", http.MethodPost))
 	ollama.logger.Debug("request payload", slog.String("component", "ollama client"), slog.String("payload", string(requestBody)))
@@ -78,14 +72,10 @@ func (ollama *OllamaClient) StreamChat(ctx context.Context, chatHistory []ChatMe
 
 	defer response.Body.Close()
 
-	// Create buffer
-
 	scanner := bufio.NewScanner(response.Body)
 	const maxTokenBytes = 11024 * 1024
 	buffer := make([]byte, 0, 64+1024)
 	scanner.Buffer(buffer, maxTokenBytes)
-
-	// Stream response
 
 	for scanner.Scan() {
 		line := scanner.Text()
