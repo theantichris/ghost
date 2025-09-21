@@ -12,7 +12,7 @@ A local, general-purpose AI assistant and orchestrator built in Go and powered b
 
 The vision for Ghost is inspired by cyberpunk media such as _Shadowrun_, _Cyberpunk 2077_, and _The Matrix_, bringing a versatile, always-on AI companion into a terminal-first experience.
 
-This repo also serves as the maintainer's personal sandbox for relearning modern Go after time away from coding. Provide explanations and incremental, well-referenced changes to support that learning goal.
+This repo also serves as the maintainer's personal sandbox for relearning modern Go after time away from coding. Answer questions like a tutorial aimed and teaching the usser. Provide explanations and incremental, well-referenced changes to support that learning goal.
 
 ## Core Principles
 
