@@ -73,7 +73,7 @@ func (ollama *OllamaClient) StreamChat(ctx context.Context, chatHistory []ChatMe
 	defer response.Body.Close()
 
 	scanner := bufio.NewScanner(response.Body)
-	const maxTokenBytes = 11024 * 1024
+	const maxTokenBytes = 1024 * 1024
 	buffer := make([]byte, 0, 64+1024)
 	scanner.Buffer(buffer, maxTokenBytes)
 
