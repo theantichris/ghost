@@ -3,9 +3,9 @@ package cmd
 import (
 	"bufio"
 	"context"
+	"errors"
 	"fmt"
 	"io"
-	"log/slog"
 	"net/http"
 	"os"
 	"strings"
@@ -20,6 +20,12 @@ var (
 	systemPrompt = "You are Ghost, a cyberpunk insprired terminal based assistant. Answer requests directly and briefly."
 	noNewLine    bool
 	timeout      time.Duration
+
+	ErrLLMBaseURLEmpty = errors.New("LLM API base url is empty")
+	ErrModelEmpty      = errors.New("model is empty")
+	ErrReadPipeInput   = errors.New("failed to read piped input")
+	ErrEmptyInput      = errors.New("input is empty")
+	ErrLLMClientInit   = errors.New("failed to create LLM client")
 )
 
 // askCmd represents the command called with chat.
@@ -50,7 +56,8 @@ func init() {
 func runAsk(cmd *cobra.Command, args []string) error {
 	llmClient, err := initializeLLMClient()
 	if err != nil {
-		return err
+		Logger.Error(ErrLLMClientInit.Error(), "error", err, "component", "askCmd")
+		return fmt.Errorf("%w: %s", ErrLLMClientInit, err)
 	}
 
 	stat, _ := os.Stdin.Stat()
@@ -61,7 +68,8 @@ func runAsk(cmd *cobra.Command, args []string) error {
 	if isPiped {
 		query, err = readPipedInput()
 		if err != nil {
-			return fmt.Errorf("failed to read piped input: %w", err)
+			Logger.Error(ErrReadPipeInput.Error(), "error", err, "component", "askCmd")
+			return fmt.Errorf("%w: %s", ErrReadPipeInput, err)
 		}
 
 		if len(args) > 0 {
@@ -70,7 +78,8 @@ func runAsk(cmd *cobra.Command, args []string) error {
 	} else if len(args) > 0 {
 		query = strings.Join(args, " ")
 	} else {
-		return fmt.Errorf("no input, provide a query or pipe input")
+		Logger.Error(ErrEmptyInput.Error(), "component", "askCmd")
+		return fmt.Errorf("%w, provide a query or pipe input", ErrEmptyInput)
 	}
 
 	return runSingleQuery(llmClient, query)
@@ -82,23 +91,21 @@ func initializeLLMClient() (*llm.OllamaClient, error) {
 	model := viper.GetString("model")
 
 	if ollamaBaseURL == "" {
-		return nil, fmt.Errorf("Ollama base URL not set, set it via OLLAMA_BASE_URL environment variable or config file")
+		return nil, fmt.Errorf("%w, set it via OLLAMA_BASE_URL environment variable or config file", ErrLLMBaseURLEmpty)
 	}
 
 	if model == "" {
-		return nil, fmt.Errorf("model not set, set it via DEFAULT_MODEL environment variable, config file, or --model flag")
+		return nil, fmt.Errorf("%w, set it via DEFAULT_MODEL environment variable, config file, or --model flag", ErrModelEmpty)
 
 	}
 
-	Logger.Debug("initializing LLM client", slog.String("component", "chatCmd"), slog.String("model", model), slog.String("base_url", ollamaBaseURL))
+	Logger.Debug("initializing LLM client", "model", model, "base_url", ollamaBaseURL, "component", "chatCmd")
 
-	httpClient := &http.Client{
-		Timeout: timeout,
-	}
+	httpClient := &http.Client{Timeout: timeout}
 
 	llmClient, err := llm.NewOllamaClient(ollamaBaseURL, model, httpClient, Logger)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create LLM Client: %w", err)
+		return nil, err
 	}
 
 	return llmClient, nil
