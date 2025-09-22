@@ -99,8 +99,6 @@ func initializeLLMClient() (*llm.OllamaClient, error) {
 
 	}
 
-	Logger.Debug("initializing LLM client", "model", model, "base_url", ollamaBaseURL, "component", "chatCmd")
-
 	httpClient := &http.Client{Timeout: timeout}
 
 	llmClient, err := llm.NewOllamaClient(ollamaBaseURL, model, httpClient, Logger)

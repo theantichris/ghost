@@ -26,14 +26,18 @@ type OllamaClient struct {
 // NewOllamaClient initializes a new OllamaClient with the given baseURL and defaultModel.
 func NewOllamaClient(baseURL, defaultModel string, httpClient *http.Client, logger *slog.Logger) (*OllamaClient, error) {
 	if strings.TrimSpace(baseURL) == "" {
+		logger.Error("Ollama client initialization failed", "error", ErrURLEmpty, "component", "ollama client")
+
 		return nil, ErrURLEmpty
 	}
 
 	if strings.TrimSpace(defaultModel) == "" {
+		logger.Error("Ollama client initialization failed", "error", ErrModelEmpty, "component", "ollama client")
+
 		return nil, ErrModelEmpty
 	}
 
-	logger.Info("Ollama client initialized", slog.String("component", "ollama client"), slog.String("baseURL", baseURL), slog.String("defaultModel", defaultModel))
+	logger.Info("Ollama client initialized", "baseURL", baseURL, "defaultModel", defaultModel, "component", "ollama client")
 
 	return &OllamaClient{
 		baseURL:      baseURL,
