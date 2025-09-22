@@ -92,7 +92,7 @@ func initLogger() {
 		logLevel = slog.LevelDebug
 	}
 
-	Logger = slog.New(slogcolor.NewHandler(askCmd.OutOrStderr(), &slogcolor.Options{
+	Logger = slog.New(slogcolor.NewHandler(os.Stderr, &slogcolor.Options{
 		Level:      logLevel,
 		TimeFormat: time.RFC3339,
 	}))
