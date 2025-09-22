@@ -3,8 +3,8 @@ package llm
 import "errors"
 
 var (
-	ErrURLEmpty          = errors.New("baseURL cannot be empty")
-	ErrModelEmpty        = errors.New("defaultModel cannot be empty")
+	ErrURLEmpty          = errors.New("API url cannot be empty")
+	ErrModelEmpty        = errors.New("default model cannot be empty")
 	ErrChatHistoryEmpty  = errors.New("chat history cannot be empty")
 	ErrMarshalRequest    = errors.New("failed to marshal request body")
 	ErrCreateRequest     = errors.New("failed to create HTTP request")
