@@ -50,9 +50,11 @@ Ghost processes your query through the configured LLM model and returns the resp
 ### Commands
 
 #### `ask` - Ask Ghost a question
+
 Send a query to the LLM and get a response. Supports both direct queries and piped input.
 
 **Command-specific flags:**
+
 - `--no-newline, -n` — Don't add newline after response (useful for scripts)
 - `--timeout` — HTTP timeout for LLM requests (default: 2 minutes)
 
@@ -70,12 +72,14 @@ Send a query to the LLM and get a response. Supports both direct queries and pip
 ### Configuration
 
 Ghost checks for configuration in the following order of precedence:
+
 1. Command-line flags
 2. Environment variables
 3. Config file (`.ghost.yaml`)
 4. Default values
 
 Configuration options:
+
 - Model selection via `--model` flag, `DEFAULT_MODEL` env var, or config file
 - Ollama base URL via `OLLAMA_BASE_URL` env var or config file
 
