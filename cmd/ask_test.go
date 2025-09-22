@@ -146,7 +146,7 @@ func TestRunSingleQuest(t *testing.T) {
 }
 
 func TestReadPipedInput(t *testing.T) {
-	t.Run("reades piped input", func(t *testing.T) {
+	t.Run("reads piped input", func(t *testing.T) {
 		t.Parallel()
 
 		input := strings.NewReader("cat main.go")
