@@ -138,7 +138,7 @@ func readPipedInput() (string, error) {
 }
 
 // runSingleQuery sends the query to the LLM client and writes the response.
-func runSingleQuery(llmClient *llm.OllamaClient, query string, output io.Writer) error {
+func runSingleQuery(llmClient llm.LLMClient, query string, output io.Writer) error {
 	ctx := context.Background()
 
 	chatHistory := []llm.ChatMessage{

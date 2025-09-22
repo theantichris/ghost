@@ -14,6 +14,7 @@ type LLMClient interface {
 
 // MockLLMClient is a mock implementation of the LLMClient interface for testing purposes.
 type MockLLMClient struct {
+	Content        string
 	Error          error
 	StreamChatFunc func(ctx context.Context, chatHistory []ChatMessage, onToken func(string)) error
 }
@@ -24,7 +25,7 @@ func (mock *MockLLMClient) Chat(ctx context.Context, chatHistory []ChatMessage) 
 		return ChatMessage{}, mock.Error
 	}
 
-	return ChatMessage{}, nil
+	return ChatMessage{Role: Assistant, Content: mock.Content}, nil
 }
 
 // StreamChat is a mock implementation of the StreamChat method.
