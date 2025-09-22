@@ -163,7 +163,7 @@ func (ollama *OllamaClient) Chat(ctx context.Context, chatHistory []ChatMessage)
 	var chatResponse ChatResponse
 	err = json.Unmarshal(responseBody, &chatResponse)
 	if err != nil {
-		ollama.logger.Error(ErrUnmarshalResponse.Error(), "error", "err", "component", "llm.OllamaClient.Chat")
+		ollama.logger.Error(ErrUnmarshalResponse.Error(), "error", err, "component", "llm.OllamaClient.Chat")
 
 		return ChatMessage{}, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
 	}
