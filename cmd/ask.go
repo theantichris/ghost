@@ -82,7 +82,7 @@ func runAsk(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("%w, provide a query or pipe input", ErrEmptyInput)
 	}
 
-	return runSingleQuery(llmClient, query, cmd.OutOrStdout())
+	return runSingleQuery(llmClient, noNewLine, query, cmd.OutOrStdout())
 }
 
 // initializeLLMClient validates the client config, creates, and returns the client.
@@ -138,7 +138,7 @@ func readPipedInput() (string, error) {
 }
 
 // runSingleQuery sends the query to the LLM client and writes the response.
-func runSingleQuery(llmClient llm.LLMClient, query string, output io.Writer) error {
+func runSingleQuery(llmClient llm.LLMClient, noNewLine bool, query string, output io.Writer) error {
 	ctx := context.Background()
 
 	chatHistory := []llm.ChatMessage{

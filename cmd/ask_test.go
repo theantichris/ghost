@@ -12,7 +12,7 @@ func TestRunSingleQuest(t *testing.T) {
 	t.Run("queries with newline", func(t *testing.T) {
 		t.Parallel()
 
-		query := "Tell me a joke?"
+		query := "Tell me a joke."
 		expectedOutput := "Why did the chicken cross the road?\n"
 
 		mockClient := &llm.MockLLMClient{
@@ -21,7 +21,30 @@ func TestRunSingleQuest(t *testing.T) {
 
 		var output bytes.Buffer
 
-		err := runSingleQuery(mockClient, query, &output)
+		err := runSingleQuery(mockClient, noNewLine, query, &output)
+
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+
+		if output.String() != expectedOutput {
+			t.Errorf("expected output %q, got %q", expectedOutput, output.String())
+		}
+	})
+
+	t.Run("strips <think> block from response", func(t *testing.T) {
+		t.Parallel()
+
+		query := "Tell me a joke."
+		expectedOutput := "Why did the chicken cross the road?\n"
+
+		mockClient := &llm.MockLLMClient{
+			Content: "<think>...</think>Why did the chicken cross the road?",
+		}
+
+		var output bytes.Buffer
+
+		err := runSingleQuery(mockClient, noNewLine, query, &output)
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}
@@ -38,13 +61,17 @@ func TestRunSingleQuest(t *testing.T) {
 		query := "Tell me a joke?"
 		expectedOutput := "Why did the chicken cross the road?"
 
+		defer func() {
+			noNewLine = false
+		}()
+
 		mockClient := &llm.MockLLMClient{
 			Content: "Why did the chicken cross the road?",
 		}
 
 		var output bytes.Buffer
 
-		err := runSingleQuery(mockClient, query, &output)
+		err := runSingleQuery(mockClient, noNewLine, query, &output)
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}
@@ -61,7 +88,7 @@ func TestRunSingleQuest(t *testing.T) {
 			Error: llm.ErrResponseBody,
 		}
 
-		err := runSingleQuery(mockClient, "Hello", &bytes.Buffer{})
+		err := runSingleQuery(mockClient, noNewLine, "Hello", &bytes.Buffer{})
 		if err == nil {
 			t.Fatalf("expected error, got nil")
 		}
