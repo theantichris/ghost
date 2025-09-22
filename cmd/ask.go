@@ -16,47 +16,38 @@ import (
 	"github.com/theantichris/ghost/internal/llm"
 )
 
-const (
-	systemPrompt            = "You are Ghost, a cyberpunk insprired terminal based assistant. Answer requests directly and briefly."
-	interactiveSystemPrompt = "You are Ghost, a cyberpunk inspired terminal based assistant. Greet the user once at the start of the conversation then answer requests directly and briefly. Ask for clarification when needed."
-	userLabel               = "\nUser: "
-	ghostLabel              = "\nGhost: "
-	exitCommand             = "/bye"
-)
-
 var (
-	interactive bool
-	noNewLine   bool
+	systemPrompt = "You are Ghost, a cyberpunk insprired terminal based assistant. Answer requests directly and briefly."
+	noNewLine    bool
+	timeout      time.Duration
 )
 
-// chatCmd represents the command called with chat.
-var chatCmd = &cobra.Command{
-	Use:   "chat [query]",
-	Short: "Chat with Ghost.",
-	Long: `Chat with Ghost.
+// askCmd represents the command called with chat.
+var askCmd = &cobra.Command{
+	Use:   "ask [query]",
+	Short: "Ask Ghost a question.",
+	Long: `Ask Ghost a question.
 
 		Examples:
 			# Quick question from command line
-			ghost chat "What is the capital of France?"
+			ghost ask "What is the capital of France?"
 
 			# Pipe input to Ghost
-			cat code.go | ghost chat "Explain this code`,
-	RunE: runChat,
+			cat code.go | ghost ask "Explain this code`,
+	RunE: runAsk,
 	Args: cobra.ArbitraryArgs,
 }
 
 // init initializes the chat command.
 func init() {
-	rootCmd.AddCommand(chatCmd)
+	rootCmd.AddCommand(askCmd)
 
-	chatCmd.Flags().BoolVarP(&noNewLine, "no-newline", "n", false, "Don't add newline after response (useful for scripts)")
-	chatCmd.Flags().Duration("timeout", 2*time.Minute, "HTTP timeout for LLM requests")
-
-	viper.BindPFlag("timeout", chatCmd.Flags().Lookup("timeout"))
+	askCmd.Flags().BoolVarP(&noNewLine, "no-newline", "n", false, "Don't add newline after response (useful for scripts)")
+	askCmd.Flags().DurationVar(&timeout, "timeout", 2*time.Minute, "HTTP timeout for LLM requests")
 }
 
-// runChat initializes the LLM Client, sends the query to the LLM and returns the response.
-func runChat(cmd *cobra.Command, args []string) error {
+// runAsk sends the query to the LLM and returns the response.
+func runAsk(cmd *cobra.Command, args []string) error {
 	llmClient, err := initializeLLMClient()
 	if err != nil {
 		return err
@@ -89,7 +80,6 @@ func runChat(cmd *cobra.Command, args []string) error {
 func initializeLLMClient() (*llm.OllamaClient, error) {
 	ollamaBaseURL := viper.GetString("ollama_base_url")
 	model := viper.GetString("model")
-	timeout := viper.GetDuration("timeout")
 
 	if ollamaBaseURL == "" {
 		return nil, fmt.Errorf("Ollama base URL not set, set it via OLLAMA_BASE_URL environment variable or config file")
@@ -100,7 +90,7 @@ func initializeLLMClient() (*llm.OllamaClient, error) {
 
 	}
 
-	Logger.Debug("Initializing LLM client", slog.String("component", "chatCmd"), slog.String("model", model), slog.String("base_url", ollamaBaseURL))
+	Logger.Debug("initializing LLM client", slog.String("component", "chatCmd"), slog.String("model", model), slog.String("base_url", ollamaBaseURL))
 
 	httpClient := &http.Client{
 		Timeout: timeout,
