@@ -52,9 +52,9 @@ func initConfig() {
 	initLogger()
 
 	if err := godotenv.Load(); err != nil {
-		Logger.Debug(".env file not found, using environment variables", slog.String("component", "rootCmd"))
+		Logger.Debug(".env file not found, using environment variables", "component", "rootCmd")
 	} else {
-		Logger.Debug(".env file loaded successfully", slog.String("component", "rootCmd"))
+		Logger.Debug(".env file loaded successfully", "component", "rootCmd")
 	}
 
 	if configFile != "" {
@@ -75,7 +75,7 @@ func initConfig() {
 	viper.BindEnv("model", "DEFAULT_MODEL")
 
 	if err := viper.ReadInConfig(); err == nil {
-		Logger.Debug("using config file", slog.String("component", "rootCmd"), slog.String("file", viper.ConfigFileUsed()))
+		Logger.Debug("using config file", "file", viper.ConfigFileUsed(), "component", "rootCmd")
 	}
 
 	if viper.GetBool("debug") {
@@ -92,7 +92,7 @@ func initLogger() {
 		logLevel = slog.LevelDebug
 	}
 
-	Logger = slog.New(slogcolor.NewHandler(os.Stderr, &slogcolor.Options{
+	Logger = slog.New(slogcolor.NewHandler(askCmd.ErrOrStderr(), &slogcolor.Options{
 		Level:      logLevel,
 		TimeFormat: time.RFC3339,
 	}))

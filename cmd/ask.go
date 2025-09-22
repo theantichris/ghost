@@ -17,7 +17,7 @@ import (
 )
 
 var (
-	systemPrompt = "You are Ghost, a cyberpunk insprired terminal based assistant. Answer requests directly and briefly."
+	systemPrompt = "You are Ghost, a cyberpunk inspired terminal based assistant. Answer requests directly and briefly."
 	noNewLine    bool
 	timeout      time.Duration
 
@@ -82,7 +82,7 @@ func runAsk(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("%w, provide a query or pipe input", ErrEmptyInput)
 	}
 
-	return runSingleQuery(llmClient, query)
+	return runSingleQuery(llmClient, query, cmd.OutOrStdout())
 }
 
 // initializeLLMClient validates the client config, creates, and returns the client.
@@ -137,8 +137,8 @@ func readPipedInput() (string, error) {
 	return strings.Join(lines, ""), nil
 }
 
-// runSingleQuery sends the query to the LLM client and prints the response.
-func runSingleQuery(llmClient *llm.OllamaClient, query string) error {
+// runSingleQuery sends the query to the LLM client and writes the response.
+func runSingleQuery(llmClient *llm.OllamaClient, query string, output io.Writer) error {
 	ctx := context.Background()
 
 	chatHistory := []llm.ChatMessage{
@@ -152,9 +152,9 @@ func runSingleQuery(llmClient *llm.OllamaClient, query string) error {
 	}
 
 	if noNewLine {
-		fmt.Print(response.Content)
+		fmt.Fprint(output, response.Content)
 	} else {
-		fmt.Println(response.Content)
+		fmt.Fprintln(output, response.Content)
 	}
 
 	return nil
