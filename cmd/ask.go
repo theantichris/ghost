@@ -151,11 +151,38 @@ func runSingleQuery(llmClient llm.LLMClient, query string, output io.Writer) err
 		return fmt.Errorf("failed to get response: %w", err)
 	}
 
+	message := stripThinkBlock(response.Content)
+
 	if noNewLine {
-		fmt.Fprint(output, response.Content)
+		fmt.Fprint(output, message)
 	} else {
-		fmt.Fprintln(output, response.Content)
+		fmt.Fprintln(output, message)
 	}
 
 	return nil
+}
+
+// stripThinkBlock removes <think>...</think> from a string.
+func stripThinkBlock(message string) string {
+	openTag := "<think>"
+	closeTag := "</think>"
+
+	for {
+		start := strings.Index(message, openTag)
+
+		if start == -1 {
+			break // No <think> block.
+		}
+
+		end := strings.Index(message[start+len(openTag):], closeTag)
+		if end == -1 {
+			break // No </think> block.
+		}
+
+		blockEnd := start + len(openTag) + end + len(closeTag)
+
+		message = message[:start] + message[blockEnd:]
+	}
+
+	return strings.TrimSpace(message)
 }
