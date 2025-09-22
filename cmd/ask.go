@@ -75,7 +75,7 @@ func runAsk(cmd *cobra.Command, args []string) error {
 		}
 
 		if len(args) > 0 {
-			query = query + "\n\n" + strings.Join(args, "")
+			query = query + "\n\n" + strings.Join(args, " ")
 		}
 	} else if len(args) > 0 {
 		query = strings.Join(args, " ")
