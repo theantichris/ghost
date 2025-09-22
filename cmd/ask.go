@@ -66,7 +66,7 @@ func runAsk(cmd *cobra.Command, args []string) error {
 	var query string
 
 	if isPiped {
-		query, err = readPipedInput()
+		query, err = readPipedInput(cmd.InOrStdin())
 		if err != nil {
 			Logger.Error(ErrReadPipeInput.Error(), "error", err, "component", "askCmd")
 			return fmt.Errorf("%w: %s", ErrReadPipeInput, err)
@@ -112,8 +112,8 @@ func initializeLLMClient() (*llm.OllamaClient, error) {
 }
 
 // readPipedInput reads input piped from the CLI.
-func readPipedInput() (string, error) {
-	reader := bufio.NewReader(os.Stdin)
+func readPipedInput(input io.Reader) (string, error) {
+	reader := bufio.NewReader(input)
 
 	var lines []string
 
