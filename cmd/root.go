@@ -15,6 +15,7 @@ import (
 var (
 	configFile string
 	Debug      bool
+	Ollama string
 	Model      string
 	Logger     *slog.Logger
 )
@@ -30,7 +31,7 @@ var rootCmd = &cobra.Command{
 func Execute() {
 	err := rootCmd.Execute()
 	if err != nil {
-		Logger.Error("error running ghost command", slog.String("component", "rootCmd"))
+		Logger.Error("error running ghost command", slog.String("component", "cmd.rootCmd"))
 		os.Exit(1)
 	}
 }
@@ -42,8 +43,10 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&configFile, "config", "", "config file (default is $HOME/.ghost.yaml)")
 	rootCmd.PersistentFlags().BoolVar(&Debug, "debug", false, "enable debug mode")
 	rootCmd.PersistentFlags().StringVar(&Model, "model", "", "LLM model to use")
+	rootCmd.PersistentFlags().StringVar(&Ollama, "ollama", "", "Ollama API base URL")
 
 	viper.BindPFlag("debug", rootCmd.PersistentFlags().Lookup("debug"))
+	viper.BindPFlag("ollama", rootCmd.PersistentFlags().Lookup("ollama"))
 	viper.BindPFlag("model", rootCmd.PersistentFlags().Lookup("model"))
 }
 
@@ -52,9 +55,9 @@ func initConfig() {
 	initLogger()
 
 	if err := godotenv.Load(); err != nil {
-		Logger.Debug(".env file not found, using environment variables", "component", "rootCmd")
+		Logger.Debug(".env file not found, using environment variables", "component", "cmd.rootCmd")
 	} else {
-		Logger.Debug(".env file loaded successfully", "component", "rootCmd")
+		Logger.Debug(".env file loaded successfully", "component", "cmd.rootCmd")
 	}
 
 	if configFile != "" {
@@ -71,11 +74,11 @@ func initConfig() {
 	}
 
 	viper.AutomaticEnv()
-	viper.BindEnv("ollama_base_url", "OLLAMA_BASE_URL")
+	viper.BindEnv("ollama", "OLLAMA_BASE_URL")
 	viper.BindEnv("model", "DEFAULT_MODEL")
 
 	if err := viper.ReadInConfig(); err == nil {
-		Logger.Debug("using config file", "file", viper.ConfigFileUsed(), "component", "rootCmd")
+		Logger.Debug("using config file", "file", viper.ConfigFileUsed(), "component", "cmd.rootCmd")
 	}
 
 	if viper.GetBool("debug") {

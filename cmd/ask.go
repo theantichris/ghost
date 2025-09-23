@@ -89,13 +89,13 @@ func runAsk(cmd *cobra.Command, args []string) error {
 
 // initializeLLMClient validates the client config, creates, and returns the client.
 func initializeLLMClient() (llm.LLMClient, error) {
-	ollamaBaseURL := viper.GetString("ollama_base_url")
+	ollamaBaseURL := viper.GetString("ollama")
 	model := viper.GetString("model")
 
 	if ollamaBaseURL == "" {
 		Logger.Error("couldn't initialize LLM client", "error", ErrURLEmpty, "component", "cmd.askCmd.initializeLLMClient")
 
-		return nil, fmt.Errorf("%w, set it via OLLAMA_BASE_URL environment variable or config file", ErrURLEmpty)
+		return nil, fmt.Errorf("%w, set it via OLLAMA_BASE_URL environment variable, config file, or --ollama flag", ErrURLEmpty)
 	}
 
 	if model == "" {
