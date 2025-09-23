@@ -76,13 +76,27 @@ Ghost checks for configuration in the following order of precedence:
 
 1. Command-line flags
 2. Environment variables
-3. Config file (`.ghost.yaml`)
+3. Config file (`.ghost.yaml` or `.ghost.yml`)
 4. Default values
+
+#### Config File
+
+Ghost looks for a config file named `.ghost.yaml` or `.ghost.yml` in:
+- Your home directory (`$HOME/.ghost.yaml`)
+- The current working directory (`./.ghost.yaml`)
+
+Example `.ghost.yaml`:
+```yaml
+ollama: http://127.0.0.1:11434
+model: llama3.1
+debug: false
+```
 
 Configuration options:
 
 - Model selection via `--model` flag, `DEFAULT_MODEL` env var, or config file
 - Ollama base URL via `--ollama` flag, `OLLAMA_BASE_URL` env var, or config file
+- Debug mode via `--debug` flag or config file
 
 ## Features
 
