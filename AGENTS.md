@@ -59,6 +59,7 @@ pkg/                 Only if stable external API needed
 
 **Dependencies**:
 
+- `github.com/charmbracelet/fang` (CLI enhancement framework)
 - `github.com/spf13/cobra` (CLI command framework)
 - `github.com/spf13/viper` (configuration management)
 - `github.com/joho/godotenv` (optional .env loading)

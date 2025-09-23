@@ -98,7 +98,7 @@ Configuration options:
 
 ## Features
 
-- **CLI Command Interface**: Clean command-line interface using Cobra framework
+- **CLI Command Interface**: Enhanced command-line interface using Fang (built on Cobra framework) with styled help pages and improved user experience
 - **Streaming Responses**: Real-time token-by-token output as the model generates responses
 - **Pipe Support**: Process files, logs, or command output by piping to Ghost
 - **Think Block Filtering**: Automatically filters out `<think>` blocks from model responses
