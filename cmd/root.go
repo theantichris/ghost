@@ -74,7 +74,7 @@ func initConfig() {
 	}
 
 	viper.AutomaticEnv()
-	viper.BindEnv("ollama_base_url", "OLLAMA_BASE_URL")
+	viper.BindEnv("ollama", "OLLAMA_BASE_URL")
 	viper.BindEnv("model", "DEFAULT_MODEL")
 
 	if err := viper.ReadInConfig(); err == nil {
