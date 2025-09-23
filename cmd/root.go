@@ -20,8 +20,8 @@ var (
 	Logger     *slog.Logger
 )
 
-// rootCmd represents the base command when called without any subcommands.
-var rootCmd = &cobra.Command{
+// RootCmd represents the base command when called without any subcommands.
+var RootCmd = &cobra.Command{
 	Use:   "ghost",
 	Short: "A cyberpunk inspired AI assistant.",
 	Long:  "Ghost is a CLI tool that provides AI-powered assistance directly in your terminal inspired by cyberpunk media.",
@@ -29,9 +29,9 @@ var rootCmd = &cobra.Command{
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 func Execute() {
-	err := rootCmd.Execute()
+	err := RootCmd.Execute()
 	if err != nil {
-		Logger.Error("error running ghost command", slog.String("component", "cmd.rootCmd"))
+		Logger.Error("error running ghost command", slog.String("component", "cmd.RootCmd"))
 		os.Exit(1)
 	}
 }
@@ -40,14 +40,14 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	rootCmd.PersistentFlags().StringVar(&configFile, "config", "", "config file (default is $HOME/.ghost.yaml)")
-	rootCmd.PersistentFlags().BoolVar(&Debug, "debug", false, "enable debug mode")
-	rootCmd.PersistentFlags().StringVar(&Model, "model", "", "LLM model to use")
-	rootCmd.PersistentFlags().StringVar(&Ollama, "ollama", "", "Ollama API base URL")
+	RootCmd.PersistentFlags().StringVar(&configFile, "config", "", "config file (default is $HOME/.ghost.yaml)")
+	RootCmd.PersistentFlags().BoolVar(&Debug, "debug", false, "enable debug mode")
+	RootCmd.PersistentFlags().StringVar(&Model, "model", "", "LLM model to use")
+	RootCmd.PersistentFlags().StringVar(&Ollama, "ollama", "", "Ollama API base URL")
 
-	viper.BindPFlag("debug", rootCmd.PersistentFlags().Lookup("debug"))
-	viper.BindPFlag("ollama", rootCmd.PersistentFlags().Lookup("ollama"))
-	viper.BindPFlag("model", rootCmd.PersistentFlags().Lookup("model"))
+	viper.BindPFlag("debug", RootCmd.PersistentFlags().Lookup("debug"))
+	viper.BindPFlag("ollama", RootCmd.PersistentFlags().Lookup("ollama"))
+	viper.BindPFlag("model", RootCmd.PersistentFlags().Lookup("model"))
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -55,9 +55,9 @@ func initConfig() {
 	initLogger()
 
 	if err := godotenv.Load(); err != nil {
-		Logger.Debug(".env file not found, using environment variables", "component", "cmd.rootCmd")
+		Logger.Debug(".env file not found, using environment variables", "component", "cmd.RootCmd")
 	} else {
-		Logger.Debug(".env file loaded successfully", "component", "cmd.rootCmd")
+		Logger.Debug(".env file loaded successfully", "component", "cmd.RootCmd")
 	}
 
 	if configFile != "" {
@@ -78,7 +78,7 @@ func initConfig() {
 	viper.BindEnv("model", "DEFAULT_MODEL")
 
 	if err := viper.ReadInConfig(); err == nil {
-		Logger.Debug("using config file", "file", viper.ConfigFileUsed(), "component", "cmd.rootCmd")
+		Logger.Debug("using config file", "file", viper.ConfigFileUsed(), "component", "cmd.RootCmd")
 	}
 
 	if viper.GetBool("debug") {

@@ -46,7 +46,7 @@ var askCmd = &cobra.Command{
 
 // init initializes the chat command.
 func init() {
-	rootCmd.AddCommand(askCmd)
+	RootCmd.AddCommand(askCmd)
 
 	askCmd.Flags().BoolVarP(&noNewLine, "no-newline", "n", false, "Don't add newline after response (useful for scripts)")
 	askCmd.Flags().DurationVar(&timeout, "timeout", 2*time.Minute, "HTTP timeout for LLM requests")
