@@ -79,10 +79,22 @@ Ghost checks for configuration in the following order of precedence:
 3. Config file (`.ghost.yaml`)
 4. Default values
 
+#### Config File Setup
+
+Create a `.ghost.yaml` file in your home directory to set default configuration:
+
+```yaml
+# ~/.ghost.yaml
+ollama: http://localhost:11434
+model: llama3.1
+debug: false
+```
+
 Configuration options:
 
-- Model selection via `--model` flag, `DEFAULT_MODEL` env var, or config file
-- Ollama base URL via `--ollama` flag, `OLLAMA_BASE_URL` env var, or config file
+- `ollama` — Ollama API base URL (default: `http://localhost:11434`)
+- `model` — LLM model to use (default: `llama3.1`)
+- `debug` — Enable debug logging (default: `false`)
 
 ## Features
 
