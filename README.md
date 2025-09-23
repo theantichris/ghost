@@ -60,6 +60,7 @@ Send a query to the LLM and get a response. Supports both direct queries and pip
 
 ### Global Flags
 
+- `--ollama` — Override the Ollama API base URL.
 - `--model` — Override the default LLM model
 - `--debug` — Enable verbose diagnostics and DEBUG level logging
 - `--config` — Specify config file location (default: `$HOME/.ghost.yaml`)
@@ -81,7 +82,7 @@ Ghost checks for configuration in the following order of precedence:
 Configuration options:
 
 - Model selection via `--model` flag, `DEFAULT_MODEL` env var, or config file
-- Ollama base URL via `OLLAMA_BASE_URL` env var or config file
+- Ollama base URL via `--ollama` flag, `OLLAMA_BASE_URL` env var, or config file
 
 ## Features
 
