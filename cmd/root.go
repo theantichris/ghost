@@ -15,7 +15,7 @@ import (
 var (
 	configFile string
 	Debug      bool
-	Ollama string
+	Ollama     string
 	Model      string
 	Logger     *slog.Logger
 )
@@ -70,7 +70,7 @@ func initConfig() {
 		viper.AddConfigPath(home)
 		viper.AddConfigPath(".")
 		viper.SetConfigName(".ghost")
-		viper.SetConfigType(".yaml")
+		viper.SetConfigType("yaml")
 	}
 
 	viper.AutomaticEnv()
