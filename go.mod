@@ -7,6 +7,7 @@ require github.com/joho/godotenv v1.5.1
 require github.com/google/go-cmp v0.7.0
 
 require (
+	github.com/charmbracelet/fang v0.4.2
 	github.com/davecgh/go-spew v1.1.1
 	github.com/spf13/cobra v1.10.1
 	github.com/spf13/viper v1.21.0
@@ -14,7 +15,6 @@ require (
 
 require (
 	github.com/charmbracelet/colorprofile v0.3.2 // indirect
-	github.com/charmbracelet/fang v0.4.2 // indirect
 	github.com/charmbracelet/lipgloss/v2 v2.0.0-beta.3.0.20250917201909-41ff0bf215ea // indirect
 	github.com/charmbracelet/ultraviolet v0.0.0-20250915111650-81d4262876ef // indirect
 	github.com/charmbracelet/x/ansi v0.10.1 // indirect
