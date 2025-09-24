@@ -40,7 +40,7 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	RootCmd.PersistentFlags().StringVar(&configFile, "config", "", "config file (default is $HOME/.ghost.yaml)")
+	RootCmd.PersistentFlags().StringVar(&configFile, "config", "", "config file (default is $HOME/.ghost.yml)")
 	RootCmd.PersistentFlags().BoolVar(&Debug, "debug", false, "enable debug mode")
 	RootCmd.PersistentFlags().StringVar(&Model, "model", "", "LLM model to use")
 	RootCmd.PersistentFlags().StringVar(&Ollama, "ollama", "", "Ollama API base URL")
@@ -77,7 +77,13 @@ func initConfig() {
 	viper.BindEnv("ollama", "OLLAMA_BASE_URL")
 	viper.BindEnv("model", "DEFAULT_MODEL")
 
-	if err := viper.ReadInConfig(); err == nil {
+	if err := viper.ReadInConfig(); err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+			Logger.Debug("config file not found", "component", "cmd.RootCmd")
+		} else {
+			Logger.Error("error loading config file", "error", err)
+		}
+	} else {
 		Logger.Debug("using config file", "file", viper.ConfigFileUsed(), "component", "cmd.RootCmd")
 	}
 
