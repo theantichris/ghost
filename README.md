@@ -63,7 +63,7 @@ Send a query to the LLM and get a response. Supports both direct queries and pip
 - `--ollama` — Override the Ollama API base URL.
 - `--model` — Override the default LLM model
 - `--debug` — Enable verbose diagnostics and DEBUG level logging
-- `--config` — Specify config file location (default: `$HOME/.ghost.yaml`)
+- `--config` — Specify config file location (default: `$HOME/.ghost.toml`)
 
 ### Environment Variables
 
@@ -76,18 +76,18 @@ Ghost checks for configuration in the following order of precedence:
 
 1. Command-line flags
 2. Environment variables
-3. Config file (`.ghost.yaml`)
+3. Config file (`.ghost.toml`)
 4. Default values
 
 #### Config File Setup
 
-Create a `.ghost.yaml` file in your home directory to set default configuration:
+Create a `.ghost.toml` file in your home directory to set default configuration:
 
-```yaml
-# ~/.ghost.yaml
-ollama: http://localhost:11434
-model: llama3.1
-debug: false
+```toml
+# ~/.ghost.toml
+ollama = "http://localhost:11434"
+model = "llama3.1"
+debug = false
 ```
 
 Configuration options:
