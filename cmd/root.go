@@ -40,7 +40,7 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	RootCmd.PersistentFlags().StringVar(&configFile, "config", "", "config file (default is $HOME/.ghost.yml)")
+	RootCmd.PersistentFlags().StringVar(&configFile, "config", "", "config file (default is $HOME/.ghost.toml)")
 	RootCmd.PersistentFlags().BoolVar(&Debug, "debug", false, "enable debug mode")
 	RootCmd.PersistentFlags().StringVar(&Model, "model", "", "LLM model to use")
 	RootCmd.PersistentFlags().StringVar(&Ollama, "ollama", "", "Ollama API base URL")
@@ -70,7 +70,7 @@ func initConfig() {
 		viper.AddConfigPath(home)
 		viper.AddConfigPath(".")
 		viper.SetConfigName(".ghost")
-		viper.SetConfigType("yaml")
+		viper.SetConfigType("toml")
 	}
 
 	viper.AutomaticEnv()
