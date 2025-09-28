@@ -68,8 +68,8 @@ func TestTokenHandler(t *testing.T) {
 		}
 
 		handler.handle("<th")
-		handler.handle("ink>reasoning here</thi")
-		handler.handle("nk>Hello world!")
+		handler.handle("ink>reasoning here</thin")
+		handler.handle("k>Hello world!")
 
 		expectedOutput := "Hello world!"
 

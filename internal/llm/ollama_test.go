@@ -27,7 +27,7 @@ func TestNewOllamaClient(t *testing.T) {
 
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`{"response": "Hello, user!"}`))
+			_, _ = w.Write([]byte(`{"response": "Hello, user!"}`))
 		}))
 		defer server.Close()
 
@@ -179,7 +179,7 @@ func TestChat(t *testing.T) {
 
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(`{"error": "Internal Server Error"}`))
+			_, _ = w.Write([]byte(`{"error": "Internal Server Error"}`))
 		}))
 		defer server.Close()
 
@@ -211,7 +211,7 @@ func TestChat(t *testing.T) {
 
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`invalid json`))
+			_, _ = w.Write([]byte(`invalid json`))
 		}))
 		defer server.Close()
 
@@ -258,7 +258,7 @@ func TestStreamChat(t *testing.T) {
 			}
 
 			for _, chunk := range chunks {
-				w.Write([]byte(chunk + "\n"))
+				_, _ = w.Write([]byte(chunk + "\n"))
 				flusher.Flush()
 			}
 		}))

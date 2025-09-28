@@ -158,9 +158,9 @@ func runSingleQuery(llmClient llm.LLMClient, noNewLine bool, query string, outpu
 	message := stripThinkBlock(response.Content)
 
 	if noNewLine {
-		fmt.Fprint(output, message)
+		_, _ = fmt.Fprint(output, message)
 	} else {
-		fmt.Fprintln(output, message)
+		_, _ = fmt.Fprintln(output, message)
 	}
 
 	return nil

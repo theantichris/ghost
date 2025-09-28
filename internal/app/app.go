@@ -107,7 +107,7 @@ func (app *App) Run(ctx context.Context, input io.Reader) error {
 
 // getLLMMessage sends the chat history to the LLM, streams the response and returns the LLM's message.
 func (app *App) getLLMMessage(ctx context.Context, chatHistory []llm.ChatMessage) (llm.ChatMessage, error) {
-	fmt.Fprint(app.output, ghostLabel)
+	_, _ = fmt.Fprint(app.output, ghostLabel)
 
 	var tokens string
 	tokenHandler := &tokenHandler{
@@ -117,7 +117,7 @@ func (app *App) getLLMMessage(ctx context.Context, chatHistory []llm.ChatMessage
 
 	err := app.llmClient.StreamChat(ctx, chatHistory, tokenHandler.handle)
 
-	fmt.Fprint(app.output, "\n") // Add newline after LLM message.
+	_, _ = fmt.Fprint(app.output, "\n") // Add newline after LLM message.
 
 	if err != nil {
 		if err := app.handleLLMResponseError(err); err != nil {
@@ -134,7 +134,7 @@ func (app *App) getLLMMessage(ctx context.Context, chatHistory []llm.ChatMessage
 func (app *App) getUserMessage(scanner *bufio.Scanner) (llm.ChatMessage, bool, error) {
 	var endChat = false
 
-	fmt.Fprint(app.output, userLabel)
+	_, _ = fmt.Fprint(app.output, userLabel)
 
 	if ok := scanner.Scan(); !ok {
 		if err := scanner.Err(); err != nil {
@@ -169,7 +169,7 @@ func (app *App) handleLLMResponseError(err error) error {
 
 	for error, msg := range errorMap {
 		if errors.Is(err, error) {
-			fmt.Fprintf(app.output, "\n%s\n", msg)
+			_, _ = fmt.Fprintf(app.output, "\n%s\n", msg)
 
 			return nil
 		}

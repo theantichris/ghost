@@ -45,9 +45,9 @@ func init() {
 	RootCmd.PersistentFlags().StringVar(&Model, "model", "", "LLM model to use")
 	RootCmd.PersistentFlags().StringVar(&Ollama, "ollama", "", "Ollama API base URL")
 
-	viper.BindPFlag("debug", RootCmd.PersistentFlags().Lookup("debug"))
-	viper.BindPFlag("ollama", RootCmd.PersistentFlags().Lookup("ollama"))
-	viper.BindPFlag("model", RootCmd.PersistentFlags().Lookup("model"))
+	_ = viper.BindPFlag("debug", RootCmd.PersistentFlags().Lookup("debug"))
+	_ = viper.BindPFlag("ollama", RootCmd.PersistentFlags().Lookup("ollama"))
+	_ = viper.BindPFlag("model", RootCmd.PersistentFlags().Lookup("model"))
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -74,8 +74,8 @@ func initConfig() {
 	}
 
 	viper.AutomaticEnv()
-	viper.BindEnv("ollama", "OLLAMA_BASE_URL")
-	viper.BindEnv("model", "DEFAULT_MODEL")
+	_ = viper.BindEnv("ollama", "OLLAMA_BASE_URL")
+	_ = viper.BindEnv("model", "DEFAULT_MODEL")
 
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
