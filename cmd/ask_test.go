@@ -33,7 +33,7 @@ func (err *errorReader) Read(p []byte) (int, error) {
 	return 0, io.EOF
 }
 
-func TestRunSingleQuest(t *testing.T) {
+func TestRunSingleQuery(t *testing.T) {
 	t.Run("queries with newline", func(t *testing.T) {
 		t.Parallel()
 
