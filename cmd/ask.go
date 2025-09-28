@@ -60,7 +60,7 @@ func NewAskCmd(logger *slog.Logger) *cobra.Command {
 }
 
 func (askCmd *askCmd) init(cmd *cobra.Command, args []string) error {
-	if err := viper.BindPFlag("timeout", cmd.PersistentFlags().Lookup("timeout")); err != nil {
+	if err := viper.BindPFlag("timeout", cmd.Flags().Lookup("timeout")); err != nil {
 		return fmt.Errorf("%w: %s", ErrAskCmd, err)
 	}
 
