@@ -107,10 +107,6 @@ func TestRunSingleQuery(t *testing.T) {
 		query := "Tell me a joke?"
 		expectedOutput := "Why did the chicken cross the road?"
 
-		defer func() {
-			noNewLine = false
-		}()
-
 		mockClient := &llm.MockLLMClient{
 			Content: "Why did the chicken cross the road?",
 		}
