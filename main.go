@@ -9,6 +9,7 @@ import (
 )
 
 func main() {
+	// TODO: Can I use this context in the commands?
 	if err := fang.Execute(context.Background(), cmd.Execute()); err != nil {
 		os.Exit(1)
 	}
