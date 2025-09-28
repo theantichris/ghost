@@ -45,7 +45,7 @@ func NewAskCmd(logger *slog.Logger) *cobra.Command {
 			ghost ask "What is the capital of France?"
 
 			# Pipe input to Ghost
-			cat code.go | ghost ask "Explain this code`,
+			cat code.go | ghost ask "Explain this code"`,
 		RunE: askCmd.run,
 		Args: cobra.ArbitraryArgs,
 	}
@@ -79,7 +79,7 @@ func (askCmd *askCmd) run(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("%w, provide a query or pipe input", ErrEmptyInput)
 	}
 
-	return runSingleQuery(llmClient, true, query, cmd.OutOrStdout())
+	return runSingleQuery(llmClient, query, cmd.OutOrStdout())
 }
 
 func initializeLLMClient(logger *slog.Logger) (llm.LLMClient, error) {
@@ -131,7 +131,7 @@ func readPipedInput(input io.Reader) (string, error) {
 	return strings.Join(lines, ""), nil
 }
 
-func runSingleQuery(llmClient llm.LLMClient, noNewLine bool, query string, output io.Writer) error {
+func runSingleQuery(llmClient llm.LLMClient, query string, output io.Writer) error {
 	ctx := context.Background()
 
 	chatHistory := []llm.ChatMessage{
@@ -146,11 +146,7 @@ func runSingleQuery(llmClient llm.LLMClient, noNewLine bool, query string, outpu
 
 	message := stripThinkBlock(response.Content)
 
-	if noNewLine {
-		_, _ = fmt.Fprint(output, message)
-	} else {
-		_, _ = fmt.Fprintln(output, message)
-	}
+	_, _ = fmt.Fprintln(output, message)
 
 	return nil
 }
