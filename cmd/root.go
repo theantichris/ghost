@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"time"
 
 	"github.com/MatusOllah/slogcolor"
 	"github.com/joho/godotenv"
@@ -34,6 +35,9 @@ func NewRootCmd(logger *slog.Logger) *cobra.Command {
 				return fmt.Errorf("%w: %s", ErrRootCmd, err)
 			}
 
+			if err := viper.BindPFlag("timeout", cmd.PersistentFlags().Lookup("timeout")); err != nil {
+				return fmt.Errorf("%w: %s", ErrRootCmd, err)
+			}
 			return nil
 		},
 	}
@@ -42,12 +46,14 @@ func NewRootCmd(logger *slog.Logger) *cobra.Command {
 	var debug bool
 	var ollama string
 	var model string
+	var timeout time.Duration
 
 	// TODO: Should I be binding the config file?
 	cmd.PersistentFlags().StringVar(&config, "config", "", "config file (default is $HOME/.ghost.toml)")
 	cmd.PersistentFlags().BoolVar(&debug, "debug", false, "enable debug mode")
 	cmd.PersistentFlags().StringVar(&model, "model", "", "LLM model to use")
 	cmd.PersistentFlags().StringVar(&ollama, "ollama", "", "Ollama API base URL")
+	cmd.PersistentFlags().DurationVar(&timeout, "timeout", 2*time.Minute, "HTTP timeout for API requests")
 
 	cmd.AddCommand(NewAskCmd(logger))
 
@@ -101,6 +107,10 @@ func initConfig(logger *slog.Logger) {
 	}
 
 	if err := viper.BindEnv("model", "DEFAULT_MODEL"); err != nil {
+		logger.Error(ErrRootCmd.Error(), "error", err)
+	}
+
+	if err := viper.BindEnv("timeout", "TIMEOUT"); err != nil {
 		logger.Error(ErrRootCmd.Error(), "error", err)
 	}
 

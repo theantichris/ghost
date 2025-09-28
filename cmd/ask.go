@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -47,24 +46,11 @@ func NewAskCmd(logger *slog.Logger) *cobra.Command {
 
 			# Pipe input to Ghost
 			cat code.go | ghost ask "Explain this code`,
-		PreRunE: askCmd.init,
-		RunE:    askCmd.run,
-		Args:    cobra.ArbitraryArgs,
+		RunE: askCmd.run,
+		Args: cobra.ArbitraryArgs,
 	}
-
-	var timeout time.Duration
-
-	cmd.Flags().DurationVar(&timeout, "timeout", 2*time.Minute, "HTTP timeout for LLM requests")
 
 	return cmd
-}
-
-func (askCmd *askCmd) init(cmd *cobra.Command, args []string) error {
-	if err := viper.BindPFlag("timeout", cmd.Flags().Lookup("timeout")); err != nil {
-		return fmt.Errorf("%w: %s", ErrAskCmd, err)
-	}
-
-	return nil
 }
 
 func (askCmd *askCmd) run(cmd *cobra.Command, args []string) error {
