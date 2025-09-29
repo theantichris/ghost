@@ -14,8 +14,6 @@ import (
 
 var ErrRootCmd = errors.New("failed to run ghost command")
 
-// TODO: should this be named ghost and not root?
-
 // NewRootCmd creates and returns the root command for the Ghost CLI application.
 // It sets up persistent flags for configuration, debug mode, model selection, and API settings.
 func NewRootCmd(logger *slog.Logger) *cobra.Command {
@@ -40,7 +38,6 @@ func NewRootCmd(logger *slog.Logger) *cobra.Command {
 		},
 	}
 
-	// TODO: Should I be binding the config file?
 	cmd.PersistentFlags().String("config", "", "config file (default is $HOME/.ghost.toml)")
 	cmd.PersistentFlags().Bool("debug", false, "enable debug mode")
 	cmd.PersistentFlags().String("model", "", "LLM model to use")
@@ -51,11 +48,8 @@ func NewRootCmd(logger *slog.Logger) *cobra.Command {
 	return cmd
 }
 
-// TODO: Research returning errors in Cobra functions.
-
-// Execute initializes and runs the Ghost CLI application.
-// It sets up the logger, configuration, and executes the root command.
-// Returns the command for use with fang.Execute or nil on error.
+// Execute creates and returns the root command for use with fang.Execute.
+// It sets up the logger and registers the configuration initialization.
 func Execute() *cobra.Command {
 	logger := slog.New(slogcolor.NewHandler(os.Stderr, &slogcolor.Options{
 		Level: slog.LevelWarn,
@@ -65,17 +59,13 @@ func Execute() *cobra.Command {
 		initConfig(logger)
 	})
 
-	cmd := NewRootCmd(logger)
-
-	if err := cmd.Execute(); err != nil {
-		logger.Error(ErrRootCmd.Error(), "error", err)
-
-		return nil
-	}
-
-	return cmd
+	return NewRootCmd(logger)
 }
 
+// initConfig initializes the configuration for the Ghost CLI application.
+// It loads environment variables from .env file, sets up viper configuration paths,
+// binds environment variables (OLLAMA_BASE_URL to ollama, DEFAULT_MODEL to model),
+// and attempts to read the config file from multiple locations.
 func initConfig(logger *slog.Logger) {
 	if err := godotenv.Load(); err != nil {
 		logger.Debug(".env file not found, using environment variables", "component", "cmd.RootCmd")
