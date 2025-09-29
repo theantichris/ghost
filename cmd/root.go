@@ -16,6 +16,8 @@ var ErrRootCmd = errors.New("failed to run ghost command")
 
 // TODO: should this be named ghost and not root?
 
+// NewRootCmd creates and returns the root command for the Ghost CLI application.
+// It sets up persistent flags for configuration, debug mode, model selection, and API settings.
 func NewRootCmd(logger *slog.Logger) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "ghost",
@@ -51,6 +53,9 @@ func NewRootCmd(logger *slog.Logger) *cobra.Command {
 
 // TODO: Research returning errors in Cobra functions.
 
+// Execute initializes and runs the Ghost CLI application.
+// It sets up the logger, configuration, and executes the root command.
+// Returns the command for use with fang.Execute or nil on error.
 func Execute() *cobra.Command {
 	logger := slog.New(slogcolor.NewHandler(os.Stderr, &slogcolor.Options{
 		Level: slog.LevelWarn,

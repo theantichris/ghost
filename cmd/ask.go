@@ -32,6 +32,8 @@ type askCmd struct {
 	logger *slog.Logger
 }
 
+// NewAskCmd creates a new ask command that sends queries to the configured LLM.
+// It supports both direct command-line queries and piped input from stdin.
 func NewAskCmd(logger *slog.Logger) *cobra.Command {
 	askCmd := &askCmd{logger: logger}
 
