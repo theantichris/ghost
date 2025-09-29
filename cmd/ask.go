@@ -28,6 +28,7 @@ var (
 
 var ErrAskCmd = errors.New("failed to run ask command")
 
+// askCmd represents the ask command and its dependencies.
 type askCmd struct {
 	logger *slog.Logger
 }
@@ -55,6 +56,9 @@ func NewAskCmd(logger *slog.Logger) *cobra.Command {
 	return cmd
 }
 
+// run executes the ask command logic.
+// It handles both piped input and command-line arguments, sends the query to the LLM,
+// and outputs the response.
 func (askCmd *askCmd) run(cmd *cobra.Command, args []string) error {
 	llmClient, err := initializeLLMClient(askCmd.logger)
 	if err != nil {
@@ -88,6 +92,9 @@ func (askCmd *askCmd) run(cmd *cobra.Command, args []string) error {
 	return runSingleQuery(llmClient, query, cmd.OutOrStdout())
 }
 
+// initializeLLMClient creates and configures an LLM client using configuration from viper.
+// It requires OLLAMA_BASE_URL and DEFAULT_MODEL to be set via environment variables,
+// config file, or command-line flags.
 func initializeLLMClient(logger *slog.Logger) (llm.LLMClient, error) {
 	ollamaBaseURL := viper.GetString("ollama")
 	model := viper.GetString("model")
@@ -112,6 +119,8 @@ func initializeLLMClient(logger *slog.Logger) (llm.LLMClient, error) {
 	return llmClient, nil
 }
 
+// readPipedInput reads all input from the provided reader until EOF.
+// It's used to capture piped input from stdin.
 func readPipedInput(input io.Reader) (string, error) {
 	reader := bufio.NewReader(input)
 
@@ -137,6 +146,9 @@ func readPipedInput(input io.Reader) (string, error) {
 	return strings.Join(lines, ""), nil
 }
 
+// runSingleQuery sends a single query to the LLM and writes the response to the output.
+// It constructs a chat history with the system prompt and user query,
+// then strips any think blocks from the response before outputting.
 func runSingleQuery(llmClient llm.LLMClient, query string, output io.Writer) error {
 	ctx := context.Background()
 
@@ -157,6 +169,8 @@ func runSingleQuery(llmClient llm.LLMClient, query string, output io.Writer) err
 	return nil
 }
 
+// stripThinkBlock removes <think>...</think> blocks from the message.
+// These blocks may contain internal reasoning that shouldn't be shown to the user.
 func stripThinkBlock(message string) string {
 	openTag := "<think>"
 	closeTag := "</think>"
