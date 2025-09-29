@@ -59,7 +59,11 @@ func (askCmd *askCmd) run(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("%w: %s", ErrLLMClientInit, err)
 	}
 
-	stat, _ := os.Stdin.Stat() // TODO: use Cobra?
+	stat, err := os.Stdin.Stat()
+	if err != nil {
+		return fmt.Errorf("%w: %s", ErrAskCmd, err)
+	}
+
 	isPiped := (stat.Mode() & os.ModeCharDevice) == 0
 
 	var query string
