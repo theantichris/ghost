@@ -69,7 +69,7 @@ func (ollama *OllamaClient) StreamChat(ctx context.Context, chatHistory []ChatMe
 	if err != nil {
 		ollama.logger.Error(ErrClientResponse.Error(), "error", err)
 
-		return fmt.Errorf("%w: %s", ErrClientResponse, err)
+		return fmt.Errorf("%w: %w", ErrClientResponse, err)
 	}
 
 	err = ollama.checkForHTTPError(response.StatusCode, response.Body)
@@ -95,7 +95,7 @@ func (ollama *OllamaClient) StreamChat(ctx context.Context, chatHistory []ChatMe
 
 		var chunk ChatResponse
 		if err := json.Unmarshal([]byte(line), &chunk); err != nil {
-			return fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
+			return fmt.Errorf("%w: %w", ErrUnmarshalResponse, err)
 		}
 
 		if chunk.Message.Content != "" && onToken != nil {
@@ -109,10 +109,10 @@ func (ollama *OllamaClient) StreamChat(ctx context.Context, chatHistory []ChatMe
 
 	if err := scanner.Err(); err != nil {
 		if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
-			return fmt.Errorf("%w: %s", ErrTimeout, err)
+			return fmt.Errorf("%w: %w", ErrTimeout, err)
 		}
 
-		return fmt.Errorf("%w: %s", ErrResponseBody, err)
+		return fmt.Errorf("%w: %w", ErrResponseBody, err)
 	}
 
 	return nil
@@ -139,7 +139,7 @@ func (ollama *OllamaClient) Chat(ctx context.Context, chatHistory []ChatMessage)
 	if err != nil {
 		ollama.logger.Error(ErrClientResponse.Error(), "error", err)
 
-		return ChatMessage{}, fmt.Errorf("%w: %s", ErrClientResponse, err)
+		return ChatMessage{}, fmt.Errorf("%w: %w", ErrClientResponse, err)
 	}
 
 	defer func() {
@@ -157,7 +157,7 @@ func (ollama *OllamaClient) Chat(ctx context.Context, chatHistory []ChatMessage)
 	if err != nil {
 		ollama.logger.Error(ErrResponseBody.Error(), "error", err)
 
-		return ChatMessage{}, fmt.Errorf("%w: %s", ErrResponseBody, err)
+		return ChatMessage{}, fmt.Errorf("%w: %w", ErrResponseBody, err)
 	}
 
 	ollama.logger.Info("received response from Ollama API", "status code", strconv.Itoa(clientResponse.StatusCode))
@@ -168,7 +168,7 @@ func (ollama *OllamaClient) Chat(ctx context.Context, chatHistory []ChatMessage)
 	if err != nil {
 		ollama.logger.Error(ErrUnmarshalResponse.Error(), "error", err)
 
-		return ChatMessage{}, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
+		return ChatMessage{}, fmt.Errorf("%w: %w", ErrUnmarshalResponse, err)
 	}
 
 	return chatResponse.Message, nil
@@ -188,7 +188,7 @@ func (ollama *OllamaClient) preparePayload(chatHistory []ChatMessage, stream boo
 
 	requestBody, err := json.Marshal(chatRequest)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", ErrMarshalRequest, err)
+		return nil, fmt.Errorf("%w: %w", ErrMarshalRequest, err)
 	}
 
 	return requestBody, nil
@@ -202,7 +202,7 @@ func (ollama *OllamaClient) createHTTPRequest(ctx context.Context, requestBody [
 	if err != nil {
 		cancel()
 
-		return nil, nil, fmt.Errorf("%w: %s", ErrCreateRequest, err)
+		return nil, nil, fmt.Errorf("%w: %w", ErrCreateRequest, err)
 	}
 
 	clientRequest.Header.Set("Content-Type", "application/json")
@@ -215,7 +215,7 @@ func (ollama *OllamaClient) checkForHTTPError(statusCode int, body io.ReadCloser
 	if statusCode/100 != 2 {
 		responseBody, err := io.ReadAll(body)
 		if err != nil {
-			return fmt.Errorf("%w: status=%d %s: %s", ErrResponseBody, statusCode, http.StatusText(statusCode), err)
+			return fmt.Errorf("%w: status=%d %s: %w", ErrResponseBody, statusCode, http.StatusText(statusCode), err)
 		}
 
 		var apiError apiError

@@ -3,9 +3,9 @@ package llm
 import "errors"
 
 var (
-	ErrURLEmpty          = errors.New("API url cannot be empty")
-	ErrModelEmpty        = errors.New("default model cannot be empty")
-	ErrChatHistoryEmpty  = errors.New("chat history cannot be empty")
+	ErrURLEmpty          = errors.New("failed to get api url")
+	ErrModelEmpty        = errors.New("failed to get model name")
+	ErrChatHistoryEmpty  = errors.New("failed to get chat history")
 	ErrMarshalRequest    = errors.New("failed to marshal request body")
 	ErrCreateRequest     = errors.New("failed to create HTTP request")
 	ErrClientResponse    = errors.New("failed to get response from Ollama API")
