@@ -8,11 +8,18 @@ Always align generated code and docs with:
 
 ## Project Overview
 
-A local, general-purpose AI assistant CLI tool built in Go and powered by Ollama. Provides command-line access to AI capabilities for quick queries, code analysis, and task automation, running entirely on your own machine.
+A local, general-purpose AI assistant CLI tool built in Go and powered by
+Ollama. Provides command-line access to AI capabilities for quick queries,
+code analysis, and task automation, running entirely on your own machine.
 
-The vision for Ghost is inspired by cyberpunk media such as _Shadowrun_, _Cyberpunk 2077_, and _The Matrix_, bringing a versatile, always-on AI companion into a terminal-first experience.
+The vision for Ghost is inspired by cyberpunk media such as _Shadowrun_,
+_Cyberpunk 2077_, and _The Matrix_, bringing a versatile, always-on AI
+companion into a terminal-first experience.
 
-This repo also serves as the maintainer's personal sandbox for relearning modern Go after time away from coding. Answer questions like a tutorial aimed and teaching the user. Provide explanations and incremental, well-referenced changes to support that learning goal.
+This repo also serves as the maintainer's personal sandbox for relearning
+modern Go after time away from coding. Answer questions like a tutorial aimed
+and teaching the user. Provide explanations and incremental, well-referenced
+changes to support that learning goal.
 
 ## Core Principles
 
@@ -42,15 +49,22 @@ pkg/                 Only if stable external API needed
 ### Key Patterns
 
 - Each boundary returns wrapped errors upward; only CLI maps to exit codes
-- Internal packages include interface + mock for testing (e.g., `LLMClient` interface with `MockLLMClient`)
-- Command layer handles configuration validation, internal packages handle domain validation
-- Dual validation pattern: config layer validates presence, domain layer validates correctness
+- Internal packages include interface + mock for testing (e.g., `LLMClient`
+  interface with `MockLLMClient`)
+- Command layer handles configuration validation, internal packages handle
+  domain validation
+- Dual validation pattern: config layer validates presence, domain layer
+  validates correctness
 - Component-based logging with structured fields (always include `component` field)
 - Future features add new interfaces rather than mutating existing ones
-- Constructors that need optional behavior accept a config/options struct (e.g., output writers, debug toggles) instead of long positional argument lists
+- Constructors that need optional behavior accept a config/options struct
+  (e.g., output writers, debug toggles) instead of long positional argument
+  lists
 - Keep HTTP client reuse (no per-call instantiation)
-- Context as first param (after receiver) for cancelable operations; never store in structs
-- Streaming responses use callback functions (`onToken func(string)`) for real-time output
+- Context as first param (after receiver) for cancelable operations; never
+  store in structs
+- Streaming responses use callback functions (`onToken func(string)`) for
+  real-time output
 - Think block filtering strips `<think>...</think>` tags from model output
 
 ## Technology Stack
@@ -75,8 +89,10 @@ pkg/                 Only if stable external API needed
 - Standard imports grouping: stdlib / third-party / internal
 - Keep functions small; avoid premature abstraction
 - Sentinel errors (`ErrURLEmpty`, etc.) + `%w` wrapping at boundaries
-- Hoist user-facing strings (labels, commands, prompts) into shared constants so code and tests stay aligned.
-- Avoid magic strings; promote shared literals (messages, prompts, flags) to constants for reuse across code, tests, and docs.
+- Hoist user-facing strings (labels, commands, prompts) into shared constants
+  so code and tests stay aligned.
+- Avoid magic strings; promote shared literals (messages, prompts, flags) to
+  constants for reuse across code, tests, and docs.
 - Prefer explicit error handling over cleverness
 - Avoid new dependencies unless essential
 
@@ -110,11 +126,14 @@ if err != nil {
 
 // Wrapping with extra context
 if statusCode/100 != 2 {
-    return "", fmt.Errorf("%w: status=%d %s body=%q", ErrNon2xxResponse, statusCode, http.StatusText(statusCode), string(responseBody))
+    return "", fmt.Errorf("%w: status=%d %s body=%q", ErrNon2xxResponse,
+        statusCode, http.StatusText(statusCode), string(responseBody))
 }
 
 // User-friendly error messages in command layer
-return nil, fmt.Errorf("%w, set it via OLLAMA_BASE_URL environment variable or config file", ErrURLEmpty)
+return nil, fmt.Errorf(
+    "%w, set it via OLLAMA_BASE_URL environment variable or config file",
+    ErrURLEmpty)
 
 // Checking in consumer
 if errors.Is(err, llm.ErrClientResponse) {
@@ -125,14 +144,16 @@ if errors.Is(err, llm.ErrClientResponse) {
 ### Logging & Output
 
 - Use `log/slog` exclusively with structured fields
-- Always set `component` field with specific context: `cmd.askCmd.runAsk`, `llm.OllamaClient.Chat`, etc.
+- Always set `component` field with specific context: `cmd.askCmd.runAsk`,
+  `llm.OllamaClient.Chat`, etc.
 - **stdout reserved strictly for command output (model responses)**
 - **Logs go to stderr** to avoid accidental leakage in pipelines
 - Error logging happens at the appropriate layer:
   - Command layer: user-facing errors with remediation hints
   - Internal packages: domain-specific errors with technical context
 - Avoid duplicate logging of the same error across layers
-- Personal debug dumps (e.g., spew) may write to stdout when guarded by an explicit developer-only flag
+- Personal debug dumps (e.g., spew) may write to stdout when guarded by an
+  explicit developer-only flag
 - Avoid logging secrets, API keys, raw env values
 
 ### Concurrency & Context
@@ -152,9 +173,11 @@ if errors.Is(err, llm.ErrClientResponse) {
 
 ### Guidelines
 
-- **Test-driven development**: Write failing tests first ('red'), implement ('green'), refactor
+- **Test-driven development**: Write failing tests first ('red'), implement
+  ('green'), refactor
 - Use subtests + `t.Parallel()` where independent
-- Prefer mocks/fakes over real HTTP; use `httptest` only for HTTP behavior testing
+- Prefer mocks/fakes over real HTTP; use `httptest` only for HTTP behavior
+  testing
 - Assert sentinel errors with `errors.Is`; substring checks only for HTTP/JSON messages
 - Keep tests deterministic; no reliance on environment or live Ollama
 - Add tests for new error paths when introducing validation
@@ -201,13 +224,17 @@ cat file.go | go run main.go ask "Explain this" # Pipe input to Ghost
 ### Common Gotchas
 
 - Forgetting env vars produces descriptive error messages with configuration hints
-- Duplicate validation between command and internal layers is intentional (separation of concerns)
+- Duplicate validation between command and internal layers is intentional
+  (separation of concerns)
 - Don't move exit code logic into internal packages
-- When testing commands with hard dependencies, extract testable functions that accept interfaces
-- Component names in logging should be specific to the function/method for better debugging
+- When testing commands with hard dependencies, extract testable functions
+  that accept interfaces
+- Component names in logging should be specific to the function/method for
+  better debugging
 
 ## External Integrations
 
 - **Ollama HTTP API** (`/api/chat` endpoint)
   - Repo: <https://github.com/ollama/ollama> (context only; don't fetch during tests)
-  - API Reference: <https://github.com/ollama/ollama/blob/main/docs/api.md> (context only; don't fetch during tests)
+  - API Reference: <https://github.com/ollama/ollama/blob/main/docs/api.md>
+    (context only; don't fetch during tests)

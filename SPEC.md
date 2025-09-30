@@ -1,19 +1,27 @@
 # Spec
 
-**Ghost** is a local, general-purpose AI assistant and orchestrator built in Go and powered by Ollama. It is designed for research, chat, and task automation, running entirely on your own machine with hybrid connectivity.
+**Ghost** is a local, general-purpose AI assistant and orchestrator built in
+Go and powered by Ollama. It is designed for research, chat, and task
+automation, running entirely on your own machine with hybrid connectivity.
 
-The vision for Ghost is inspired by cyberpunk media such as _Shadowrun_, _Cyberpunk 2077_, and _The Matrix_, bringing a versatile, always on AI companion into a terminal-first experience.
+The vision for Ghost is inspired by cyberpunk media such as _Shadowrun_,
+_Cyberpunk 2077_, and _The Matrix_, bringing a versatile, always on AI
+companion into a terminal-first experience.
 
-Capabilities should include research, web searching, helping with code, generating images, executing tasks, setting up reminders, and chatting.
+Capabilities should include research, web searching, helping with code,
+generating images, executing tasks, setting up reminders, and chatting.
 
 ## Technical Architecture
 
 ### Core Principles
 
 - **Local Execution**: Core AI processing runs locally via Ollama
-- **Internet-Enabled**: External services (web search, APIs) allowed for enhanced capabilities
+- **Internet-Enabled**: External services (web search, APIs) allowed for
+  enhanced capabilities
 - **Modular Design**: Clean separation between engine, memory, tools, and interfaces
-- **Strong Separation of Concerns**: Technical designs must enforce clear boundaries between components and responsibilities to keep the project easy to maintain and extend.
+- **Strong Separation of Concerns**: Technical designs must enforce clear
+  boundaries between components and responsibilities to keep the project easy
+  to maintain and extend.
 
 ### System Components
 
@@ -21,8 +29,11 @@ Capabilities should include research, web searching, helping with code, generati
 
 - **LLM Client**: Ollama API integration with tool support
 - **Conversation Manager**: Handle chat flow, context windows, streaming
-  - Seeds CLI sessions with the Ghost system prompt, captures the initial greeting before user input, maintains in-memory turn history, and exits on the `/bye` command.
-  - Streaming responses implemented with real-time token output and think block filtering for thinking models.
+  - Seeds CLI sessions with the Ghost system prompt, captures the initial
+    greeting before user input, maintains in-memory turn history, and exits
+    on the `/bye` command.
+  - Streaming responses implemented with real-time token output and think
+    block filtering for thinking models.
 - **Tool Orchestrator**: Execute and manage external tools/functions
 
 #### 2. Memory System (Hybrid Approach)
@@ -90,7 +101,8 @@ The assistant should demonstrate:
 
 Cards define assistant personas, prompts, system behavior, and (later) allowed tools.
 
-Format: Markdown with optional front matter (YAML or TOML). If front matter is absent, entire file (minus leading heading) is the system prompt.
+Format: Markdown with optional front matter (YAML or TOML). If front matter is
+absent, entire file (minus leading heading) is the system prompt.
 
 Example (`researcher.md`):
 
@@ -123,7 +135,8 @@ Flags override environment variables, which override internal defaults.
 | Model         | `-model` | `DEFAULT_MODEL` | (required if not set) |
 | Debug logging | `-debug` | —               | `false`               |
 
-- Recoverable LLM failures (transport, non-2xx, decode) surface as system messages so sessions can continue without exiting.
+- Recoverable LLM failures (transport, non-2xx, decode) surface as system
+  messages so sessions can continue without exiting.
 
 ---
 
@@ -145,11 +158,15 @@ Codes may expand; backward compatibility will be maintained after first tag.
 ## Logging Strategy
 
 - Logs to stderr; model/token output to stdout (enables piping).
-- Explicit debug tooling (e.g., spew dumps) may write structured data to stdout when gated behind a developer-only flag.
+- Explicit debug tooling (e.g., spew dumps) may write structured data to
+  stdout when gated behind a developer-only flag.
 - All operations accept `context.Context` for cancellation and trace correlation.
 - Avoid panics outside `main`; return errors with `%w` for wrapping.
 
-Use sentinel errors (package-level variables, e.g., `var ErrModelEmpty = errors.New("model cannot be empty")`) for robust error matching and propagation. Wrap sentinel errors with `%w` when returning from functions, and prefer `errors.Is` for error checks in tests and consumers.
+Use sentinel errors (package-level variables, e.g.,
+`var ErrModelEmpty = errors.New("model cannot be empty")`) for robust error
+matching and propagation. Wrap sentinel errors with `%w` when returning from
+functions, and prefer `errors.Is` for error checks in tests and consumers.
 
 Example:
 
@@ -164,7 +181,8 @@ if err != nil {
 
 // Wrapping with extra context
 if statusCode/100 != 2 {
-    return "", fmt.Errorf("%w: status=%d %s body=%q", ErrNon2xxResponse, statusCode, http.StatusText(statusCode), string(responseBody))
+    return "", fmt.Errorf("%w: status=%d %s body=%q", ErrNon2xxResponse,
+        statusCode, http.StatusText(statusCode), string(responseBody))
 }
 
 // Checking in consumer
@@ -184,11 +202,14 @@ Log levels (guideline):
 
 ## Testing & Quality
 
-- Each internal package defines an interface to enable mocking in dependents (e.g., `llm.Client`).
+- Each internal package defines an interface to enable mocking in dependents
+  (e.g., `llm.Client`).
 - Separate test cases for a function using `test.Run()`.
 - Run tests in parallel when possible using `t.Parallel()`.
-- Use sentinel errors and `errors.Is` for error assertions in tests, rather than string matching.
-- Avoid magic strings by hoisting shared literals (messages, prompts, keys) into constants shared across code and tests.
+- Use sentinel errors and `errors.Is` for error assertions in tests, rather
+  than string matching.
+- Avoid magic strings by hoisting shared literals (messages, prompts, keys)
+  into constants shared across code and tests.
 - Run: `go test ./...`; optional: `go vet ./...`; later: integrate `golangci-lint`.
 - Race checks: `go test -race` (periodic / CI optional early on).
 
@@ -201,9 +222,11 @@ Log levels (guideline):
 
 ## Concurrency & Streaming Guidelines
 
-- A single streaming response pipeline per request; use channels for token delivery.
+- A single streaming response pipeline per request; use channels for token
+  delivery.
 - Cancel on context done; ensure goroutines exit (no leaks).
-- Backpressure: token writer checks context and downstream errors; do not buffer unbounded.
+- Backpressure: token writer checks context and downstream errors; do not
+  buffer unbounded.
 
 ## Style & Conventions (Summary)
 

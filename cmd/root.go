@@ -1,9 +1,10 @@
 package cmd
 
 import (
+	"errors"
+	"fmt"
 	"log/slog"
 	"os"
-	"time"
 
 	"github.com/MatusOllah/slogcolor"
 	"github.com/joho/godotenv"
@@ -11,62 +12,75 @@ import (
 	"github.com/spf13/viper"
 )
 
-// Variable to store flags and Logger.
-var (
-	configFile string
-	Debug      bool
-	Ollama     string
-	Model      string
-	Logger     *slog.Logger
-)
+var ErrRootCmd = errors.New("failed to run ghost command")
 
-// RootCmd represents the base command when called without any subcommands.
-var RootCmd = &cobra.Command{
-	Use:   "ghost",
-	Short: "A cyberpunk inspired AI assistant.",
-	Long:  "Ghost is a CLI tool that provides AI-powered assistance directly in your terminal inspired by cyberpunk media.",
-}
+// NewRootCmd creates and returns the root command for the Ghost CLI application.
+// It sets up persistent flags for configuration, debug mode, model selection, and API settings.
+func NewRootCmd(logger *slog.Logger) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "ghost",
+		Short: "A cyberpunk inspired AI assistant.",
+		Long:  "Ghost is a CLI tool that provides AI-powered assistance directly in your terminal inspired by cyberpunk media.",
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if err := viper.BindPFlag("debug", cmd.PersistentFlags().Lookup("debug")); err != nil {
+				return fmt.Errorf("%w: %s", ErrRootCmd, err)
+			}
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-func Execute() {
-	err := RootCmd.Execute()
-	if err != nil {
-		Logger.Error("error running ghost command", slog.String("component", "cmd.RootCmd"))
-		os.Exit(1)
+			if err := viper.BindPFlag("ollama", cmd.PersistentFlags().Lookup("ollama")); err != nil {
+				return fmt.Errorf("%w: %s", ErrRootCmd, err)
+			}
+
+			if err := viper.BindPFlag("model", cmd.PersistentFlags().Lookup("model")); err != nil {
+				return fmt.Errorf("%w: %s", ErrRootCmd, err)
+			}
+
+			return nil
+		},
 	}
+
+	cmd.PersistentFlags().String("config", "", "config file (default is $HOME/.ghost.toml)")
+	cmd.PersistentFlags().Bool("debug", false, "enable debug mode")
+	cmd.PersistentFlags().String("model", "", "LLM model to use")
+	cmd.PersistentFlags().String("ollama", "", "Ollama API base URL")
+
+	cmd.AddCommand(NewAskCmd(logger))
+
+	return cmd
 }
 
-// init initializes the application.
-func init() {
-	cobra.OnInitialize(initConfig)
+// Execute creates and returns the root command for use with fang.Execute.
+// It sets up the logger and registers the configuration initialization.
+func Execute() *cobra.Command {
+	logger := slog.New(slogcolor.NewHandler(os.Stderr, &slogcolor.Options{
+		Level: slog.LevelWarn,
+	}))
 
-	RootCmd.PersistentFlags().StringVar(&configFile, "config", "", "config file (default is $HOME/.ghost.toml)")
-	RootCmd.PersistentFlags().BoolVar(&Debug, "debug", false, "enable debug mode")
-	RootCmd.PersistentFlags().StringVar(&Model, "model", "", "LLM model to use")
-	RootCmd.PersistentFlags().StringVar(&Ollama, "ollama", "", "Ollama API base URL")
+	cobra.OnInitialize(func() {
+		initConfig(logger)
+	})
 
-	_ = viper.BindPFlag("debug", RootCmd.PersistentFlags().Lookup("debug"))
-	_ = viper.BindPFlag("ollama", RootCmd.PersistentFlags().Lookup("ollama"))
-	_ = viper.BindPFlag("model", RootCmd.PersistentFlags().Lookup("model"))
+	return NewRootCmd(logger)
 }
 
-// initConfig reads in config file and ENV variables if set.
-func initConfig() {
-	initLogger()
-
+// initConfig initializes the configuration for the Ghost CLI application.
+// It loads environment variables from .env file, sets up viper configuration paths,
+// binds environment variables (OLLAMA_BASE_URL to ollama, DEFAULT_MODEL to model),
+// and attempts to read the config file from multiple locations.
+func initConfig(logger *slog.Logger) {
 	if err := godotenv.Load(); err != nil {
-		Logger.Debug(".env file not found, using environment variables", "component", "cmd.RootCmd")
+		logger.Debug(".env file not found, using environment variables", "component", "cmd.RootCmd")
 	} else {
-		Logger.Debug(".env file loaded successfully", "component", "cmd.RootCmd")
+		logger.Debug(".env file loaded successfully", "component", "cmd.RootCmd")
 	}
 
-	if configFile != "" {
-		viper.SetConfigFile(configFile)
+	config := viper.GetString("config")
+
+	if config != "" {
+		viper.SetConfigFile(config)
 	} else {
 		home, err := os.UserHomeDir()
 		cobra.CheckErr(err)
 
-		// Search for config in home directory and current directory.
 		viper.AddConfigPath(home)
 		viper.AddConfigPath(".")
 		viper.SetConfigName(".ghost")
@@ -74,37 +88,25 @@ func initConfig() {
 	}
 
 	viper.AutomaticEnv()
-	_ = viper.BindEnv("ollama", "OLLAMA_BASE_URL")
-	_ = viper.BindEnv("model", "DEFAULT_MODEL")
+	if err := viper.BindEnv("ollama", "OLLAMA_BASE_URL"); err != nil {
+		logger.Error(ErrRootCmd.Error(), "error", err)
+	}
+
+	if err := viper.BindEnv("model", "DEFAULT_MODEL"); err != nil {
+		logger.Error(ErrRootCmd.Error(), "error", err)
+	}
 
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			Logger.Debug("config file not found", "component", "cmd.RootCmd")
+			logger.Debug("config file not found", "component", "cmd.RootCmd")
 		} else {
-			Logger.Error("error loading config file", "error", err)
+			logger.Error("error loading config file", "error", err)
 		}
 	} else {
-		Logger.Debug("using config file", "file", viper.ConfigFileUsed(), "component", "cmd.RootCmd")
+		logger.Debug("using config file", "file", viper.ConfigFileUsed(), "component", "cmd.RootCmd")
 	}
 
-	if viper.GetBool("debug") {
-		Debug = true
-		initLogger()
-	}
-}
-
-// initLogger initializes the logger.
-func initLogger() {
-	logLevel := slog.LevelWarn
-
-	if Debug {
-		logLevel = slog.LevelDebug
-	}
-
-	Logger = slog.New(slogcolor.NewHandler(os.Stderr, &slogcolor.Options{
-		Level:      logLevel,
-		TimeFormat: time.RFC3339,
-	}))
-
-	slog.SetDefault(Logger)
+	// if viper.GetBool("debug") {
+	// TODO: Set debug level once I switch logger.
+	// }
 }

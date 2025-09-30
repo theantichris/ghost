@@ -46,7 +46,7 @@ func TestRunSingleQuery(t *testing.T) {
 
 		var output bytes.Buffer
 
-		err := runSingleQuery(mockClient, false, query, &output)
+		err := runSingleQuery(mockClient, query, &output)
 
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
@@ -69,7 +69,7 @@ func TestRunSingleQuery(t *testing.T) {
 
 		var output bytes.Buffer
 
-		err := runSingleQuery(mockClient, false, query, &output)
+		err := runSingleQuery(mockClient, query, &output)
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}
@@ -91,33 +91,7 @@ func TestRunSingleQuery(t *testing.T) {
 
 		var output bytes.Buffer
 
-		err := runSingleQuery(mockClient, false, query, &output)
-		if err != nil {
-			t.Fatalf("expected no error, got %v", err)
-		}
-
-		if output.String() != expectedOutput {
-			t.Errorf("expected output %q, got %q", expectedOutput, output.String())
-		}
-	})
-
-	t.Run("queries without newline", func(t *testing.T) {
-		t.Parallel()
-
-		query := "Tell me a joke?"
-		expectedOutput := "Why did the chicken cross the road?"
-
-		defer func() {
-			noNewLine = false
-		}()
-
-		mockClient := &llm.MockLLMClient{
-			Content: "Why did the chicken cross the road?",
-		}
-
-		var output bytes.Buffer
-
-		err := runSingleQuery(mockClient, true, query, &output)
+		err := runSingleQuery(mockClient, query, &output)
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}
@@ -134,7 +108,7 @@ func TestRunSingleQuery(t *testing.T) {
 			Error: llm.ErrResponseBody,
 		}
 
-		err := runSingleQuery(mockClient, false, "Hello", &bytes.Buffer{})
+		err := runSingleQuery(mockClient, "Hello", &bytes.Buffer{})
 		if err == nil {
 			t.Fatalf("expected error, got nil")
 		}
