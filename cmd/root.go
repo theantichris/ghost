@@ -3,7 +3,6 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -59,10 +58,12 @@ func NewRootCmd(logger *log.Logger) *cobra.Command {
 // Execute creates and returns the root command for use with fang.Execute.
 // It sets up the logger and registers the configuration initialization.
 func Execute() *cobra.Command {
+	// Start with stderr for early initialization logs
+	// setupFileLogging() will switch to file output after config loads
 	logger := log.NewWithOptions(os.Stderr, log.Options{
 		ReportCaller:    true,
 		ReportTimestamp: true,
-		Level:           log.DebugLevel,
+		Level:           log.WarnLevel, // Only show warnings/errors on stderr during init
 	})
 
 	cobra.OnInitialize(func() {
@@ -161,8 +162,11 @@ func setupFileLogging(logger *log.Logger) error {
 		return fmt.Errorf("failed to open log file: %w", err)
 	}
 
-	multiWriter := io.MultiWriter(os.Stderr, logFile)
-	logger.SetOutput(multiWriter)
+	// Set output to file only (no stderr)
+	logger.SetOutput(logFile)
+
+	// Set level to DEBUG now that we're logging to file
+	logger.SetLevel(log.DebugLevel)
 
 	logger.Info("file logging enabled", "path", logFilePath)
 
