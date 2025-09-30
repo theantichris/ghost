@@ -9,7 +9,7 @@
 *.test
 
 # Binaries
-./ghost
+ghost
 
 # Code coverage profiles and other test artifacts
 *.out

@@ -3,7 +3,10 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"io"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/charmbracelet/log"
 	"github.com/joho/godotenv"
@@ -33,6 +36,12 @@ func NewRootCmd(logger *log.Logger) *cobra.Command {
 
 			logger.Debug("bound persistent flag", "flag", "model", "value", viper.GetString("model"))
 
+			if err := viper.BindPFlag("log_file", cmd.PersistentFlags().Lookup("log-file")); err != nil {
+				return fmt.Errorf("%w: %s", ErrRootCmd, err)
+			}
+
+			logger.Debug("bound persistent flag", "flag", "log_file", "value", viper.GetString("log_file"))
+
 			return nil
 		},
 	}
@@ -40,6 +49,7 @@ func NewRootCmd(logger *log.Logger) *cobra.Command {
 	cmd.PersistentFlags().String("config", "", "config file (default is $HOME/.ghost.toml)")
 	cmd.PersistentFlags().String("model", "", "LLM model to use")
 	cmd.PersistentFlags().String("ollama", "", "Ollama API base URL")
+	cmd.PersistentFlags().String("log-file", "", "log file path (default: ~/.ghost/ghost.log)")
 
 	cmd.AddCommand(NewAskCmd(logger))
 
@@ -100,6 +110,14 @@ func initConfig(logger *log.Logger) {
 
 	logger.Debug("bound environment variable", "var", "DEFAULT_MODEL")
 
+	if err := viper.BindEnv("log_file", "LOG_FILE"); err != nil {
+		logger.Error(ErrRootCmd.Error(), "error", err)
+	}
+
+	logger.Debug("bound environment variable", "var", "LOG_FILE")
+
+	viper.SetDefault("log_file", "~/.ghost/ghost.log")
+
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 			logger.Debug("config file not found")
@@ -111,4 +129,42 @@ func initConfig(logger *log.Logger) {
 	}
 
 	logger.Debug("configuration loaded successfully", "ollama", viper.GetString("ollama"), "model", viper.GetString("model"), "debug", viper.GetBool("debug"))
+
+	if err := setupFileLogging(logger); err != nil {
+		logger.Error("failed to setup file logging", "error", err)
+	}
+}
+
+// setupFileLogging configures file logging if a log file path is specified.
+func setupFileLogging(logger *log.Logger) error {
+	logFilePath := viper.GetString("log_file")
+	if logFilePath == "" {
+		logger.Debug("file logging disabled (empty path)")
+		return nil
+	}
+
+	if strings.HasPrefix(logFilePath, "~/") {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return fmt.Errorf("failed to get home directory: %w", err)
+		}
+		logFilePath = filepath.Join(home, logFilePath[2:])
+	}
+
+	logDir := filepath.Dir(logFilePath)
+	if err := os.MkdirAll(logDir, 0755); err != nil {
+		return fmt.Errorf("failed to create log directory: %w", err)
+	}
+
+	logFile, err := os.OpenFile(logFilePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to open log file: %w", err)
+	}
+
+	multiWriter := io.MultiWriter(os.Stderr, logFile)
+	logger.SetOutput(multiWriter)
+
+	logger.Info("file logging enabled", "path", logFilePath)
+
+	return nil
 }

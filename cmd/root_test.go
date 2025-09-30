@@ -45,6 +45,11 @@ func TestNewRootCmd(t *testing.T) {
 			t.Error("expected ollama flag to be set")
 		}
 
+		logFile := cmd.PersistentFlags().Lookup("log-file")
+		if logFile == nil {
+			t.Error("expected log-file flag to be set")
+		}
+
 		if cmd.PreRunE == nil {
 			t.Error("expected PreRunE to be set")
 		}
