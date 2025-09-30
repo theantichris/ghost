@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/charmbracelet/log"
 	"github.com/joho/godotenv"
@@ -21,24 +22,23 @@ func NewRootCmd(logger *log.Logger) *cobra.Command {
 		Short: "A cyberpunk inspired AI assistant.",
 		Long:  "Ghost is a CLI tool that provides AI-powered assistance directly in your terminal inspired by cyberpunk media.",
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			if err := viper.BindPFlag("debug", cmd.PersistentFlags().Lookup("debug")); err != nil {
-				return fmt.Errorf("%w: %s", ErrRootCmd, err)
-			}
-
 			if err := viper.BindPFlag("ollama", cmd.PersistentFlags().Lookup("ollama")); err != nil {
 				return fmt.Errorf("%w: %s", ErrRootCmd, err)
 			}
+
+			logger.Debug("bound persistent flag", "flag", "ollama", "value", viper.GetString("ollama"))
 
 			if err := viper.BindPFlag("model", cmd.PersistentFlags().Lookup("model")); err != nil {
 				return fmt.Errorf("%w: %s", ErrRootCmd, err)
 			}
 
+			logger.Debug("bound persistent flag", "flag", "model", "value", viper.GetString("model"))
+
 			return nil
 		},
 	}
 
-	cmd.PersistentFlags().String("config", "", "config file (default is $HOME/.ghost.toml)")
-	cmd.PersistentFlags().Bool("debug", false, "enable debug mode")
+	cmd.PersistentFlags().String("config", "", "config file (default is $HOME/.ghost/config.toml)")
 	cmd.PersistentFlags().String("model", "", "LLM model to use")
 	cmd.PersistentFlags().String("ollama", "", "Ollama API base URL")
 
@@ -50,10 +50,12 @@ func NewRootCmd(logger *log.Logger) *cobra.Command {
 // Execute creates and returns the root command for use with fang.Execute.
 // It sets up the logger and registers the configuration initialization.
 func Execute() *cobra.Command {
+	// Start with stderr for early initialization logs
+	// setupFileLogging() will switch to file output after config loads
 	logger := log.NewWithOptions(os.Stderr, log.Options{
 		ReportCaller:    true,
 		ReportTimestamp: true,
-		Level:           log.WarnLevel,
+		Level:           log.WarnLevel, // Only show warnings/errors on stderr during init
 	})
 
 	cobra.OnInitialize(func() {
@@ -82,9 +84,9 @@ func initConfig(logger *log.Logger) {
 		home, err := os.UserHomeDir()
 		cobra.CheckErr(err)
 
-		viper.AddConfigPath(home)
+		viper.AddConfigPath(filepath.Join(home, ".ghost"))
 		viper.AddConfigPath(".")
-		viper.SetConfigName(".ghost")
+		viper.SetConfigName("config")
 		viper.SetConfigType("toml")
 	}
 
@@ -93,9 +95,13 @@ func initConfig(logger *log.Logger) {
 		logger.Error(ErrRootCmd.Error(), "error", err)
 	}
 
+	logger.Debug("bound environment variable", "var", "OLLAMA_BASE_URL")
+
 	if err := viper.BindEnv("model", "DEFAULT_MODEL"); err != nil {
 		logger.Error(ErrRootCmd.Error(), "error", err)
 	}
+
+	logger.Debug("bound environment variable", "var", "DEFAULT_MODEL")
 
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
@@ -107,7 +113,40 @@ func initConfig(logger *log.Logger) {
 		logger.Debug("using config file", "file", viper.ConfigFileUsed())
 	}
 
-	if viper.GetBool("debug") {
-		logger.SetLevel(log.DebugLevel)
+	logger.Debug("configuration loaded successfully", "ollama", viper.GetString("ollama"), "model", viper.GetString("model"), "debug", viper.GetBool("debug"))
+
+	if err := setupFileLogging(logger); err != nil {
+		logger.Error("failed to setup file logging", "error", err)
 	}
+}
+
+// setupFileLogging configures file logging to ~/.ghost/ghost.log
+func setupFileLogging(logger *log.Logger) error {
+	// Hardcoded log file location
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return fmt.Errorf("failed to get home directory: %w", err)
+	}
+
+	logFilePath := filepath.Join(home, ".ghost", "ghost.log")
+
+	// Create directory if needed
+	logDir := filepath.Dir(logFilePath)
+	if err := os.MkdirAll(logDir, 0755); err != nil {
+		return fmt.Errorf("failed to create log directory: %w", err)
+	}
+
+	// Open log file
+	logFile, err := os.OpenFile(logFilePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to open log file: %w", err)
+	}
+
+	// Set output to file only (no stderr)
+	logger.SetOutput(logFile)
+
+	// Set level to DEBUG now that we're logging to file
+	logger.SetLevel(log.DebugLevel)
+
+	return nil
 }

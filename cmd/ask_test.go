@@ -2,10 +2,13 @@ package cmd
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"io"
 	"strings"
 	"testing"
+
+	"github.com/charmbracelet/log"
 
 	"github.com/theantichris/ghost/internal/llm"
 )
@@ -46,7 +49,7 @@ func TestRunSingleQuery(t *testing.T) {
 
 		var output bytes.Buffer
 
-		err := runSingleQuery(mockClient, query, &output)
+		err := runSingleQuery(context.Background(), mockClient, query, &output, log.New(io.Discard))
 
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
@@ -69,7 +72,7 @@ func TestRunSingleQuery(t *testing.T) {
 
 		var output bytes.Buffer
 
-		err := runSingleQuery(mockClient, query, &output)
+		err := runSingleQuery(context.Background(), mockClient, query, &output, log.New(io.Discard))
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}
@@ -91,7 +94,7 @@ func TestRunSingleQuery(t *testing.T) {
 
 		var output bytes.Buffer
 
-		err := runSingleQuery(mockClient, query, &output)
+		err := runSingleQuery(context.Background(), mockClient, query, &output, log.New(io.Discard))
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}
@@ -108,7 +111,7 @@ func TestRunSingleQuery(t *testing.T) {
 			Error: llm.ErrResponseBody,
 		}
 
-		err := runSingleQuery(mockClient, "Hello", &bytes.Buffer{})
+		err := runSingleQuery(context.Background(), mockClient, "Hello", &bytes.Buffer{}, log.New(io.Discard))
 		if err == nil {
 			t.Fatalf("expected error, got nil")
 		}

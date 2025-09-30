@@ -130,10 +130,9 @@ Tool permission gating is deferred until tools beyond web search are added.
 
 Flags override environment variables, which override internal defaults.
 
-| Concern       | Flag     | Env             | Default (MVP)         |
-| ------------- | -------- | --------------- | --------------------- |
-| Model         | `-model` | `DEFAULT_MODEL` | (required if not set) |
-| Debug logging | `-debug` | —               | `false`               |
+| Concern | Flag     | Env             | Default (MVP)         |
+| ------- | -------- | --------------- | --------------------- |
+| Model   | `-model` | `DEFAULT_MODEL` | (required if not set) |
 
 - Recoverable LLM failures (transport, non-2xx, decode) surface as system
   messages so sessions can continue without exiting.
@@ -157,7 +156,9 @@ Codes may expand; backward compatibility will be maintained after first tag.
 
 ## Logging Strategy
 
-- Logs to stderr; model/token output to stdout (enables piping).
+- All logs written to `~/.ghost/ghost.log` at DEBUG level (always enabled).
+- Model/token output to stdout (enables piping).
+- stderr reserved for critical startup failures only.
 - Explicit debug tooling (e.g., spew dumps) may write structured data to
   stdout when gated behind a developer-only flag.
 - All operations accept `context.Context` for cancellation and trace correlation.
@@ -193,10 +194,14 @@ if errors.Is(err, llm.ErrClientResponse) {
 
 Log levels (guideline):
 
-- DEBUG: token streaming internals (suppressed by default)
+- DEBUG: token streaming internals, detailed state information
 - INFO: start/end of requests, selected model, tool invocations
 - WARN: transient recoverable issues (recoverable network errors)
 - ERROR: user-visible failures or abort conditions
+
+**Security Note:** Logs never contain user input content (queries, responses, arguments)
+to prevent sensitive data leakage. Only metadata (lengths, counts, status codes)
+ is logged.
 
 ---
 

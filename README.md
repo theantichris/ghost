@@ -68,8 +68,7 @@ piped input.
 
 - `--ollama` — Override the Ollama API base URL.
 - `--model` — Override the default LLM model
-- `--debug` — Enable verbose diagnostics and DEBUG level logging
-- `--config` — Specify config file location (default: `$HOME/.ghost.toml`)
+- `--config` — Specify config file location (default: `$HOME/.ghost/config.toml`)
 
 ### Environment Variables
 
@@ -87,20 +86,18 @@ Ghost checks for configuration in the following order of precedence:
 
 #### Config File Setup
 
-Create a `.ghost.toml` file in your home directory to set default configuration:
+Create a `config.toml` file in `~/.ghost/` to set default configuration:
 
 ```toml
-# ~/.ghost.toml
+# ~/.ghost/config.toml
 ollama = "http://localhost:11434"
 model = "llama3.1"
-debug = false
 ```
 
 Configuration options:
 
 - `ollama` — Ollama API base URL (default: `http://localhost:11434`)
 - `model` — LLM model to use (default: `llama3.1`)
-- `debug` — Enable debug logging (default: `false`)
 
 ## Features
 
@@ -112,6 +109,7 @@ Configuration options:
   model responses
 - **Flexible Configuration**: Support for environment variables, config
   files, and command-line flags
-- **Structured Logging**: Clean, component-based logging with adjustable verbosity
+- **File Logging**: All operations logged to `~/.ghost/ghost.log` for debugging
+  and troubleshooting (sensitive data never logged)
 - **Error Handling**: Comprehensive error messages with clear guidance on
   configuration issues
