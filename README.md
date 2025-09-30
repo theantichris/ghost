@@ -68,7 +68,7 @@ piped input.
 
 - `--ollama` — Override the Ollama API base URL.
 - `--model` — Override the default LLM model
-- `--config` — Specify config file location (default: `$HOME/.ghost.toml`)
+- `--config` — Specify config file location (default: `$HOME/.ghost/config.toml`)
 
 ### Environment Variables
 
@@ -86,10 +86,10 @@ Ghost checks for configuration in the following order of precedence:
 
 #### Config File Setup
 
-Create a `.ghost.toml` file in your home directory to set default configuration:
+Create a `config.toml` file in `~/.ghost/` to set default configuration:
 
 ```toml
-# ~/.ghost.toml
+# ~/.ghost/config.toml
 ollama = "http://localhost:11434"
 model = "llama3.1"
 ```

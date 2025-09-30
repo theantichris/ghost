@@ -46,7 +46,7 @@ func NewRootCmd(logger *log.Logger) *cobra.Command {
 		},
 	}
 
-	cmd.PersistentFlags().String("config", "", "config file (default is $HOME/.ghost.toml)")
+	cmd.PersistentFlags().String("config", "", "config file (default is $HOME/.ghost/config.toml)")
 	cmd.PersistentFlags().String("model", "", "LLM model to use")
 	cmd.PersistentFlags().String("ollama", "", "Ollama API base URL")
 	cmd.PersistentFlags().String("log-file", "", "log file path (default: ~/.ghost/ghost.log)")
@@ -91,9 +91,9 @@ func initConfig(logger *log.Logger) {
 		home, err := os.UserHomeDir()
 		cobra.CheckErr(err)
 
-		viper.AddConfigPath(home)
+		viper.AddConfigPath(filepath.Join(home, ".ghost"))
 		viper.AddConfigPath(".")
-		viper.SetConfigName(".ghost")
+		viper.SetConfigName("config")
 		viper.SetConfigType("toml")
 	}
 
