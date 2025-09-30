@@ -19,15 +19,15 @@ import (
 const systemPrompt = "You are Ghost, a cyberpunk inspired terminal based assistant. Answer requests directly and briefly."
 
 var (
-	ErrURLEmpty      = errors.New("OLLAMA_BASE_URL not configured")
-	ErrModelEmpty    = errors.New("DEFAULT_MODEL name not configured")
+	ErrURLEmpty      = errors.New("failed to get ollama base url")
+	ErrModelEmpty    = errors.New("failed to get model name")
+	ErrStdinStat     = errors.New("failed to stat stdin")
 	ErrReadPipeInput = errors.New("failed to read piped input")
 	ErrEmptyInput    = errors.New("input is empty")
 	ErrLLMClientInit = errors.New("failed to create LLM client")
+	ErrLLMChat       = errors.New("failed to get LLM response")
 	ErrLLMResponse   = errors.New("failed to print LLM response")
 )
-
-var ErrAskCmd = errors.New("failed to run ask command")
 
 // askCmd represents the ask command and its dependencies.
 type askCmd struct {
@@ -63,14 +63,14 @@ func NewAskCmd(logger *log.Logger) *cobra.Command {
 func (askCmd *askCmd) run(cmd *cobra.Command, args []string) error {
 	llmClient, err := initializeLLMClient(askCmd.logger)
 	if err != nil {
-		return fmt.Errorf("%w: %s", ErrLLMClientInit, err)
+		return fmt.Errorf("%w: %w", ErrLLMClientInit, err)
 	}
 
 	askCmd.logger.Info("LLM client initialized successfully")
 
 	stat, err := os.Stdin.Stat()
 	if err != nil {
-		return fmt.Errorf("%w: %s", ErrAskCmd, err)
+		return fmt.Errorf("%w: %w", ErrStdinStat, err)
 	}
 
 	isPiped := (stat.Mode() & os.ModeCharDevice) == 0
@@ -81,7 +81,7 @@ func (askCmd *askCmd) run(cmd *cobra.Command, args []string) error {
 	if isPiped {
 		query, err = readPipedInput(cmd.InOrStdin())
 		if err != nil {
-			return fmt.Errorf("%w: %s", ErrReadPipeInput, err)
+			return fmt.Errorf("%w: %w", ErrReadPipeInput, err)
 		}
 
 		askCmd.logger.Debug("read piped input", "bytes", len(query))
@@ -132,7 +132,7 @@ func initializeLLMClient(logger *log.Logger) (llm.LLMClient, error) {
 
 	llmClient, err := llm.NewOllamaClient(ollamaBaseURL, model, httpClient, logger)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %w", ErrLLMClientInit, err)
 	}
 
 	return llmClient, nil
@@ -156,7 +156,7 @@ func readPipedInput(input io.Reader) (string, error) {
 				break
 			}
 
-			return "", err
+			return "", fmt.Errorf("%w: %w", ErrReadPipeInput, err)
 		}
 
 		lines = append(lines, line)
@@ -176,7 +176,7 @@ func runSingleQuery(ctx context.Context, llmClient llm.LLMClient, query string, 
 
 	response, err := llmClient.Chat(ctx, chatHistory)
 	if err != nil {
-		return fmt.Errorf("failed to get response: %w", err)
+		return fmt.Errorf("%w: %w", ErrLLMChat, err)
 	}
 
 	logger.Info("received response", "contentLength", len(response.Content))
@@ -186,7 +186,7 @@ func runSingleQuery(ctx context.Context, llmClient llm.LLMClient, query string, 
 	logger.Debug("stripped think blocks", "finalLength", len(message))
 
 	if _, err = fmt.Fprintln(output, message); err != nil {
-		return fmt.Errorf("%w: %s", ErrLLMResponse, err)
+		return fmt.Errorf("%w: %w", ErrLLMResponse, err)
 	}
 
 	logger.Info("query completed successfully")
