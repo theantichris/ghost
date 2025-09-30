@@ -156,7 +156,9 @@ Codes may expand; backward compatibility will be maintained after first tag.
 
 ## Logging Strategy
 
-- Logs to stderr; model/token output to stdout (enables piping).
+- All logs written to `~/.ghost/ghost.log` at DEBUG level (always enabled).
+- Model/token output to stdout (enables piping).
+- stderr reserved for critical startup failures only.
 - Explicit debug tooling (e.g., spew dumps) may write structured data to
   stdout when gated behind a developer-only flag.
 - All operations accept `context.Context` for cancellation and trace correlation.
@@ -197,7 +199,9 @@ Log levels (guideline):
 - WARN: transient recoverable issues (recoverable network errors)
 - ERROR: user-visible failures or abort conditions
 
-All logs are written to file at DEBUG level by default.
+**Security Note:** Logs never contain user input content (queries, responses, arguments)
+to prevent sensitive data leakage. Only metadata (lengths, counts, status codes)
+ is logged.
 
 ---
 

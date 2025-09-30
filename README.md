@@ -109,6 +109,7 @@ Configuration options:
   model responses
 - **Flexible Configuration**: Support for environment variables, config
   files, and command-line flags
-- **Structured Logging**: Clean, component-based logging with adjustable verbosity
+- **File Logging**: All operations logged to `~/.ghost/ghost.log` for debugging
+  and troubleshooting (sensitive data never logged)
 - **Error Handling**: Comprehensive error messages with clear guidance on
   configuration issues
