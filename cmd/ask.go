@@ -90,7 +90,9 @@ func (askCmd *askCmd) run(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("%w, provide a query or pipe input", ErrEmptyInput)
 	}
 
-	return runSingleQuery(llmClient, query, cmd.OutOrStdout())
+	ctx := cmd.Context()
+
+	return runSingleQuery(ctx, llmClient, query, cmd.OutOrStdout())
 }
 
 // initializeLLMClient creates and configures an LLM client using configuration from viper.
@@ -150,9 +152,7 @@ func readPipedInput(input io.Reader) (string, error) {
 // runSingleQuery sends a single query to the LLM and writes the response to the output.
 // It constructs a chat history with the system prompt and user query,
 // then strips any think blocks from the response before outputting.
-func runSingleQuery(llmClient llm.LLMClient, query string, output io.Writer) error {
-	ctx := context.Background()
-
+func runSingleQuery(ctx context.Context, llmClient llm.LLMClient, query string, output io.Writer) error {
 	chatHistory := []llm.ChatMessage{
 		{Role: llm.System, Content: systemPrompt},
 		{Role: llm.User, Content: query},
