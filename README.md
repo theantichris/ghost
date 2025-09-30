@@ -12,11 +12,20 @@
        ░   ░  ░  ░    ░ ░        ░
 ```
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/theantichris/ghost.svg)](https://pkg.go.dev/github.com/theantichris/ghost) [![Build Status](https://github.com/theantichris/ghost/actions/workflows/go.yml/badge.svg)](https://github.com/theantichris/ghost/actions) [![Build Status](https://github.com/theantichris/ghost/actions/workflows/markdown.yml/badge.svg)](https://github.com/theantichris/ghost/actions) [![Go ReportCard](https://goreportcard.com/badge/theantichris/ghost)](https://goreportcard.com/report/theantichris/ghost) ![license](https://img.shields.io/badge/license-MIT-informational?style=flat)
+[![Go Reference](https://pkg.go.dev/badge/github.com/theantichris/ghost.svg)](https://pkg.go.dev/github.com/theantichris/ghost)
+[![Build Status](https://github.com/theantichris/ghost/actions/workflows/go.yml/badge.svg)](https://github.com/theantichris/ghost/actions)
+[![Build Status](https://github.com/theantichris/ghost/actions/workflows/markdown.yml/badge.svg)](https://github.com/theantichris/ghost/actions)
+[![Go ReportCard](https://goreportcard.com/badge/theantichris/ghost)](https://goreportcard.com/report/theantichris/ghost)
+![license](https://img.shields.io/badge/license-MIT-informational?style=flat)
 
-**Ghost** is a local, general-purpose AI assistant CLI tool built in Go and powered by Ollama. It provides command-line access to AI capabilities for quick queries, code analysis, and task automation, running entirely on your own machine.
+**Ghost** is a local, general-purpose AI assistant CLI tool built in Go and
+powered by Ollama. It provides command-line access to AI capabilities for
+quick queries, code analysis, and task automation, running entirely on your
+own machine.
 
-The vision for Ghost is inspired by cyberpunk media such as _Shadowrun_, _Cyberpunk 2077_, and _The Matrix_, bringing a versatile, always-on AI companion into a terminal-first experience.
+The vision for Ghost is inspired by cyberpunk media such as _Shadowrun_,
+_Cyberpunk 2077_, and _The Matrix_, bringing a versatile, always-on AI
+companion into a terminal-first experience.
 
 ## Documents
 
@@ -45,18 +54,15 @@ cat error.log | ghost ask "What's causing this error?"
 go run main.go ask "Your question here"
 ```
 
-Ghost processes your query through the configured LLM model and returns the response directly to stdout. Responses stream in real-time as tokens are generated.
+Ghost processes your query through the configured LLM model and returns the
+response directly to stdout.
 
 ### Commands
 
 #### `ask` - Ask Ghost a question
 
-Send a query to the LLM and get a response. Supports both direct queries and piped input.
-
-**Command-specific flags:**
-
-- `--no-newline, -n` — Don't add newline after response (useful for scripts)
-- `--timeout` — HTTP timeout for LLM requests (default: 2 minutes)
+Send a query to the LLM and get a response. Supports both direct queries and
+piped input.
 
 ### Global Flags
 
@@ -98,9 +104,14 @@ Configuration options:
 
 ## Features
 
-- **CLI Command Interface**: Enhanced command-line interface using Fang (built on Cobra framework) with styled help pages and improved user experience
-- **Streaming Responses**: Real-time token-by-token output as the model generates responses
+- **CLI Command Interface**: Enhanced command-line interface using Fang
+  (built on Cobra framework) with styled help pages and improved user
+  experience
 - **Pipe Support**: Process files, logs, or command output by piping to Ghost
-- **Think Block Filtering**: Automatically filters out `<think>` blocks from model responses
-- **Flexible Configuration**: Support for environment variables, config files, and command-line flags
+- **Think Block Filtering**: Automatically filters out `<think>` blocks from
+  model responses
+- **Flexible Configuration**: Support for environment variables, config
+  files, and command-line flags
 - **Structured Logging**: Clean, component-based logging with adjustable verbosity
+- **Error Handling**: Comprehensive error messages with clear guidance on
+  configuration issues
