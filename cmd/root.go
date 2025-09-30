@@ -25,13 +25,19 @@ func NewRootCmd(logger *log.Logger) *cobra.Command {
 				return fmt.Errorf("%w: %s", ErrRootCmd, err)
 			}
 
+			logger.Debug("bound persistent flag", "flag", "debug", "value", viper.GetBool("debug"))
+
 			if err := viper.BindPFlag("ollama", cmd.PersistentFlags().Lookup("ollama")); err != nil {
 				return fmt.Errorf("%w: %s", ErrRootCmd, err)
 			}
 
+			logger.Debug("bound persistent flag", "flag", "ollama", "value", viper.GetString("ollama"))
+
 			if err := viper.BindPFlag("model", cmd.PersistentFlags().Lookup("model")); err != nil {
 				return fmt.Errorf("%w: %s", ErrRootCmd, err)
 			}
+
+			logger.Debug("bound persistent flag", "flag", "model", "value", viper.GetString("model"))
 
 			return nil
 		},
@@ -93,9 +99,13 @@ func initConfig(logger *log.Logger) {
 		logger.Error(ErrRootCmd.Error(), "error", err)
 	}
 
+	logger.Debug("bound environment variable", "var", "OLLAMA_BASE_URL")
+
 	if err := viper.BindEnv("model", "DEFAULT_MODEL"); err != nil {
 		logger.Error(ErrRootCmd.Error(), "error", err)
 	}
+
+	logger.Debug("bound environment variable", "var", "DEFAULT_MODEL")
 
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
@@ -106,6 +116,8 @@ func initConfig(logger *log.Logger) {
 	} else {
 		logger.Debug("using config file", "file", viper.ConfigFileUsed())
 	}
+
+	logger.Debug("configuration loaded successfully", "ollama", viper.GetString("ollama"), "model", viper.GetString("model"), "debug", viper.GetBool("debug"))
 
 	if viper.GetBool("debug") {
 		logger.SetLevel(log.DebugLevel)
