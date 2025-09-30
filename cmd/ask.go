@@ -6,11 +6,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log/slog"
 	"net/http"
 	"os"
 	"strings"
 
+	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/theantichris/ghost/internal/llm"
@@ -31,12 +31,12 @@ var ErrAskCmd = errors.New("failed to run ask command")
 
 // askCmd represents the ask command and its dependencies.
 type askCmd struct {
-	logger *slog.Logger
+	logger *log.Logger
 }
 
 // NewAskCmd creates a new ask command that sends queries to the configured LLM.
 // It supports both direct command-line queries and piped input from stdin.
-func NewAskCmd(logger *slog.Logger) *cobra.Command {
+func NewAskCmd(logger *log.Logger) *cobra.Command {
 	askCmd := &askCmd{logger: logger}
 
 	cmd := &cobra.Command{
@@ -96,7 +96,7 @@ func (askCmd *askCmd) run(cmd *cobra.Command, args []string) error {
 // initializeLLMClient creates and configures an LLM client using configuration from viper.
 // It requires OLLAMA_BASE_URL and DEFAULT_MODEL to be set via environment variables,
 // config file, or command-line flags.
-func initializeLLMClient(logger *slog.Logger) (llm.LLMClient, error) {
+func initializeLLMClient(logger *log.Logger) (llm.LLMClient, error) {
 	ollamaBaseURL := viper.GetString("ollama")
 	model := viper.GetString("model")
 
