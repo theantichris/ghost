@@ -66,6 +66,8 @@ func (askCmd *askCmd) run(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("%w: %s", ErrLLMClientInit, err)
 	}
 
+	askCmd.logger.Info("LLM client initialized successfully")
+
 	stat, err := os.Stdin.Stat()
 	if err != nil {
 		return fmt.Errorf("%w: %s", ErrAskCmd, err)
@@ -73,6 +75,7 @@ func (askCmd *askCmd) run(cmd *cobra.Command, args []string) error {
 
 	isPiped := (stat.Mode() & os.ModeCharDevice) == 0
 
+	askCmd.logger.Debug("detected input mode", "piped", isPiped)
 	var query string
 
 	if isPiped {
@@ -81,18 +84,28 @@ func (askCmd *askCmd) run(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("%w: %s", ErrReadPipeInput, err)
 		}
 
+		askCmd.logger.Info("read piped input", "bytes", len(query))
+
 		if len(args) > 0 {
 			query = query + "\n\n" + strings.Join(args, " ")
+
+			askCmd.logger.Debug("combined piped input with agurments", "args", strings.Join(args, " "))
 		}
 	} else if len(args) > 0 {
 		query = strings.Join(args, " ")
+
+		askCmd.logger.Debug("using direct arguments as query", args, strings.Join(args, " "))
 	} else {
+		askCmd.logger.Warn("no input provided")
+
 		return fmt.Errorf("%w, provide a query or pipe input", ErrEmptyInput)
 	}
 
 	ctx := cmd.Context()
 
-	return runSingleQuery(ctx, llmClient, query, cmd.OutOrStdout())
+	askCmd.logger.Info("executing query", "query", query)
+
+	return runSingleQuery(ctx, llmClient, query, cmd.OutOrStdout(), askCmd.logger)
 }
 
 // initializeLLMClient creates and configures an LLM client using configuration from viper.
@@ -112,6 +125,9 @@ func initializeLLMClient(logger *log.Logger) (llm.LLMClient, error) {
 	}
 
 	timeout := viper.GetDuration("timeout")
+
+	logger.Info("creating Ollama client", "baseURL", ollamaBaseURL, "model", model, "timeout", timeout)
+
 	httpClient := &http.Client{Timeout: timeout}
 
 	llmClient, err := llm.NewOllamaClient(ollamaBaseURL, model, httpClient, logger)
@@ -152,7 +168,7 @@ func readPipedInput(input io.Reader) (string, error) {
 // runSingleQuery sends a single query to the LLM and writes the response to the output.
 // It constructs a chat history with the system prompt and user query,
 // then strips any think blocks from the response before outputting.
-func runSingleQuery(ctx context.Context, llmClient llm.LLMClient, query string, output io.Writer) error {
+func runSingleQuery(ctx context.Context, llmClient llm.LLMClient, query string, output io.Writer, logger *log.Logger) error {
 	chatHistory := []llm.ChatMessage{
 		{Role: llm.System, Content: systemPrompt},
 		{Role: llm.User, Content: query},
@@ -163,11 +179,17 @@ func runSingleQuery(ctx context.Context, llmClient llm.LLMClient, query string, 
 		return fmt.Errorf("failed to get response: %w", err)
 	}
 
+	logger.Info("received response", "contentLength", len(response.Content))
+
 	message := stripThinkBlock(response.Content)
+
+	logger.Debug("stripped think blocks", "finalLength", len(message))
 
 	if _, err = fmt.Fprintln(output, message); err != nil {
 		return fmt.Errorf("%w: %s", ErrLLMResponse, err)
 	}
+
+	logger.Info("query completed successfully")
 
 	return nil
 }
