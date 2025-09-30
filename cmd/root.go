@@ -12,7 +12,10 @@ import (
 	"github.com/spf13/viper"
 )
 
-var ErrRootCmd = errors.New("failed to run ghost command")
+var (
+	ErrConfig  = errors.New("failed to bind config")
+	ErrLogging = errors.New("failed to setup logging")
+)
 
 // NewRootCmd creates and returns the root command for the Ghost CLI application.
 // It sets up persistent flags for configuration, debug mode, model selection, and API settings.
@@ -23,13 +26,13 @@ func NewRootCmd(logger *log.Logger) *cobra.Command {
 		Long:  "Ghost is a CLI tool that provides AI-powered assistance directly in your terminal inspired by cyberpunk media.",
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			if err := viper.BindPFlag("ollama", cmd.PersistentFlags().Lookup("ollama")); err != nil {
-				return fmt.Errorf("%w: %s", ErrRootCmd, err)
+				return fmt.Errorf("%w: %s", ErrConfig, err)
 			}
 
 			logger.Debug("bound persistent flag", "flag", "ollama", "value", viper.GetString("ollama"))
 
 			if err := viper.BindPFlag("model", cmd.PersistentFlags().Lookup("model")); err != nil {
-				return fmt.Errorf("%w: %s", ErrRootCmd, err)
+				return fmt.Errorf("%w: %s", ErrConfig, err)
 			}
 
 			logger.Debug("bound persistent flag", "flag", "model", "value", viper.GetString("model"))
@@ -92,13 +95,13 @@ func initConfig(logger *log.Logger) {
 
 	viper.AutomaticEnv()
 	if err := viper.BindEnv("ollama", "OLLAMA_BASE_URL"); err != nil {
-		logger.Error(ErrRootCmd.Error(), "error", err)
+		logger.Error("failed to bind ollama config", "error", err)
 	}
 
 	logger.Debug("bound environment variable", "var", "OLLAMA_BASE_URL")
 
 	if err := viper.BindEnv("model", "DEFAULT_MODEL"); err != nil {
-		logger.Error(ErrRootCmd.Error(), "error", err)
+		logger.Error("failed to bind model config", "error", err)
 	}
 
 	logger.Debug("bound environment variable", "var", "DEFAULT_MODEL")
@@ -107,7 +110,7 @@ func initConfig(logger *log.Logger) {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 			logger.Debug("config file not found")
 		} else {
-			logger.Error("error loading config file")
+			logger.Error("error loading config file", "error", err)
 		}
 	} else {
 		logger.Debug("using config file", "file", viper.ConfigFileUsed())
@@ -116,7 +119,7 @@ func initConfig(logger *log.Logger) {
 	logger.Debug("configuration loaded successfully", "ollama", viper.GetString("ollama"), "model", viper.GetString("model"), "debug", viper.GetBool("debug"))
 
 	if err := setupFileLogging(logger); err != nil {
-		logger.Error("failed to setup file logging", "error", err)
+		logger.Error("failed to setup file logging, continuing with stderr", "error", err)
 	}
 }
 
@@ -125,7 +128,7 @@ func setupFileLogging(logger *log.Logger) error {
 	// Hardcoded log file location
 	home, err := os.UserHomeDir()
 	if err != nil {
-		return fmt.Errorf("failed to get home directory: %w", err)
+		return fmt.Errorf("%w: failed to get home directory: %w", ErrLogging, err)
 	}
 
 	logFilePath := filepath.Join(home, ".ghost", "ghost.log")
@@ -133,13 +136,13 @@ func setupFileLogging(logger *log.Logger) error {
 	// Create directory if needed
 	logDir := filepath.Dir(logFilePath)
 	if err := os.MkdirAll(logDir, 0755); err != nil {
-		return fmt.Errorf("failed to create log directory: %w", err)
+		return fmt.Errorf("%w: failed to create log directory: %w", ErrLogging, err)
 	}
 
 	// Open log file
 	logFile, err := os.OpenFile(logFilePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
-		return fmt.Errorf("failed to open log file: %w", err)
+		return fmt.Errorf("%w: failed to open log file: %w", ErrLogging, err)
 	}
 
 	// Set output to file only (no stderr)
