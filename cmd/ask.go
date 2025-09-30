@@ -24,6 +24,7 @@ var (
 	ErrReadPipeInput = errors.New("failed to read piped input")
 	ErrEmptyInput    = errors.New("input is empty")
 	ErrLLMClientInit = errors.New("failed to create LLM client")
+	ErrLLMResponse   = errors.New("failed to print LLM response")
 )
 
 var ErrAskCmd = errors.New("failed to run ask command")
@@ -164,7 +165,9 @@ func runSingleQuery(llmClient llm.LLMClient, query string, output io.Writer) err
 
 	message := stripThinkBlock(response.Content)
 
-	_, _ = fmt.Fprintln(output, message)
+	if _, err = fmt.Fprintln(output, message); err != nil {
+		return fmt.Errorf("%w: %s", ErrLLMResponse, err)
+	}
 
 	return nil
 }
