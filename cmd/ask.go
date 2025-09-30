@@ -19,14 +19,9 @@ import (
 const systemPrompt = "You are Ghost, a cyberpunk inspired terminal based assistant. Answer requests directly and briefly."
 
 var (
-	ErrURLEmpty      = errors.New("failed to get ollama base url")
-	ErrModelEmpty    = errors.New("failed to get model name")
-	ErrStdinStat     = errors.New("failed to stat stdin")
-	ErrReadPipeInput = errors.New("failed to read piped input")
-	ErrEmptyInput    = errors.New("input is empty")
-	ErrLLMClientInit = errors.New("failed to create LLM client")
-	ErrLLMChat       = errors.New("failed to get LLM response")
-	ErrLLMResponse   = errors.New("failed to print LLM response")
+	ErrInput = errors.New("failed to get input")
+	ErrLLM   = errors.New("failed to process LLM request")
+	ErrIO    = errors.New("failed to read or write data")
 )
 
 // askCmd represents the ask command and its dependencies.
@@ -63,14 +58,14 @@ func NewAskCmd(logger *log.Logger) *cobra.Command {
 func (askCmd *askCmd) run(cmd *cobra.Command, args []string) error {
 	llmClient, err := initializeLLMClient(askCmd.logger)
 	if err != nil {
-		return fmt.Errorf("%w: %w", ErrLLMClientInit, err)
+		return fmt.Errorf("%w: %w", ErrLLM, err)
 	}
 
 	askCmd.logger.Info("LLM client initialized successfully")
 
 	stat, err := os.Stdin.Stat()
 	if err != nil {
-		return fmt.Errorf("%w: %w", ErrStdinStat, err)
+		return fmt.Errorf("%w: %w", ErrInput, err)
 	}
 
 	isPiped := (stat.Mode() & os.ModeCharDevice) == 0
@@ -81,7 +76,7 @@ func (askCmd *askCmd) run(cmd *cobra.Command, args []string) error {
 	if isPiped {
 		query, err = readPipedInput(cmd.InOrStdin())
 		if err != nil {
-			return fmt.Errorf("%w: %w", ErrReadPipeInput, err)
+			return fmt.Errorf("%w: %w", ErrIO, err)
 		}
 
 		askCmd.logger.Debug("read piped input", "bytes", len(query))
@@ -98,7 +93,7 @@ func (askCmd *askCmd) run(cmd *cobra.Command, args []string) error {
 	} else {
 		askCmd.logger.Warn("no input provided")
 
-		return fmt.Errorf("%w, provide a query or pipe input", ErrEmptyInput)
+		return fmt.Errorf("%w: provide a query or pipe input", ErrInput)
 	}
 
 	ctx := cmd.Context()
@@ -116,12 +111,11 @@ func initializeLLMClient(logger *log.Logger) (llm.LLMClient, error) {
 	model := viper.GetString("model")
 
 	if ollamaBaseURL == "" {
-		return nil, fmt.Errorf("%w, set it via OLLAMA_BASE_URL environment variable, config file, or --ollama flag", ErrURLEmpty)
+		return nil, fmt.Errorf("%w: set OLLAMA_BASE_URL via environment variable, config file, or --ollama flag", ErrInput)
 	}
 
 	if model == "" {
-		return nil, fmt.Errorf("%w, set it via DEFAULT_MODEL environment variable, config file, or --model flag", ErrModelEmpty)
-
+		return nil, fmt.Errorf("%w: set DEFAULT_MODEL via environment variable, config file, or --model flag", ErrInput)
 	}
 
 	timeout := viper.GetDuration("timeout")
@@ -132,7 +126,7 @@ func initializeLLMClient(logger *log.Logger) (llm.LLMClient, error) {
 
 	llmClient, err := llm.NewOllamaClient(ollamaBaseURL, model, httpClient, logger)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", ErrLLMClientInit, err)
+		return nil, fmt.Errorf("%w: %w", ErrLLM, err)
 	}
 
 	return llmClient, nil
@@ -156,7 +150,7 @@ func readPipedInput(input io.Reader) (string, error) {
 				break
 			}
 
-			return "", fmt.Errorf("%w: %w", ErrReadPipeInput, err)
+			return "", fmt.Errorf("%w: %w", ErrIO, err)
 		}
 
 		lines = append(lines, line)
@@ -176,7 +170,7 @@ func runSingleQuery(ctx context.Context, llmClient llm.LLMClient, query string, 
 
 	response, err := llmClient.Chat(ctx, chatHistory)
 	if err != nil {
-		return fmt.Errorf("%w: %w", ErrLLMChat, err)
+		return fmt.Errorf("%w: %w", ErrLLM, err)
 	}
 
 	logger.Info("received response", "contentLength", len(response.Content))
@@ -186,7 +180,7 @@ func runSingleQuery(ctx context.Context, llmClient llm.LLMClient, query string, 
 	logger.Debug("stripped think blocks", "finalLength", len(message))
 
 	if _, err = fmt.Fprintln(output, message); err != nil {
-		return fmt.Errorf("%w: %w", ErrLLMResponse, err)
+		return fmt.Errorf("%w: %w", ErrIO, err)
 	}
 
 	logger.Info("query completed successfully")

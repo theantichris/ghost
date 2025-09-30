@@ -27,7 +27,7 @@ func TestMockLLMClientChat(t *testing.T) {
 		t.Parallel()
 
 		client := &MockLLMClient{
-			Error: ErrChatHistoryEmpty,
+			Error: ErrValidation,
 		}
 
 		messageHistory := []ChatMessage{
@@ -46,7 +46,7 @@ func TestMockLLMClientStreamChat(t *testing.T) {
 		t.Parallel()
 
 		client := &MockLLMClient{
-			Error: ErrChatHistoryEmpty,
+			Error: ErrValidation,
 		}
 
 		messageHistory := []ChatMessage{{Role: User, Content: "Hello"}}
@@ -56,8 +56,8 @@ func TestMockLLMClientStreamChat(t *testing.T) {
 			t.Fatal("expected SteamChat to return error but got nil")
 		}
 
-		if !errors.Is(err, ErrChatHistoryEmpty) {
-			t.Errorf("expected error %v, got %v", ErrChatHistoryEmpty, err)
+		if !errors.Is(err, ErrValidation) {
+			t.Errorf("expected error %v, got %v", ErrValidation, err)
 		}
 	})
 
