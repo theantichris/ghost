@@ -4,16 +4,16 @@ import (
 	"context"
 	"errors"
 	"io"
-	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
+	"github.com/charmbracelet/log"
 	"github.com/google/go-cmp/cmp"
 )
 
-var logger *slog.Logger = slog.New(slog.NewTextHandler(io.Discard, nil))
+var logger *log.Logger = log.New(io.Discard)
 
 type errorTransport struct{}
 

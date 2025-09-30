@@ -1,10 +1,12 @@
 package cmd
 
 import (
-	"log/slog"
+	"io"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/charmbracelet/log"
 
 	"github.com/spf13/viper"
 )
@@ -13,7 +15,7 @@ func TestNewRootCmd(t *testing.T) {
 	t.Run("creates root command with correct configuration", func(t *testing.T) {
 		t.Parallel()
 
-		logger := slog.New(slog.DiscardHandler)
+		logger := log.New(io.Discard)
 		cmd := NewRootCmd(logger)
 
 		if cmd == nil {
@@ -106,7 +108,7 @@ func TestInitConfig(t *testing.T) {
 	t.Run("loads environment variables from .env file", func(t *testing.T) {
 		t.Parallel()
 
-		logger := slog.New(slog.DiscardHandler)
+		logger := log.New(io.Discard)
 		viper.Reset()
 
 		tmpDir := t.TempDir()

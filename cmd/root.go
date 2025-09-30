@@ -3,10 +3,9 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"log/slog"
 	"os"
 
-	"github.com/MatusOllah/slogcolor"
+	"github.com/charmbracelet/log"
 	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -16,7 +15,7 @@ var ErrRootCmd = errors.New("failed to run ghost command")
 
 // NewRootCmd creates and returns the root command for the Ghost CLI application.
 // It sets up persistent flags for configuration, debug mode, model selection, and API settings.
-func NewRootCmd(logger *slog.Logger) *cobra.Command {
+func NewRootCmd(logger *log.Logger) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "ghost",
 		Short: "A cyberpunk inspired AI assistant.",
@@ -51,9 +50,11 @@ func NewRootCmd(logger *slog.Logger) *cobra.Command {
 // Execute creates and returns the root command for use with fang.Execute.
 // It sets up the logger and registers the configuration initialization.
 func Execute() *cobra.Command {
-	logger := slog.New(slogcolor.NewHandler(os.Stderr, &slogcolor.Options{
-		Level: slog.LevelWarn,
-	}))
+	logger := log.NewWithOptions(os.Stderr, log.Options{
+		ReportCaller:    true,
+		ReportTimestamp: true,
+		Level:           log.WarnLevel,
+	})
 
 	cobra.OnInitialize(func() {
 		initConfig(logger)
@@ -66,11 +67,11 @@ func Execute() *cobra.Command {
 // It loads environment variables from .env file, sets up viper configuration paths,
 // binds environment variables (OLLAMA_BASE_URL to ollama, DEFAULT_MODEL to model),
 // and attempts to read the config file from multiple locations.
-func initConfig(logger *slog.Logger) {
+func initConfig(logger *log.Logger) {
 	if err := godotenv.Load(); err != nil {
-		logger.Debug(".env file not found, using environment variables", "component", "cmd.RootCmd")
+		logger.Debug(".env file not found, using environment variables")
 	} else {
-		logger.Debug(".env file loaded successfully", "component", "cmd.RootCmd")
+		logger.Debug(".env file loaded successfully")
 	}
 
 	config := viper.GetString("config")
@@ -98,15 +99,15 @@ func initConfig(logger *slog.Logger) {
 
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			logger.Debug("config file not found", "component", "cmd.RootCmd")
+			logger.Debug("config file not found")
 		} else {
-			logger.Error("error loading config file", "error", err)
+			logger.Error("error loading config file")
 		}
 	} else {
-		logger.Debug("using config file", "file", viper.ConfigFileUsed(), "component", "cmd.RootCmd")
+		logger.Debug("using config file", "file", viper.ConfigFileUsed())
 	}
 
-	// if viper.GetBool("debug") {
-	// TODO: Set debug level once I switch logger.
-	// }
+	if viper.GetBool("debug") {
+		logger.SetLevel(log.DebugLevel)
+	}
 }

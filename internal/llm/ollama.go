@@ -8,11 +8,12 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/charmbracelet/log"
 )
 
 // OllamaClient is a client for interacting with the Ollama API.
@@ -20,24 +21,24 @@ type OllamaClient struct {
 	baseURL      string       // Base Ollama server URL
 	defaultModel string       // Default model to use
 	httpClient   *http.Client // HTTP client for making requests
-	logger       *slog.Logger // Logger for structured logging
+	logger       *log.Logger  // Logger for structured logging
 }
 
 // NewOllamaClient initializes a new OllamaClient with the given baseURL and defaultModel.
-func NewOllamaClient(baseURL, defaultModel string, httpClient *http.Client, logger *slog.Logger) (*OllamaClient, error) {
+func NewOllamaClient(baseURL, defaultModel string, httpClient *http.Client, logger *log.Logger) (*OllamaClient, error) {
 	if strings.TrimSpace(baseURL) == "" {
-		logger.Error("Ollama client initialization failed", "error", ErrURLEmpty, "component", "llm.NewOllamaClient")
+		logger.Error("Ollama client initialization failed", "error", ErrURLEmpty)
 
 		return nil, ErrURLEmpty
 	}
 
 	if strings.TrimSpace(defaultModel) == "" {
-		logger.Error("Ollama client initialization failed", "error", ErrModelEmpty, "component", "llm.NewOllamaClient")
+		logger.Error("Ollama client initialization failed", "error", ErrModelEmpty)
 
 		return nil, ErrModelEmpty
 	}
 
-	logger.Info("Ollama client initialized", "baseURL", baseURL, "defaultModel", defaultModel, "component", "llm.NewOllamaClient")
+	logger.Info("Ollama client initialized", "baseURL", baseURL, "defaultModel", defaultModel)
 
 	return &OllamaClient{
 		baseURL:      baseURL,
@@ -61,12 +62,12 @@ func (ollama *OllamaClient) StreamChat(ctx context.Context, chatHistory []ChatMe
 
 	defer cancel()
 
-	ollama.logger.Info("sending chat request to Ollama API", "url", ollama.baseURL+"/api/chat", "method", http.MethodPost, "component", "llm.OllamaClient.StreamChat")
-	ollama.logger.Debug("request payload", "payload", string(requestBody), "component", "llm.OllamaClient.StreamChat")
+	ollama.logger.Info("sending chat request to Ollama API", "url", ollama.baseURL+"/api/chat", "method", http.MethodPost)
+	ollama.logger.Debug("request payload", "payload", string(requestBody))
 
 	response, err := ollama.httpClient.Do(request)
 	if err != nil {
-		ollama.logger.Error(ErrClientResponse.Error(), "error", err, "component", "llm.OllamaClient.StreamChat")
+		ollama.logger.Error(ErrClientResponse.Error(), "error", err)
 
 		return fmt.Errorf("%w: %s", ErrClientResponse, err)
 	}
@@ -131,19 +132,19 @@ func (ollama *OllamaClient) Chat(ctx context.Context, chatHistory []ChatMessage)
 
 	defer cancel()
 
-	ollama.logger.Info("sending chat request to Ollama API", "url", ollama.baseURL+"/api/chat", "method", http.MethodPost, "component", "llm.OllamaClient.Chat")
-	ollama.logger.Debug("request payload", "payload", string(requestBody), "component", "llm.OllamaClient.Chat")
+	ollama.logger.Info("sending chat request to Ollama API", "url", ollama.baseURL+"/api/chat", "method", http.MethodPost)
+	ollama.logger.Debug("request payload", "payload", string(requestBody))
 
 	clientResponse, err := ollama.httpClient.Do(clientRequest)
 	if err != nil {
-		ollama.logger.Error(ErrClientResponse.Error(), "error", err, "component", "llm.OllamaClient.Chat")
+		ollama.logger.Error(ErrClientResponse.Error(), "error", err)
 
 		return ChatMessage{}, fmt.Errorf("%w: %s", ErrClientResponse, err)
 	}
 
 	defer func() {
 		if err := clientResponse.Body.Close(); err != nil {
-			ollama.logger.Error("failed to close response body", "error", err, "component", "llm.OllamaClient.Chat")
+			ollama.logger.Error("failed to close response body", "error", err)
 		}
 	}()
 
@@ -154,18 +155,18 @@ func (ollama *OllamaClient) Chat(ctx context.Context, chatHistory []ChatMessage)
 
 	responseBody, err := io.ReadAll(clientResponse.Body)
 	if err != nil {
-		ollama.logger.Error(ErrResponseBody.Error(), "error", err, "component", "llm.OllamaClient.Chat")
+		ollama.logger.Error(ErrResponseBody.Error(), "error", err)
 
 		return ChatMessage{}, fmt.Errorf("%w: %s", ErrResponseBody, err)
 	}
 
-	ollama.logger.Info("received response from Ollama API", "status code", strconv.Itoa(clientResponse.StatusCode), "component", "llm.OllamaClient.Chat")
-	ollama.logger.Debug("response payload", "payload", string(responseBody), "component", "llm.OllamaClient.Chat")
+	ollama.logger.Info("received response from Ollama API", "status code", strconv.Itoa(clientResponse.StatusCode))
+	ollama.logger.Debug("response payload", "payload", string(responseBody))
 
 	var chatResponse ChatResponse
 	err = json.Unmarshal(responseBody, &chatResponse)
 	if err != nil {
-		ollama.logger.Error(ErrUnmarshalResponse.Error(), "error", err, "component", "llm.OllamaClient.Chat")
+		ollama.logger.Error(ErrUnmarshalResponse.Error(), "error", err)
 
 		return ChatMessage{}, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
 	}
