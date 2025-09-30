@@ -68,7 +68,6 @@ piped input.
 
 - `--ollama` — Override the Ollama API base URL.
 - `--model` — Override the default LLM model
-- `--debug` — Enable verbose diagnostics and DEBUG level logging
 - `--config` — Specify config file location (default: `$HOME/.ghost.toml`)
 
 ### Environment Variables
@@ -93,14 +92,12 @@ Create a `.ghost.toml` file in your home directory to set default configuration:
 # ~/.ghost.toml
 ollama = "http://localhost:11434"
 model = "llama3.1"
-debug = false
 ```
 
 Configuration options:
 
 - `ollama` — Ollama API base URL (default: `http://localhost:11434`)
 - `model` — LLM model to use (default: `llama3.1`)
-- `debug` — Enable debug logging (default: `false`)
 
 ## Features
 

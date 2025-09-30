@@ -130,10 +130,9 @@ Tool permission gating is deferred until tools beyond web search are added.
 
 Flags override environment variables, which override internal defaults.
 
-| Concern       | Flag     | Env             | Default (MVP)         |
-| ------------- | -------- | --------------- | --------------------- |
-| Model         | `-model` | `DEFAULT_MODEL` | (required if not set) |
-| Debug logging | `-debug` | —               | `false`               |
+| Concern | Flag     | Env             | Default (MVP)         |
+| ------- | -------- | --------------- | --------------------- |
+| Model   | `-model` | `DEFAULT_MODEL` | (required if not set) |
 
 - Recoverable LLM failures (transport, non-2xx, decode) surface as system
   messages so sessions can continue without exiting.
@@ -193,10 +192,12 @@ if errors.Is(err, llm.ErrClientResponse) {
 
 Log levels (guideline):
 
-- DEBUG: token streaming internals (suppressed by default)
+- DEBUG: token streaming internals, detailed state information
 - INFO: start/end of requests, selected model, tool invocations
 - WARN: transient recoverable issues (recoverable network errors)
 - ERROR: user-visible failures or abort conditions
+
+All logs are written to file at DEBUG level by default.
 
 ---
 

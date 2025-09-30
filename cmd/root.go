@@ -21,12 +21,6 @@ func NewRootCmd(logger *log.Logger) *cobra.Command {
 		Short: "A cyberpunk inspired AI assistant.",
 		Long:  "Ghost is a CLI tool that provides AI-powered assistance directly in your terminal inspired by cyberpunk media.",
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			if err := viper.BindPFlag("debug", cmd.PersistentFlags().Lookup("debug")); err != nil {
-				return fmt.Errorf("%w: %s", ErrRootCmd, err)
-			}
-
-			logger.Debug("bound persistent flag", "flag", "debug", "value", viper.GetBool("debug"))
-
 			if err := viper.BindPFlag("ollama", cmd.PersistentFlags().Lookup("ollama")); err != nil {
 				return fmt.Errorf("%w: %s", ErrRootCmd, err)
 			}
@@ -44,7 +38,6 @@ func NewRootCmd(logger *log.Logger) *cobra.Command {
 	}
 
 	cmd.PersistentFlags().String("config", "", "config file (default is $HOME/.ghost.toml)")
-	cmd.PersistentFlags().Bool("debug", false, "enable debug mode")
 	cmd.PersistentFlags().String("model", "", "LLM model to use")
 	cmd.PersistentFlags().String("ollama", "", "Ollama API base URL")
 
@@ -59,7 +52,7 @@ func Execute() *cobra.Command {
 	logger := log.NewWithOptions(os.Stderr, log.Options{
 		ReportCaller:    true,
 		ReportTimestamp: true,
-		Level:           log.WarnLevel,
+		Level:           log.DebugLevel,
 	})
 
 	cobra.OnInitialize(func() {
@@ -118,8 +111,4 @@ func initConfig(logger *log.Logger) {
 	}
 
 	logger.Debug("configuration loaded successfully", "ollama", viper.GetString("ollama"), "model", viper.GetString("model"), "debug", viper.GetBool("debug"))
-
-	if viper.GetBool("debug") {
-		logger.SetLevel(log.DebugLevel)
-	}
 }
