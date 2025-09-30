@@ -26,13 +26,13 @@ func NewRootCmd(logger *log.Logger) *cobra.Command {
 		Long:  "Ghost is a CLI tool that provides AI-powered assistance directly in your terminal inspired by cyberpunk media.",
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			if err := viper.BindPFlag("ollama", cmd.PersistentFlags().Lookup("ollama")); err != nil {
-				return fmt.Errorf("%w: %s", ErrConfig, err)
+				return fmt.Errorf("%w: %w", ErrConfig, err)
 			}
 
 			logger.Debug("bound persistent flag", "flag", "ollama", "value", viper.GetString("ollama"))
 
 			if err := viper.BindPFlag("model", cmd.PersistentFlags().Lookup("model")); err != nil {
-				return fmt.Errorf("%w: %s", ErrConfig, err)
+				return fmt.Errorf("%w: %w", ErrConfig, err)
 			}
 
 			logger.Debug("bound persistent flag", "flag", "model", "value", viper.GetString("model"))

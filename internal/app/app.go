@@ -138,7 +138,7 @@ func (app *App) getUserMessage(scanner *bufio.Scanner) (llm.ChatMessage, bool, e
 
 	if ok := scanner.Scan(); !ok {
 		if err := scanner.Err(); err != nil {
-			return llm.ChatMessage{}, endChat, fmt.Errorf("%w: %s", ErrReadingInput, err)
+			return llm.ChatMessage{}, endChat, fmt.Errorf("%w: %w", ErrReadingInput, err)
 		}
 	}
 
@@ -172,5 +172,5 @@ func (app *App) handleLLMResponseError(err error) error {
 		}
 	}
 
-	return fmt.Errorf("%w: %s", ErrChatFailed, err)
+	return fmt.Errorf("%w: %w", ErrChatFailed, err)
 }
