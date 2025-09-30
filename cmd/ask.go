@@ -89,12 +89,12 @@ func (askCmd *askCmd) run(cmd *cobra.Command, args []string) error {
 		if len(args) > 0 {
 			query = query + "\n\n" + strings.Join(args, " ")
 
-			askCmd.logger.Debug("combined piped input with agurments", "args", strings.Join(args, " "))
+			askCmd.logger.Debug("combined piped input with arguments", "argCount", len(args))
 		}
 	} else if len(args) > 0 {
 		query = strings.Join(args, " ")
 
-		askCmd.logger.Debug("using direct arguments as query", args, strings.Join(args, " "))
+		askCmd.logger.Debug("using direct arguments as query", "argCount", len(args))
 	} else {
 		askCmd.logger.Warn("no input provided")
 
