@@ -84,7 +84,7 @@ func (askCmd *askCmd) run(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("%w: %s", ErrReadPipeInput, err)
 		}
 
-		askCmd.logger.Info("read piped input", "bytes", len(query))
+		askCmd.logger.Debug("read piped input", "bytes", len(query))
 
 		if len(args) > 0 {
 			query = query + "\n\n" + strings.Join(args, " ")
@@ -103,7 +103,7 @@ func (askCmd *askCmd) run(cmd *cobra.Command, args []string) error {
 
 	ctx := cmd.Context()
 
-	askCmd.logger.Info("executing query", "query", query)
+	askCmd.logger.Info("executing query", "queryLength", len(query))
 
 	return runSingleQuery(ctx, llmClient, query, cmd.OutOrStdout(), askCmd.logger)
 }
