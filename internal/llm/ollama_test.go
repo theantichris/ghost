@@ -55,8 +55,8 @@ func TestNewOllamaClient(t *testing.T) {
 			t.Fatal("expected error for empty baseURL, got nil")
 		}
 
-		if !errors.Is(err, ErrURLEmpty) {
-			t.Errorf("expected ErrURLEmpty, got %v", err)
+		if !errors.Is(err, ErrValidation) {
+			t.Errorf("expected ErrValidation, got %v", err)
 		}
 	})
 
@@ -69,8 +69,8 @@ func TestNewOllamaClient(t *testing.T) {
 			t.Fatal("expected error for empty defaultModel, got nil")
 		}
 
-		if !errors.Is(err, ErrModelEmpty) {
-			t.Errorf("expected ErrModelEmpty, got %v", err)
+		if !errors.Is(err, ErrValidation) {
+			t.Errorf("expected ErrValidation, got %v", err)
 		}
 	})
 }
@@ -123,8 +123,8 @@ func TestChat(t *testing.T) {
 			t.Fatal("expected error for empty message, got nil")
 		}
 
-		if !errors.Is(err, ErrChatHistoryEmpty) {
-			t.Errorf("expected ErrChatHistoryEmpty, got %v", err)
+		if !errors.Is(err, ErrValidation) {
+			t.Errorf("expected ErrValidation, got %v", err)
 		}
 	})
 
@@ -201,8 +201,8 @@ func TestChat(t *testing.T) {
 			t.Fatal("expected error for non-200 HTTP response, got nil")
 		}
 
-		if !strings.Contains(err.Error(), "non-2xx response: status=500 Internal Server Error") {
-			t.Errorf("expected error containing 'non-2xx response: status=500 Internal Server Error', got %v", err)
+		if !strings.Contains(err.Error(), "failed to process response: status=500 Internal Server Error") {
+			t.Errorf("expected error containing 'failed to process response: status=500 Internal Server Error', got %v", err)
 		}
 	})
 
@@ -233,8 +233,8 @@ func TestChat(t *testing.T) {
 			t.Fatal("expected error for invalid JSON response, got nil")
 		}
 
-		if !strings.Contains(err.Error(), "failed to unmarshal response body: invalid character 'i' looking for beginning of value") {
-			t.Errorf("expected error containing 'failed to unmarshal response body: invalid character 'i' looking for beginning of value', got %v", err)
+		if !strings.Contains(err.Error(), "failed to process response: invalid character 'i' looking for beginning of value") {
+			t.Errorf("expected error containing 'failed to process response: invalid character 'i' looking for beginning of value', got %v", err)
 		}
 	})
 }

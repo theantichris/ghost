@@ -164,31 +164,51 @@ Codes may expand; backward compatibility will be maintained after first tag.
 - All operations accept `context.Context` for cancellation and trace correlation.
 - Avoid panics outside `main`; return errors with `%w` for wrapping.
 
-Use sentinel errors (package-level variables, e.g.,
-`var ErrModelEmpty = errors.New("model cannot be empty")`) for robust error
-matching and propagation. Wrap sentinel errors with `%w` when returning from
-functions, and prefer `errors.Is` for error checks in tests and consumers.
+Use sentinel errors (package-level variables) for robust error matching and
+propagation. Wrap sentinel errors with `%w` when returning from functions,
+and prefer `errors.Is` for error checks in tests and consumers.
+
+**Error Message Guidelines:**
+
+- Use consistent "failed to..." pattern for sentinel error messages
+- Domain-based sentinels (e.g., `ErrConfig`, `ErrLogging`) over cause-based
+- Only create sentinels for errors that callers need to handle differently
+
+**Error Wrapping Best Practices:**
+
+- Always use `%w: %w` when wrapping an error with a sentinel error
+- The first `%w` is for the sentinel, the second `%w` is for the underlying error
+- This preserves the full error chain for `errors.Is()` and `errors.Unwrap()`
+- Never use `%s` for error arguments as it breaks the error chain
 
 Example:
 
 ```go
-// Sentinel error definition
-var ErrClientResponse = errors.New("failed to get response from Ollama API")
+// Sentinel error definitions
+var (
+    ErrConfig  = errors.New("failed to bind config")
+    ErrLogging = errors.New("failed to setup logging")
+)
 
-// Wrapping at boundary
+// Wrapping with sentinel - CORRECT
 if err != nil {
-    return "", fmt.Errorf("%w: %s", ErrClientResponse, err)
+    return fmt.Errorf("%w: %w", ErrConfig, err)
 }
 
-// Wrapping with extra context
+// Wrapping with sentinel - INCORRECT (breaks error chain)
+if err != nil {
+    return fmt.Errorf("%w: %s", ErrConfig, err)  // Don't use %s!
+}
+
+// Wrapping with context and status codes
 if statusCode/100 != 2 {
-    return "", fmt.Errorf("%w: status=%d %s body=%q", ErrNon2xxResponse,
-        statusCode, http.StatusText(statusCode), string(responseBody))
+    return fmt.Errorf("%w: status=%d %s: %w", ErrNon2xxResponse,
+        statusCode, http.StatusText(statusCode), err)
 }
 
 // Checking in consumer
-if errors.Is(err, llm.ErrClientResponse) {
-    // handle error
+if errors.Is(err, ErrConfig) {
+    // handle configuration error specifically
 }
 ```
 

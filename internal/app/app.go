@@ -138,7 +138,7 @@ func (app *App) getUserMessage(scanner *bufio.Scanner) (llm.ChatMessage, bool, e
 
 	if ok := scanner.Scan(); !ok {
 		if err := scanner.Err(); err != nil {
-			return llm.ChatMessage{}, endChat, fmt.Errorf("%w: %s", ErrReadingInput, err)
+			return llm.ChatMessage{}, endChat, fmt.Errorf("%w: %w", ErrReadingInput, err)
 		}
 	}
 
@@ -161,10 +161,7 @@ func (app *App) getUserMessage(scanner *bufio.Scanner) (llm.ChatMessage, bool, e
 // handleLLMResponseError shows a system message for recoverable errors and returns unrecoverable errors.
 func (app *App) handleLLMResponseError(err error) error {
 	errorMap := map[error]systemMessage{
-		llm.ErrClientResponse:    msgClientResponse,
-		llm.ErrNon2xxResponse:    msgNon2xxResponse,
-		llm.ErrResponseBody:      msgResponseBody,
-		llm.ErrUnmarshalResponse: msgUnmarshalResponse,
+		llm.ErrResponse: msgClientResponse,
 	}
 
 	for error, msg := range errorMap {
@@ -175,5 +172,5 @@ func (app *App) handleLLMResponseError(err error) error {
 		}
 	}
 
-	return fmt.Errorf("%w: %s", ErrChatFailed, err)
+	return fmt.Errorf("%w: %w", ErrChatFailed, err)
 }

@@ -234,7 +234,7 @@ func TestRun(t *testing.T) {
 }
 
 func TestHandleLLMResponseError(t *testing.T) {
-	t.Run("prints message for ErrClientResponse", func(t *testing.T) {
+	t.Run("prints message for ErrResponse", func(t *testing.T) {
 		t.Parallel()
 
 		buffer := &bytes.Buffer{}
@@ -244,7 +244,7 @@ func TestHandleLLMResponseError(t *testing.T) {
 			t.Fatalf("unexpected error: %v", err)
 		}
 
-		err = app.handleLLMResponseError(llm.ErrClientResponse)
+		err = app.handleLLMResponseError(llm.ErrResponse)
 		if err != nil {
 			t.Fatalf("expected handleLLMResponse to recover, got %v", err)
 		}
@@ -253,72 +253,6 @@ func TestHandleLLMResponseError(t *testing.T) {
 
 		if actual != msgClientResponse.String() {
 			t.Errorf("expected system message %q, got %q", msgClientResponse, actual)
-		}
-	})
-
-	t.Run("prints message for ErrNon2xxResponse", func(t *testing.T) {
-		t.Parallel()
-
-		buffer := &bytes.Buffer{}
-
-		app, err := New(&llm.MockLLMClient{}, logger, Config{Output: buffer})
-		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
-
-		err = app.handleLLMResponseError(llm.ErrNon2xxResponse)
-		if err != nil {
-			t.Fatalf("expected handleLLMResponse to recover, got %v", err)
-		}
-
-		actual := strings.TrimSpace(buffer.String())
-
-		if actual != msgNon2xxResponse.String() {
-			t.Errorf("expected system message %q, got %q", msgNon2xxResponse, actual)
-		}
-	})
-
-	t.Run("prints message for ErrResponseBody", func(t *testing.T) {
-		t.Parallel()
-
-		buffer := &bytes.Buffer{}
-
-		app, err := New(&llm.MockLLMClient{}, logger, Config{Output: buffer})
-		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
-
-		err = app.handleLLMResponseError(llm.ErrResponseBody)
-		if err != nil {
-			t.Fatalf("expected handleLLMResponse to recover, got %v", err)
-		}
-
-		actual := strings.TrimSpace(buffer.String())
-
-		if actual != msgResponseBody.String() {
-			t.Errorf("expected system message %q, got %q", msgResponseBody, actual)
-		}
-	})
-
-	t.Run("prints message for ErrUnmarshalResponse", func(t *testing.T) {
-		t.Parallel()
-
-		buffer := &bytes.Buffer{}
-
-		app, err := New(&llm.MockLLMClient{}, logger, Config{Output: buffer})
-		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
-
-		err = app.handleLLMResponseError(llm.ErrUnmarshalResponse)
-		if err != nil {
-			t.Fatalf("expected handleLLMResponse to recover, got %v", err)
-		}
-
-		actual := strings.TrimSpace(buffer.String())
-
-		if actual != msgUnmarshalResponse.String() {
-			t.Errorf("expected system message %q, got %q", msgUnmarshalResponse, actual)
 		}
 	})
 }

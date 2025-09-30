@@ -108,7 +108,7 @@ func TestRunSingleQuery(t *testing.T) {
 		t.Parallel()
 
 		mockClient := &llm.MockLLMClient{
-			Error: llm.ErrResponseBody,
+			Error: llm.ErrResponse,
 		}
 
 		err := runSingleQuery(context.Background(), mockClient, "Hello", &bytes.Buffer{}, log.New(io.Discard))
@@ -116,8 +116,8 @@ func TestRunSingleQuery(t *testing.T) {
 			t.Fatalf("expected error, got nil")
 		}
 
-		if !errors.Is(err, llm.ErrResponseBody) {
-			t.Errorf("expected error %v, got %v", llm.ErrResponseBody, err)
+		if !errors.Is(err, ErrLLM) {
+			t.Errorf("expected error %v, got %v", ErrLLM, err)
 		}
 	})
 }

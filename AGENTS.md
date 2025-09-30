@@ -121,12 +121,12 @@ Logger.Error("couldn't initialize LLM client",
 
 // Wrapping at boundary
 if err != nil {
-    return "", fmt.Errorf("%w: %s", ErrClientResponse, err)
+    return "", fmt.Errorf("%w: %w", ErrResponse, err)
 }
 
 // Wrapping with extra context
 if statusCode/100 != 2 {
-    return "", fmt.Errorf("%w: status=%d %s body=%q", ErrNon2xxResponse,
+    return "", fmt.Errorf("%w: status=%d %s body=%q", ErrResponse,
         statusCode, http.StatusText(statusCode), string(responseBody))
 }
 

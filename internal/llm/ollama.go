@@ -27,15 +27,15 @@ type OllamaClient struct {
 // NewOllamaClient initializes a new OllamaClient with the given baseURL and defaultModel.
 func NewOllamaClient(baseURL, defaultModel string, httpClient *http.Client, logger *log.Logger) (*OllamaClient, error) {
 	if strings.TrimSpace(baseURL) == "" {
-		logger.Error("Ollama client initialization failed", "error", ErrURLEmpty)
+		logger.Error("Ollama client initialization failed", "error", ErrValidation)
 
-		return nil, ErrURLEmpty
+		return nil, fmt.Errorf("%w: base URL is empty", ErrValidation)
 	}
 
 	if strings.TrimSpace(defaultModel) == "" {
-		logger.Error("Ollama client initialization failed", "error", ErrModelEmpty)
+		logger.Error("Ollama client initialization failed", "error", ErrValidation)
 
-		return nil, ErrModelEmpty
+		return nil, fmt.Errorf("%w: model name is empty", ErrValidation)
 	}
 
 	logger.Info("Ollama client initialized", "baseURL", baseURL, "defaultModel", defaultModel)
@@ -67,9 +67,9 @@ func (ollama *OllamaClient) StreamChat(ctx context.Context, chatHistory []ChatMe
 
 	response, err := ollama.httpClient.Do(request)
 	if err != nil {
-		ollama.logger.Error(ErrClientResponse.Error(), "error", err)
+		ollama.logger.Error(ErrResponse.Error(), "error", err)
 
-		return fmt.Errorf("%w: %s", ErrClientResponse, err)
+		return fmt.Errorf("%w: %w", ErrResponse, err)
 	}
 
 	err = ollama.checkForHTTPError(response.StatusCode, response.Body)
@@ -95,7 +95,7 @@ func (ollama *OllamaClient) StreamChat(ctx context.Context, chatHistory []ChatMe
 
 		var chunk ChatResponse
 		if err := json.Unmarshal([]byte(line), &chunk); err != nil {
-			return fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
+			return fmt.Errorf("%w: %w", ErrResponse, err)
 		}
 
 		if chunk.Message.Content != "" && onToken != nil {
@@ -109,10 +109,10 @@ func (ollama *OllamaClient) StreamChat(ctx context.Context, chatHistory []ChatMe
 
 	if err := scanner.Err(); err != nil {
 		if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
-			return fmt.Errorf("%w: %s", ErrTimeout, err)
+			return fmt.Errorf("%w: timeout: %w", ErrResponse, err)
 		}
 
-		return fmt.Errorf("%w: %s", ErrResponseBody, err)
+		return fmt.Errorf("%w: %w", ErrResponse, err)
 	}
 
 	return nil
@@ -137,9 +137,9 @@ func (ollama *OllamaClient) Chat(ctx context.Context, chatHistory []ChatMessage)
 
 	clientResponse, err := ollama.httpClient.Do(clientRequest)
 	if err != nil {
-		ollama.logger.Error(ErrClientResponse.Error(), "error", err)
+		ollama.logger.Error(ErrResponse.Error(), "error", err)
 
-		return ChatMessage{}, fmt.Errorf("%w: %s", ErrClientResponse, err)
+		return ChatMessage{}, fmt.Errorf("%w: %w", ErrResponse, err)
 	}
 
 	defer func() {
@@ -155,9 +155,9 @@ func (ollama *OllamaClient) Chat(ctx context.Context, chatHistory []ChatMessage)
 
 	responseBody, err := io.ReadAll(clientResponse.Body)
 	if err != nil {
-		ollama.logger.Error(ErrResponseBody.Error(), "error", err)
+		ollama.logger.Error(ErrResponse.Error(), "error", err)
 
-		return ChatMessage{}, fmt.Errorf("%w: %s", ErrResponseBody, err)
+		return ChatMessage{}, fmt.Errorf("%w: %w", ErrResponse, err)
 	}
 
 	ollama.logger.Info("received response from Ollama API", "status code", strconv.Itoa(clientResponse.StatusCode))
@@ -166,9 +166,9 @@ func (ollama *OllamaClient) Chat(ctx context.Context, chatHistory []ChatMessage)
 	var chatResponse ChatResponse
 	err = json.Unmarshal(responseBody, &chatResponse)
 	if err != nil {
-		ollama.logger.Error(ErrUnmarshalResponse.Error(), "error", err)
+		ollama.logger.Error(ErrResponse.Error(), "error", err)
 
-		return ChatMessage{}, fmt.Errorf("%w: %s", ErrUnmarshalResponse, err)
+		return ChatMessage{}, fmt.Errorf("%w: %w", ErrResponse, err)
 	}
 
 	return chatResponse.Message, nil
@@ -177,7 +177,7 @@ func (ollama *OllamaClient) Chat(ctx context.Context, chatHistory []ChatMessage)
 // preparePayload takes the chat history and returns the marshaled request body.
 func (ollama *OllamaClient) preparePayload(chatHistory []ChatMessage, stream bool) ([]byte, error) {
 	if len(chatHistory) == 0 {
-		return nil, ErrChatHistoryEmpty
+		return nil, fmt.Errorf("%w: chat history is empty", ErrValidation)
 	}
 
 	chatRequest := ChatRequest{
@@ -188,7 +188,7 @@ func (ollama *OllamaClient) preparePayload(chatHistory []ChatMessage, stream boo
 
 	requestBody, err := json.Marshal(chatRequest)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %s", ErrMarshalRequest, err)
+		return nil, fmt.Errorf("%w: %w", ErrRequest, err)
 	}
 
 	return requestBody, nil
@@ -202,7 +202,7 @@ func (ollama *OllamaClient) createHTTPRequest(ctx context.Context, requestBody [
 	if err != nil {
 		cancel()
 
-		return nil, nil, fmt.Errorf("%w: %s", ErrCreateRequest, err)
+		return nil, nil, fmt.Errorf("%w: %w", ErrRequest, err)
 	}
 
 	clientRequest.Header.Set("Content-Type", "application/json")
@@ -215,15 +215,15 @@ func (ollama *OllamaClient) checkForHTTPError(statusCode int, body io.ReadCloser
 	if statusCode/100 != 2 {
 		responseBody, err := io.ReadAll(body)
 		if err != nil {
-			return fmt.Errorf("%w: status=%d %s: %s", ErrResponseBody, statusCode, http.StatusText(statusCode), err)
+			return fmt.Errorf("%w: status=%d %s: %w", ErrResponse, statusCode, http.StatusText(statusCode), err)
 		}
 
 		var apiError apiError
 		if err := json.Unmarshal(responseBody, &apiError); err == nil && apiError.Error != "" {
-			return fmt.Errorf("%w: status=%d %s api_error=%s", ErrNon2xxResponse, statusCode, http.StatusText(statusCode), apiError.Error)
+			return fmt.Errorf("%w: status=%d %s api_error=%s", ErrResponse, statusCode, http.StatusText(statusCode), apiError.Error)
 		}
 
-		return fmt.Errorf("%w: status=%d %s body=%s", ErrNon2xxResponse, statusCode, http.StatusText(statusCode), string(responseBody))
+		return fmt.Errorf("%w: status=%d %s body=%s", ErrResponse, statusCode, http.StatusText(statusCode), string(responseBody))
 	}
 
 	return nil
