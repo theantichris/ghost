@@ -33,8 +33,8 @@ See [SPEC.md](/SPEC.md) for full technical architecture, error handling patterns
  information; redact as needed
 - **Configuration**: Viper for config management; support env vars, flags, and
  TOML config files
-- **Types**: Use explicit types; prefer `any` over `interface{}` (Go 1.18+); avoid
- `any` unless necessary (prefer explicit types)
+- **Types**: Prefer concrete types. If an empty interface is unavoidable, use `any`
+ instead of `interface{}`
 - **Constants**: Define as typed constants in blocks at package level
 
 ## Pre-commit Hooks
