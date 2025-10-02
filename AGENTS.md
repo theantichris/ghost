@@ -33,12 +33,15 @@ See [SPEC.md](/SPEC.md) for full technical architecture, error handling patterns
  information; redact as needed
 - **Configuration**: Viper for config management; support env vars, flags, and
  TOML config files
-- **Types**: Use explicit types; prefer `any` over `interface{}` (Go 1.18+); avoid
- `any` unless necessary (prefer explicit types)
+- **Types**: Prefer concrete types. If an empty interface is unavoidable, use `any`
+ instead of `interface{}`
 - **Constants**: Define as typed constants in blocks at package level
 
 ## Pre-commit Hooks
 
-The following checks are run on every commit via pre-commit hooks: `go fmt`, `go mod tidy`, `go test`, `golangci-lint`, markdown linting, and spell checking.
+The following checks are run on every commit via pre-commit hooks: `go fmt`,
+ `go mod tidy`, `go test`, `golangci-lint`, markdown linting, and spell checking.
 
-> **Note:** To enable these checks locally, you must install [pre-commit](https://pre-commit.com/) and run `pre-commit install` in your repository root. See the `.pre-commit-config.yaml` file for the list of configured hooks.
+> **Note:** To enable these checks locally, you must install [pre-commit](https://pre-commit.com/)
+ and run `pre-commit install` in your repository root. See the `.pre-commit-config.yaml`
+  file for the list of configured hooks.
