@@ -39,6 +39,9 @@ See [SPEC.md](/SPEC.md) for full technical architecture, error handling patterns
 
 ## Pre-commit Hooks
 
-The following checks are run on every commit via pre-commit hooks: `go fmt`, `go mod tidy`, `go test`, `golangci-lint`, markdown linting, and spell checking.
+The following checks are run on every commit via pre-commit hooks: `go fmt`,
+ `go mod tidy`, `go test`, `golangci-lint`, markdown linting, and spell checking.
 
-> **Note:** To enable these checks locally, you must install [pre-commit](https://pre-commit.com/) and run `pre-commit install` in your repository root. See the `.pre-commit-config.yaml` file for the list of configured hooks.
+> **Note:** To enable these checks locally, you must install [pre-commit](https://pre-commit.com/)
+ and run `pre-commit install` in your repository root. See the `.pre-commit-config.yaml`
+  file for the list of configured hooks.
