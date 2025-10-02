@@ -1,13 +1,16 @@
 # Agent Guidelines for Ghost
 
-See @SPEC.md for full technical architecture, error handling patterns, logging
- strategy, and system design.
+Quick reference for automated coding agents and developers working on Ghost.
+
+See [SPEC.md](/SPEC.md) for full technical architecture, error handling patterns,
+ logging strategy,
+ and system design.
 
 ## Build & Test Commands
 
 - **Build**: `go build -v ./...`
 - **Test all**: `go test -v ./...`
-- **Test single package**: `go test -v ./cmd` or `go test -v ./internal/app`
+- **Test single package**: `go test -v ./cmd` or `go test -v ./internal/llm`
 - **Run single test**: `go test -v -run TestFunctionName ./path/to/package`
 - **Lint**: `golangci-lint run` (via pre-commit hook)
 - **Format**: `go fmt ./...` (automatically via pre-commit)
@@ -26,10 +29,12 @@ See @SPEC.md for full technical architecture, error handling patterns, logging
  for parallel tests; mock interfaces for dependencies
 - **Comments**: Only add comments for exported functions/types or complex logic
 - **Logging**: Use `charmbracelet/log` for structured logging with key-value pairs;
- log to file at `~/.ghost/ghost.log`
+ log to stderr by default for pipeline friendliness. Never log secrets or sensitive
+ information; redact as needed
 - **Configuration**: Viper for config management; support env vars, flags, and
  TOML config files
-- **Types**: Use explicit types; avoid `interface{}` unless necessary
+- **Types**: Use explicit types; prefer `any` over `interface{}` (Go 1.18+); avoid
+ `any` unless necessary (prefer explicit types)
 - **Constants**: Define as typed constants in blocks at package level
 
 ## Pre-commit Hooks
