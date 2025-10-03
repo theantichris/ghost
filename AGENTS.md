@@ -37,6 +37,52 @@ See [SPEC.md](/SPEC.md) for full technical architecture, error handling patterns
  instead of `interface{}`
 - **Constants**: Define as typed constants in blocks at package level
 
+## File Organization
+
+Ghost follows a modular file organization pattern within packages to maintain
+ clear separation of concerns:
+
+### `cmd/` Package Structure
+
+The `cmd/` package is organized by responsibility rather than having
+ monolithic command files:
+
+- **`ask.go`** - Ask command definition and orchestration logic
+- **`root.go`** - Root command setup, configuration initialization, and logging setup
+- **`llm.go`** - LLM client initialization and shared constants (e.g., `systemPrompt`)
+- **`input.go`** - Input handling utilities (`readPipedInput`)
+- **`format.go`** - Output formatting utilities (`stripThinkBlock`)
+- **`errors.go`** - Centralized sentinel error definitions for the cmd package
+
+### When to Create New Files
+
+Follow these guidelines when deciding whether to create a new file or add to
+ an existing one:
+
+- **Create a new file when:**
+  - A function is reusable across multiple commands (e.g., `readPipedInput
+   used by ask and future chat commands)
+  - A file exceeds ~300 lines and has distinct logical sections
+  - You're adding a new command (e.g., `chat.go`, `search.go`)
+  - You have 5+ related utility functions that form a cohesive group
+
+- **Add to existing file when:**
+  - The function is only used by one command
+  - The file is under 200 lines and cohesive
+  - The function is tightly coupled to existing code in the file
+
+- **File naming conventions:**
+  - Use concrete, descriptive names: `input.go`, `format.go`, `client.go`
+  - Avoid generic names like `utils.go`, `helpers.go`, or `common.go`
+  - Name command files after the command: `ask.go`, `chat.go`
+
+### YAGNI Principle
+
+Avoid premature abstraction. Don't create `internal/` packages until you have
+ concrete reuse across multiple top-level packages. For example, `cmd/input
+  go` should only move to `internal/io` when packages outside `cmd/` need the
+   same functionality.
+
 ## Pre-commit Hooks
 
 The following checks are run on every commit via pre-commit hooks: `go fmt`,
