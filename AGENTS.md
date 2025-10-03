@@ -14,6 +14,8 @@ See [SPEC.md](/SPEC.md) for full technical architecture, error handling patterns
 - **Run single test**: `go test -v -run TestFunctionName ./path/to/package`
 - **Lint**: `golangci-lint run` (via pre-commit hook)
 - **Format**: `go fmt ./...` (automatically via pre-commit)
+- **Release**: `git tag vX.Y.Z && git push origin vX.Y.Z` (triggers
+ GoReleaser via GitHub Actions)
 
 ## Code Style
 
@@ -91,3 +93,25 @@ The following checks are run on every commit via pre-commit hooks: `go fmt`,
 > **Note:** To enable these checks locally, you must install [pre-commit](https://pre-commit.com/)
  and run `pre-commit install` in your repository root. See the `.pre-commit-config.yaml`
   file for the list of configured hooks.
+
+## Release Process
+
+Ghost uses [GoReleaser](https://goreleaser.com/) for automated releases via
+ GitHub Actions.
+
+### Creating a Release
+
+1. Tag the commit with a semantic version: `git tag vX.Y.Z`
+2. Push the tag: `git push origin vX.Y.Z`
+3. GitHub Actions will automatically:
+   - Build binaries for Linux, macOS, and Windows
+   - Create archives (tar.gz for Unix, zip for Windows)
+   - Generate a changelog from commits
+   - Create a GitHub release with all artifacts
+
+### Configuration
+
+- **GoReleaser config**: `.goreleaser.yaml` in project root
+- **GitHub workflow**: `.github/workflows/release.yml`
+- Builds are CGO-disabled for maximum portability
+- Archives follow OS/Arch naming conventions compatible with `uname`

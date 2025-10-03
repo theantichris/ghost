@@ -38,6 +38,20 @@ companion into a terminal-first experience.
 - Ollama installed and running locally
 - At least one model pulled (e.g., `ollama pull llama3.1`)
 
+## Installation
+
+### From Source
+
+```bash
+git clone https://github.com/theantichris/ghost.git
+cd ghost
+go build -v
+```
+
+### From Release
+
+Download pre-built binaries for Linux, macOS, or Windows from the [releases page](https://github.com/theantichris/ghost/releases).
+
 ## Usage
 
 ```bash

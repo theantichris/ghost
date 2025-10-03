@@ -239,6 +239,20 @@ to prevent sensitive data leakage. Only metadata (lengths, counts, status codes)
 - Run: `go test ./...`; optional: `go vet ./...`; later: integrate `golangci-lint`.
 - Race checks: `go test -race` (periodic / CI optional early on).
 
+## Release & Distribution
+
+Ghost uses [GoReleaser](https://goreleaser.com/) for automated binary distribution:
+
+- **Trigger**: Pushing a version tag (`vX.Y.Z`) to GitHub
+- **Platforms**: Linux, macOS (Darwin), Windows
+- **Architectures**: Cross-compiled for multiple architectures
+- **Artifacts**: Platform-specific archives (tar.gz/zip) with binaries
+- **Process**: Fully automated via GitHub Actions (`.github/workflows/release.yml`)
+- **Configuration**: See `.goreleaser.yaml` for build and archive settings
+
+Pre-release hook runs `go mod tidy` to ensure dependencies are clean. Changelog
+is auto-generated from commits (excluding docs and test commits).
+
 ## Tool Execution
 
 - The agent decides if it needs to run a tool.
