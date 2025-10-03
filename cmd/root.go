@@ -47,12 +47,11 @@ func NewRootCmd(logger *log.Logger) *cobra.Command {
 // Execute creates and returns the root command for use with fang.Execute.
 // It sets up the logger and registers the configuration initialization.
 func Execute() *cobra.Command {
-	// Start with stderr for early initialization logs
-	// setupFileLogging() will switch to file output after config loads
 	logger := log.NewWithOptions(os.Stderr, log.Options{
+		Formatter:       log.JSONFormatter,
 		ReportCaller:    true,
 		ReportTimestamp: true,
-		Level:           log.WarnLevel, // Only show warnings/errors on stderr during init
+		Level:           log.WarnLevel,
 	})
 
 	cobra.OnInitialize(func() {
@@ -112,14 +111,13 @@ func initConfig(logger *log.Logger) {
 
 	logger.Debug("configuration loaded successfully", "ollama", viper.GetString("ollama"), "model", viper.GetString("model"), "debug", viper.GetBool("debug"))
 
-	if err := setupFileLogging(logger); err != nil {
+	if err := initLogger(logger); err != nil {
 		logger.Error("failed to setup file logging, continuing with stderr", "error", err)
 	}
 }
 
-// setupFileLogging configures file logging to ~/.ghost/ghost.log
-func setupFileLogging(logger *log.Logger) error {
-	// Hardcoded log file location
+// initLogger configures file logging to ~/.ghost/ghost.log
+func initLogger(logger *log.Logger) error {
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return fmt.Errorf("%w: failed to get home directory: %w", ErrLogging, err)
@@ -127,22 +125,18 @@ func setupFileLogging(logger *log.Logger) error {
 
 	logFilePath := filepath.Join(home, ".ghost", "ghost.log")
 
-	// Create directory if needed
 	logDir := filepath.Dir(logFilePath)
 	if err := os.MkdirAll(logDir, 0755); err != nil {
 		return fmt.Errorf("%w: failed to create log directory: %w", ErrLogging, err)
 	}
 
-	// Open log file
 	logFile, err := os.OpenFile(logFilePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
 		return fmt.Errorf("%w: failed to open log file: %w", ErrLogging, err)
 	}
 
-	// Set output to file only (no stderr)
 	logger.SetOutput(logFile)
 
-	// Set level to DEBUG now that we're logging to file
 	logger.SetLevel(log.DebugLevel)
 
 	return nil
