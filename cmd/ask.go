@@ -5,17 +5,13 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net/http"
 	"os"
 	"strings"
 
 	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"github.com/theantichris/ghost/internal/llm"
 )
-
-const systemPrompt = "You are Ghost, a cyberpunk inspired terminal based assistant. Answer requests directly and briefly."
 
 var (
 	ErrInput = errors.New("failed to get input")
@@ -100,35 +96,6 @@ func (askCmd *askCmd) run(cmd *cobra.Command, args []string) error {
 	askCmd.logger.Info("executing query", "queryLength", len(query))
 
 	return runSingleQuery(ctx, llmClient, query, cmd.OutOrStdout(), askCmd.logger)
-}
-
-// initializeLLMClient creates and configures an LLM client using configuration from viper.
-// It requires OLLAMA_BASE_URL and DEFAULT_MODEL to be set via environment variables,
-// config file, or command-line flags.
-func initializeLLMClient(logger *log.Logger) (llm.LLMClient, error) {
-	ollamaBaseURL := viper.GetString("ollama")
-	model := viper.GetString("model")
-
-	if ollamaBaseURL == "" {
-		return nil, fmt.Errorf("%w: set OLLAMA_BASE_URL via environment variable, config file, or --ollama flag", ErrInput)
-	}
-
-	if model == "" {
-		return nil, fmt.Errorf("%w: set DEFAULT_MODEL via environment variable, config file, or --model flag", ErrInput)
-	}
-
-	timeout := viper.GetDuration("timeout")
-
-	logger.Info("creating Ollama client", "baseURL", ollamaBaseURL, "model", model, "timeout", timeout)
-
-	httpClient := &http.Client{Timeout: timeout}
-
-	llmClient, err := llm.NewOllamaClient(ollamaBaseURL, model, httpClient, logger)
-	if err != nil {
-		return nil, fmt.Errorf("%w: %w", ErrLLM, err)
-	}
-
-	return llmClient, nil
 }
 
 // runSingleQuery sends a single query to the LLM and writes the response to the output.
