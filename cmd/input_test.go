@@ -44,7 +44,7 @@ func TestReadPipedInput(t *testing.T) {
 		expectedOutput := "cat main.go"
 
 		if output != expectedOutput {
-			t.Errorf("expected  output %q, got %q", expectedOutput, output)
+			t.Errorf("expected output %q, got %q", expectedOutput, output)
 		}
 	})
 
