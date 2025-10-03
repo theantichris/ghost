@@ -1,27 +1,15 @@
 package cmd
 
 import (
-	"bufio"
 	"context"
-	"errors"
 	"fmt"
 	"io"
-	"net/http"
 	"os"
 	"strings"
 
 	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"github.com/theantichris/ghost/internal/llm"
-)
-
-const systemPrompt = "You are Ghost, a cyberpunk inspired terminal based assistant. Answer requests directly and briefly."
-
-var (
-	ErrInput = errors.New("failed to get input")
-	ErrLLM   = errors.New("failed to process LLM request")
-	ErrIO    = errors.New("failed to read or write data")
 )
 
 // askCmd represents the ask command and its dependencies.
@@ -100,69 +88,13 @@ func (askCmd *askCmd) run(cmd *cobra.Command, args []string) error {
 
 	askCmd.logger.Info("executing query", "queryLength", len(query))
 
-	return runSingleQuery(ctx, llmClient, query, cmd.OutOrStdout(), askCmd.logger)
+	return processQuery(ctx, llmClient, query, cmd.OutOrStdout(), askCmd.logger)
 }
 
-// initializeLLMClient creates and configures an LLM client using configuration from viper.
-// It requires OLLAMA_BASE_URL and DEFAULT_MODEL to be set via environment variables,
-// config file, or command-line flags.
-func initializeLLMClient(logger *log.Logger) (llm.LLMClient, error) {
-	ollamaBaseURL := viper.GetString("ollama")
-	model := viper.GetString("model")
-
-	if ollamaBaseURL == "" {
-		return nil, fmt.Errorf("%w: set OLLAMA_BASE_URL via environment variable, config file, or --ollama flag", ErrInput)
-	}
-
-	if model == "" {
-		return nil, fmt.Errorf("%w: set DEFAULT_MODEL via environment variable, config file, or --model flag", ErrInput)
-	}
-
-	timeout := viper.GetDuration("timeout")
-
-	logger.Info("creating Ollama client", "baseURL", ollamaBaseURL, "model", model, "timeout", timeout)
-
-	httpClient := &http.Client{Timeout: timeout}
-
-	llmClient, err := llm.NewOllamaClient(ollamaBaseURL, model, httpClient, logger)
-	if err != nil {
-		return nil, fmt.Errorf("%w: %w", ErrLLM, err)
-	}
-
-	return llmClient, nil
-}
-
-// readPipedInput reads all input from the provided reader until EOF.
-// It's used to capture piped input from stdin.
-func readPipedInput(input io.Reader) (string, error) {
-	reader := bufio.NewReader(input)
-
-	var lines []string
-
-	for {
-		line, err := reader.ReadString('\n')
-		if err != nil {
-			if err == io.EOF {
-				if line != "" {
-					lines = append(lines, line)
-				}
-
-				break
-			}
-
-			return "", fmt.Errorf("%w: %w", ErrIO, err)
-		}
-
-		lines = append(lines, line)
-	}
-
-	return strings.Join(lines, ""), nil
-}
-
-// runSingleQuery sends a single query to the LLM and writes the response to the output.
+// processQuery sends a single query to the LLM and writes the response to the output.
 // It constructs a chat history with the system prompt and user query,
 // then strips any think blocks from the response before outputting.
-func runSingleQuery(ctx context.Context, llmClient llm.LLMClient, query string, output io.Writer, logger *log.Logger) error {
+func processQuery(ctx context.Context, llmClient llm.LLMClient, query string, output io.Writer, logger *log.Logger) error {
 	chatHistory := []llm.ChatMessage{
 		{Role: llm.System, Content: systemPrompt},
 		{Role: llm.User, Content: query},
@@ -186,30 +118,4 @@ func runSingleQuery(ctx context.Context, llmClient llm.LLMClient, query string, 
 	logger.Info("query completed successfully")
 
 	return nil
-}
-
-// stripThinkBlock removes <think>...</think> blocks from the message.
-// These blocks may contain internal reasoning that shouldn't be shown to the user.
-func stripThinkBlock(message string) string {
-	openTag := "<think>"
-	closeTag := "</think>"
-
-	for {
-		start := strings.Index(message, openTag)
-
-		if start == -1 {
-			break // No <think> block.
-		}
-
-		end := strings.Index(message[start+len(openTag):], closeTag)
-		if end == -1 {
-			break // No </think> block.
-		}
-
-		blockEnd := start + len(openTag) + end + len(closeTag)
-
-		message = message[:start] + message[blockEnd:]
-	}
-
-	return strings.TrimSpace(message)
 }
