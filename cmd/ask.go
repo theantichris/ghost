@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -11,12 +10,6 @@ import (
 	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
 	"github.com/theantichris/ghost/internal/llm"
-)
-
-var (
-	ErrInput = errors.New("failed to get input")
-	ErrLLM   = errors.New("failed to process LLM request")
-	ErrIO    = errors.New("failed to read or write data")
 )
 
 // askCmd represents the ask command and its dependencies.

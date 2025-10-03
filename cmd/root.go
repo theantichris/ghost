@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -10,11 +9,6 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-)
-
-var (
-	ErrConfig  = errors.New("failed to bind config")
-	ErrLogging = errors.New("failed to setup logging")
 )
 
 // NewRootCmd creates and returns the root command for the Ghost CLI application.
