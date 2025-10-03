@@ -35,7 +35,7 @@ func NewRootCmd(logger *log.Logger) *cobra.Command {
 		},
 	}
 
-	cmd.PersistentFlags().String("config", "", "config file (default is $HOME/.ghost/config.toml)")
+	cmd.PersistentFlags().String("config", "", "config file (default is $HOME/.config/ghost/config.toml)")
 	cmd.PersistentFlags().String("model", "", "LLM model to use")
 	cmd.PersistentFlags().String("ollama", "", "Ollama API base URL")
 
@@ -80,8 +80,7 @@ func initConfig(logger *log.Logger) {
 		home, err := os.UserHomeDir()
 		cobra.CheckErr(err)
 
-		viper.AddConfigPath(filepath.Join(home, ".ghost"))
-		viper.AddConfigPath(".")
+		viper.AddConfigPath(filepath.Join(home, ".config", "ghost"))
 		viper.SetConfigName("config")
 		viper.SetConfigType("toml")
 	}
@@ -116,14 +115,14 @@ func initConfig(logger *log.Logger) {
 	}
 }
 
-// initLogger configures file logging to ~/.ghost/ghost.log
+// initLogger configures file logging to ~/.config/ghost/ghost.log
 func initLogger(logger *log.Logger) error {
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return fmt.Errorf("%w: failed to get home directory: %w", ErrLogging, err)
 	}
 
-	logFilePath := filepath.Join(home, ".ghost", "ghost.log")
+	logFilePath := filepath.Join(home, ".config", "ghost", "ghost.log")
 
 	logDir := filepath.Dir(logFilePath)
 	if err := os.MkdirAll(logDir, 0755); err != nil {
