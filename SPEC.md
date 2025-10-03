@@ -157,6 +157,7 @@ Codes may expand; backward compatibility will be maintained after first tag.
 ## Logging Strategy
 
 - All logs written to `~/.ghost/ghost.log` at DEBUG level (always enabled).
+- Logs use JSON formatting for structured output with caller information and timestamps.
 - Model/token output to stdout (enables piping).
 - stderr reserved for critical startup failures only.
 - Explicit debug tooling (e.g., spew dumps) may write structured data to
