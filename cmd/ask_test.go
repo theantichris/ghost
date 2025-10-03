@@ -12,8 +12,8 @@ import (
 	"github.com/theantichris/ghost/internal/llm"
 )
 
-func TestRunSingleQuery(t *testing.T) {
-	t.Run("queries with newline", func(t *testing.T) {
+func TestProcessQuery(t *testing.T) {
+	t.Run("processes queries with newline", func(t *testing.T) {
 		t.Parallel()
 
 		query := "Tell me a joke."
@@ -25,7 +25,7 @@ func TestRunSingleQuery(t *testing.T) {
 
 		var output bytes.Buffer
 
-		err := runSingleQuery(context.Background(), mockClient, query, &output, log.New(io.Discard))
+		err := processQuery(context.Background(), mockClient, query, &output, log.New(io.Discard))
 
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
@@ -48,7 +48,7 @@ func TestRunSingleQuery(t *testing.T) {
 
 		var output bytes.Buffer
 
-		err := runSingleQuery(context.Background(), mockClient, query, &output, log.New(io.Discard))
+		err := processQuery(context.Background(), mockClient, query, &output, log.New(io.Discard))
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}
@@ -70,7 +70,7 @@ func TestRunSingleQuery(t *testing.T) {
 
 		var output bytes.Buffer
 
-		err := runSingleQuery(context.Background(), mockClient, query, &output, log.New(io.Discard))
+		err := processQuery(context.Background(), mockClient, query, &output, log.New(io.Discard))
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}
@@ -87,7 +87,7 @@ func TestRunSingleQuery(t *testing.T) {
 			Error: llm.ErrResponse,
 		}
 
-		err := runSingleQuery(context.Background(), mockClient, "Hello", &bytes.Buffer{}, log.New(io.Discard))
+		err := processQuery(context.Background(), mockClient, "Hello", &bytes.Buffer{}, log.New(io.Discard))
 		if err == nil {
 			t.Fatalf("expected error, got nil")
 		}

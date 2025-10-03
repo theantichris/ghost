@@ -95,13 +95,13 @@ func (askCmd *askCmd) run(cmd *cobra.Command, args []string) error {
 
 	askCmd.logger.Info("executing query", "queryLength", len(query))
 
-	return runSingleQuery(ctx, llmClient, query, cmd.OutOrStdout(), askCmd.logger)
+	return processQuery(ctx, llmClient, query, cmd.OutOrStdout(), askCmd.logger)
 }
 
-// runSingleQuery sends a single query to the LLM and writes the response to the output.
+// processQuery sends a single query to the LLM and writes the response to the output.
 // It constructs a chat history with the system prompt and user query,
 // then strips any think blocks from the response before outputting.
-func runSingleQuery(ctx context.Context, llmClient llm.LLMClient, query string, output io.Writer, logger *log.Logger) error {
+func processQuery(ctx context.Context, llmClient llm.LLMClient, query string, output io.Writer, logger *log.Logger) error {
 	chatHistory := []llm.ChatMessage{
 		{Role: llm.System, Content: systemPrompt},
 		{Role: llm.User, Content: query},
