@@ -25,6 +25,8 @@ type OutputWriter struct {
 	newlinesTrimmed  bool
 }
 
+// TODO: check logging for sensitive information.
+
 // Write processes a single token from the LLM stream, accumulating it while
 // filtering out think blocks from the output. It trims leading whitespace
 // before the first visible output or after closing a think block.
@@ -82,6 +84,8 @@ func (writer *OutputWriter) Write(token string) {
 	if writer.insideThinkBlock {
 		isCloseTag, index := isCloseTag(output)
 
+		writer.Logger.Debug("checking for close tag", "found", isCloseTag, "index", index, "buffer_len", len(output))
+
 		if isCloseTag {
 			output := output[index+len(closeTag):]
 			output = strings.TrimLeft(output, " \n\r\t")
@@ -98,6 +102,8 @@ func (writer *OutputWriter) Write(token string) {
 			writer.canPassThrough = true
 
 			writer.Logger.Debug("pass through mode enabled", "reason", "think block closed")
+		} else {
+			writer.Logger.Debug("buffering think block", "buffer_len", len(output))
 		}
 	}
 }
@@ -128,7 +134,11 @@ func (writer *OutputWriter) Flush() {
 	writer.Logger.Debug("flushing buffer", "length", writer.buffer.Len(), "inside_think", writer.insideThinkBlock)
 
 	if writer.insideThinkBlock {
-		writer.Logger.Debug("discarding incomplete think block", "content_length", len(bufferContent))
+		preview := bufferContent
+		if len(preview) > 100 {
+			preview = preview[:100] + "..."
+		}
+		writer.Logger.Debug("discarding incomplete think block", "content_length", len(bufferContent), "preview", preview)
 		return
 	}
 
