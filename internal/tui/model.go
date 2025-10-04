@@ -49,9 +49,16 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return model, tea.Quit
 		case tea.KeyEnter:
 			if model.input != "" {
+				input := model.input
+
+				if input == "/bye" {
+					model.exiting = true
+					input = "Goodbye!"
+				}
+
 				model.chatHistory = append(model.chatHistory, llm.ChatMessage{
 					Role:    llm.UserRole,
-					Content: model.input,
+					Content: input,
 				})
 
 				model.input = ""
