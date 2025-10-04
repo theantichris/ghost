@@ -126,6 +126,29 @@ func TestUpdate(t *testing.T) {
 			t.Errorf("expected command to return tea.QuitMsg, got %T", quitMsg)
 		}
 	})
+
+	t.Run("handles ctrl+c to exit", func(t *testing.T) {
+		t.Parallel()
+
+		model := Model{}
+		keyMsg := tea.KeyMsg{Type: tea.KeyCtrlC}
+
+		returnedModel, actualCmd := model.Update(keyMsg)
+
+		actualModel, ok := returnedModel.(Model)
+		if !ok {
+			t.Fatal("expected model to be of type model")
+		}
+
+		if !actualModel.exiting {
+			t.Errorf("expected model exiting to be true, got false")
+		}
+
+		quitMsg := actualCmd()
+		if _, ok := quitMsg.(tea.QuitMsg); !ok {
+			t.Errorf("expected command to return tea.QuitMsg, got %T", quitMsg)
+		}
+	})
 }
 
 func TestView(t *testing.T) {

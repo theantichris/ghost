@@ -41,7 +41,7 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if len(model.input) > 0 {
 				model.input = model.input[:len(model.input)-1]
 			}
-		case tea.KeyCtrlD:
+		case tea.KeyCtrlD, tea.KeyCtrlC:
 			model.exiting = true
 			return model, tea.Quit
 		}
