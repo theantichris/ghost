@@ -50,8 +50,6 @@ func (askCmd *askCmd) run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	ctx := cmd.Context()
-
 	askCmd.logger.Info("executing query", "queryLength", len(userInput))
 
 	chatHistory := []llm.ChatMessage{
@@ -59,7 +57,7 @@ func (askCmd *askCmd) run(cmd *cobra.Command, args []string) error {
 		{Role: llm.User, Content: userInput},
 	}
 
-	response, err := llmClient.Chat(ctx, chatHistory)
+	response, err := llmClient.Chat(cmd.Context(), chatHistory)
 	if err != nil {
 		return fmt.Errorf("%w: %w", ErrLLM, err)
 	}
