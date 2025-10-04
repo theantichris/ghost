@@ -4,11 +4,12 @@ import (
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/log"
 	"github.com/theantichris/ghost/internal/llm"
 )
 
 type Model struct {
-	// logger      *log.Logger
+	logger *log.Logger
 	// llmClient   *llm.LLMClient
 	chatHistory []llm.ChatMessage
 
@@ -25,6 +26,14 @@ type Model struct {
 	// Exit state
 	exiting bool
 	// err     error
+}
+
+func NewModel(logger *log.Logger) Model {
+	model := Model{
+		logger: logger,
+	}
+
+	return model
 }
 
 func (model Model) Init() tea.Cmd {

@@ -1,12 +1,37 @@
 package tui
 
 import (
+	"io"
 	"strings"
 	"testing"
+
+	"github.com/charmbracelet/log"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/theantichris/ghost/internal/llm"
 )
+
+func TestNewModel(t *testing.T) {
+	t.Run("creates a new model with dependencies", func(t *testing.T) {
+		t.Parallel()
+
+		logger := log.New(io.Discard)
+
+		actualModel := NewModel(logger)
+
+		if actualModel.logger == nil {
+			t.Error("expected logger to be set")
+		}
+
+		if len(actualModel.chatHistory) != 0 {
+			t.Errorf("expected empty chat history, got %d items", len(actualModel.chatHistory))
+		}
+
+		if actualModel.input != "" {
+			t.Errorf("expected empty input, got %q", actualModel.input)
+		}
+	})
+}
 
 func TestInit(t *testing.T) {
 	t.Run("initializes the model", func(t *testing.T) {
