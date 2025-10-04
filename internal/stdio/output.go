@@ -69,7 +69,7 @@ func (writer *OutputWriter) Write(token string) {
 			writer.Logger.Debug("writing to output", "content", output, "length", len(output))
 
 			if _, err := writer.Output.Write([]byte(output)); err != nil {
-				writer.Logger.Error("%w: %w", ErrIO, err)
+				writer.Logger.Error(ErrIO.Error(), "error", err)
 			}
 
 			writer.buffer.Reset()
@@ -92,7 +92,7 @@ func (writer *OutputWriter) Write(token string) {
 				writer.Logger.Debug("writing to output", "content", output, "length", len(output))
 
 				if _, err := writer.Output.Write([]byte(output)); err != nil {
-					writer.Logger.Error("%w: %w", ErrIO, err)
+					writer.Logger.Error(ErrIO.Error(), "error", err)
 				}
 			}
 
