@@ -236,6 +236,11 @@ to prevent sensitive data leakage. Only metadata (lengths, counts, status codes)
   than string matching.
 - Avoid magic strings by hoisting shared literals (messages, prompts, keys)
   into constants shared across code and tests.
+- In test assertions, use explicit variable names with `actual` and `expected`
+  prefixes (e.g., `actualOutput`, `expectedOutput`, `actualTokens`, `expectedTokens`)
+  to make comparisons clear and readable. Add a blank line before assertion blocks
+  to improve readability.
+- All pre-commit hooks must pass before committing changes.
 - Run: `go test ./...`; optional: `go vet ./...`; later: integrate `golangci-lint`.
 - Race checks: `go test -race` (periodic / CI optional early on).
 

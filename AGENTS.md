@@ -28,7 +28,11 @@ See [SPEC.md](/SPEC.md) for full technical architecture, error handling patterns
 - **Naming**: Use camelCase for unexported, PascalCase for exported; descriptive
  names (e.g., `llmClient`, `chatHistory`)
 - **Testing**: Table-driven tests with `t.Run()` for subtests; use `t.Parallel()`
- for parallel tests; mock interfaces for dependencies
+ for parallel tests; mock interfaces for dependencies. In test assertions, use
+ explicit variable names with `actual` and `expected` prefixes (e.g., `actualOutput`,
+ `expectedOutput`, `actualTokens`, `expectedTokens`) to make comparisons clear.
+ Add a blank line before assertion blocks to improve readability. All pre-commit
+ hooks must pass before committing changes
 - **Comments**: Only add comments for exported functions/types or complex logic
 - **Logging**: Use `charmbracelet/log` for structured logging with key-value pairs;
  log to stderr by default for pipeline friendliness. Never log secrets or sensitive
