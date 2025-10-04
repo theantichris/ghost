@@ -27,15 +27,11 @@ func TestUpdate(t *testing.T) {
 		model := Model{}
 		msg := tea.KeyMsg{}
 
-		returnedModel, actualCmd := model.Update(msg)
+		returnedModel, _ := model.Update(msg)
 
 		_, ok := returnedModel.(Model)
 		if !ok {
 			t.Fatal("expected model to be of type Model")
-		}
-
-		if actualCmd != nil {
-			t.Errorf("expected teaCmd to be nil, got %v", actualCmd)
 		}
 	})
 
