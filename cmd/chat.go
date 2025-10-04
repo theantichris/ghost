@@ -67,10 +67,6 @@ func (chatCmd *chatCmd) run(cmd *cobra.Command, args []string) error {
 	endChat := false
 
 	for !endChat {
-		if _, err := fmt.Fprint(writer.output, "User: "); err != nil {
-			return fmt.Errorf("%w: %w", ErrIO, err)
-		}
-
 		if ok := inputScanner.Scan(); !ok {
 			if err := inputScanner.Err(); err != nil {
 				return fmt.Errorf("%w: %w", ErrIO, err)
