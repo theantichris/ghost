@@ -64,6 +64,7 @@ func (askCmd *askCmd) run(cmd *cobra.Command, args []string) error {
 
 	askCmd.logger.Info("received response", "contentLength", len(response.Content))
 
+	// TODO: remove
 	message := stripThinkBlock(response.Content)
 
 	askCmd.logger.Debug("stripped think blocks", "finalLength", len(message))
@@ -71,6 +72,10 @@ func (askCmd *askCmd) run(cmd *cobra.Command, args []string) error {
 	var tokens string
 	output := outputWriter{logger: askCmd.logger, output: cmd.OutOrStdout(), tokens: &tokens}
 	output.write(message)
+
+	if _, err := fmt.Fprintln(cmd.OutOrStdout()); err != nil {
+		return fmt.Errorf("%w: %w", ErrIO, err)
+	}
 
 	askCmd.logger.Info("query completed successfully")
 

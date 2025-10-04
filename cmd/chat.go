@@ -56,6 +56,10 @@ func (chatCmd *chatCmd) run(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("%w: %w", ErrLLM, err)
 	}
 
+	if _, err := fmt.Fprintln(cmd.OutOrStdout()); err != nil {
+		return fmt.Errorf("%w: %w", ErrIO, err)
+	}
+
 	// chatHistory = append(chatHistory, llm.ChatMessage{Role: llm.Assistant, Content: tokens})
 
 	return nil
