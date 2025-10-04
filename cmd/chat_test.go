@@ -294,7 +294,7 @@ func TestChatCmdRun(t *testing.T) {
 			t.Errorf("expected at least 4 messages in history (system + greeting + user + assistant), got %d", len(capturedHistory))
 		}
 
-		if capturedHistory[0].Role != llm.System {
+		if capturedHistory[0].Role != llm.SystemRole {
 			t.Errorf("expected first message to be system, got %v", capturedHistory[0].Role)
 		}
 	})

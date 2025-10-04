@@ -220,7 +220,7 @@ func TestAskCmdRun(t *testing.T) {
 			t.Fatalf("expected at least 2 messages in history, got %d", len(capturedHistory))
 		}
 
-		if capturedHistory[0].Role != llm.System {
+		if capturedHistory[0].Role != llm.SystemRole {
 			t.Errorf("expected first message to be system, got %v", capturedHistory[0].Role)
 		}
 

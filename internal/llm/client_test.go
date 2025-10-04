@@ -15,7 +15,7 @@ func TestMockLLMClientChat(t *testing.T) {
 			Error: ErrValidation,
 		}
 
-		messageHistory := []ChatMessage{{Role: User, Content: "Hello"}}
+		messageHistory := []ChatMessage{{Role: UserRole, Content: "Hello"}}
 
 		err := client.Chat(context.Background(), messageHistory, func(token string) {})
 		if err == nil {
@@ -42,7 +42,7 @@ func TestMockLLMClientChat(t *testing.T) {
 			ChatFunc: mockStreamChat,
 		}
 
-		messageHistory := []ChatMessage{{Role: User, Content: "Hello"}}
+		messageHistory := []ChatMessage{{Role: UserRole, Content: "Hello"}}
 
 		err := client.Chat(context.Background(), messageHistory, func(string) {})
 		if err != nil {

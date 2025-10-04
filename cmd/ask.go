@@ -60,8 +60,8 @@ func (askCmd *askCmd) run(cmd *cobra.Command, args []string) error {
 	askCmd.logger.Info("executing query", "queryLength", len(userInput))
 
 	chatHistory := []llm.ChatMessage{
-		{Role: llm.System, Content: systemPrompt},
-		{Role: llm.User, Content: userInput},
+		{Role: llm.SystemRole, Content: systemPrompt},
+		{Role: llm.UserRole, Content: userInput},
 	}
 
 	var tokens string

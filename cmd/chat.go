@@ -48,8 +48,8 @@ func (chatCmd *chatCmd) run(cmd *cobra.Command, args []string) error {
 	}
 
 	chatHistory := []llm.ChatMessage{
-		{Role: llm.System, Content: systemPrompt},
-		{Role: llm.System, Content: "Greet the user"},
+		{Role: llm.SystemRole, Content: systemPrompt},
+		{Role: llm.SystemRole, Content: "Greet the user"},
 	}
 
 	var tokens string
@@ -65,7 +65,7 @@ func (chatCmd *chatCmd) run(cmd *cobra.Command, args []string) error {
 	}
 	writer.flush()
 
-	chatHistory = append(chatHistory, llm.ChatMessage{Role: llm.Assistant, Content: tokens})
+	chatHistory = append(chatHistory, llm.ChatMessage{Role: llm.AssistantRole, Content: tokens})
 
 	if _, err := fmt.Fprintln(cmd.OutOrStdout()); err != nil {
 		return fmt.Errorf("%w: %w", ErrIO, err)
@@ -95,7 +95,7 @@ func (chatCmd *chatCmd) run(cmd *cobra.Command, args []string) error {
 			input = "Goodbye!"
 		}
 
-		chatHistory = append(chatHistory, llm.ChatMessage{Role: llm.User, Content: input})
+		chatHistory = append(chatHistory, llm.ChatMessage{Role: llm.UserRole, Content: input})
 
 		writer.reset()
 		if err := chatCmd.llmClient.Chat(cmd.Context(), chatHistory, writer.write); err != nil {
@@ -103,7 +103,7 @@ func (chatCmd *chatCmd) run(cmd *cobra.Command, args []string) error {
 		}
 		writer.flush()
 
-		chatHistory = append(chatHistory, llm.ChatMessage{Role: llm.Assistant, Content: tokens})
+		chatHistory = append(chatHistory, llm.ChatMessage{Role: llm.AssistantRole, Content: tokens})
 
 		if _, err := fmt.Fprintln(cmd.OutOrStdout()); err != nil {
 			return fmt.Errorf("%w: %w", ErrIO, err)

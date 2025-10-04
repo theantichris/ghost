@@ -104,7 +104,7 @@ func TestChat(t *testing.T) {
 		}
 
 		chatHistory := []ChatMessage{
-			{Role: User, Content: "Hello, there!"},
+			{Role: UserRole, Content: "Hello, there!"},
 		}
 
 		var actual []string
