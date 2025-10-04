@@ -2,12 +2,13 @@ package tui
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/theantichris/ghost/internal/llm"
 )
 
 type Model struct {
 	// logger      *log.Logger
 	// llmClient   *llm.LLMClient
-	// chatHistory []llm.ChatMessage
+	chatHistory []llm.ChatMessage
 
 	// UI state
 	// messages []string // Rendered messages for display
@@ -46,6 +47,11 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return model, tea.Quit
 		case tea.KeyEnter:
 			if model.input != "" {
+				model.chatHistory = append(model.chatHistory, llm.ChatMessage{
+					Role:    llm.UserRole,
+					Content: model.input,
+				})
+
 				model.input = ""
 			}
 		}

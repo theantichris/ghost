@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/theantichris/ghost/internal/llm"
 )
 
 func TestInit(t *testing.T) {
@@ -149,6 +150,37 @@ func TestUpdate(t *testing.T) {
 
 		if actualModel.input != expectedInput {
 			t.Errorf("expected input to be cleared, got %q", actualModel.input)
+		}
+	})
+
+	t.Run("enter key adds message to chat history", func(t *testing.T) {
+		t.Parallel()
+
+		model := Model{input: "hello"}
+		keyMsg := tea.KeyMsg{Type: tea.KeyEnter}
+
+		returnedModel, _ := model.Update(keyMsg)
+
+		actualModel, ok := returnedModel.(Model)
+		if !ok {
+			t.Fatal("expected model to be of type model")
+		}
+
+		expectedHistoryLength := 1
+
+		if len(actualModel.chatHistory) != expectedHistoryLength {
+			t.Errorf("expected chat history length %d, got %d", expectedHistoryLength, len(actualModel.chatHistory))
+		}
+
+		expectedRole := llm.UserRole
+		expectedContent := "hello"
+
+		if actualModel.chatHistory[0].Role != expectedRole {
+			t.Errorf("expected role %q, got %q", expectedRole, actualModel.chatHistory[0].Role)
+		}
+
+		if actualModel.chatHistory[0].Content != expectedContent {
+			t.Errorf("expected content %q, got %q", expectedContent, actualModel.chatHistory[0].Content)
 		}
 	})
 }
