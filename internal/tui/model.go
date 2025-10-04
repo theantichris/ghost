@@ -34,8 +34,10 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		model.width = msg.Width
 		model.height = msg.Height
 	case tea.KeyMsg:
-		model.input = string(msg.Runes)
-
+		switch msg.Type {
+		case tea.KeyRunes:
+			model.input += string(msg.Runes)
+		}
 	}
 
 	return model, nil
