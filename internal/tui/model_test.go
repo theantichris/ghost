@@ -12,19 +12,30 @@ import (
 )
 
 func TestNewModel(t *testing.T) {
-	t.Run("creates a new model with dependencies", func(t *testing.T) {
+	t.Run("creates a new model with dependencies and system prompt", func(t *testing.T) {
 		t.Parallel()
 
 		logger := log.New(io.Discard)
+		systemPrompt := "This is the system prompt."
 
-		actualModel := NewModel(logger)
+		actualModel := NewModel(systemPrompt, logger)
 
 		if actualModel.logger == nil {
 			t.Error("expected logger to be set")
 		}
 
-		if len(actualModel.chatHistory) != 0 {
-			t.Errorf("expected empty chat history, got %d items", len(actualModel.chatHistory))
+		if len(actualModel.chatHistory) != 1 {
+			t.Errorf("expected empty chat to contain 1 item, got %d", len(actualModel.chatHistory))
+		}
+
+		actualChatMessage := actualModel.chatHistory[0]
+
+		if actualChatMessage.Role != llm.SystemRole {
+			t.Errorf("expected system prompt to have user role, got %q", actualChatMessage.Role)
+		}
+
+		if actualChatMessage.Content != systemPrompt {
+			t.Errorf("expected system prompt, got %q", actualChatMessage.Content)
 		}
 
 		if actualModel.input != "" {
