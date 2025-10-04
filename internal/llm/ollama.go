@@ -47,8 +47,8 @@ func NewOllamaClient(baseURL, defaultModel string, httpClient *http.Client, logg
 	}, nil
 }
 
-// StreamChat sends a message to the Ollama API and streams the response.
-func (ollama *OllamaClient) StreamChat(ctx context.Context, chatHistory []ChatMessage, onToken func(string)) error {
+// Chat sends a message to the Ollama API and streams the response.
+func (ollama *OllamaClient) Chat(ctx context.Context, chatHistory []ChatMessage, onToken func(string)) error {
 	requestBody, err := ollama.preparePayload(chatHistory, true)
 	if err != nil {
 		return err

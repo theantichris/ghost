@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestMockLLMClientStreamChat(t *testing.T) {
+func TestMockLLMClientChat(t *testing.T) {
 	t.Run("returns error when Error is set", func(t *testing.T) {
 		t.Parallel()
 
@@ -17,7 +17,7 @@ func TestMockLLMClientStreamChat(t *testing.T) {
 
 		messageHistory := []ChatMessage{{Role: User, Content: "Hello"}}
 
-		err := client.StreamChat(context.Background(), messageHistory, func(token string) {})
+		err := client.Chat(context.Background(), messageHistory, func(token string) {})
 		if err == nil {
 			t.Fatal("expected SteamChat to return error but got nil")
 		}
@@ -39,12 +39,12 @@ func TestMockLLMClientStreamChat(t *testing.T) {
 		}
 
 		client := &MockLLMClient{
-			StreamChatFunc: mockStreamChat,
+			ChatFunc: mockStreamChat,
 		}
 
 		messageHistory := []ChatMessage{{Role: User, Content: "Hello"}}
 
-		err := client.StreamChat(context.Background(), messageHistory, func(string) {})
+		err := client.Chat(context.Background(), messageHistory, func(string) {})
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}

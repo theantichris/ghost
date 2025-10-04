@@ -68,7 +68,7 @@ func TestNewOllamaClient(t *testing.T) {
 	})
 }
 
-func TestStreamChat(t *testing.T) {
+func TestChat(t *testing.T) {
 	t.Run("streams chat without error", func(t *testing.T) {
 		t.Parallel()
 
@@ -112,7 +112,7 @@ func TestStreamChat(t *testing.T) {
 			actual = append(actual, token)
 		}
 
-		err = client.StreamChat(context.Background(), chatHistory, onToken)
+		err = client.Chat(context.Background(), chatHistory, onToken)
 		if err != nil {
 			t.Fatalf("expected no error calling StreamChat, got %v", err)
 		}
