@@ -11,9 +11,9 @@ type Model struct {
 
 	// UI state
 	// messages []string // Rendered messages for display
-	// input    string   // Current user input
-	width  int // Terminal width
-	height int // Terminal height
+	input  string // Current user input
+	width  int    // Terminal width
+	height int    // Terminal height
 
 	// Streaming state
 	// streaming  bool   // True if currently receiving a stream
@@ -33,6 +33,9 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		model.width = msg.Width
 		model.height = msg.Height
+	case tea.KeyMsg:
+		model.input = string(msg.Runes)
+
 	}
 
 	return model, nil

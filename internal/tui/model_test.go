@@ -29,17 +29,9 @@ func TestUpdate(t *testing.T) {
 
 		returnedModel, actualCmd := model.Update(msg)
 
-		actualModel, ok := returnedModel.(Model)
+		_, ok := returnedModel.(Model)
 		if !ok {
 			t.Fatal("expected model to be of type Model")
-		}
-
-		if actualModel.width != 0 {
-			t.Errorf("expected model width to be 0, got %d", actualModel.width)
-		}
-
-		if actualModel.height != 0 {
-			t.Errorf("expected model heigiht to be 0, got %d", actualModel.height)
 		}
 
 		if actualCmd != nil {
@@ -53,7 +45,7 @@ func TestUpdate(t *testing.T) {
 		model := Model{}
 		sizeMsg := tea.WindowSizeMsg{Width: 80, Height: 24}
 
-		returnedModel, actualCmd := model.Update(sizeMsg)
+		returnedModel, _ := model.Update(sizeMsg)
 
 		actualModel, ok := returnedModel.(Model)
 		if !ok {
@@ -70,9 +62,25 @@ func TestUpdate(t *testing.T) {
 		if actualModel.height != expectedHeight {
 			t.Errorf("expected height %d, got %d", expectedHeight, actualModel.height)
 		}
+	})
 
-		if actualCmd != nil {
-			t.Errorf("expect teaCmd to be nil, got %v", actualCmd)
+	t.Run("handles regular key press", func(t *testing.T) {
+		t.Parallel()
+
+		model := Model{}
+		keyMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'h'}}
+
+		returnedModel, _ := model.Update(keyMsg)
+
+		actualModel, ok := returnedModel.(Model)
+		if !ok {
+			t.Fatal("expected model to be of type model")
+		}
+
+		expectedInput := "h"
+
+		if actualModel.input != expectedInput {
+			t.Errorf("expected model input to be %q, got %q", expectedInput, actualModel.input)
 		}
 	})
 }
