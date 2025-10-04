@@ -212,6 +212,34 @@ func TestUpdate(t *testing.T) {
 			t.Errorf("expected message content %q, got %q", expectedContent, actualModel.chatHistory[0].Content)
 		}
 	})
+
+	t.Run("/exit command quits chat", func(t *testing.T) {
+		t.Parallel()
+
+		model := Model{input: "/exit"}
+		keyMsg := tea.KeyMsg{Type: tea.KeyEnter}
+
+		returnedModel, _ := model.Update(keyMsg)
+
+		actualModel, ok := returnedModel.(Model)
+		if !ok {
+			t.Fatal("expected model to be of type Model")
+		}
+
+		if !actualModel.exiting {
+			t.Error("expected model exiting to be true, got false")
+		}
+
+		expectedContent := "Goodbye!"
+
+		if len(actualModel.chatHistory) != 1 {
+			t.Errorf("expected chat history length %d, got %d", 1, len(actualModel.chatHistory))
+		}
+
+		if actualModel.chatHistory[0].Content != expectedContent {
+			t.Errorf("expected message content %q, got %q", expectedContent, actualModel.chatHistory[0].Content)
+		}
+	})
 }
 
 func TestView(t *testing.T) {

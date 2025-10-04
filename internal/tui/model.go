@@ -51,7 +51,7 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if model.input != "" {
 				input := model.input
 
-				if input == "/bye" {
+				if input == "/bye" || input == "/exit" {
 					model.exiting = true
 					input = "Goodbye!"
 				}
