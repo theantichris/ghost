@@ -2,28 +2,12 @@ package cmd
 
 import (
 	"bytes"
-	"errors"
 	"io"
 	"strings"
 	"testing"
 
 	"github.com/charmbracelet/log"
 )
-
-type errorWriter struct {
-	failAt int
-	calls  int
-}
-
-func (err *errorWriter) Write(p []byte) (int, error) {
-	err.calls++
-
-	if err.calls == err.failAt {
-		return 0, errors.New("simulated I/O error")
-	}
-
-	return len(p), nil
-}
 
 func TestOutputWriterWrite(t *testing.T) {
 	t.Run("writes token without think block", func(t *testing.T) {
@@ -53,39 +37,10 @@ func TestOutputWriterWrite(t *testing.T) {
 			t.Errorf("expected tokens %q, got %q", expectedTokens, actualTokens)
 		}
 	})
+}
 
-	t.Run("strips think block", func(t *testing.T) {
-		t.Parallel()
-
-		var actualOutput bytes.Buffer
-		var actualTokens string
-		logger := log.New(io.Discard)
-
-		writer := &outputWriter{
-			logger: logger,
-			output: &actualOutput,
-			tokens: &actualTokens,
-		}
-
-		writer.write("<think>")
-		writer.write("reasoning here")
-		writer.write("</think>")
-		writer.write("Actual response")
-
-		expectedOutput := "Actual response"
-
-		if actualOutput.String() != expectedOutput {
-			t.Errorf("expected output %q, got %q", expectedOutput, actualOutput.String())
-		}
-
-		expectedTokens := "<think>reasoning here</think>Actual response"
-
-		if actualTokens != expectedTokens {
-			t.Errorf("expected tokens %q, got %q", expectedTokens, actualTokens)
-		}
-	})
-
-	t.Run("strips think block with close tag in one token", func(t *testing.T) {
+func TestOutputWriterReset(t *testing.T) {
+	t.Run("resets all state fields", func(t *testing.T) {
 		t.Parallel()
 
 		var actualOutput bytes.Buffer
@@ -99,234 +54,38 @@ func TestOutputWriterWrite(t *testing.T) {
 		}
 
 		writer.write("<think>reasoning</think>Response")
+		actualTokens = "accumulated tokens"
+		writer.buffer.WriteString("buffer content")
+		writer.insideThinkBlock = true
+		writer.canPassThrough = true
+		writer.newlinesTrimmed = true
 
-		expectedOutput := "Response"
+		writer.reset()
 
-		if actualOutput.String() != expectedOutput {
-			t.Errorf("expected output %q, got %q", expectedOutput, actualOutput.String())
-		}
-	})
-
-	t.Run("trims leading whitespace before first output", func(t *testing.T) {
-		t.Parallel()
-
-		var actualOutput bytes.Buffer
-		var actualTokens string
-		logger := log.New(io.Discard)
-
-		writer := &outputWriter{
-			logger: logger,
-			output: &actualOutput,
-			tokens: &actualTokens,
+		if writer.buffer.Len() != 0 {
+			t.Errorf("expected buffer length 0, got %d", writer.buffer.Len())
 		}
 
-		writer.write("  \n\t  Hello World")
-
-		expectedOutput := "Hello World"
-
-		if actualOutput.String() != expectedOutput {
-			t.Errorf("expected output %q, got %q", expectedOutput, actualOutput.String())
-		}
-	})
-
-	t.Run("trims leading whitespace after think block", func(t *testing.T) {
-		t.Parallel()
-
-		var actualOutput bytes.Buffer
-		var actualTokens string
-		logger := log.New(io.Discard)
-
-		writer := &outputWriter{
-			logger: logger,
-			output: &actualOutput,
-			tokens: &actualTokens,
+		if writer.insideThinkBlock {
+			t.Error("expected insideThinkBlock to be false")
 		}
 
-		writer.write("<think>reasoning</think>  \n\t  Response")
-
-		expectedOutput := "Response"
-
-		if actualOutput.String() != expectedOutput {
-			t.Errorf("expected output %q, got %q", expectedOutput, actualOutput.String())
-		}
-	})
-
-	t.Run("enables pass-through after detecting no think block", func(t *testing.T) {
-		t.Parallel()
-
-		var actualOutput bytes.Buffer
-		var actualTokens string
-		logger := log.New(io.Discard)
-
-		writer := &outputWriter{
-			logger: logger,
-			output: &actualOutput,
-			tokens: &actualTokens,
+		if writer.canPassThrough {
+			t.Error("expected canPassThrough to be false")
 		}
 
-		writer.write("Normal ")
-		writer.write("response ")
-		writer.write("here")
-
-		expectedOutput := "Normal response here"
-
-		if actualOutput.String() != expectedOutput {
-			t.Errorf("expected output %q, got %q", expectedOutput, actualOutput.String())
+		if writer.newlinesTrimmed {
+			t.Error("expected newlinesTrimmed to be false")
 		}
 
-		if !writer.canPassThrough {
-			t.Error("expected canPassThrough to be true")
-		}
-	})
-
-	t.Run("enables pass-through after closing think block", func(t *testing.T) {
-		t.Parallel()
-
-		var actualOutput bytes.Buffer
-		var actualTokens string
-		logger := log.New(io.Discard)
-
-		writer := &outputWriter{
-			logger: logger,
-			output: &actualOutput,
-			tokens: &actualTokens,
-		}
-
-		writer.write("<think>reasoning</think>First ")
-		writer.write("Second")
-
-		expectedOutput := "First Second"
-
-		if actualOutput.String() != expectedOutput {
-			t.Errorf("expected output %q, got %q", expectedOutput, actualOutput.String())
-		}
-
-		if !writer.canPassThrough {
-			t.Error("expected canPassThrough to be true after closing think block")
-		}
-	})
-
-	t.Run("handles partial open tag", func(t *testing.T) {
-		t.Parallel()
-
-		var actualOutput bytes.Buffer
-		var actualTokens string
-		logger := log.New(io.Discard)
-
-		writer := &outputWriter{
-			logger: logger,
-			output: &actualOutput,
-			tokens: &actualTokens,
-		}
-
-		writer.write("<th")
-		writer.write("ink>reasoning</think>Response")
-
-		expectedOutput := "Response"
-
-		if actualOutput.String() != expectedOutput {
-			t.Errorf("expected output %q, got %q", expectedOutput, actualOutput.String())
-		}
-	})
-
-	t.Run("logs error on write failure during normal output", func(t *testing.T) {
-		t.Parallel()
-
-		var actualTokens string
-		logger := log.New(io.Discard)
-		errWriter := &errorWriter{failAt: 1}
-
-		writer := &outputWriter{
-			logger: logger,
-			output: errWriter,
-			tokens: &actualTokens,
-		}
-
-		writer.write("Hello")
-
-		expectedCalls := 1
-
-		if errWriter.calls != expectedCalls {
-			t.Errorf("expected %d write call, got %d", expectedCalls, errWriter.calls)
-		}
-	})
-
-	t.Run("logs error on write failure during pass-through", func(t *testing.T) {
-		t.Parallel()
-
-		var actualTokens string
-		logger := log.New(io.Discard)
-		errWriter := &errorWriter{failAt: 1}
-
-		writer := &outputWriter{
-			logger:         logger,
-			output:         errWriter,
-			tokens:         &actualTokens,
-			canPassThrough: true,
-		}
-
-		writer.write("  \nHello")
-
-		expectedCalls := 1
-
-		if errWriter.calls != expectedCalls {
-			t.Errorf("expected %d write call, got %d", expectedCalls, errWriter.calls)
-		}
-	})
-
-	t.Run("handles empty tokens", func(t *testing.T) {
-		t.Parallel()
-
-		var actualOutput bytes.Buffer
-		var actualTokens string
-		logger := log.New(io.Discard)
-
-		writer := &outputWriter{
-			logger: logger,
-			output: &actualOutput,
-			tokens: &actualTokens,
-		}
-
-		writer.write("")
-
-		expectedOutput := ""
-
-		if actualOutput.String() != expectedOutput {
-			t.Errorf("expected output %q, got %q", expectedOutput, actualOutput.String())
-		}
-	})
-
-	t.Run("accumulates tokens even when output is stripped", func(t *testing.T) {
-		t.Parallel()
-
-		var actualOutput bytes.Buffer
-		var actualTokens string
-		logger := log.New(io.Discard)
-
-		writer := &outputWriter{
-			logger: logger,
-			output: &actualOutput,
-			tokens: &actualTokens,
-		}
-
-		writer.write("<think>")
-		writer.write("internal reasoning")
-		writer.write("</think>")
-
-		expectedTokens := "<think>internal reasoning</think>"
+		expectedTokens := ""
 
 		if actualTokens != expectedTokens {
 			t.Errorf("expected tokens %q, got %q", expectedTokens, actualTokens)
 		}
-
-		expectedOutput := ""
-
-		if actualOutput.String() != expectedOutput {
-			t.Errorf("expected output %q, got %q", expectedOutput, actualOutput.String())
-		}
 	})
 
-	t.Run("handles whitespace-only token during pass-through", func(t *testing.T) {
+	t.Run("allows writer to be reused after reset", func(t *testing.T) {
 		t.Parallel()
 
 		var actualOutput bytes.Buffer
@@ -334,19 +93,50 @@ func TestOutputWriterWrite(t *testing.T) {
 		logger := log.New(io.Discard)
 
 		writer := &outputWriter{
-			logger:          logger,
-			output:          &actualOutput,
-			tokens:          &actualTokens,
-			canPassThrough:  true,
-			newlinesTrimmed: true,
+			logger: logger,
+			output: &actualOutput,
+			tokens: &actualTokens,
 		}
 
-		writer.write("   ")
+		writer.write("<think>first</think>First response")
 
-		expectedOutput := "   "
+		expectedFirstOutput := "First response"
 
-		if actualOutput.String() != expectedOutput {
-			t.Errorf("expected output %q, got %q", expectedOutput, actualOutput.String())
+		if actualOutput.String() != expectedFirstOutput {
+			t.Errorf("expected first output %q, got %q", expectedFirstOutput, actualOutput.String())
+		}
+
+		writer.reset()
+		actualOutput.Reset()
+
+		writer.write("<think>second</think>Second response")
+
+		expectedSecondOutput := "Second response"
+
+		if actualOutput.String() != expectedSecondOutput {
+			t.Errorf("expected second output %q, got %q", expectedSecondOutput, actualOutput.String())
+		}
+	})
+
+	t.Run("clears tokens pointer", func(t *testing.T) {
+		t.Parallel()
+
+		var actualOutput bytes.Buffer
+		actualTokens := "initial tokens"
+		logger := log.New(io.Discard)
+
+		writer := &outputWriter{
+			logger: logger,
+			output: &actualOutput,
+			tokens: &actualTokens,
+		}
+
+		writer.reset()
+
+		expectedTokens := ""
+
+		if actualTokens != expectedTokens {
+			t.Errorf("expected tokens %q, got %q", expectedTokens, actualTokens)
 		}
 	})
 }

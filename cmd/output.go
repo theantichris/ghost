@@ -12,6 +12,9 @@ const (
 	closeTag string = "</think>"
 )
 
+// outputWriter handles streaming LLM output with think block filtering.
+// It accumulates all tokens while stripping <think>...</think> blocks from
+// the output stream. State must be reset between LLM calls using reset().
 type outputWriter struct {
 	logger           *log.Logger
 	output           io.Writer
@@ -22,6 +25,9 @@ type outputWriter struct {
 	newlinesTrimmed  bool
 }
 
+// write processes a single token from the LLM stream, accumulating it while
+// filtering out think blocks from the output. It trims leading whitespace
+// before the first visible output or after closing a think block.
 func (writer *outputWriter) write(token string) {
 	*writer.tokens += token
 
@@ -82,16 +88,31 @@ func (writer *outputWriter) write(token string) {
 	}
 }
 
+// reset clears all outputWriter state for reuse with a new LLM response.
+// This includes the buffer, state flags, and tokens pointer.
+func (writer *outputWriter) reset() {
+	writer.buffer.Reset()
+	writer.insideThinkBlock = false
+	writer.canPassThrough = false
+	writer.newlinesTrimmed = false
+	*writer.tokens = ""
+}
+
+// isOpenTag checks if content starts with the think block opening tag.
 func isOpenTag(content string) bool {
 	return strings.HasPrefix(content, openTag)
 }
 
+// isCloseTag checks if content contains the think block closing tag.
+// Returns true and the tag's index if found, false and -1 otherwise.
 func isCloseTag(content string) (bool, int) {
 	index := strings.Index(content, closeTag)
 
 	return index != -1, index
 }
 
+// thinkBlockNotPossible determines if the buffered content cannot possibly
+// start a think block, enabling pass-through mode for better performance.
 func thinkBlockNotPossible(content string) bool {
 	return (len(content) >= 7 && !strings.HasPrefix(content, "<think>")) || (len(content) < len(openTag) && !strings.HasPrefix("<think>", content))
 }
