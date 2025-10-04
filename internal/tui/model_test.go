@@ -221,4 +221,27 @@ func TestView(t *testing.T) {
 			t.Errorf("expected view to contain separator line of 80 characters, got %q", actualView)
 		}
 	})
+
+	t.Run("renders chat messages", func(t *testing.T) {
+		t.Parallel()
+
+		model := Model{
+			messages: []string{"Hello, how are you?", "I'm doing great!"},
+			width:    80,
+			height:   24,
+		}
+
+		actualView := model.View()
+
+		expectedMessage1 := "Hello, how are you?"
+		expectedMessage2 := "I'm doing great!"
+
+		if !strings.Contains(actualView, expectedMessage1) {
+			t.Errorf("expected view to contain %q, got %q", expectedMessage1, actualView)
+		}
+
+		if !strings.Contains(actualView, expectedMessage2) {
+			t.Errorf("expected view to contain %q, got %q", expectedMessage2, actualView)
+		}
+	})
 }

@@ -13,10 +13,10 @@ type Model struct {
 	chatHistory []llm.ChatMessage
 
 	// UI state
-	// messages []string // Rendered messages for display
-	input  string // Current user input
-	width  int    // Terminal width
-	height int    // Terminal height
+	messages []string // Rendered messages for display
+	input    string   // Current user input
+	width    int      // Terminal width
+	height   int      // Terminal height
 
 	// Streaming state
 	// streaming  bool   // True if currently receiving a stream
@@ -63,9 +63,10 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (model Model) View() string {
+	chatArea := strings.Join(model.messages, "\n")
 	separator := strings.Repeat("─", model.width)
 
-	view := separator + "\n" + model.input
+	view := chatArea + "\n" + separator + "\n" + model.input
 
 	return view
 }
