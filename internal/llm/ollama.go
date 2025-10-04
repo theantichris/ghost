@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
@@ -48,8 +47,8 @@ func NewOllamaClient(baseURL, defaultModel string, httpClient *http.Client, logg
 	}, nil
 }
 
-// StreamChat sends a message to the Ollama API and streams the response.
-func (ollama *OllamaClient) StreamChat(ctx context.Context, chatHistory []ChatMessage, onToken func(string)) error {
+// Chat sends a message to the Ollama API and streams the response.
+func (ollama *OllamaClient) Chat(ctx context.Context, chatHistory []ChatMessage, onToken func(string)) error {
 	requestBody, err := ollama.preparePayload(chatHistory, true)
 	if err != nil {
 		return err
@@ -62,8 +61,7 @@ func (ollama *OllamaClient) StreamChat(ctx context.Context, chatHistory []ChatMe
 
 	defer cancel()
 
-	ollama.logger.Info("sending chat request to Ollama API", "url", ollama.baseURL+"/api/chat", "method", http.MethodPost)
-	ollama.logger.Debug("request payload", "payload", string(requestBody))
+	ollama.logger.Info("sending chat request to Ollama API", "url", ollama.baseURL+"/api/chat", "method", http.MethodPost, "queryLength", len(string(requestBody)))
 
 	response, err := ollama.httpClient.Do(request)
 	if err != nil {
@@ -116,62 +114,6 @@ func (ollama *OllamaClient) StreamChat(ctx context.Context, chatHistory []ChatMe
 	}
 
 	return nil
-}
-
-// Chat sends a message to the Ollama API.
-func (ollama *OllamaClient) Chat(ctx context.Context, chatHistory []ChatMessage) (ChatMessage, error) {
-	requestBody, err := ollama.preparePayload(chatHistory, false)
-	if err != nil {
-		return ChatMessage{}, err
-	}
-
-	clientRequest, cancel, err := ollama.createHTTPRequest(ctx, requestBody)
-	if err != nil {
-		return ChatMessage{}, err
-	}
-
-	defer cancel()
-
-	ollama.logger.Info("sending chat request to Ollama API", "url", ollama.baseURL+"/api/chat", "method", http.MethodPost)
-	ollama.logger.Debug("request payload", "payload", string(requestBody))
-
-	clientResponse, err := ollama.httpClient.Do(clientRequest)
-	if err != nil {
-		ollama.logger.Error(ErrResponse.Error(), "error", err)
-
-		return ChatMessage{}, fmt.Errorf("%w: %w", ErrResponse, err)
-	}
-
-	defer func() {
-		if err := clientResponse.Body.Close(); err != nil {
-			ollama.logger.Error("failed to close response body", "error", err)
-		}
-	}()
-
-	err = ollama.checkForHTTPError(clientResponse.StatusCode, clientResponse.Body)
-	if err != nil {
-		return ChatMessage{}, err
-	}
-
-	responseBody, err := io.ReadAll(clientResponse.Body)
-	if err != nil {
-		ollama.logger.Error(ErrResponse.Error(), "error", err)
-
-		return ChatMessage{}, fmt.Errorf("%w: %w", ErrResponse, err)
-	}
-
-	ollama.logger.Info("received response from Ollama API", "status code", strconv.Itoa(clientResponse.StatusCode))
-	ollama.logger.Debug("response payload", "payload", string(responseBody))
-
-	var chatResponse ChatResponse
-	err = json.Unmarshal(responseBody, &chatResponse)
-	if err != nil {
-		ollama.logger.Error(ErrResponse.Error(), "error", err)
-
-		return ChatMessage{}, fmt.Errorf("%w: %w", ErrResponse, err)
-	}
-
-	return chatResponse.Message, nil
 }
 
 // preparePayload takes the chat history and returns the marshaled request body.

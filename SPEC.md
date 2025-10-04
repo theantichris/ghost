@@ -31,9 +31,17 @@ generating images, executing tasks, setting up reminders, and chatting.
 - **Conversation Manager**: Handle chat flow, context windows, streaming
   - Seeds CLI sessions with the Ghost system prompt, captures the initial
     greeting before user input, maintains in-memory turn history, and exits
-    on the `/bye` command.
+    on the `/bye` or `/exit` commands (or EOF/Ctrl+D).
   - Streaming responses implemented with real-time token output and think
     block filtering for thinking models.
+  - Implemented via the `chat` command (`cmd/chat.go`) with interactive loop.
+- **Output Handler**: Streaming token processor with think block filtering
+  - `OutputWriter` struct in `internal/stdio/output.go` manages streaming output
+  - State machine tracks think block boundaries (`<think>...</think>`)
+  - Buffers tokens until think block status is determined
+  - Flushes remaining content when stream ends (discards incomplete think blocks)
+  - Shared by both `ask` and `chat` commands for consistent output handling
+  - Comprehensive diagnostic logging tracks token flow and think block detection
 - **Tool Orchestrator**: Execute and manage external tools/functions
 
 #### 2. Memory System (Hybrid Approach)
@@ -77,10 +85,11 @@ The assistant should demonstrate:
 ### Performance
 
 - Efficient vector search for large knowledge bases
-- Streaming responses for better user experience
+- Streaming responses for better user experience with real-time token output
 - Context window management for long conversations
 - Resource usage optimization for local execution
 - Think block filtering preserves full context while hiding reasoning from display
+- Stateful output buffering minimizes overhead once think block presence is determined
 
 ### Security
 
@@ -220,9 +229,13 @@ Log levels (guideline):
 - WARN: transient recoverable issues (recoverable network errors)
 - ERROR: user-visible failures or abort conditions
 
-**Security Note:** Logs never contain user input content (queries, responses, arguments)
-to prevent sensitive data leakage. Only metadata (lengths, counts, status codes)
- is logged.
+**Security Note:** Since Ghost is a local-first tool with planned conversation
+persistence, DEBUG-level logs may include LLM response tokens and content for
+diagnostic purposes. Logs remain on your local machine at `~/.config/ghost/ghost.log`.
+
+**Never log credentials:** API keys, passwords, authentication tokens, and other
+secrets must never be written to logs. When logging configuration or tool parameters,
+redact sensitive fields (e.g., `api_key: <redacted>`).
 
 ---
 
@@ -236,8 +249,16 @@ to prevent sensitive data leakage. Only metadata (lengths, counts, status codes)
   than string matching.
 - Avoid magic strings by hoisting shared literals (messages, prompts, keys)
   into constants shared across code and tests.
+- In test assertions, use explicit variable names with `actual` and `expected`
+  prefixes (e.g., `actualOutput`, `expectedOutput`, `actualTokens`, `expectedTokens`)
+  to make comparisons clear and readable. Add a blank line before assertion blocks
+  to improve readability.
+- Dependency injection used in command structs (`askCmd`, `chatCmd`) to enable
+  LLM client mocking in tests.
+- All pre-commit hooks must pass before committing changes.
 - Run: `go test ./...`; optional: `go vet ./...`; later: integrate `golangci-lint`.
 - Race checks: `go test -race` (periodic / CI optional early on).
+- **Current test coverage**: `cmd` package at 64.5%, `internal/llm` at 69.9%
 
 ## Release & Distribution
 

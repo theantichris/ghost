@@ -11,6 +11,7 @@ See [SPEC.md](/SPEC.md) for full technical architecture, error handling patterns
 - **Build**: `go build -v ./...`
 - **Test all**: `go test -v ./...`
 - **Test single package**: `go test -v ./cmd` or `go test -v ./internal/llm`
+  or `go test -v ./internal/stdio`
 - **Run single test**: `go test -v -run TestFunctionName ./path/to/package`
 - **Lint**: `golangci-lint run` (via pre-commit hook)
 - **Format**: `go fmt ./...` (automatically via pre-commit)
@@ -28,7 +29,13 @@ See [SPEC.md](/SPEC.md) for full technical architecture, error handling patterns
 - **Naming**: Use camelCase for unexported, PascalCase for exported; descriptive
  names (e.g., `llmClient`, `chatHistory`)
 - **Testing**: Table-driven tests with `t.Run()` for subtests; use `t.Parallel()`
- for parallel tests; mock interfaces for dependencies
+ for parallel tests; mock interfaces for dependencies using dependency injection
+ (e.g., injecting `llm.LLMClient` into command structs). In test assertions, use
+ explicit variable names with `actual` and `expected` prefixes (e.g., `actualOutput`,
+ `expectedOutput`, `actualTokens`, `expectedTokens`) to make comparisons clear.
+ Add a blank line before assertion blocks to improve readability. All pre-commit
+ hooks must pass before committing changes. Current test coverage: cmd 64.5%,
+ internal/llm 69.9%
 - **Comments**: Only add comments for exported functions/types or complex logic
 - **Logging**: Use `charmbracelet/log` for structured logging with key-value pairs;
  log to stderr by default for pipeline friendliness. Never log secrets or sensitive
@@ -49,12 +56,20 @@ Ghost follows a modular file organization pattern within packages to maintain
 The `cmd/` package is organized by responsibility rather than having
  monolithic command files:
 
-- **`ask.go`** - Ask command definition and orchestration logic
+- **`ask.go`** - Ask command with LLM client dependency injection
+- **`chat.go`** - Interactive chat command with conversation loop and history management
 - **`root.go`** - Root command setup, configuration initialization, and logging setup
 - **`llm.go`** - LLM client initialization and shared constants (e.g., `systemPrompt`)
-- **`input.go`** - Input handling utilities (`readPipedInput`)
-- **`format.go`** - Output formatting utilities (`stripThinkBlock`)
 - **`errors.go`** - Centralized sentinel error definitions for the cmd package
+
+### `internal/stdio/` Package Structure
+
+Standard input/output handling utilities used by command implementations:
+
+- **`input.go`** - Input handling utilities (`InputReader`, piped input
+  detection, user input scanning)
+- **`output.go`** - Output stream processing with think block filtering (`OutputWriter`)
+- **`errors.go`** - I/O-specific sentinel errors (`ErrIO`, `ErrInput`, `ErrInputEmpty`)
 
 ### When to Create New Files
 

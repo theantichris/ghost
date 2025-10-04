@@ -4,10 +4,10 @@ package llm
 type Role string
 
 const (
-	System    Role = "system"
-	User      Role = "user"
-	Assistant Role = "assistant"
-	Tool      Role = "tool"
+	SystemRole    Role = "system"
+	UserRole      Role = "user"
+	AssistantRole Role = "assistant"
+	ToolRole      Role = "tool"
 )
 
 // ChatRequest represents a request to the Ollama chat API.
