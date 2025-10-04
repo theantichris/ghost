@@ -149,6 +149,26 @@ func TestUpdate(t *testing.T) {
 			t.Errorf("expected command to return tea.QuitMsg, got %T", quitMsg)
 		}
 	})
+
+	t.Run("enter key clears input", func(t *testing.T) {
+		t.Parallel()
+
+		model := Model{input: "hello"}
+		keyMsg := tea.KeyMsg{Type: tea.KeyEnter}
+
+		returnedModel, _ := model.Update(keyMsg)
+
+		actualModel, ok := returnedModel.(Model)
+		if !ok {
+			t.Fatal("expected model to be of type model")
+		}
+
+		expectedInput := ""
+
+		if actualModel.input != expectedInput {
+			t.Errorf("expected input to be cleared, got %q", actualModel.input)
+		}
+	})
 }
 
 func TestView(t *testing.T) {
