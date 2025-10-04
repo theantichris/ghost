@@ -52,7 +52,7 @@ func (chatCmd *chatCmd) run(cmd *cobra.Command, args []string) error {
 		tokens: &tokens,
 	}
 
-	if err := llmClient.StreamChat(cmd.Context(), chatHistory, outputWriter.writeLLMOutput); err != nil {
+	if err := llmClient.StreamChat(cmd.Context(), chatHistory, outputWriter.write); err != nil {
 		return fmt.Errorf("%w: %w", ErrLLM, err)
 	}
 

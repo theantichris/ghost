@@ -70,7 +70,7 @@ func (askCmd *askCmd) run(cmd *cobra.Command, args []string) error {
 
 	var tokens string
 	output := outputWriter{logger: askCmd.logger, output: cmd.OutOrStdout(), tokens: &tokens}
-	output.writeLLMOutput(message)
+	output.write(message)
 
 	askCmd.logger.Info("query completed successfully")
 

@@ -13,7 +13,7 @@ type outputWriter struct {
 	tokens *string
 }
 
-func (outputWriter *outputWriter) writeLLMOutput(token string) {
+func (outputWriter *outputWriter) write(token string) {
 	*outputWriter.tokens += token
 
 	_, err := outputWriter.output.Write([]byte(token))
