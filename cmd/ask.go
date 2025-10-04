@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"os"
-	"strings"
 
 	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
@@ -41,53 +39,23 @@ func NewAskCmd(logger *log.Logger) *cobra.Command {
 }
 
 // run executes the ask command logic.
-// It handles both piped input and command-line arguments, sends the query to the LLM,
-// and outputs the response.
+// It initializes the LLM client, retrieves user input, and processes the query.
 func (askCmd *askCmd) run(cmd *cobra.Command, args []string) error {
 	llmClient, err := initializeLLMClient(askCmd.logger)
 	if err != nil {
 		return fmt.Errorf("%w: %w", ErrLLM, err)
 	}
 
-	stat, err := os.Stdin.Stat()
+	userInput, err := getUserInput(cmd, args, askCmd.logger)
 	if err != nil {
-		return fmt.Errorf("%w: %w", ErrInput, err)
-	}
-
-	isPiped := (stat.Mode() & os.ModeCharDevice) == 0
-
-	askCmd.logger.Debug("detected input mode", "piped", isPiped)
-
-	var query string
-
-	if isPiped {
-		query, err = readPipedInput(cmd.InOrStdin())
-		if err != nil {
-			return fmt.Errorf("%w: %w", ErrIO, err)
-		}
-
-		askCmd.logger.Debug("read piped input", "bytes", len(query))
-
-		if len(args) > 0 {
-			query = query + "\n\n" + strings.Join(args, " ")
-
-			askCmd.logger.Debug("combined piped input with arguments", "argCount", len(args))
-		}
-	} else if len(args) > 0 {
-		query = strings.Join(args, " ")
-
-		askCmd.logger.Debug("using direct arguments as query", "argCount", len(args))
-	} else {
-		askCmd.logger.Warn("no input provided")
-
-		return fmt.Errorf("%w: provide a query or pipe input", ErrInput)
+		return err
 	}
 
 	ctx := cmd.Context()
 
-	askCmd.logger.Info("executing query", "queryLength", len(query))
+	askCmd.logger.Info("executing query", "queryLength", len(userInput))
 
-	return processQuery(ctx, llmClient, query, cmd.OutOrStdout(), askCmd.logger)
+	return processQuery(ctx, llmClient, userInput, cmd.OutOrStdout(), askCmd.logger)
 }
 
 // processQuery sends a single query to the LLM and writes the response to the output.
