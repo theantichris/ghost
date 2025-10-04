@@ -68,9 +68,9 @@ func (askCmd *askCmd) run(cmd *cobra.Command, args []string) error {
 
 	askCmd.logger.Debug("stripped think blocks", "finalLength", len(message))
 
-	if _, err = fmt.Fprintln(cmd.OutOrStdout(), message); err != nil {
-		return fmt.Errorf("%w: %w", ErrIO, err)
-	}
+	var tokens string
+	output := outputWriter{logger: askCmd.logger, output: cmd.OutOrStdout(), tokens: &tokens}
+	output.writeLLMOutput(message)
 
 	askCmd.logger.Info("query completed successfully")
 
