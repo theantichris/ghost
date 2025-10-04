@@ -37,5 +37,7 @@ func initializeLLMClient(logger *log.Logger) (llm.LLMClient, error) {
 		return nil, fmt.Errorf("%w: %w", ErrLLM, err)
 	}
 
+	logger.Info("LLM client initialized successfully")
+
 	return llmClient, nil
 }

@@ -49,8 +49,6 @@ func (askCmd *askCmd) run(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("%w: %w", ErrLLM, err)
 	}
 
-	askCmd.logger.Info("LLM client initialized successfully")
-
 	stat, err := os.Stdin.Stat()
 	if err != nil {
 		return fmt.Errorf("%w: %w", ErrInput, err)
@@ -59,6 +57,7 @@ func (askCmd *askCmd) run(cmd *cobra.Command, args []string) error {
 	isPiped := (stat.Mode() & os.ModeCharDevice) == 0
 
 	askCmd.logger.Debug("detected input mode", "piped", isPiped)
+
 	var query string
 
 	if isPiped {
