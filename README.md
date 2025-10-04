@@ -146,6 +146,6 @@ Configuration options:
 - **Flexible Configuration**: Support for environment variables, config
   files, and command-line flags
 - **File Logging**: All operations logged to `~/.config/ghost/ghost.log` for debugging
-  and troubleshooting (sensitive data never logged)
+  and troubleshooting (credentials never logged)
 - **Error Handling**: Comprehensive error messages with clear guidance on
   configuration issues

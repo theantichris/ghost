@@ -36,11 +36,12 @@ generating images, executing tasks, setting up reminders, and chatting.
     block filtering for thinking models.
   - Implemented via the `chat` command (`cmd/chat.go`) with interactive loop.
 - **Output Handler**: Streaming token processor with think block filtering
-  - `outputWriter` struct in `cmd/output.go` manages streaming output
+  - `OutputWriter` struct in `internal/stdio/output.go` manages streaming output
   - State machine tracks think block boundaries (`<think>...</think>`)
   - Buffers tokens until think block status is determined
   - Flushes remaining content when stream ends (discards incomplete think blocks)
   - Shared by both `ask` and `chat` commands for consistent output handling
+  - Comprehensive diagnostic logging tracks token flow and think block detection
 - **Tool Orchestrator**: Execute and manage external tools/functions
 
 #### 2. Memory System (Hybrid Approach)

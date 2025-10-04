@@ -11,6 +11,7 @@ See [SPEC.md](/SPEC.md) for full technical architecture, error handling patterns
 - **Build**: `go build -v ./...`
 - **Test all**: `go test -v ./...`
 - **Test single package**: `go test -v ./cmd` or `go test -v ./internal/llm`
+  or `go test -v ./internal/stdio`
 - **Run single test**: `go test -v -run TestFunctionName ./path/to/package`
 - **Lint**: `golangci-lint run` (via pre-commit hook)
 - **Format**: `go fmt ./...` (automatically via pre-commit)
@@ -59,9 +60,16 @@ The `cmd/` package is organized by responsibility rather than having
 - **`chat.go`** - Interactive chat command with conversation loop and history management
 - **`root.go`** - Root command setup, configuration initialization, and logging setup
 - **`llm.go`** - LLM client initialization and shared constants (e.g., `systemPrompt`)
-- **`input.go`** - Input handling utilities (`readPipedInput`, user input scanning)
-- **`output.go`** - Output stream processing with think block filtering (`outputWriter`)
 - **`errors.go`** - Centralized sentinel error definitions for the cmd package
+
+### `internal/stdio/` Package Structure
+
+Standard input/output handling utilities used by command implementations:
+
+- **`input.go`** - Input handling utilities (`InputReader`, piped input
+  detection, user input scanning)
+- **`output.go`** - Output stream processing with think block filtering (`OutputWriter`)
+- **`errors.go`** - I/O-specific sentinel errors (`ErrIO`, `ErrInput`, `ErrInputEmpty`)
 
 ### When to Create New Files
 
