@@ -31,6 +31,7 @@ type Model struct {
 func NewModel(systemPrompt string, logger *log.Logger) Model {
 	chatHistory := []llm.ChatMessage{
 		{Role: llm.SystemRole, Content: systemPrompt},
+		{Role: llm.SystemRole, Content: "Greet the user."},
 	}
 
 	model := Model{

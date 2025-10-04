@@ -24,18 +24,30 @@ func TestNewModel(t *testing.T) {
 			t.Error("expected logger to be set")
 		}
 
-		if len(actualModel.chatHistory) != 1 {
-			t.Errorf("expected empty chat to contain 1 item, got %d", len(actualModel.chatHistory))
+		expectedChatLength := 2
+
+		if len(actualModel.chatHistory) != expectedChatLength {
+			t.Fatalf("expected chat to contain %d items, got %d", expectedChatLength, len(actualModel.chatHistory))
 		}
 
-		actualChatMessage := actualModel.chatHistory[0]
+		actualSystemPrompt := actualModel.chatHistory[0]
 
-		if actualChatMessage.Role != llm.SystemRole {
-			t.Errorf("expected system prompt to have user role, got %q", actualChatMessage.Role)
+		if actualSystemPrompt.Role != llm.SystemRole {
+			t.Errorf("expected system prompt to have user role, got %q", actualSystemPrompt.Role)
 		}
 
-		if actualChatMessage.Content != systemPrompt {
-			t.Errorf("expected system prompt, got %q", actualChatMessage.Content)
+		if actualSystemPrompt.Content != systemPrompt {
+			t.Errorf("expected system prompt, got %q", actualSystemPrompt.Content)
+		}
+
+		actualGreetingPrompt := actualModel.chatHistory[1]
+
+		if actualGreetingPrompt.Role != llm.SystemRole {
+			t.Errorf("expected greeting prompt to have user role, got %q", actualGreetingPrompt.Role)
+		}
+
+		if actualGreetingPrompt.Content != "Greet the user." {
+			t.Errorf("expected greeting prompt, got %q", actualGreetingPrompt.Content)
 		}
 
 		if actualModel.input != "" {
