@@ -62,8 +62,7 @@ func (ollama *OllamaClient) StreamChat(ctx context.Context, chatHistory []ChatMe
 
 	defer cancel()
 
-	ollama.logger.Info("sending chat request to Ollama API", "url", ollama.baseURL+"/api/chat", "method", http.MethodPost)
-	ollama.logger.Debug("request payload", "payload", string(requestBody))
+	ollama.logger.Info("sending chat request to Ollama API", "url", ollama.baseURL+"/api/chat", "method", http.MethodPost, "queryLength", len(string(requestBody)))
 
 	response, err := ollama.httpClient.Do(request)
 	if err != nil {
@@ -133,7 +132,7 @@ func (ollama *OllamaClient) Chat(ctx context.Context, chatHistory []ChatMessage)
 	defer cancel()
 
 	ollama.logger.Info("sending chat request to Ollama API", "url", ollama.baseURL+"/api/chat", "method", http.MethodPost)
-	ollama.logger.Debug("request payload", "payload", string(requestBody))
+	ollama.logger.Debug("request payload", "requestLength", len(string(requestBody)))
 
 	clientResponse, err := ollama.httpClient.Do(clientRequest)
 	if err != nil {
@@ -161,7 +160,7 @@ func (ollama *OllamaClient) Chat(ctx context.Context, chatHistory []ChatMessage)
 	}
 
 	ollama.logger.Info("received response from Ollama API", "status code", strconv.Itoa(clientResponse.StatusCode))
-	ollama.logger.Debug("response payload", "payload", string(responseBody))
+	ollama.logger.Debug("response payload", "responseLength", len(string(responseBody)))
 
 	var chatResponse ChatResponse
 	err = json.Unmarshal(responseBody, &chatResponse)
