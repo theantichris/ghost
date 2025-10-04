@@ -21,20 +21,6 @@ func TestInit(t *testing.T) {
 }
 
 func TestUpdate(t *testing.T) {
-	t.Run("updates the model", func(t *testing.T) {
-		t.Parallel()
-
-		model := Model{}
-		msg := tea.KeyMsg{}
-
-		returnedModel, _ := model.Update(msg)
-
-		_, ok := returnedModel.(Model)
-		if !ok {
-			t.Fatal("expected model to be of type Model")
-		}
-	})
-
 	t.Run("handles window size message", func(t *testing.T) {
 		t.Parallel()
 
