@@ -3,6 +3,7 @@ package llm
 // Role defines the role of a message in the chat.
 type Role string
 
+// TODO: Change to SystemRole, etc.
 const (
 	System    Role = "system"
 	User      Role = "user"

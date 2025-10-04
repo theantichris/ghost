@@ -10,13 +10,16 @@ import (
 
 // askCmd represents the ask command and its dependencies.
 type askCmd struct {
-	logger *log.Logger
+	logger    *log.Logger
+	llmClient llm.LLMClient
 }
 
 // NewAskCmd creates a new ask command that sends queries to the configured LLM.
 // It supports both direct command-line queries and piped input from stdin.
 func NewAskCmd(logger *log.Logger) *cobra.Command {
-	askCmd := &askCmd{logger: logger}
+	askCmd := &askCmd{
+		logger: logger,
+	}
 
 	cmd := &cobra.Command{
 		Use:   "ask [query]",
@@ -39,9 +42,13 @@ func NewAskCmd(logger *log.Logger) *cobra.Command {
 // run executes the ask command logic.
 // It initializes the LLM client, retrieves user input, and processes the query.
 func (askCmd *askCmd) run(cmd *cobra.Command, args []string) error {
-	llmClient, err := initializeLLMClient(askCmd.logger)
-	if err != nil {
-		return fmt.Errorf("%w: %w", ErrLLM, err)
+	if askCmd.llmClient == nil {
+		llmClient, err := initializeLLMClient(askCmd.logger)
+		if err != nil {
+			return fmt.Errorf("%w: %w", ErrLLM, err)
+		}
+
+		askCmd.llmClient = llmClient
 	}
 
 	inputReader := newInputReader(askCmd.logger)
@@ -64,7 +71,7 @@ func (askCmd *askCmd) run(cmd *cobra.Command, args []string) error {
 		tokens: &tokens,
 	}
 
-	if err := llmClient.Chat(cmd.Context(), chatHistory, outputWriter.write); err != nil {
+	if err := askCmd.llmClient.Chat(cmd.Context(), chatHistory, outputWriter.write); err != nil {
 		return fmt.Errorf("%w: %w", ErrLLM, err)
 	}
 	outputWriter.flush()
