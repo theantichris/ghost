@@ -25,8 +25,6 @@ type OutputWriter struct {
 	newlinesTrimmed  bool
 }
 
-// TODO: check logging for sensitive information.
-
 // Write processes a single token from the LLM stream, accumulating it while
 // filtering out think blocks from the output. It trims leading whitespace
 // before the first visible output or after closing a think block.

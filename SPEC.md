@@ -228,9 +228,13 @@ Log levels (guideline):
 - WARN: transient recoverable issues (recoverable network errors)
 - ERROR: user-visible failures or abort conditions
 
-**Security Note:** Logs never contain user input content (queries, responses, arguments)
-to prevent sensitive data leakage. Only metadata (lengths, counts, status codes)
- is logged.
+**Security Note:** Since Ghost is a local-first tool with planned conversation
+persistence, DEBUG-level logs may include LLM response tokens and content for
+diagnostic purposes. Logs remain on your local machine at `~/.config/ghost/ghost.log`.
+
+**Never log credentials:** API keys, passwords, authentication tokens, and other
+secrets must never be written to logs. When logging configuration or tool parameters,
+redact sensitive fields (e.g., `api_key: <redacted>`).
 
 ---
 
