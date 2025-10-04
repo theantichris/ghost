@@ -12,13 +12,16 @@ import (
 
 // chatCmd represents the chat command and its dependencies.
 type chatCmd struct {
-	logger *log.Logger
+	logger    *log.Logger
+	llmClient llm.LLMClient
 }
 
 // NewChatCmd creates a new chat command that sends queries to the configured LLM.
 // It supports both direct command-line queries and piped input from stdin.
 func NewChatCmd(logger *log.Logger) *cobra.Command {
-	chatCmd := &chatCmd{logger: logger}
+	chatCmd := &chatCmd{
+		logger: logger,
+	}
 
 	cmd := &cobra.Command{
 		Use:   "chat",
@@ -35,9 +38,13 @@ func NewChatCmd(logger *log.Logger) *cobra.Command {
 }
 
 func (chatCmd *chatCmd) run(cmd *cobra.Command, args []string) error {
-	llmClient, err := initializeLLMClient(chatCmd.logger)
-	if err != nil {
-		return fmt.Errorf("%w: %w", ErrLLM, err)
+	if chatCmd.llmClient == nil {
+		llmClient, err := initializeLLMClient(chatCmd.logger)
+		if err != nil {
+			return fmt.Errorf("%w: %w", ErrLLM, err)
+		}
+
+		chatCmd.llmClient = llmClient
 	}
 
 	chatHistory := []llm.ChatMessage{
@@ -53,7 +60,7 @@ func (chatCmd *chatCmd) run(cmd *cobra.Command, args []string) error {
 	}
 
 	// Send system and greeting prompt.
-	if err := llmClient.Chat(cmd.Context(), chatHistory, writer.write); err != nil {
+	if err := chatCmd.llmClient.Chat(cmd.Context(), chatHistory, writer.write); err != nil {
 		return fmt.Errorf("%w: %w", ErrLLM, err)
 	}
 	writer.flush()
@@ -91,7 +98,7 @@ func (chatCmd *chatCmd) run(cmd *cobra.Command, args []string) error {
 		chatHistory = append(chatHistory, llm.ChatMessage{Role: llm.User, Content: input})
 
 		writer.reset()
-		if err := llmClient.Chat(cmd.Context(), chatHistory, writer.write); err != nil {
+		if err := chatCmd.llmClient.Chat(cmd.Context(), chatHistory, writer.write); err != nil {
 			return fmt.Errorf("%w: %w", ErrLLM, err)
 		}
 		writer.flush()
