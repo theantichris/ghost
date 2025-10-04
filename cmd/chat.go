@@ -79,7 +79,7 @@ func (chatCmd *chatCmd) run(cmd *cobra.Command, args []string) error {
 		input := strings.TrimSpace(inputScanner.Text())
 
 		if input == "" {
-			return ErrInputEmpty
+			continue
 		}
 
 		// Setup exit routine.
