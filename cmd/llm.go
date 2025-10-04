@@ -19,11 +19,11 @@ func initializeLLMClient(logger *log.Logger) (llm.LLMClient, error) {
 	model := viper.GetString("model")
 
 	if ollamaBaseURL == "" {
-		return nil, fmt.Errorf("%w: set OLLAMA_BASE_URL via environment variable, config file, or --ollama flag", ErrInput)
+		return nil, fmt.Errorf("%w: set OLLAMA_BASE_URL via environment variable, config file, or --ollama flag", ErrConfig)
 	}
 
 	if model == "" {
-		return nil, fmt.Errorf("%w: set DEFAULT_MODEL via environment variable, config file, or --model flag", ErrInput)
+		return nil, fmt.Errorf("%w: set DEFAULT_MODEL via environment variable, config file, or --model flag", ErrConfig)
 	}
 
 	timeout := viper.GetDuration("timeout")

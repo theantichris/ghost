@@ -1,4 +1,4 @@
-package cmd
+package stdio
 
 import (
 	"io"
@@ -12,26 +12,26 @@ const (
 	closeTag string = "</think>"
 )
 
-// outputWriter handles streaming LLM output with think block filtering.
+// OutputWriter handles streaming LLM output with think block filtering.
 // It accumulates all tokens while stripping <think>...</think> blocks from
 // the output stream. State must be reset between LLM calls using reset().
-type outputWriter struct {
-	logger           *log.Logger
-	output           io.Writer
-	tokens           *string
+type OutputWriter struct {
+	Logger           *log.Logger
+	Output           io.Writer
+	Tokens           *string
 	buffer           strings.Builder
 	insideThinkBlock bool
 	canPassThrough   bool
 	newlinesTrimmed  bool
 }
 
-// write processes a single token from the LLM stream, accumulating it while
+// Write processes a single token from the LLM stream, accumulating it while
 // filtering out think blocks from the output. It trims leading whitespace
 // before the first visible output or after closing a think block.
-func (writer *outputWriter) write(token string) {
-	writer.logger.Debug("token received", "token", token, "length", len(token))
+func (writer *OutputWriter) Write(token string) {
+	writer.Logger.Debug("token received", "token", token, "length", len(token))
 
-	*writer.tokens += token
+	*writer.Tokens += token
 
 	if writer.canPassThrough {
 		output := token
@@ -45,10 +45,10 @@ func (writer *outputWriter) write(token string) {
 		}
 
 		if output != "" {
-			writer.logger.Debug("writing to output", "content", output, "length", len(output))
+			writer.Logger.Debug("writing to output", "content", output, "length", len(output))
 
-			if _, err := writer.output.Write([]byte(output)); err != nil {
-				writer.logger.Error(ErrIO.Error(), "error", err)
+			if _, err := writer.Output.Write([]byte(output)); err != nil {
+				writer.Logger.Error(ErrIO.Error(), "error", err)
 			}
 		}
 
@@ -62,20 +62,20 @@ func (writer *outputWriter) write(token string) {
 		if isOpenTag(output) {
 			writer.insideThinkBlock = true
 
-			writer.logger.Debug("think block opened")
+			writer.Logger.Debug("think block opened")
 		} else if thinkBlockNotPossible(output) {
 			output = strings.TrimLeft(output, " \n\r\t")
 
-			writer.logger.Debug("writing to output", "content", output, "length", len(output))
+			writer.Logger.Debug("writing to output", "content", output, "length", len(output))
 
-			if _, err := writer.output.Write([]byte(output)); err != nil {
-				writer.logger.Error("%w: %w", ErrIO, err)
+			if _, err := writer.Output.Write([]byte(output)); err != nil {
+				writer.Logger.Error("%w: %w", ErrIO, err)
 			}
 
 			writer.buffer.Reset()
 			writer.canPassThrough = true
 
-			writer.logger.Debug("pass through mode enabled", "reason", "no think block")
+			writer.Logger.Debug("pass through mode enabled", "reason", "no think block")
 		}
 	}
 
@@ -87,58 +87,58 @@ func (writer *outputWriter) write(token string) {
 			output = strings.TrimLeft(output, " \n\r\t")
 
 			if output != "" {
-				writer.logger.Debug("writing to output", "content", output, "length", len(output))
+				writer.Logger.Debug("writing to output", "content", output, "length", len(output))
 
-				if _, err := writer.output.Write([]byte(output)); err != nil {
-					writer.logger.Error("%w: %w", ErrIO, err)
+				if _, err := writer.Output.Write([]byte(output)); err != nil {
+					writer.Logger.Error("%w: %w", ErrIO, err)
 				}
 			}
 
 			writer.buffer.Reset()
 			writer.canPassThrough = true
 
-			writer.logger.Debug("pass through mode enabled", "reason", "think block closed")
+			writer.Logger.Debug("pass through mode enabled", "reason", "think block closed")
 		}
 	}
 }
 
 // reset clears all outputWriter state for reuse with a new LLM response.
 // This includes the buffer, state flags, and tokens pointer.
-func (writer *outputWriter) reset() {
-	writer.logger.Debug("writer reset", "tokensLength", len(*writer.tokens), "buffLength", writer.buffer.Len(), "insideThinkBlock", writer.insideThinkBlock, "canPassThrough", writer.canPassThrough)
+func (writer *OutputWriter) Reset() {
+	writer.Logger.Debug("writer reset", "tokensLength", len(*writer.Tokens), "buffLength", writer.buffer.Len(), "insideThinkBlock", writer.insideThinkBlock, "canPassThrough", writer.canPassThrough)
 
 	writer.buffer.Reset()
 	writer.insideThinkBlock = false
 	writer.canPassThrough = false
 	writer.newlinesTrimmed = false
-	*writer.tokens = ""
+	*writer.Tokens = ""
 }
 
-// flush writes any remaining buffered content to output when the stream ends.
+// Flush writes any remaining buffered content to output when the stream ends.
 // If inside an unclosed think block, buffered content is discarded as incomplete
 // reasoning. If still determining whether content is a think block, the buffer
 // is written to output after trimming leading whitespace.
-func (writer *outputWriter) flush() {
+func (writer *OutputWriter) Flush() {
 	if writer.buffer.Len() == 0 {
 		return
 	}
 
 	bufferContent := writer.buffer.String()
 
-	writer.logger.Debug("flushing buffer", "length", writer.buffer.Len(), "inside_think", writer.insideThinkBlock)
+	writer.Logger.Debug("flushing buffer", "length", writer.buffer.Len(), "inside_think", writer.insideThinkBlock)
 
 	if writer.insideThinkBlock {
-		writer.logger.Debug("discarding incomplete think block", "content_length", len(bufferContent))
+		writer.Logger.Debug("discarding incomplete think block", "content_length", len(bufferContent))
 		return
 	}
 
 	bufferContent = strings.TrimLeft(bufferContent, " \n\r\t")
 
 	if bufferContent != "" {
-		writer.logger.Debug("writing buffered content", "content", bufferContent, "length", len(bufferContent))
+		writer.Logger.Debug("writing buffered content", "content", bufferContent, "length", len(bufferContent))
 
-		if _, err := writer.output.Write([]byte(bufferContent)); err != nil {
-			writer.logger.Error(ErrIO.Error(), "error", err)
+		if _, err := writer.Output.Write([]byte(bufferContent)); err != nil {
+			writer.Logger.Error(ErrIO.Error(), "error", err)
 		}
 	}
 }

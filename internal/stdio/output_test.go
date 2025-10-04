@@ -1,4 +1,4 @@
-package cmd
+package stdio
 
 import (
 	"bytes"
@@ -17,13 +17,13 @@ func TestOutputWriterWrite(t *testing.T) {
 		var actualTokens string
 		logger := log.New(io.Discard)
 
-		writer := &outputWriter{
-			logger: logger,
-			output: &actualOutput,
-			tokens: &actualTokens,
+		writer := &OutputWriter{
+			Logger: logger,
+			Output: &actualOutput,
+			Tokens: &actualTokens,
 		}
 
-		writer.write("Hello World")
+		writer.Write("Hello World")
 
 		expectedOutput := "Hello World"
 
@@ -47,20 +47,20 @@ func TestOutputWriterReset(t *testing.T) {
 		var actualTokens string
 		logger := log.New(io.Discard)
 
-		writer := &outputWriter{
-			logger: logger,
-			output: &actualOutput,
-			tokens: &actualTokens,
+		writer := &OutputWriter{
+			Logger: logger,
+			Output: &actualOutput,
+			Tokens: &actualTokens,
 		}
 
-		writer.write("<think>reasoning</think>Response")
+		writer.Write("<think>reasoning</think>Response")
 		actualTokens = "accumulated tokens"
 		writer.buffer.WriteString("buffer content")
 		writer.insideThinkBlock = true
 		writer.canPassThrough = true
 		writer.newlinesTrimmed = true
 
-		writer.reset()
+		writer.Reset()
 
 		if writer.buffer.Len() != 0 {
 			t.Errorf("expected buffer length 0, got %d", writer.buffer.Len())
@@ -92,13 +92,13 @@ func TestOutputWriterReset(t *testing.T) {
 		var actualTokens string
 		logger := log.New(io.Discard)
 
-		writer := &outputWriter{
-			logger: logger,
-			output: &actualOutput,
-			tokens: &actualTokens,
+		writer := &OutputWriter{
+			Logger: logger,
+			Output: &actualOutput,
+			Tokens: &actualTokens,
 		}
 
-		writer.write("<think>first</think>First response")
+		writer.Write("<think>first</think>First response")
 
 		expectedFirstOutput := "First response"
 
@@ -106,10 +106,10 @@ func TestOutputWriterReset(t *testing.T) {
 			t.Errorf("expected first output %q, got %q", expectedFirstOutput, actualOutput.String())
 		}
 
-		writer.reset()
+		writer.Reset()
 		actualOutput.Reset()
 
-		writer.write("<think>second</think>Second response")
+		writer.Write("<think>second</think>Second response")
 
 		expectedSecondOutput := "Second response"
 
@@ -125,13 +125,13 @@ func TestOutputWriterReset(t *testing.T) {
 		actualTokens := "initial tokens"
 		logger := log.New(io.Discard)
 
-		writer := &outputWriter{
-			logger: logger,
-			output: &actualOutput,
-			tokens: &actualTokens,
+		writer := &OutputWriter{
+			Logger: logger,
+			Output: &actualOutput,
+			Tokens: &actualTokens,
 		}
 
-		writer.reset()
+		writer.Reset()
 
 		expectedTokens := ""
 
@@ -149,16 +149,16 @@ func TestOutputWriterFlush(t *testing.T) {
 		var actualTokens string
 		logger := log.New(io.Discard)
 
-		writer := &outputWriter{
-			logger: logger,
-			output: &actualOutput,
-			tokens: &actualTokens,
+		writer := &OutputWriter{
+			Logger: logger,
+			Output: &actualOutput,
+			Tokens: &actualTokens,
 		}
 
-		writer.write("<think>")
-		writer.write("incomplete reasoning")
+		writer.Write("<think>")
+		writer.Write("incomplete reasoning")
 
-		writer.flush()
+		writer.Flush()
 
 		expectedOutput := ""
 
@@ -180,15 +180,15 @@ func TestOutputWriterFlush(t *testing.T) {
 		var actualTokens string
 		logger := log.New(io.Discard)
 
-		writer := &outputWriter{
-			logger: logger,
-			output: &actualOutput,
-			tokens: &actualTokens,
+		writer := &OutputWriter{
+			Logger: logger,
+			Output: &actualOutput,
+			Tokens: &actualTokens,
 		}
 
-		writer.write("<th")
+		writer.Write("<th")
 
-		writer.flush()
+		writer.Flush()
 
 		expectedOutput := "<th"
 
@@ -204,15 +204,15 @@ func TestOutputWriterFlush(t *testing.T) {
 		var actualTokens string
 		logger := log.New(io.Discard)
 
-		writer := &outputWriter{
-			logger: logger,
-			output: &actualOutput,
-			tokens: &actualTokens,
+		writer := &OutputWriter{
+			Logger: logger,
+			Output: &actualOutput,
+			Tokens: &actualTokens,
 		}
 
-		writer.write("Normal text")
+		writer.Write("Normal text")
 
-		writer.flush()
+		writer.Flush()
 
 		expectedOutput := "Normal text"
 
@@ -228,13 +228,13 @@ func TestOutputWriterFlush(t *testing.T) {
 		var actualTokens string
 		logger := log.New(io.Discard)
 
-		writer := &outputWriter{
-			logger: logger,
-			output: &actualOutput,
-			tokens: &actualTokens,
+		writer := &OutputWriter{
+			Logger: logger,
+			Output: &actualOutput,
+			Tokens: &actualTokens,
 		}
 
-		writer.flush()
+		writer.Flush()
 
 		expectedOutput := ""
 
@@ -452,10 +452,10 @@ func TestOutputWriterIntegration(t *testing.T) {
 		var actualTokens string
 		logger := log.New(io.Discard)
 
-		writer := &outputWriter{
-			logger: logger,
-			output: &actualOutput,
-			tokens: &actualTokens,
+		writer := &OutputWriter{
+			Logger: logger,
+			Output: &actualOutput,
+			Tokens: &actualTokens,
 		}
 
 		streamTokens := []string{
@@ -470,7 +470,7 @@ func TestOutputWriterIntegration(t *testing.T) {
 		}
 
 		for _, token := range streamTokens {
-			writer.write(token)
+			writer.Write(token)
 		}
 
 		expectedOutput := "Response"
@@ -493,10 +493,10 @@ func TestOutputWriterIntegration(t *testing.T) {
 		var actualTokens string
 		logger := log.New(io.Discard)
 
-		writer := &outputWriter{
-			logger: logger,
-			output: &actualOutput,
-			tokens: &actualTokens,
+		writer := &OutputWriter{
+			Logger: logger,
+			Output: &actualOutput,
+			Tokens: &actualTokens,
 		}
 
 		streamTokens := []string{
@@ -509,7 +509,7 @@ func TestOutputWriterIntegration(t *testing.T) {
 		}
 
 		for _, token := range streamTokens {
-			writer.write(token)
+			writer.Write(token)
 		}
 
 		expectedOutput := "Hello, how can I help?"
@@ -526,23 +526,23 @@ func TestOutputWriterIntegration(t *testing.T) {
 		var actualTokens1 string
 		logger := log.New(io.Discard)
 
-		writer1 := &outputWriter{
-			logger: logger,
-			output: &actualOutput1,
-			tokens: &actualTokens1,
+		writer1 := &OutputWriter{
+			Logger: logger,
+			Output: &actualOutput1,
+			Tokens: &actualTokens1,
 		}
 
-		writer1.write("<think>first</think>Response")
+		writer1.Write("<think>first</think>Response")
 
 		var actualOutput2 bytes.Buffer
 		var actualTokens2 string
-		writer2 := &outputWriter{
-			logger: logger,
-			output: &actualOutput2,
-			tokens: &actualTokens2,
+		writer2 := &OutputWriter{
+			Logger: logger,
+			Output: &actualOutput2,
+			Tokens: &actualTokens2,
 		}
 
-		writer2.write("<think>second</think>Another")
+		writer2.Write("<think>second</think>Another")
 
 		expectedOutput1 := "Response"
 

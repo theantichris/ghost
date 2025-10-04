@@ -6,6 +6,7 @@ import (
 	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
 	"github.com/theantichris/ghost/internal/llm"
+	"github.com/theantichris/ghost/internal/stdio"
 )
 
 // askCmd represents the ask command and its dependencies.
@@ -51,8 +52,8 @@ func (askCmd *askCmd) run(cmd *cobra.Command, args []string) error {
 		askCmd.llmClient = llmClient
 	}
 
-	inputReader := newInputReader(askCmd.logger)
-	userInput, err := inputReader.read(cmd, args)
+	inputReader := stdio.NewInputReader(askCmd.logger)
+	userInput, err := inputReader.Read(cmd, args)
 	if err != nil {
 		return err
 	}
@@ -65,19 +66,19 @@ func (askCmd *askCmd) run(cmd *cobra.Command, args []string) error {
 	}
 
 	var tokens string
-	outputWriter := &outputWriter{
-		logger: askCmd.logger,
-		output: cmd.OutOrStdout(),
-		tokens: &tokens,
+	outputWriter := &stdio.OutputWriter{
+		Logger: askCmd.logger,
+		Output: cmd.OutOrStdout(),
+		Tokens: &tokens,
 	}
 
-	if err := askCmd.llmClient.Chat(cmd.Context(), chatHistory, outputWriter.write); err != nil {
+	if err := askCmd.llmClient.Chat(cmd.Context(), chatHistory, outputWriter.Write); err != nil {
 		return fmt.Errorf("%w: %w", ErrLLM, err)
 	}
-	outputWriter.flush()
+	outputWriter.Flush()
 
 	if _, err := fmt.Fprintln(cmd.OutOrStdout()); err != nil {
-		return fmt.Errorf("%w: %w", ErrIO, err)
+		return fmt.Errorf("%w: %w", stdio.ErrIO, err)
 	}
 
 	askCmd.logger.Info("query completed successfully")

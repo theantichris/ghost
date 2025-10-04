@@ -10,6 +10,7 @@ import (
 
 	"github.com/charmbracelet/log"
 	"github.com/theantichris/ghost/internal/llm"
+	"github.com/theantichris/ghost/internal/stdio"
 )
 
 func TestNewAskCmd(t *testing.T) {
@@ -149,7 +150,7 @@ func TestAskCmdRun(t *testing.T) {
 			t.Fatal("expected error when no input provided, got nil")
 		}
 
-		if !errors.Is(err, ErrInput) {
+		if !errors.Is(err, stdio.ErrIO) {
 			t.Errorf("expected error to wrap ErrInput, got %v", err)
 		}
 	})

@@ -1,4 +1,4 @@
-package cmd
+package stdio
 
 import (
 	"bufio"
@@ -18,7 +18,7 @@ type inputReader struct {
 }
 
 // newInputReader creates an inputReader with the default stdin detector.
-func newInputReader(logger *log.Logger) *inputReader {
+func NewInputReader(logger *log.Logger) *inputReader {
 	inputReader := inputReader{
 		logger: logger,
 		stdinDetector: func() (bool, error) {
@@ -34,13 +34,13 @@ func newInputReader(logger *log.Logger) *inputReader {
 	return &inputReader
 }
 
-// read retrieves user input from either piped stdin or command-line arguments.
+// Read retrieves user input from either piped stdin or command-line arguments.
 // It handles both piped input and direct arguments, combining them when both are provided.
 // Returns an error if no input is available from either source.
-func (inputReader *inputReader) read(cmd *cobra.Command, args []string) (string, error) {
+func (inputReader *inputReader) Read(cmd *cobra.Command, args []string) (string, error) {
 	isPiped, err := inputReader.stdinDetector()
 	if err != nil {
-		return "", fmt.Errorf("%w: %w", ErrInput, err)
+		return "", fmt.Errorf("%w: %w", ErrIO, err)
 	}
 
 	inputReader.logger.Debug("detected input mode", "piped", isPiped)
@@ -67,7 +67,7 @@ func (inputReader *inputReader) read(cmd *cobra.Command, args []string) (string,
 	} else {
 		inputReader.logger.Warn("no input provided")
 
-		return "", fmt.Errorf("%w: provide a query or pipe input", ErrInput)
+		return "", fmt.Errorf("%w: provide a query or pipe input", ErrIO)
 	}
 
 	return query, nil
