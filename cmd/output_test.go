@@ -47,8 +47,10 @@ func TestOutputWriterWrite(t *testing.T) {
 			t.Errorf("expected output %q, got %q", expectedOutput, actualOutput.String())
 		}
 
-		if actualTokens != "Hello World" {
-			t.Errorf("expected tokens %q, got %q", "Hello World", actualTokens)
+		expectedTokens := "Hello World"
+
+		if actualTokens != expectedTokens {
+			t.Errorf("expected tokens %q, got %q", expectedTokens, actualTokens)
 		}
 	})
 
@@ -77,6 +79,7 @@ func TestOutputWriterWrite(t *testing.T) {
 		}
 
 		expectedTokens := "<think>reasoning here</think>Actual response"
+
 		if actualTokens != expectedTokens {
 			t.Errorf("expected tokens %q, got %q", expectedTokens, actualTokens)
 		}
