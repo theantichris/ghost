@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"bufio"
 	"fmt"
+	"strings"
 
 	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
@@ -43,24 +45,65 @@ func (chatCmd *chatCmd) run(cmd *cobra.Command, args []string) error {
 		{Role: llm.System, Content: "Greet the user"},
 	}
 
-	// TODO: Send message to LLM and stream response
-
 	var tokens string
-	outputWriter := &outputWriter{
+	writer := &outputWriter{
 		logger: chatCmd.logger,
 		output: cmd.OutOrStdout(),
 		tokens: &tokens,
 	}
 
-	if err := llmClient.Chat(cmd.Context(), chatHistory, outputWriter.write); err != nil {
+	// Send system and greeting prompt.
+	if err := llmClient.Chat(cmd.Context(), chatHistory, writer.write); err != nil {
 		return fmt.Errorf("%w: %w", ErrLLM, err)
 	}
+
+	chatHistory = append(chatHistory, llm.ChatMessage{Role: llm.Assistant, Content: tokens})
 
 	if _, err := fmt.Fprintln(cmd.OutOrStdout()); err != nil {
 		return fmt.Errorf("%w: %w", ErrIO, err)
 	}
 
-	// chatHistory = append(chatHistory, llm.ChatMessage{Role: llm.Assistant, Content: tokens})
+	inputScanner := bufio.NewScanner(cmd.InOrStdin())
+	endChat := false
+
+	for !endChat {
+		if _, err := fmt.Fprint(writer.output, "User: "); err != nil {
+			return fmt.Errorf("%w: %w", ErrIO, err)
+		}
+
+		if ok := inputScanner.Scan(); !ok {
+			if err := inputScanner.Err(); err != nil {
+				return fmt.Errorf("%w: %w", ErrIO, err)
+			}
+
+			break // Reached EOF.
+		}
+
+		input := strings.TrimSpace(inputScanner.Text())
+
+		if input == "" {
+			return ErrInputEmpty
+		}
+
+		// Setup exit routine.
+		if input == "/bye" || input == "/exit" {
+			endChat = true
+			input = "Goodbye!"
+		}
+
+		chatHistory = append(chatHistory, llm.ChatMessage{Role: llm.User, Content: input})
+
+		writer.reset()
+		if err := llmClient.Chat(cmd.Context(), chatHistory, writer.write); err != nil {
+			return fmt.Errorf("%w: %w", ErrLLM, err)
+		}
+
+		chatHistory = append(chatHistory, llm.ChatMessage{Role: llm.Assistant, Content: tokens})
+
+		if _, err := fmt.Fprintln(cmd.OutOrStdout()); err != nil {
+			return fmt.Errorf("%w: %w", ErrIO, err)
+		}
+	}
 
 	return nil
 }
