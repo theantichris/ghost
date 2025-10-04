@@ -50,16 +50,24 @@ func TestNewRootCmd(t *testing.T) {
 		}
 
 		// Check for subcommands.
-		found := false
+		foundAsk := false
+		foundChat := false
 		for _, subCmd := range cmd.Commands() {
 			if subCmd.Name() == "ask" {
-				found = true
-				break
+				foundAsk = true
+			}
+
+			if subCmd.Name() == "chat" {
+				foundChat = true
 			}
 		}
 
-		if !found {
+		if !foundAsk {
 			t.Error("expected ask subcommand to be added")
+		}
+
+		if !foundChat {
+			t.Error("expected chat subcommand to be added")
 		}
 	})
 }

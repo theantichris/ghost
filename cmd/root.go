@@ -40,6 +40,7 @@ func NewRootCmd(logger *log.Logger) *cobra.Command {
 	cmd.PersistentFlags().String("ollama", "", "Ollama API base URL")
 
 	cmd.AddCommand(NewAskCmd(logger))
+	cmd.AddCommand(NewChatCmd(logger))
 
 	return cmd
 }

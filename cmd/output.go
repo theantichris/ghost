@@ -1,6 +1,26 @@
 package cmd
 
-import "strings"
+import (
+	"io"
+	"strings"
+
+	"github.com/charmbracelet/log"
+)
+
+type outputWriter struct {
+	logger *log.Logger
+	output io.Writer
+	tokens *string
+}
+
+func (outputWriter *outputWriter) writeLLMOutput(token string) {
+	*outputWriter.tokens += token
+
+	_, err := outputWriter.output.Write([]byte(token))
+	if err != nil {
+		outputWriter.logger.Error(ErrIO.Error(), "error", err)
+	}
+}
 
 // stripThinkBlock removes <think>...</think> blocks from the message.
 // These blocks may contain internal reasoning that shouldn't be shown to the user.
