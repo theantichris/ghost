@@ -34,10 +34,10 @@ func newInputReader(logger *log.Logger) *inputReader {
 	return &inputReader
 }
 
-// getUserInput retrieves user input from either piped stdin or command-line arguments.
+// read retrieves user input from either piped stdin or command-line arguments.
 // It handles both piped input and direct arguments, combining them when both are provided.
 // Returns an error if no input is available from either source.
-func (inputReader *inputReader) getUserInput(cmd *cobra.Command, args []string) (string, error) {
+func (inputReader *inputReader) read(cmd *cobra.Command, args []string) (string, error) {
 	isPiped, err := inputReader.stdinDetector()
 	if err != nil {
 		return "", fmt.Errorf("%w: %w", ErrInput, err)

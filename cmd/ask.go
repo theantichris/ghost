@@ -45,7 +45,7 @@ func (askCmd *askCmd) run(cmd *cobra.Command, args []string) error {
 	}
 
 	inputReader := newInputReader(askCmd.logger)
-	userInput, err := inputReader.getUserInput(cmd, args)
+	userInput, err := inputReader.read(cmd, args)
 	if err != nil {
 		return err
 	}

@@ -82,7 +82,7 @@ func TestGetUserInput(t *testing.T) {
 		cmd := &cobra.Command{}
 		args := []string{}
 
-		_, err := reader.getUserInput(cmd, args)
+		_, err := reader.read(cmd, args)
 		if err == nil {
 			t.Fatal("expected error when no input provided, got nil")
 		}
@@ -106,7 +106,7 @@ func TestGetUserInput(t *testing.T) {
 		cmd := &cobra.Command{}
 		args := []string{"What", "is", "Go?"}
 
-		actual, err := reader.getUserInput(cmd, args)
+		actual, err := reader.read(cmd, args)
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}
@@ -132,7 +132,7 @@ func TestGetUserInput(t *testing.T) {
 		cmd.SetIn(strings.NewReader("func main() {}\n"))
 		args := []string{}
 
-		actual, err := reader.getUserInput(cmd, args)
+		actual, err := reader.read(cmd, args)
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}
@@ -158,7 +158,7 @@ func TestGetUserInput(t *testing.T) {
 		cmd.SetIn(strings.NewReader("func main() {}\n"))
 		args := []string{"Explain", "this"}
 
-		actual, err := reader.getUserInput(cmd, args)
+		actual, err := reader.read(cmd, args)
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}
@@ -190,7 +190,7 @@ func TestGetUserInput(t *testing.T) {
 		cmd := &cobra.Command{}
 		args := []string{"test"}
 
-		_, err := reader.getUserInput(cmd, args)
+		_, err := reader.read(cmd, args)
 		if err == nil {
 			t.Fatal("expected error when stdin stat fails, got nil")
 		}
@@ -215,7 +215,7 @@ func TestGetUserInput(t *testing.T) {
 		cmd.SetIn(&errorReader{failAt: 2})
 		args := []string{}
 
-		_, err := reader.getUserInput(cmd, args)
+		_, err := reader.read(cmd, args)
 		if err == nil {
 			t.Fatal("expected error when reading piped input fails, got nil")
 		}
