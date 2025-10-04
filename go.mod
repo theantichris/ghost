@@ -7,6 +7,7 @@ require github.com/joho/godotenv v1.5.1
 require github.com/google/go-cmp v0.7.0
 
 require (
+	github.com/charmbracelet/bubbletea v1.3.10
 	github.com/charmbracelet/fang v0.4.3
 	github.com/charmbracelet/log v0.4.2
 	github.com/spf13/cobra v1.10.1
@@ -53,6 +54,9 @@ require (
 )
 
 require (
+	github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
+	github.com/mattn/go-localereader v0.0.1 // indirect
+	github.com/muesli/ansi v0.0.0-20230316100256-276c6243b2f6 // indirect
 	golang.org/x/sys v0.36.0 // indirect
 )
