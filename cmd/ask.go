@@ -1,9 +1,7 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
-	"io"
 
 	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
@@ -46,7 +44,8 @@ func (askCmd *askCmd) run(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("%w: %w", ErrLLM, err)
 	}
 
-	userInput, err := getUserInput(cmd, args, askCmd.logger)
+	inputReader := newInputReader(askCmd.logger)
+	userInput, err := inputReader.getUserInput(cmd, args)
 	if err != nil {
 		return err
 	}
@@ -55,16 +54,9 @@ func (askCmd *askCmd) run(cmd *cobra.Command, args []string) error {
 
 	askCmd.logger.Info("executing query", "queryLength", len(userInput))
 
-	return processQuery(ctx, llmClient, userInput, cmd.OutOrStdout(), askCmd.logger)
-}
-
-// processQuery sends a single query to the LLM and writes the response to the output.
-// It constructs a chat history with the system prompt and user query,
-// then strips any think blocks from the response before outputting.
-func processQuery(ctx context.Context, llmClient llm.LLMClient, query string, output io.Writer, logger *log.Logger) error {
 	chatHistory := []llm.ChatMessage{
 		{Role: llm.System, Content: systemPrompt},
-		{Role: llm.User, Content: query},
+		{Role: llm.User, Content: userInput},
 	}
 
 	response, err := llmClient.Chat(ctx, chatHistory)
@@ -72,17 +64,17 @@ func processQuery(ctx context.Context, llmClient llm.LLMClient, query string, ou
 		return fmt.Errorf("%w: %w", ErrLLM, err)
 	}
 
-	logger.Info("received response", "contentLength", len(response.Content))
+	askCmd.logger.Info("received response", "contentLength", len(response.Content))
 
 	message := stripThinkBlock(response.Content)
 
-	logger.Debug("stripped think blocks", "finalLength", len(message))
+	askCmd.logger.Debug("stripped think blocks", "finalLength", len(message))
 
-	if _, err = fmt.Fprintln(output, message); err != nil {
+	if _, err = fmt.Fprintln(cmd.OutOrStdout(), message); err != nil {
 		return fmt.Errorf("%w: %w", ErrIO, err)
 	}
 
-	logger.Info("query completed successfully")
+	askCmd.logger.Info("query completed successfully")
 
 	return nil
 }
