@@ -102,9 +102,6 @@ func (writer *outputWriter) write(token string) {
 	}
 }
 
-// TODO: Should I just create a constructor?
-// TODO: Check response token count.
-
 // reset clears all outputWriter state for reuse with a new LLM response.
 // This includes the buffer, state flags, and tokens pointer.
 func (writer *outputWriter) reset() {
