@@ -56,6 +56,7 @@ func (chatCmd *chatCmd) run(cmd *cobra.Command, args []string) error {
 	if err := llmClient.Chat(cmd.Context(), chatHistory, writer.write); err != nil {
 		return fmt.Errorf("%w: %w", ErrLLM, err)
 	}
+	writer.flush()
 
 	chatHistory = append(chatHistory, llm.ChatMessage{Role: llm.Assistant, Content: tokens})
 
@@ -93,6 +94,7 @@ func (chatCmd *chatCmd) run(cmd *cobra.Command, args []string) error {
 		if err := llmClient.Chat(cmd.Context(), chatHistory, writer.write); err != nil {
 			return fmt.Errorf("%w: %w", ErrLLM, err)
 		}
+		writer.flush()
 
 		chatHistory = append(chatHistory, llm.ChatMessage{Role: llm.Assistant, Content: tokens})
 

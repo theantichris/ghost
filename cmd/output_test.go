@@ -141,6 +141,109 @@ func TestOutputWriterReset(t *testing.T) {
 	})
 }
 
+func TestOutputWriterFlush(t *testing.T) {
+	t.Run("discards buffered content when think block never closed", func(t *testing.T) {
+		t.Parallel()
+
+		var actualOutput bytes.Buffer
+		var actualTokens string
+		logger := log.New(io.Discard)
+
+		writer := &outputWriter{
+			logger: logger,
+			output: &actualOutput,
+			tokens: &actualTokens,
+		}
+
+		writer.write("<think>")
+		writer.write("incomplete reasoning")
+
+		writer.flush()
+
+		expectedOutput := ""
+
+		if actualOutput.String() != expectedOutput {
+			t.Errorf("expected output %q, got %q", expectedOutput, actualOutput.String())
+		}
+
+		expectedTokens := "<think>incomplete reasoning"
+
+		if actualTokens != expectedTokens {
+			t.Errorf("expected tokens %q, got %q", expectedTokens, actualTokens)
+		}
+	})
+
+	t.Run("flushes partial tag when stream ends early", func(t *testing.T) {
+		t.Parallel()
+
+		var actualOutput bytes.Buffer
+		var actualTokens string
+		logger := log.New(io.Discard)
+
+		writer := &outputWriter{
+			logger: logger,
+			output: &actualOutput,
+			tokens: &actualTokens,
+		}
+
+		writer.write("<th")
+
+		writer.flush()
+
+		expectedOutput := "<th"
+
+		if actualOutput.String() != expectedOutput {
+			t.Errorf("expected output %q, got %q", expectedOutput, actualOutput.String())
+		}
+	})
+
+	t.Run("does nothing when in pass-through mode", func(t *testing.T) {
+		t.Parallel()
+
+		var actualOutput bytes.Buffer
+		var actualTokens string
+		logger := log.New(io.Discard)
+
+		writer := &outputWriter{
+			logger: logger,
+			output: &actualOutput,
+			tokens: &actualTokens,
+		}
+
+		writer.write("Normal text")
+
+		writer.flush()
+
+		expectedOutput := "Normal text"
+
+		if actualOutput.String() != expectedOutput {
+			t.Errorf("expected output %q, got %q", expectedOutput, actualOutput.String())
+		}
+	})
+
+	t.Run("does nothing when buffer is empty", func(t *testing.T) {
+		t.Parallel()
+
+		var actualOutput bytes.Buffer
+		var actualTokens string
+		logger := log.New(io.Discard)
+
+		writer := &outputWriter{
+			logger: logger,
+			output: &actualOutput,
+			tokens: &actualTokens,
+		}
+
+		writer.flush()
+
+		expectedOutput := ""
+
+		if actualOutput.String() != expectedOutput {
+			t.Errorf("expected output %q, got %q", expectedOutput, actualOutput.String())
+		}
+	})
+}
+
 func TestIsOpenTag(t *testing.T) {
 	t.Run("returns true for open tag", func(t *testing.T) {
 		t.Parallel()
