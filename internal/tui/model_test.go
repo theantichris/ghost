@@ -204,4 +204,21 @@ func TestView(t *testing.T) {
 			t.Errorf("expected view to contain input %q, got: %q", expectedInput, actualView)
 		}
 	})
+
+	t.Run("renders separator line", func(t *testing.T) {
+		t.Parallel()
+
+		model := Model{
+			width:  80,
+			height: 24,
+		}
+
+		actualView := model.View()
+
+		expectedSeparator := strings.Repeat("─", 80)
+
+		if !strings.Contains(actualView, expectedSeparator) {
+			t.Errorf("expected view to contain separator line of 80 characters, got %q", actualView)
+		}
+	})
 }

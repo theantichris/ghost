@@ -1,6 +1,8 @@
 package tui
 
 import (
+	"strings"
+
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/theantichris/ghost/internal/llm"
 )
@@ -61,5 +63,9 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (model Model) View() string {
-	return model.input
+	separator := strings.Repeat("─", model.width)
+
+	view := separator + "\n" + model.input
+
+	return view
 }
