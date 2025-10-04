@@ -57,21 +57,16 @@ func (askCmd *askCmd) run(cmd *cobra.Command, args []string) error {
 		{Role: llm.User, Content: userInput},
 	}
 
-	response, err := llmClient.Chat(cmd.Context(), chatHistory)
-	if err != nil {
-		return fmt.Errorf("%w: %w", ErrLLM, err)
+	var tokens string
+	outputWriter := &outputWriter{
+		logger: askCmd.logger,
+		output: cmd.OutOrStdout(),
+		tokens: &tokens,
 	}
 
-	askCmd.logger.Info("received response", "contentLength", len(response.Content))
-
-	// TODO: remove
-	message := stripThinkBlock(response.Content)
-
-	askCmd.logger.Debug("stripped think blocks", "finalLength", len(message))
-
-	var tokens string
-	output := outputWriter{logger: askCmd.logger, output: cmd.OutOrStdout(), tokens: &tokens}
-	output.write(message)
+	if err := llmClient.StreamChat(cmd.Context(), chatHistory, outputWriter.write); err != nil {
+		return fmt.Errorf("%w: %w", ErrLLM, err)
+	}
 
 	if _, err := fmt.Fprintln(cmd.OutOrStdout()); err != nil {
 		return fmt.Errorf("%w: %w", ErrIO, err)
