@@ -12,10 +12,10 @@ func TestInit(t *testing.T) {
 
 		model := Model{}
 
-		actualTeaCmd := model.Init()
+		actualCmd := model.Init()
 
-		if actualTeaCmd != nil {
-			t.Errorf("expected teaCmd to be nil, got %v", actualTeaCmd)
+		if actualCmd != nil {
+			t.Errorf("expected teaCmd to be nil, got %v", actualCmd)
 		}
 	})
 }
@@ -27,14 +27,52 @@ func TestUpdate(t *testing.T) {
 		model := Model{}
 		msg := tea.KeyMsg{}
 
-		actualTeaModel, actualTeaCmd := model.Update(msg)
+		returnedModel, actualCmd := model.Update(msg)
 
-		if actualTeaModel != nil {
-			t.Errorf("expected model to be nil, got %v", actualTeaModel)
+		actualModel, ok := returnedModel.(Model)
+		if !ok {
+			t.Fatal("expected model to be of type Model")
 		}
 
-		if actualTeaCmd != nil {
-			t.Errorf("expected teaCmd to be nil, got %v", actualTeaCmd)
+		if actualModel.width != 0 {
+			t.Errorf("expected model width to be 0, got %d", actualModel.width)
+		}
+
+		if actualModel.height != 0 {
+			t.Errorf("expected model heigiht to be 0, got %d", actualModel.height)
+		}
+
+		if actualCmd != nil {
+			t.Errorf("expected teaCmd to be nil, got %v", actualCmd)
+		}
+	})
+
+	t.Run("handles window size message", func(t *testing.T) {
+		t.Parallel()
+
+		model := Model{}
+		sizeMsg := tea.WindowSizeMsg{Width: 80, Height: 24}
+
+		returnedModel, actualCmd := model.Update(sizeMsg)
+
+		actualModel, ok := returnedModel.(Model)
+		if !ok {
+			t.Fatal("expected model to be of type Model")
+		}
+
+		expectedWidth := 80
+		expectedHeight := 24
+
+		if actualModel.width != expectedWidth {
+			t.Errorf("expected width %d, got %d", expectedWidth, actualModel.width)
+		}
+
+		if actualModel.height != expectedHeight {
+			t.Errorf("expected height %d, got %d", expectedHeight, actualModel.height)
+		}
+
+		if actualCmd != nil {
+			t.Errorf("expect teaCmd to be nil, got %v", actualCmd)
 		}
 	})
 }
