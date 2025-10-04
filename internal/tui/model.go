@@ -61,5 +61,5 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (model Model) View() string {
-	return ""
+	return model.input
 }

@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"strings"
 	"testing"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -186,15 +187,21 @@ func TestUpdate(t *testing.T) {
 }
 
 func TestView(t *testing.T) {
-	t.Run("returns the view string", func(t *testing.T) {
+	t.Run("renders input field", func(t *testing.T) {
 		t.Parallel()
 
-		model := Model{}
+		model := Model{
+			input:  "hello",
+			width:  80,
+			height: 24,
+		}
 
 		actualView := model.View()
 
-		if actualView != "" {
-			t.Errorf("expected view to be empty, got %q", actualView)
+		expectedInput := "hello"
+
+		if !strings.Contains(actualView, expectedInput) {
+			t.Errorf("expected view to contain input %q, got: %q", expectedInput, actualView)
 		}
 	})
 }
