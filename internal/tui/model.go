@@ -8,6 +8,16 @@ import (
 	"github.com/theantichris/ghost/internal/llm"
 )
 
+type streamingChunkMsg struct {
+	content string
+}
+
+type streamCompleteMsg struct{}
+
+type streamErrorMsg struct {
+	err error
+}
+
 type Model struct {
 	logger *log.Logger
 	// llmClient   *llm.LLMClient
@@ -20,12 +30,12 @@ type Model struct {
 	height   int      // Terminal height
 
 	// Streaming state
-	// streaming  bool   // True if currently receiving a stream
-	// currentMsg string // Current message being streamed
+	streaming  bool   // True if currently receiving a stream
+	currentMsg string // Current message being streamed
 
 	// Exit state
 	exiting bool
-	// err     error
+	err     error
 }
 
 func NewModel(systemPrompt string, logger *log.Logger) Model {
@@ -55,6 +65,7 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		model.width = msg.Width
 		model.height = msg.Height
+
 	case tea.KeyMsg:
 		switch msg.Type {
 		case tea.KeyRunes:
@@ -83,6 +94,26 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				model.input = ""
 			}
 		}
+
+	case streamingChunkMsg:
+		model.streaming = true
+		model.currentMsg += msg.content
+
+	case streamCompleteMsg:
+		model.streaming = false
+		model.messages = append(model.messages, model.currentMsg)
+
+		model.chatHistory = append(model.chatHistory, llm.ChatMessage{
+			Role:    llm.AssistantRole,
+			Content: model.currentMsg,
+		})
+
+		model.currentMsg = ""
+
+	case streamErrorMsg:
+		model.streaming = false
+		model.err = msg.err
+		model.currentMsg = ""
 	}
 
 	return model, nil

@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"errors"
 	"io"
 	"strings"
 	"testing"
@@ -291,6 +292,140 @@ func TestUpdate(t *testing.T) {
 
 		if actualModel.chatHistory[0].Content != expectedContent {
 			t.Errorf("expected message content %q, got %q", expectedContent, actualModel.chatHistory[0].Content)
+		}
+	})
+
+	t.Run("handles stream chunk message", func(t *testing.T) {
+		t.Parallel()
+
+		model := Model{}
+		msg := streamingChunkMsg{content: "Hello"}
+
+		returnedModel, _ := model.Update(msg)
+
+		actualModel, ok := returnedModel.(Model)
+		if !ok {
+			t.Fatal("expected model to be of type Model")
+		}
+
+		expectedCurrentMsg := "Hello"
+
+		if actualModel.currentMsg != "Hello" {
+			t.Errorf("expected current message to be %q, got %q", expectedCurrentMsg, actualModel.currentMsg)
+		}
+
+		if !actualModel.streaming {
+			t.Error("expected streaming to be true, got false")
+		}
+	})
+
+	t.Run("appends multiple stream chunks", func(t *testing.T) {
+		t.Parallel()
+
+		model := Model{currentMsg: "Hello", streaming: true}
+		msg := streamingChunkMsg{content: " world"}
+
+		returnedModel, _ := model.Update(msg)
+
+		actualModel, ok := returnedModel.(Model)
+		if !ok {
+			t.Fatal("expected model to be of type Model")
+		}
+
+		expectedCurrentMsg := "Hello world"
+
+		if actualModel.currentMsg != expectedCurrentMsg {
+			t.Errorf("expected current message to be %q, got %q", expectedCurrentMsg, actualModel.currentMsg)
+		}
+	})
+
+	t.Run("handles stream complete message", func(t *testing.T) {
+		t.Parallel()
+
+		model := Model{
+			currentMsg: "Hello, how can I help?",
+			streaming:  true,
+		}
+		msg := streamCompleteMsg{}
+
+		returnedModel, _ := model.Update(msg)
+
+		actualModel, ok := returnedModel.(Model)
+		if !ok {
+			t.Fatal("expected model to be of type Model")
+		}
+
+		if actualModel.streaming {
+			t.Error("expected streaming to be false, got true")
+		}
+
+		if actualModel.currentMsg != "" {
+			t.Errorf("expected currentMsg to be empty, got %q", actualModel.currentMsg)
+		}
+
+		expectedMessagesLength := 1
+
+		if len(actualModel.messages) != expectedMessagesLength {
+			t.Errorf("expected messages length %d, got %d", expectedMessagesLength, len(actualModel.messages))
+		}
+
+		expectedMessage := "Hello, how can I help?"
+		actualMessage := actualModel.messages[0]
+
+		if actualMessage != expectedMessage {
+			t.Errorf("expected message %q, got %q", expectedMessage, actualMessage)
+		}
+
+		expectedHistoryLength := 1
+		actualHistoryLength := len(actualModel.chatHistory)
+
+		if actualHistoryLength != expectedHistoryLength {
+			t.Errorf("expected history length %d, got %d", expectedHistoryLength, actualHistoryLength)
+		}
+
+		actualChatMessage := actualModel.chatHistory[0]
+
+		if actualChatMessage.Role != llm.AssistantRole {
+			t.Errorf("expected role to be %q, got %q", llm.AssistantRole, actualChatMessage.Role)
+		}
+
+		if actualChatMessage.Content != expectedMessage {
+			t.Errorf("expected chat message %q, got %q", expectedMessage, actualChatMessage.Content)
+		}
+	})
+
+	t.Run("handles stream error message", func(t *testing.T) {
+		t.Parallel()
+
+		testError := errors.New("connection failed")
+
+		model := Model{
+			currentMsg: "Hello",
+			streaming:  true,
+		}
+		msg := streamErrorMsg{err: testError}
+
+		returnedModel, _ := model.Update(msg)
+
+		actualModel, ok := returnedModel.(Model)
+		if !ok {
+			t.Fatal("expected model to be of type Model")
+		}
+
+		if actualModel.streaming {
+			t.Error("expected streaming to be false, got true")
+		}
+
+		if actualModel.err == nil {
+			t.Fatal("expected error to be set, got nil")
+		}
+
+		if !errors.Is(actualModel.err, testError) {
+			t.Errorf("expected error %v, got %v", testError, actualModel.err)
+		}
+
+		if actualModel.currentMsg != "" {
+			t.Errorf("expected currentMsg to be cleared, got %q", actualModel.currentMsg)
 		}
 	})
 }
