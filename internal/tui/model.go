@@ -43,6 +43,10 @@ func NewModel(systemPrompt string, logger *log.Logger) Model {
 }
 
 func (model Model) Init() tea.Cmd {
+	if len(model.chatHistory) > 0 {
+		return model.sendChatRequest
+	}
+
 	return nil
 }
 
@@ -91,4 +95,8 @@ func (model Model) View() string {
 	view := chatArea + "\n" + separator + "\n" + model.input
 
 	return view
+}
+
+func (model Model) sendChatRequest() tea.Msg {
+	return nil
 }

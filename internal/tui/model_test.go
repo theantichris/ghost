@@ -57,15 +57,20 @@ func TestNewModel(t *testing.T) {
 }
 
 func TestInit(t *testing.T) {
-	t.Run("initializes the model", func(t *testing.T) {
+	t.Run("returns command to send greeting", func(t *testing.T) {
 		t.Parallel()
 
-		model := Model{}
+		model := Model{
+			chatHistory: []llm.ChatMessage{
+				{Role: llm.SystemRole, Content: "test system prompt"},
+				{Role: llm.SystemRole, Content: "tes greeting prompt"},
+			},
+		}
 
 		actualCmd := model.Init()
 
-		if actualCmd != nil {
-			t.Errorf("expected teaCmd to be nil, got %v", actualCmd)
+		if actualCmd == nil {
+			t.Fatal("expected command to send greeting, got nil")
 		}
 	})
 }
