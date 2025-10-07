@@ -492,18 +492,39 @@ func TestView(t *testing.T) {
 }
 
 func TestSendChatRequest(t *testing.T) {
-	t.Run("sends chat request and returns stream messages", func(t *testing.T) {
+	t.Run("returns stream complete message after successful chat", func(t *testing.T) {
 		t.Parallel()
 
-		tokens := []string{"Hello", " world"}
-		mockClient := &llm.MockLLMClient{
+		mockClient := llm.MockLLMClient{
 			ChatFunc: func(ctx context.Context, messages []llm.ChatMessage, onToken func(string)) error {
-				for _, token := range tokens {
-					onToken(token)
-				}
+				onToken("Hello")
+				onToken(" world")
 
 				return nil
 			},
+		}
+
+		model := Model{
+			llmClient: &mockClient,
+			chatHistory: []llm.ChatMessage{
+				{Role: llm.SystemRole, Content: "test"},
+			},
+		}
+
+		msg := model.sendChatRequest()
+
+		_, ok := msg.(streamCompleteMsg)
+		if !ok {
+			t.Errorf("expected streamCompleteMsg, got %T", msg)
+		}
+	})
+
+	t.Run("returns stream error message on chat error", func(t *testing.T) {
+		t.Parallel()
+
+		testError := errors.New("connection failed")
+		mockClient := &llm.MockLLMClient{
+			Error: testError,
 		}
 
 		model := Model{
@@ -515,8 +536,13 @@ func TestSendChatRequest(t *testing.T) {
 
 		msg := model.sendChatRequest()
 
-		if msg == nil {
-			t.Fatal("expected message to be returned, not nil")
+		errMsg, ok := msg.(streamErrorMsg)
+		if !ok {
+			t.Fatalf("expected streamErrorMsg, got %T", msg)
+		}
+
+		if !errors.Is(errMsg.err, testError) {
+			t.Errorf("expected error %v, got %v", testError, errMsg.err)
 		}
 	})
 }
