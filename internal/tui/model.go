@@ -105,7 +105,7 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case streamCompleteMsg:
 		model.streaming = false
-		model.messages = append(model.messages, model.currentMsg)
+		model.messages = append(model.messages, msg.content)
 
 		model.chatHistory = append(model.chatHistory, llm.ChatMessage{
 			Role:    llm.AssistantRole,

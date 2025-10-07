@@ -347,7 +347,7 @@ func TestUpdate(t *testing.T) {
 			currentMsg: "Hello, how can I help?",
 			streaming:  true,
 		}
-		msg := streamCompleteMsg{}
+		msg := streamCompleteMsg{"Hello, how can I help?"}
 
 		returnedModel, _ := model.Update(msg)
 
