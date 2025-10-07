@@ -1,6 +1,8 @@
 package tui
 
 import (
+	"context"
+	"fmt"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -19,8 +21,8 @@ type streamErrorMsg struct {
 }
 
 type Model struct {
-	logger *log.Logger
-	// llmClient   *llm.LLMClient
+	logger      *log.Logger
+	llmClient   llm.LLMClient
 	chatHistory []llm.ChatMessage
 
 	// UI state
@@ -129,5 +131,16 @@ func (model Model) View() string {
 }
 
 func (model Model) sendChatRequest() tea.Msg {
-	return nil
+	if model.llmClient == nil {
+		return streamErrorMsg{err: ErrLLMClientInit}
+	}
+
+	// TODO: use existing context
+	err := model.llmClient.Chat(context.Background(), model.chatHistory, func(token string) {})
+
+	if err != nil {
+		return streamErrorMsg{err: fmt.Errorf("%w: %w", ErrLLMRequest, err)}
+	}
+
+	return streamCompleteMsg{}
 }

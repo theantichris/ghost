@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"context"
 	"errors"
 	"io"
 	"strings"
@@ -486,6 +487,36 @@ func TestView(t *testing.T) {
 
 		if !strings.Contains(actualView, expectedMessage2) {
 			t.Errorf("expected view to contain %q, got %q", expectedMessage2, actualView)
+		}
+	})
+}
+
+func TestSendChatRequest(t *testing.T) {
+	t.Run("sends chat request and returns stream messages", func(t *testing.T) {
+		t.Parallel()
+
+		tokens := []string{"Hello", " world"}
+		mockClient := &llm.MockLLMClient{
+			ChatFunc: func(ctx context.Context, messages []llm.ChatMessage, onToken func(string)) error {
+				for _, token := range tokens {
+					onToken(token)
+				}
+
+				return nil
+			},
+		}
+
+		model := Model{
+			llmClient: mockClient,
+			chatHistory: []llm.ChatMessage{
+				{Role: llm.SystemRole, Content: "test"},
+			},
+		}
+
+		msg := model.sendChatRequest()
+
+		if msg == nil {
+			t.Fatal("expected message to be returned, not nil")
 		}
 	})
 }
