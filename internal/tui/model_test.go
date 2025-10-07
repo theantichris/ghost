@@ -64,7 +64,7 @@ func TestInit(t *testing.T) {
 		model := Model{
 			chatHistory: []llm.ChatMessage{
 				{Role: llm.SystemRole, Content: "test system prompt"},
-				{Role: llm.SystemRole, Content: "tes greeting prompt"},
+				{Role: llm.SystemRole, Content: "test greeting prompt"},
 			},
 		}
 
