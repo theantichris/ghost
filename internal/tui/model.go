@@ -109,7 +109,7 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		model.chatHistory = append(model.chatHistory, llm.ChatMessage{
 			Role:    llm.AssistantRole,
-			Content: model.currentMsg,
+			Content: msg.content,
 		})
 
 		model.currentMsg = ""
