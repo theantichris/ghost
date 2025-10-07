@@ -14,7 +14,9 @@ type streamingChunkMsg struct {
 	content string
 }
 
-type streamCompleteMsg struct{}
+type streamCompleteMsg struct {
+	content string
+}
 
 type streamErrorMsg struct {
 	err error
@@ -135,12 +137,17 @@ func (model Model) sendChatRequest() tea.Msg {
 		return streamErrorMsg{err: ErrLLMClientInit}
 	}
 
+	var content strings.Builder
 	// TODO: use existing context
-	err := model.llmClient.Chat(context.Background(), model.chatHistory, func(token string) {})
+	err := model.llmClient.Chat(context.Background(), model.chatHistory, func(token string) {
+		content.WriteString(token)
+	})
 
 	if err != nil {
 		return streamErrorMsg{err: fmt.Errorf("%w: %w", ErrLLMRequest, err)}
 	}
 
-	return streamCompleteMsg{}
+	completeMsg := streamCompleteMsg{content: content.String()}
+
+	return completeMsg
 }

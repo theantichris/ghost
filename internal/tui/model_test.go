@@ -545,4 +545,38 @@ func TestSendChatRequest(t *testing.T) {
 			t.Errorf("expected error %v, got %v", testError, errMsg.err)
 		}
 	})
+
+	t.Run("accumulates tokens and returns complete message with content", func(t *testing.T) {
+		t.Parallel()
+
+		mockClient := &llm.MockLLMClient{
+			ChatFunc: func(ctx context.Context, messages []llm.ChatMessage, onToken func(string)) error {
+				onToken("Hello")
+				onToken(" ")
+				onToken("world")
+
+				return nil
+			},
+		}
+
+		model := Model{
+			llmClient: mockClient,
+			chatHistory: []llm.ChatMessage{
+				{Role: llm.SystemRole, Content: "test"},
+			},
+		}
+
+		msg := model.sendChatRequest()
+
+		completeMsg, ok := msg.(streamCompleteMsg)
+		if !ok {
+			t.Fatalf("expected streamCompleteMsg, got %T", msg)
+		}
+
+		expectedContent := "Hello world"
+
+		if completeMsg.content != expectedContent {
+			t.Errorf("expected content %q, got %q", expectedContent, completeMsg.content)
+		}
+	})
 }
