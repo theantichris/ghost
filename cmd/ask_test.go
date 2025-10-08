@@ -151,7 +151,7 @@ func TestAskCmdRun(t *testing.T) {
 		}
 
 		if !errors.Is(err, stdio.ErrIO) {
-			t.Errorf("expected error to wrap ErrInput, got %v", err)
+			t.Errorf("expected error to wrap %v, got %v", stdio.ErrIO, err)
 		}
 	})
 
