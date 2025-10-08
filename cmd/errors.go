@@ -12,5 +12,6 @@ var (
 	// ErrLLM indicates an LLM client initialization or request processing failure.
 	ErrLLM = errors.New("failed to process LLM request")
 
+	// ErrHomeDir indicates a failure to retrieve the user's home directory path.
 	ErrHomeDir = errors.New("failed to get home directory")
 )

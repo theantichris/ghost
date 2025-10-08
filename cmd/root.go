@@ -1,3 +1,6 @@
+// Package cmd provides the command-line interface for Ghost, including
+// the root command configuration, subcommands (ask, chat), and shared
+// functionality like LLM client initialization.
 package cmd
 
 import (

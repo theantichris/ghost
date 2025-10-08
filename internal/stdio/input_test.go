@@ -12,8 +12,8 @@ import (
 
 // errorReader simulates read errors for testing purposes.
 type errorReader struct {
-	failAt int
-	calls  int
+	failAt int // Number of calls before simulating an error
+	calls  int // Current number of Read calls
 }
 
 // Read simulates read operations with configurable failure points for errorReader.

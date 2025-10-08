@@ -18,13 +18,13 @@ const (
 // It accumulates all tokens while stripping <think>...</think> blocks from
 // the output stream. State must be reset between LLM calls using reset().
 type OutputWriter struct {
-	Logger           *log.Logger
-	Output           io.Writer
-	Tokens           *string
-	buffer           strings.Builder
-	insideThinkBlock bool
-	canPassThrough   bool
-	newlinesTrimmed  bool
+	Logger           *log.Logger     // Logger for structured logging of stream processing
+	Output           io.Writer       // Output destination for filtered content (without think blocks)
+	Tokens           *string         // Accumulator for all tokens including think blocks
+	buffer           strings.Builder // Internal buffer for stream parsing
+	insideThinkBlock bool            // Tracks whether currently inside a think block
+	canPassThrough   bool            // Enables direct write mode after think block detection
+	newlinesTrimmed  bool            // Tracks whether leading whitespace has been trimmed
 }
 
 // Write processes a single token from the LLM stream, accumulating it while

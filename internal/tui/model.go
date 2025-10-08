@@ -1,3 +1,6 @@
+// Package tui implements the terminal user interface for Ghost's interactive
+// chat mode using the BubbleTea framework. It handles user input, message
+// display, viewport management, and LLM streaming integration.
 package tui
 
 import (

@@ -57,7 +57,7 @@ The `cmd/` package is organized by responsibility rather than having
  monolithic command files:
 
 - **`ask.go`** - Ask command with LLM client dependency injection
-- **`chat.go`** - Interactive chat command with conversation loop and history management
+- **`chat.go`** - Interactive chat command with TUI interface and history management
 - **`root.go`** - Root command setup, configuration initialization, and logging setup
 - **`llm.go`** - LLM client initialization and shared constants (e.g., `systemPrompt`)
 - **`errors.go`** - Centralized sentinel error definitions for the cmd package
@@ -69,7 +69,15 @@ Standard input/output handling utilities used by command implementations:
 - **`input.go`** - Input handling utilities (`InputReader`, piped input
   detection, user input scanning)
 - **`output.go`** - Output stream processing with think block filtering (`OutputWriter`)
-- **`errors.go`** - I/O-specific sentinel errors (`ErrIO`, `ErrInput`, `ErrInputEmpty`)
+- **`errors.go`** - I/O-specific sentinel errors (`ErrIO`, `ErrInputEmpty`)
+
+### `internal/tui/` Package Structure
+
+Terminal user interface implementation for interactive chat:
+
+- **`model.go`** - BubbleTea model implementation with message handling and LLM integration
+- **`run.go`** - TUI program entry point
+- **`errors.go`** - TUI-specific sentinel errors (`ErrLLMClientInit`, `ErrLLMRequest`)
 
 ### When to Create New Files
 

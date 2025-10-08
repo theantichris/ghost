@@ -101,6 +101,7 @@ ghost chat
 
 - `--ollama` — Override the Ollama API base URL.
 - `--model` — Override the default LLM model
+- `--timeout` — Override the HTTP timeout for LLM requests (e.g., `5m`, `30s`)
 - `--config` — Specify config file location (default: `$HOME/.config/ghost/config.toml`)
 
 ### Environment Variables
@@ -125,12 +126,14 @@ Create a `config.toml` file in `~/.config/ghost/` to set default configuration:
 # ~/.config/ghost/config.toml
 ollama = "http://localhost:11434"
 model = "llama3.1"
+timeout = "5m"  # Optional: custom timeout for LLM requests
 ```
 
 Configuration options:
 
 - `ollama` — Ollama API base URL (default: `http://localhost:11434`)
 - `model` — LLM model to use (default: `llama3.1`)
+- `timeout` — HTTP client timeout for LLM requests (default: `2m`)
 
 ## Features
 

@@ -34,7 +34,7 @@ generating images, executing tasks, setting up reminders, and chatting.
     on the `/bye` or `/exit` commands (or EOF/Ctrl+D).
   - Streaming responses implemented with real-time token output and think
     block filtering for thinking models.
-  - Implemented via the `chat` command (`cmd/chat.go`) with interactive loop.
+  - Implemented via the `chat` command (`cmd/chat.go`) with BubbleTea TUI interface.
 - **Output Handler**: Streaming token processor with think block filtering
   - `OutputWriter` struct in `internal/stdio/output.go` manages streaming output
   - State machine tracks think block boundaries (`<think>...</think>`)

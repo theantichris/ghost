@@ -1,3 +1,6 @@
+// Package stdio provides utilities for handling standard input/output operations,
+// including piped input detection, output filtering, and think block processing
+// for LLM streaming responses.
 package stdio
 
 import (
@@ -27,6 +30,7 @@ func NewInputReader(logger *log.Logger) *InputReader {
 	return &inputReader
 }
 
+// isPiped checks if stdin is piped by examining the file mode of os.Stdin.
 func isPiped() (bool, error) {
 	stat, err := os.Stdin.Stat()
 	if err != nil {

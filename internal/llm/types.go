@@ -36,7 +36,7 @@ type ChatResponse struct {
 	Done    bool        `json:"done,omitempty"` // True if response is the last in the stream
 }
 
-// apiError represents an error response from the Ollama API.
+// apiError represents an error response from the Ollama API with error details.
 type apiError struct {
 	Error string `json:"error"`
 }
