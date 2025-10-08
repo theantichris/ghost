@@ -20,18 +20,20 @@ type InputReader struct {
 // NewInputReader creates an InputReader with the default stdin detector.
 func NewInputReader(logger *log.Logger) *InputReader {
 	inputReader := InputReader{
-		logger: logger,
-		stdinDetector: func() (bool, error) {
-			stat, err := os.Stdin.Stat()
-			if err != nil {
-				return false, err
-			}
-
-			return (stat.Mode() & os.ModeCharDevice) == 0, nil
-		},
+		logger:        logger,
+		stdinDetector: isPiped,
 	}
 
 	return &inputReader
+}
+
+func isPiped() (bool, error) {
+	stat, err := os.Stdin.Stat()
+	if err != nil {
+		return false, err
+	}
+
+	return (stat.Mode() & os.ModeCharDevice) == 0, nil
 }
 
 // Read retrieves user input from either piped stdin or command-line arguments,
