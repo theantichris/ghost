@@ -138,6 +138,9 @@ func initLogger(logger *log.Logger) error {
 		return fmt.Errorf("%w: failed to open log file: %w", ErrLogging, err)
 	}
 
+	// logFile is intentionally not closed here as the logger needs to write to
+	// it for the program's lifecycle. The file will be closed by the OS when the
+	// program exits.
 	logger.SetOutput(logFile)
 
 	logger.SetLevel(log.DebugLevel)
