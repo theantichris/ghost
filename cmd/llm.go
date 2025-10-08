@@ -31,7 +31,7 @@ func initializeLLMClient(logger *log.Logger) (llm.LLMClient, error) {
 
 	logger.Info("creating Ollama client", "baseURL", ollamaBaseURL, "model", model, "timeout", timeout)
 
-	httpClient := &http.Client{Timeout: timeout}
+	httpClient := &http.Client{}
 
 	llmClient, err := llm.NewOllamaClient(ollamaBaseURL, model, httpClient, logger)
 	if err != nil {

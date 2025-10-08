@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
@@ -200,9 +201,11 @@ func (model Model) sendChatRequest() tea.Msg {
 		return streamErrorMsg{err: ErrLLMClientInit}
 	}
 
+	ctx, cancel := context.WithTimeout(model.ctx, 2*time.Minute)
+	defer cancel()
+
 	var content strings.Builder
-	// TODO: use existing context
-	err := model.llmClient.Chat(model.ctx, model.chatHistory, func(token string) {
+	err := model.llmClient.Chat(ctx, model.chatHistory, func(token string) {
 		content.WriteString(token)
 	})
 

@@ -69,6 +69,7 @@ func TestInit(t *testing.T) {
 		t.Parallel()
 
 		model := Model{
+			ctx: context.Background(),
 			chatHistory: []llm.ChatMessage{
 				{Role: llm.SystemRole, Content: "test system prompt"},
 				{Role: llm.SystemRole, Content: "test greeting prompt"},
@@ -87,7 +88,7 @@ func TestUpdate(t *testing.T) {
 	t.Run("handles window size message", func(t *testing.T) {
 		t.Parallel()
 
-		model := Model{}
+		model := Model{ctx: context.Background()}
 		sizeMsg := tea.WindowSizeMsg{Width: 80, Height: 24}
 
 		returnedModel, _ := model.Update(sizeMsg)
@@ -112,7 +113,7 @@ func TestUpdate(t *testing.T) {
 	t.Run("handles regular key press", func(t *testing.T) {
 		t.Parallel()
 
-		model := Model{}
+		model := Model{ctx: context.Background()}
 		keyMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'h'}}
 
 		returnedModel, _ := model.Update(keyMsg)
@@ -132,7 +133,7 @@ func TestUpdate(t *testing.T) {
 	t.Run("handles space key press", func(t *testing.T) {
 		t.Parallel()
 
-		model := Model{input: "hello"}
+		model := Model{ctx: context.Background(), input: "hello"}
 		keyMsg := tea.KeyMsg{Type: tea.KeySpace}
 
 		returnedModel, _ := model.Update(keyMsg)
@@ -152,7 +153,7 @@ func TestUpdate(t *testing.T) {
 	t.Run("handles backspace key", func(t *testing.T) {
 		t.Parallel()
 
-		model := Model{input: "hello"}
+		model := Model{ctx: context.Background(), input: "hello"}
 		keyMsg := tea.KeyMsg{Type: tea.KeyBackspace}
 
 		returnedModel, _ := model.Update(keyMsg)
@@ -172,7 +173,7 @@ func TestUpdate(t *testing.T) {
 	t.Run("handles ctrl+d to exit", func(t *testing.T) {
 		t.Parallel()
 
-		model := Model{}
+		model := Model{ctx: context.Background()}
 		keyMsg := tea.KeyMsg{Type: tea.KeyCtrlD}
 
 		returnedModel, actualCmd := model.Update(keyMsg)
@@ -195,7 +196,7 @@ func TestUpdate(t *testing.T) {
 	t.Run("handles ctrl+c to exit", func(t *testing.T) {
 		t.Parallel()
 
-		model := Model{}
+		model := Model{ctx: context.Background()}
 		keyMsg := tea.KeyMsg{Type: tea.KeyCtrlC}
 
 		returnedModel, actualCmd := model.Update(keyMsg)
@@ -218,7 +219,7 @@ func TestUpdate(t *testing.T) {
 	t.Run("enter key clears input", func(t *testing.T) {
 		t.Parallel()
 
-		model := Model{input: "hello"}
+		model := Model{ctx: context.Background(), input: "hello"}
 		keyMsg := tea.KeyMsg{Type: tea.KeyEnter}
 
 		returnedModel, _ := model.Update(keyMsg)
@@ -238,7 +239,7 @@ func TestUpdate(t *testing.T) {
 	t.Run("enter key adds message to chat history", func(t *testing.T) {
 		t.Parallel()
 
-		model := Model{input: "hello"}
+		model := Model{ctx: context.Background(), input: "hello"}
 		keyMsg := tea.KeyMsg{Type: tea.KeyEnter}
 
 		returnedModel, _ := model.Update(keyMsg)
@@ -269,7 +270,7 @@ func TestUpdate(t *testing.T) {
 	t.Run("enter key adds user message to display messages", func(t *testing.T) {
 		t.Parallel()
 
-		model := Model{input: "hello"}
+		model := Model{ctx: context.Background(), input: "hello"}
 		keyMsg := tea.KeyMsg{Type: tea.KeyEnter}
 
 		returnedModel, _ := model.Update(keyMsg)
@@ -306,6 +307,7 @@ func TestUpdate(t *testing.T) {
 		}
 
 		model := Model{
+			ctx:       context.Background(),
 			input:     "hello",
 			llmClient: mockClient,
 		}
@@ -349,7 +351,7 @@ func TestUpdate(t *testing.T) {
 	t.Run("/exit command quits chat", func(t *testing.T) {
 		t.Parallel()
 
-		model := Model{input: "/exit"}
+		model := Model{ctx: context.Background(), input: "/exit"}
 		keyMsg := tea.KeyMsg{Type: tea.KeyEnter}
 
 		returnedModel, _ := model.Update(keyMsg)
@@ -377,7 +379,7 @@ func TestUpdate(t *testing.T) {
 	t.Run("handles stream chunk message", func(t *testing.T) {
 		t.Parallel()
 
-		model := Model{}
+		model := Model{ctx: context.Background()}
 		msg := streamingChunkMsg{content: "Hello"}
 
 		returnedModel, _ := model.Update(msg)
@@ -401,7 +403,7 @@ func TestUpdate(t *testing.T) {
 	t.Run("appends multiple stream chunks", func(t *testing.T) {
 		t.Parallel()
 
-		model := Model{currentMsg: "Hello", streaming: true}
+		model := Model{ctx: context.Background(), currentMsg: "Hello", streaming: true}
 		msg := streamingChunkMsg{content: " world"}
 
 		returnedModel, _ := model.Update(msg)
@@ -422,6 +424,7 @@ func TestUpdate(t *testing.T) {
 		t.Parallel()
 
 		model := Model{
+			ctx:        context.Background(),
 			currentMsg: "Hello, how can I help?",
 			streaming:  true,
 		}
@@ -479,6 +482,7 @@ func TestUpdate(t *testing.T) {
 		testError := errors.New("connection failed")
 
 		model := Model{
+			ctx:        context.Background(),
 			currentMsg: "Hello",
 			streaming:  true,
 		}
@@ -514,6 +518,7 @@ func TestView(t *testing.T) {
 		t.Parallel()
 
 		model := Model{
+			ctx:    context.Background(),
 			input:  "hello",
 			width:  80,
 			height: 24,
@@ -553,6 +558,7 @@ func TestView(t *testing.T) {
 		viewport.SetContent(strings.Join(messages, "\n"))
 
 		model := Model{
+			ctx:      context.Background(),
 			viewport: viewport,
 			width:    80,
 			height:   24,
@@ -587,6 +593,7 @@ func TestSendChatRequest(t *testing.T) {
 		}
 
 		model := Model{
+			ctx:       context.Background(),
 			llmClient: &mockClient,
 			chatHistory: []llm.ChatMessage{
 				{Role: llm.SystemRole, Content: "test"},
@@ -610,6 +617,7 @@ func TestSendChatRequest(t *testing.T) {
 		}
 
 		model := Model{
+			ctx:       context.Background(),
 			llmClient: mockClient,
 			chatHistory: []llm.ChatMessage{
 				{Role: llm.SystemRole, Content: "test"},
@@ -642,6 +650,7 @@ func TestSendChatRequest(t *testing.T) {
 		}
 
 		model := Model{
+			ctx:       context.Background(),
 			llmClient: mockClient,
 			chatHistory: []llm.ChatMessage{
 				{Role: llm.SystemRole, Content: "test"},

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/charmbracelet/log"
 	"github.com/joho/godotenv"
@@ -31,6 +32,12 @@ func NewRootCmd(logger *log.Logger) *cobra.Command {
 
 			logger.Debug("bound persistent flag", "flag", "model", "value", viper.GetString("model"))
 
+			if err := viper.BindPFlag("timeout", cmd.PersistentFlags().Lookup("timeout")); err != nil {
+				return fmt.Errorf("%w: %w", ErrConfig, err)
+			}
+
+			logger.Debug("bound persistent flag", "flag", "timeout", "value", viper.GetString("timeout"))
+
 			return nil
 		},
 	}
@@ -38,6 +45,7 @@ func NewRootCmd(logger *log.Logger) *cobra.Command {
 	cmd.PersistentFlags().String("config", "", "config file (default is $HOME/.config/ghost/config.toml)")
 	cmd.PersistentFlags().String("model", "", "LLM model to use")
 	cmd.PersistentFlags().String("ollama", "", "Ollama API base URL")
+	cmd.PersistentFlags().Duration("timeout", 2*time.Minute, "HTTP client timeout for LLM requests")
 
 	cmd.AddCommand(NewAskCmd(logger))
 	cmd.AddCommand(NewChatCmd(logger))

@@ -10,7 +10,6 @@ import (
 	"io"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/charmbracelet/log"
 )
@@ -56,12 +55,10 @@ func (ollama *OllamaClient) Chat(ctx context.Context, chatHistory []ChatMessage,
 		return err
 	}
 
-	request, cancel, err := ollama.createHTTPRequest(ctx, requestBody)
+	request, err := ollama.createHTTPRequest(ctx, requestBody)
 	if err != nil {
 		return err
 	}
-
-	defer cancel()
 
 	ollama.logger.Info("sending chat request to Ollama API", "url", ollama.baseURL+"/api/chat", "method", http.MethodPost, "queryLength", len(string(requestBody)))
 
@@ -139,19 +136,15 @@ func (ollama *OllamaClient) preparePayload(chatHistory []ChatMessage, stream boo
 }
 
 // createHTTPRequest creates an HTTP POST request with timeout and headers for the Ollama chat endpoint.
-func (ollama *OllamaClient) createHTTPRequest(ctx context.Context, requestBody []byte) (*http.Request, context.CancelFunc, error) {
-	requestCTX, cancel := context.WithTimeout(ctx, 2*time.Minute)
-
-	clientRequest, err := http.NewRequestWithContext(requestCTX, http.MethodPost, ollama.baseURL+"/api/chat", bytes.NewReader(requestBody))
+func (ollama *OllamaClient) createHTTPRequest(ctx context.Context, requestBody []byte) (*http.Request, error) {
+	clientRequest, err := http.NewRequestWithContext(ctx, http.MethodPost, ollama.baseURL+"/api/chat", bytes.NewReader(requestBody))
 	if err != nil {
-		cancel()
-
-		return nil, nil, fmt.Errorf("%w: %w", ErrRequest, err)
+		return nil, fmt.Errorf("%w: %w", ErrRequest, err)
 	}
 
 	clientRequest.Header.Set("Content-Type", "application/json")
 
-	return clientRequest, cancel, nil
+	return clientRequest, nil
 }
 
 // checkForHTTPError validates the HTTP response status code and returns an error for non-2xx responses.
