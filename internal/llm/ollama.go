@@ -79,8 +79,9 @@ func (ollama *OllamaClient) Chat(ctx context.Context, chatHistory []ChatMessage,
 	}()
 
 	scanner := bufio.NewScanner(response.Body)
-	const maxTokenBytes = 1024 * 1024
-	buffer := make([]byte, 0, 64+1024)
+	const maxTokenBytes = 1024 * 1024   // 1MB maximum token size
+	const initialBufferSize = 64 + 1024 // 64 bytes + 1KB initial capacity
+	buffer := make([]byte, 0, initialBufferSize)
 	scanner.Buffer(buffer, maxTokenBytes)
 
 	for scanner.Scan() {

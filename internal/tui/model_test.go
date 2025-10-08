@@ -14,6 +14,11 @@ import (
 	"github.com/theantichris/ghost/internal/llm"
 )
 
+const (
+	testTerminalWidth  = 80 // Standard terminal width for tests
+	testTerminalHeight = 24 // Standard terminal height for tests
+)
+
 func TestNewModel(t *testing.T) {
 	t.Run("creates a new model with dependencies and system prompt", func(t *testing.T) {
 		t.Parallel()
@@ -89,7 +94,7 @@ func TestUpdate(t *testing.T) {
 		t.Parallel()
 
 		model := Model{ctx: context.Background()}
-		sizeMsg := tea.WindowSizeMsg{Width: 80, Height: 24}
+		sizeMsg := tea.WindowSizeMsg{Width: testTerminalWidth, Height: testTerminalHeight}
 
 		returnedModel, _ := model.Update(sizeMsg)
 
@@ -98,8 +103,8 @@ func TestUpdate(t *testing.T) {
 			t.Fatal("expected model to be of type Model")
 		}
 
-		expectedWidth := 80
-		expectedHeight := 24
+		expectedWidth := testTerminalWidth
+		expectedHeight := testTerminalHeight
 
 		if actualModel.width != expectedWidth {
 			t.Errorf("expected width %d, got %d", expectedWidth, actualModel.width)
@@ -520,8 +525,8 @@ func TestView(t *testing.T) {
 		model := Model{
 			ctx:    context.Background(),
 			input:  "hello",
-			width:  80,
-			height: 24,
+			width:  testTerminalWidth,
+			height: testTerminalHeight,
 		}
 
 		actualView := model.View()
@@ -537,8 +542,8 @@ func TestView(t *testing.T) {
 		t.Parallel()
 
 		model := Model{
-			width:  80,
-			height: 24,
+			width:  testTerminalWidth,
+			height: testTerminalHeight,
 		}
 
 		actualView := model.View()
