@@ -79,11 +79,14 @@ func initConfig(logger *log.Logger) {
 		viper.SetConfigFile(config)
 	} else {
 		home, err := os.UserHomeDir()
-		cobra.CheckErr(err)
-
-		viper.AddConfigPath(filepath.Join(home, ".config", "ghost"))
-		viper.SetConfigName("config")
-		viper.SetConfigType("toml")
+		if err != nil {
+			logger.Error(ErrHomeDir.Error(), "error", err)
+			logger.Debug("skipping home directory config path")
+		} else {
+			viper.AddConfigPath(filepath.Join(home, ".config", "ghost"))
+			viper.SetConfigName("config")
+			viper.SetConfigType("toml")
+		}
 	}
 
 	viper.AutomaticEnv()
