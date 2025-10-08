@@ -388,7 +388,7 @@ func TestUpdate(t *testing.T) {
 
 		expectedCurrentMsg := "Hello"
 
-		if actualModel.currentMsg != "Hello" {
+		if actualModel.currentMsg != expectedCurrentMsg {
 			t.Errorf("expected current message to be %q, got %q", expectedCurrentMsg, actualModel.currentMsg)
 		}
 
