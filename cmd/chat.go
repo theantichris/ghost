@@ -36,6 +36,7 @@ func NewChatCmd(logger *log.Logger) *cobra.Command {
 	return cmd
 }
 
+// run initializes the LLM client and launches the interactive TUI chat interface.
 func (chatCmd *chatCmd) run(cmd *cobra.Command, args []string) error {
 	if chatCmd.llmClient == nil {
 		llmClient, err := initializeLLMClient(chatCmd.logger)

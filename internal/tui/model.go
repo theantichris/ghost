@@ -12,18 +12,23 @@ import (
 	"github.com/theantichris/ghost/internal/llm"
 )
 
+// streamingChunkMsg carries a single token from the LLM stream.
 type streamingChunkMsg struct {
 	content string
 }
 
+// streamCompleteMsg signals that streaming is complete and carries the full accumulated response.
 type streamCompleteMsg struct {
 	content string
 }
 
+// streamErrorMsg carries error information when an LLM request fails.
 type streamErrorMsg struct {
 	err error
 }
 
+// Model represents the TUI application state for the chat interface.
+// It implements the BubbleTea Model interface (Init, Update, View).
 type Model struct {
 	logger      *log.Logger
 	llmClient   llm.LLMClient
@@ -45,6 +50,9 @@ type Model struct {
 	err     error
 }
 
+// NewModel creates a new TUI model initialized with the provided dependencies.
+// The model is pre-configured with a system prompt and greeting instruction
+// that will be sent to the LLM on initialization.
 func NewModel(llmClient llm.LLMClient, systemPrompt string, logger *log.Logger) Model {
 	chatHistory := []llm.ChatMessage{
 		{Role: llm.SystemRole, Content: systemPrompt},
@@ -63,6 +71,8 @@ func NewModel(llmClient llm.LLMClient, systemPrompt string, logger *log.Logger) 
 	return model
 }
 
+// Init initializes the TUI and returns a command to send the initial greeting.
+// This is called once when the BubbleTea program starts.
 func (model Model) Init() tea.Cmd {
 	if len(model.chatHistory) > 0 {
 		return model.sendChatRequest
@@ -71,6 +81,9 @@ func (model Model) Init() tea.Cmd {
 	return nil
 }
 
+// Update handles all incoming messages and updates the model state accordingly.
+// It processes terminal events (window resize, key presses) and custom messages
+// (streaming chunks, completion, errors) from LLM requests.
 func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
@@ -79,10 +92,8 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		// TODO: Update tests.
 
-		viewportHeight := msg.Height - 3
-		if viewportHeight < 1 {
-			viewportHeight = 1
-		}
+		// Save 3 lines for spacing, divider, and user input.
+		viewportHeight := max(msg.Height-3, 1)
 
 		model.viewport.Width = msg.Width
 		model.viewport.Height = viewportHeight
@@ -156,6 +167,7 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return model, nil
 }
 
+// View renders the TUI layout with the chat viewport, separator, and input field.
 func (model Model) View() string {
 	separator := strings.Repeat("─", model.width)
 
@@ -164,6 +176,7 @@ func (model Model) View() string {
 	return view
 }
 
+// wordwrap wraps all messages to fit the terminal width using lipgloss.
 func (model Model) wordwrap() string {
 	var wrapped []string
 
@@ -177,6 +190,8 @@ func (model Model) wordwrap() string {
 	return messages
 }
 
+// sendChatRequest sends the current chat history to the LLM and accumulates
+// the streamed response. Returns a streamCompleteMsg on success or streamErrorMsg on failure.
 func (model Model) sendChatRequest() tea.Msg {
 	if model.llmClient == nil {
 		return streamErrorMsg{err: ErrLLMClientInit}
