@@ -47,7 +47,7 @@ func (chatCmd *chatCmd) run(cmd *cobra.Command, args []string) error {
 		chatCmd.llmClient = llmClient
 	}
 
-	model := tui.NewModel(chatCmd.llmClient, systemPrompt, chatCmd.logger)
+	model := tui.NewModel(cmd.Context(), chatCmd.llmClient, systemPrompt, chatCmd.logger)
 
 	return tui.Run(model)
 }

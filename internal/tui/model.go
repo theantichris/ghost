@@ -30,6 +30,7 @@ type streamErrorMsg struct {
 // Model represents the TUI application state for the chat interface.
 // It implements the BubbleTea Model interface (Init, Update, View).
 type Model struct {
+	ctx         context.Context
 	logger      *log.Logger
 	llmClient   llm.LLMClient
 	chatHistory []llm.ChatMessage
@@ -53,7 +54,7 @@ type Model struct {
 // NewModel creates a new TUI model initialized with the provided dependencies.
 // The model is pre-configured with a system prompt and greeting instruction
 // that will be sent to the LLM on initialization.
-func NewModel(llmClient llm.LLMClient, systemPrompt string, logger *log.Logger) Model {
+func NewModel(ctx context.Context, llmClient llm.LLMClient, systemPrompt string, logger *log.Logger) Model {
 	chatHistory := []llm.ChatMessage{
 		{Role: llm.SystemRole, Content: systemPrompt},
 		{Role: llm.SystemRole, Content: "Greet the user."},
@@ -62,6 +63,7 @@ func NewModel(llmClient llm.LLMClient, systemPrompt string, logger *log.Logger) 
 	viewport := viewport.New(80, 20)
 
 	model := Model{
+		ctx:         ctx,
 		llmClient:   llmClient,
 		logger:      logger,
 		viewport:    viewport,
@@ -200,7 +202,7 @@ func (model Model) sendChatRequest() tea.Msg {
 
 	var content strings.Builder
 	// TODO: use existing context
-	err := model.llmClient.Chat(context.Background(), model.chatHistory, func(token string) {
+	err := model.llmClient.Chat(model.ctx, model.chatHistory, func(token string) {
 		content.WriteString(token)
 	})
 

@@ -22,7 +22,7 @@ func TestNewModel(t *testing.T) {
 		logger := log.New(io.Discard)
 		systemPrompt := "This is the system prompt."
 
-		actualModel := NewModel(&llmClient, systemPrompt, logger)
+		actualModel := NewModel(context.Background(), &llmClient, systemPrompt, logger)
 
 		if actualModel.llmClient == nil {
 			t.Errorf("expected llmClient to be set")
