@@ -98,6 +98,9 @@ func initConfig(logger *log.Logger) {
 	}
 
 	viper.AutomaticEnv()
+
+	// Environment variable binding errors are logged but not returned as they are
+	// non-fatal. Configuration can still be loaded from flags or config file.
 	if err := viper.BindEnv("ollama", "OLLAMA_BASE_URL"); err != nil {
 		logger.Error("failed to bind ollama config", "error", err)
 	}

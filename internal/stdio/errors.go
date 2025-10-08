@@ -7,5 +7,5 @@ var (
 	ErrIO = errors.New("failed to read or write data")
 
 	// ErrInputEmpty indicates that no input was provided from stdin or arguments.
-	ErrInputEmpty = errors.New("input is empty")
+	ErrInputEmpty = errors.New("failed to read input")
 )
