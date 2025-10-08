@@ -265,6 +265,34 @@ func TestUpdate(t *testing.T) {
 		}
 	})
 
+	t.Run("enter key adds user message to display messages", func(t *testing.T) {
+		t.Parallel()
+
+		model := Model{input: "hello"}
+		keyMsg := tea.KeyMsg{Type: tea.KeyEnter}
+
+		returnedModel, _ := model.Update(keyMsg)
+
+		actualModel, ok := returnedModel.(Model)
+		if !ok {
+			t.Fatal("expected model to be of type Model")
+		}
+
+		actualMessageLength := len(actualModel.messages)
+		expectedMessagesLength := 1
+
+		if actualMessageLength != expectedMessagesLength {
+			t.Fatalf("expected messages length %d, got %d", expectedMessagesLength, actualMessageLength)
+		}
+
+		actualMessage := actualModel.messages[0]
+		expectedMessage := "You: hello"
+
+		if actualMessage != expectedMessage {
+			t.Errorf("expected message %q, got %q", expectedMessage, actualMessage)
+		}
+	})
+
 	t.Run("/bye command quits chat", func(t *testing.T) {
 		t.Parallel()
 

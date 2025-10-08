@@ -98,6 +98,8 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					Content: input,
 				})
 
+				model.messages = append(model.messages, "You: "+input)
+
 				model.input = ""
 			}
 		}
