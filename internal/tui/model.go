@@ -100,6 +100,10 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case tea.KeyCtrlD, tea.KeyCtrlC:
 			model.exiting = true
 			return model, tea.Quit
+		case tea.KeyUp, tea.KeyDown, tea.KeyPgUp, tea.KeyPgDown:
+			var cmd tea.Cmd
+			model.viewport, cmd = model.viewport.Update(msg)
+			return model, cmd
 		case tea.KeyEnter:
 			if model.input != "" {
 				input := model.input
