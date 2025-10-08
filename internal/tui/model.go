@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss/v2"
 	"github.com/charmbracelet/log"
 	"github.com/theantichris/ghost/internal/llm"
 )
@@ -28,10 +30,11 @@ type Model struct {
 	chatHistory []llm.ChatMessage
 
 	// UI state
-	messages []string // Rendered messages for display
-	input    string   // Current user input
-	width    int      // Terminal width
-	height   int      // Terminal height
+	viewport viewport.Model // Chat message viewport
+	messages []string       // Rendered messages for display
+	input    string         // Current user input
+	width    int            // Terminal width
+	height   int            // Terminal height
 
 	// Streaming state
 	streaming  bool   // True if currently receiving a stream
@@ -48,9 +51,12 @@ func NewModel(llmClient llm.LLMClient, systemPrompt string, logger *log.Logger) 
 		{Role: llm.SystemRole, Content: "Greet the user."},
 	}
 
+	viewport := viewport.New(80, 20)
+
 	model := Model{
 		llmClient:   llmClient,
 		logger:      logger,
+		viewport:    viewport,
 		chatHistory: chatHistory,
 	}
 
@@ -70,6 +76,16 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		model.width = msg.Width
 		model.height = msg.Height
+
+		// TODO: Update tests.
+
+		viewportHeight := msg.Height - 3
+		if viewportHeight < 1 {
+			viewportHeight = 1
+		}
+
+		model.viewport.Width = msg.Width
+		model.viewport.Height = viewportHeight
 
 	case tea.KeyMsg:
 		switch msg.Type {
@@ -102,6 +118,9 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 				model.input = ""
 
+				model.viewport.SetContent(model.wordwrap())
+				model.viewport.GotoBottom()
+
 				return model, model.sendChatRequest
 			}
 		}
@@ -121,6 +140,9 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		model.currentMsg = ""
 
+		model.viewport.SetContent(model.wordwrap())
+		model.viewport.GotoBottom()
+
 	case streamErrorMsg:
 		model.streaming = false
 		model.err = msg.err
@@ -131,12 +153,24 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (model Model) View() string {
-	chatArea := strings.Join(model.messages, "\n")
 	separator := strings.Repeat("─", model.width)
 
-	view := chatArea + "\n" + separator + "\n" + model.input
+	view := model.viewport.View() + "\n" + separator + "\n" + model.input
 
 	return view
+}
+
+func (model Model) wordwrap() string {
+	var wrapped []string
+
+	for _, msg := range model.messages {
+		wrappedMsg := lipgloss.NewStyle().Width(model.width).Render(msg)
+		wrapped = append(wrapped, wrappedMsg)
+	}
+
+	messages := strings.Join(wrapped, "\n")
+
+	return messages
 }
 
 func (model Model) sendChatRequest() tea.Msg {

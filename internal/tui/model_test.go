@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/charmbracelet/bubbles/viewport"
 	"github.com/charmbracelet/log"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -547,8 +548,12 @@ func TestView(t *testing.T) {
 	t.Run("renders chat messages", func(t *testing.T) {
 		t.Parallel()
 
+		messages := []string{"Hello, how are you?", "I'm doing great!"}
+		viewport := viewport.New(80, 24)
+		viewport.SetContent(strings.Join(messages, "\n"))
+
 		model := Model{
-			messages: []string{"Hello, how are you?", "I'm doing great!"},
+			viewport: viewport,
 			width:    80,
 			height:   24,
 		}
