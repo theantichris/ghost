@@ -87,6 +87,18 @@ func TestInit(t *testing.T) {
 			t.Fatal("expected command to send greeting, got nil")
 		}
 	})
+
+	t.Run("returns nil if chat history is empty", func(t *testing.T) {
+		t.Parallel()
+
+		model := Model{}
+
+		actualCmd := model.Init()
+
+		if actualCmd != nil {
+			t.Errorf("expected command to be nil, got %v", actualCmd)
+		}
+	})
 }
 
 func TestUpdate(t *testing.T) {
@@ -218,6 +230,47 @@ func TestUpdate(t *testing.T) {
 		quitMsg := actualCmd()
 		if _, ok := quitMsg.(tea.QuitMsg); !ok {
 			t.Errorf("expected command to return tea.QuitMsg, got %T", quitMsg)
+		}
+	})
+
+	t.Run("handles arrow keys update viewport", func(t *testing.T) {
+		tests := []struct {
+			name    string
+			keyType tea.KeyType
+		}{
+			{"KeyUp updates viewport", tea.KeyUp},
+			{"KeyDown updates viewport", tea.KeyDown},
+			{"KeyPgUp updates viewport", tea.KeyPgUp},
+			{"KeyPgDown updates viewport", tea.KeyPgDown},
+		}
+
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				model := Model{viewport: viewport.New(testTerminalWidth, 2)}
+
+				model.viewport.SetContent("Line 1\nLine 2\nLine3\nLine4\n")
+
+				if tt.keyType == tea.KeyUp || tt.keyType == tea.KeyPgUp {
+					model.viewport.GotoBottom()
+				}
+
+				initialYOffset := model.viewport.YOffset
+
+				keyMsg := tea.KeyMsg{Type: tt.keyType}
+				returnedModel, _ := model.Update(keyMsg)
+
+				actualModel, ok := returnedModel.(Model)
+				if !ok {
+					t.Fatalf("expected model to be of type Model")
+				}
+
+				actualYOffset := actualModel.viewport.YOffset
+
+				if actualYOffset == initialYOffset {
+					t.Errorf("viewport not updated: YOffset remained %d", initialYOffset)
+				}
+			})
+
 		}
 	})
 

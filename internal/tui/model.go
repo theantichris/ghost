@@ -96,8 +96,6 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		model.width = msg.Width
 		model.height = msg.Height
 
-		// TODO: Update tests.
-
 		// Save 3 lines for spacing, divider, and user input.
 		viewportHeight := max(msg.Height-3, 1)
 
