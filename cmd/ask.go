@@ -66,6 +66,9 @@ func (askCmd *askCmd) run(cmd *cobra.Command, args []string) error {
 	}
 
 	var tokens string
+
+	// OutputWriter.Tokens is a pointer to accumulate all tokens (including think
+	//  blocks) while filtering only non-think content to Output.
 	outputWriter := &stdio.OutputWriter{
 		Logger: askCmd.logger,
 		Output: cmd.OutOrStdout(),
