@@ -8,7 +8,9 @@ import (
 )
 
 const (
-	openTag  string = "<think>"
+	// openTag is the opening delimiter for think blocks in LLM responses.
+	openTag string = "<think>"
+	// closeTag is the closing delimiter for think blocks in LLM responses.
 	closeTag string = "</think>"
 )
 
@@ -165,7 +167,8 @@ func isCloseTag(content string) (bool, int) {
 }
 
 // thinkBlockNotPossible determines if the buffered content cannot possibly
-// start a think block, enabling pass-through mode for better performance.
+// start a think block by checking if the content is too long without matching
+// the opening tag prefix or if it's too short to be a complete opening tag.
 func thinkBlockNotPossible(content string) bool {
 	return (len(content) >= 7 && !strings.HasPrefix(content, "<think>")) || (len(content) < len(openTag) && !strings.HasPrefix("<think>", content))
 }

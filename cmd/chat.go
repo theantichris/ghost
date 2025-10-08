@@ -15,8 +15,8 @@ type chatCmd struct {
 	llmClient llm.LLMClient
 }
 
-// NewChatCmd creates a new chat command that sends queries to the configured LLM.
-// It supports both direct command-line queries and piped input from stdin.
+// NewChatCmd creates a new chat command that launches an interactive TUI session
+// for multi-turn conversations with the configured LLM.
 func NewChatCmd(logger *log.Logger) *cobra.Command {
 	chatCmd := &chatCmd{
 		logger: logger,

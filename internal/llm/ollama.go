@@ -23,7 +23,8 @@ type OllamaClient struct {
 	logger       *log.Logger  // Logger for structured logging
 }
 
-// NewOllamaClient initializes a new OllamaClient with the given baseURL and defaultModel.
+// NewOllamaClient initializes a new OllamaClient with the given baseURL, defaultModel,
+// httpClient, and logger, validating that baseURL and defaultModel are non-empty.
 func NewOllamaClient(baseURL, defaultModel string, httpClient *http.Client, logger *log.Logger) (*OllamaClient, error) {
 	if strings.TrimSpace(baseURL) == "" {
 		logger.Error("Ollama client initialization failed", "error", ErrValidation)
@@ -47,7 +48,8 @@ func NewOllamaClient(baseURL, defaultModel string, httpClient *http.Client, logg
 	}, nil
 }
 
-// Chat sends a message to the Ollama API and streams the response.
+// Chat sends a message to the Ollama API and streams the response by invoking
+// the onToken callback for each token received from the streaming endpoint.
 func (ollama *OllamaClient) Chat(ctx context.Context, chatHistory []ChatMessage, onToken func(string)) error {
 	requestBody, err := ollama.preparePayload(chatHistory, true)
 	if err != nil {

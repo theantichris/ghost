@@ -176,7 +176,8 @@ func (model Model) View() string {
 	return view
 }
 
-// wordwrap formats all messages to fit the terminal width using lipgloss styling.
+// wordwrap formats all messages to fit the terminal width using lipgloss styling
+// and returns the joined result as a single string for viewport rendering.
 func (model Model) wordwrap() string {
 	var wrapped []string
 

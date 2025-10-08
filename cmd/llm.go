@@ -9,6 +9,7 @@ import (
 	"github.com/theantichris/ghost/internal/llm"
 )
 
+// systemPrompt defines the default system-level instruction for Ghost's LLM interactions.
 const systemPrompt = "You are Ghost, a cyberpunk inspired terminal based assistant. Answer requests directly and briefly."
 
 // initializeLLMClient creates and configures an LLM client using configuration from viper,
