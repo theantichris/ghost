@@ -170,5 +170,14 @@ func isCloseTag(content string) (bool, int) {
 // start a think block by checking if the content is too long without matching
 // the opening tag prefix or if it's too short to be a complete opening tag.
 func thinkBlockNotPossible(content string) bool {
-	return (len(content) >= 7 && !strings.HasPrefix(content, "<think>")) || (len(content) < len(openTag) && !strings.HasPrefix("<think>", content))
+	contentLength := len(content)
+	tagLength := len(openTag)
+
+	// If there is enough content to determine if in think tag.
+	if contentLength >= tagLength {
+		return !strings.HasPrefix(content, openTag)
+	}
+
+	// If content is shorter than the tag, check if it could be the start.
+	return !strings.HasPrefix(openTag, content)
 }
