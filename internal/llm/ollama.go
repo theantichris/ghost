@@ -116,7 +116,7 @@ func (ollama *OllamaClient) Chat(ctx context.Context, chatHistory []ChatMessage,
 	return nil
 }
 
-// preparePayload takes the chat history and returns the marshaled request body.
+// preparePayload marshals the chat history into a JSON request body for the Ollama API.
 func (ollama *OllamaClient) preparePayload(chatHistory []ChatMessage, stream bool) ([]byte, error) {
 	if len(chatHistory) == 0 {
 		return nil, fmt.Errorf("%w: chat history is empty", ErrValidation)
@@ -136,7 +136,7 @@ func (ollama *OllamaClient) preparePayload(chatHistory []ChatMessage, stream boo
 	return requestBody, nil
 }
 
-// createHTTPRequest creates the HTTP request with timeout and headers.
+// createHTTPRequest creates an HTTP POST request with timeout and headers for the Ollama chat endpoint.
 func (ollama *OllamaClient) createHTTPRequest(ctx context.Context, requestBody []byte) (*http.Request, context.CancelFunc, error) {
 	requestCTX, cancel := context.WithTimeout(ctx, 2*time.Minute)
 
@@ -152,7 +152,7 @@ func (ollama *OllamaClient) createHTTPRequest(ctx context.Context, requestBody [
 	return clientRequest, cancel, nil
 }
 
-// checkForHTTPError returns the correct error for the HTTP status code.
+// checkForHTTPError validates the HTTP response status code and returns an error for non-2xx responses.
 func (ollama *OllamaClient) checkForHTTPError(statusCode int, body io.ReadCloser) error {
 	if statusCode/100 != 2 {
 		responseBody, err := io.ReadAll(body)

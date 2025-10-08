@@ -62,10 +62,10 @@ func Execute() *cobra.Command {
 	return NewRootCmd(logger)
 }
 
-// initConfig initializes the configuration for the Ghost CLI application.
-// It loads environment variables from .env file, sets up viper configuration paths,
-// binds environment variables (OLLAMA_BASE_URL to ollama, DEFAULT_MODEL to model),
-// and attempts to read the config file from multiple locations.
+// initConfig initializes the configuration for the Ghost CLI application by loading
+// environment variables from .env file, setting up viper configuration paths, binding
+// environment variables (OLLAMA_BASE_URL to ollama, DEFAULT_MODEL to model), and
+// attempting to read the config file from multiple locations.
 func initConfig(logger *log.Logger) {
 	if err := godotenv.Load(); err != nil {
 		logger.Debug(".env file not found, using environment variables")
@@ -116,7 +116,7 @@ func initConfig(logger *log.Logger) {
 	}
 }
 
-// initLogger configures file logging to ~/.config/ghost/ghost.log
+// initLogger configures file logging to ~/.config/ghost/ghost.log for debug output.
 func initLogger(logger *log.Logger) error {
 	home, err := os.UserHomeDir()
 	if err != nil {

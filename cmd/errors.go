@@ -3,7 +3,12 @@ package cmd
 import "errors"
 
 var (
-	ErrConfig  = errors.New("failed to bind config")
+	// ErrConfig indicates a configuration binding or initialization failure.
+	ErrConfig = errors.New("failed to bind config")
+
+	// ErrLogging indicates a logging setup or file operation failure.
 	ErrLogging = errors.New("failed to setup logging")
-	ErrLLM     = errors.New("failed to process LLM request")
+
+	// ErrLLM indicates an LLM client initialization or request processing failure.
+	ErrLLM = errors.New("failed to process LLM request")
 )

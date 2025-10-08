@@ -106,8 +106,8 @@ func (writer *OutputWriter) Write(token string) {
 	}
 }
 
-// reset clears all outputWriter state for reuse with a new LLM response.
-// This includes the buffer, state flags, and tokens pointer.
+// Reset clears all outputWriter state for reuse with a new LLM response.
+// Reset includes the buffer, state flags, and tokens pointer.
 func (writer *OutputWriter) Reset() {
 	writer.Logger.Debug("writer reset", "tokensLength", len(*writer.Tokens), "buffLength", writer.buffer.Len(), "insideThinkBlock", writer.insideThinkBlock, "canPassThrough", writer.canPassThrough)
 
@@ -156,8 +156,8 @@ func isOpenTag(content string) bool {
 	return strings.HasPrefix(content, openTag)
 }
 
-// isCloseTag checks if content contains the think block closing tag.
-// Returns true and the tag's index if found, false and -1 otherwise.
+// isCloseTag checks if content contains the think block closing tag and returns
+// true and the tag's index if found, false and -1 otherwise.
 func isCloseTag(content string) (bool, int) {
 	index := strings.Index(content, closeTag)
 

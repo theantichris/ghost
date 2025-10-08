@@ -176,7 +176,7 @@ func (model Model) View() string {
 	return view
 }
 
-// wordwrap wraps all messages to fit the terminal width using lipgloss.
+// wordwrap formats all messages to fit the terminal width using lipgloss styling.
 func (model Model) wordwrap() string {
 	var wrapped []string
 
@@ -190,8 +190,8 @@ func (model Model) wordwrap() string {
 	return messages
 }
 
-// sendChatRequest sends the current chat history to the LLM and accumulates
-// the streamed response. Returns a streamCompleteMsg on success or streamErrorMsg on failure.
+// sendChatRequest sends the current chat history to the LLM and accumulates the
+// streamed response, returning streamCompleteMsg on success or streamErrorMsg on failure.
 func (model Model) sendChatRequest() tea.Msg {
 	if model.llmClient == nil {
 		return streamErrorMsg{err: ErrLLMClientInit}
