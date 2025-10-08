@@ -2,8 +2,8 @@ package tui
 
 import tea "github.com/charmbracelet/bubbletea"
 
-func Run() error {
-	_, err := tea.NewProgram(Model{}, tea.WithAltScreen()).Run()
+func Run(model Model) error {
+	_, err := tea.NewProgram(model, tea.WithAltScreen()).Run()
 
 	return err
 }

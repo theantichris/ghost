@@ -75,6 +75,8 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.Type {
 		case tea.KeyRunes:
 			model.input += string(msg.Runes)
+		case tea.KeySpace:
+			model.input += " "
 		case tea.KeyBackspace:
 			if len(model.input) > 0 {
 				model.input = model.input[:len(model.input)-1]

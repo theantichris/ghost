@@ -128,6 +128,26 @@ func TestUpdate(t *testing.T) {
 		}
 	})
 
+	t.Run("handles space key press", func(t *testing.T) {
+		t.Parallel()
+
+		model := Model{input: "hello"}
+		keyMsg := tea.KeyMsg{Type: tea.KeySpace}
+
+		returnedModel, _ := model.Update(keyMsg)
+
+		actualModel, ok := returnedModel.(Model)
+		if !ok {
+			t.Fatal("expected model to be of type model")
+		}
+
+		expectedInput := "hello "
+
+		if actualModel.input != expectedInput {
+			t.Errorf("expected model input to be %q, got %q", expectedInput, actualModel.input)
+		}
+	})
+
 	t.Run("handles backspace key", func(t *testing.T) {
 		t.Parallel()
 
