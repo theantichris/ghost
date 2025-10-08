@@ -109,6 +109,20 @@ The following checks are run on every commit via pre-commit hooks: `go fmt`,
  and run `pre-commit install` in your repository root. See the `.pre-commit-config.yaml`
   file for the list of configured hooks.
 
+### Agent Workflow
+
+**IMPORTANT**: Whenever you create or edit any file, you MUST run the appropriate
+linter and fix any issues before considering the task complete:
+
+- **Go files**: Run `go fmt` and `golangci-lint run` on the modified files
+- **Markdown files**: Run `pre-commit run markdownlint --files <filename>`
+  to check and auto-fix markdown issues
+- **All files**: Consider running `pre-commit run --files <filename>` to
+  run all applicable hooks
+
+Do not wait for the user to ask you to lint. This should be automatic for
+every file you touch.
+
 ## Release Process
 
 Ghost uses [GoReleaser](https://goreleaser.com/) for automated releases via
