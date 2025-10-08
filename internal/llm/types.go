@@ -21,7 +21,6 @@ const (
 type ChatRequest struct {
 	Model    string        `json:"model"`    // Required. The model name.
 	Messages []ChatMessage `json:"messages"` // The messages of the chat, this can be used to keep a chat memory
-	Think    bool          `json:"think"`    // Whether to think step by step
 	Stream   bool          `json:"stream"`   // Whether to stream the response
 }
 
