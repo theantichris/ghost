@@ -17,10 +17,15 @@ func TestNewModel(t *testing.T) {
 	t.Run("creates a new model with dependencies and system prompt", func(t *testing.T) {
 		t.Parallel()
 
+		llmClient := llm.MockLLMClient{}
 		logger := log.New(io.Discard)
 		systemPrompt := "This is the system prompt."
 
-		actualModel := NewModel(systemPrompt, logger)
+		actualModel := NewModel(&llmClient, systemPrompt, logger)
+
+		if actualModel.llmClient == nil {
+			t.Errorf("expected llmClient to be set")
+		}
 
 		if actualModel.logger == nil {
 			t.Error("expected logger to be set")

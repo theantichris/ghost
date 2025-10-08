@@ -42,13 +42,14 @@ type Model struct {
 	err     error
 }
 
-func NewModel(systemPrompt string, logger *log.Logger) Model {
+func NewModel(llmClient llm.LLMClient, systemPrompt string, logger *log.Logger) Model {
 	chatHistory := []llm.ChatMessage{
 		{Role: llm.SystemRole, Content: systemPrompt},
 		{Role: llm.SystemRole, Content: "Greet the user."},
 	}
 
 	model := Model{
+		llmClient:   llmClient,
 		logger:      logger,
 		chatHistory: chatHistory,
 	}
