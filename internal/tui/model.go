@@ -101,6 +101,8 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				model.messages = append(model.messages, "You: "+input)
 
 				model.input = ""
+
+				return model, model.sendChatRequest
 			}
 		}
 

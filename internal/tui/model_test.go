@@ -293,6 +293,30 @@ func TestUpdate(t *testing.T) {
 		}
 	})
 
+	t.Run("enter key with input returns LLM request command", func(t *testing.T) {
+		t.Parallel()
+
+		mockClient := &llm.MockLLMClient{
+			ChatFunc: func(ctx context.Context, messages []llm.ChatMessage, onToken func(string)) error {
+				onToken("response")
+
+				return nil
+			},
+		}
+
+		model := Model{
+			input:     "hello",
+			llmClient: mockClient,
+		}
+		keyMsg := tea.KeyMsg{Type: tea.KeyEnter}
+
+		_, actualCmd := model.Update(keyMsg)
+
+		if actualCmd == nil {
+			t.Errorf("expected command to be returned, got nil")
+		}
+	})
+
 	t.Run("/bye command quits chat", func(t *testing.T) {
 		t.Parallel()
 
