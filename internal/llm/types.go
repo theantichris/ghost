@@ -1,20 +1,26 @@
 package llm
 
-// Role defines the role of a message in the chat.
+// Role defines the role of a message in the chat conversation.
 type Role string
 
 const (
-	SystemRole    Role = "system"
-	UserRole      Role = "user"
+	// SystemRole represents system-level instructions and prompts.
+	SystemRole Role = "system"
+
+	// UserRole represents messages from the user.
+	UserRole Role = "user"
+
+	// AssistantRole represents messages from the AI assistant.
 	AssistantRole Role = "assistant"
-	ToolRole      Role = "tool"
+
+	// ToolRole represents messages from external tool executions.
+	ToolRole Role = "tool"
 )
 
 // ChatRequest represents a request to the Ollama chat API.
 type ChatRequest struct {
 	Model    string        `json:"model"`    // Required. The model name.
 	Messages []ChatMessage `json:"messages"` // The messages of the chat, this can be used to keep a chat memory
-	Think    bool          `json:"think"`    // Whether to think step by step
 	Stream   bool          `json:"stream"`   // Whether to stream the response
 }
 
@@ -30,7 +36,7 @@ type ChatResponse struct {
 	Done    bool        `json:"done,omitempty"` // True if response is the last in the stream
 }
 
-// apiError represents an error response from the Ollama API.
+// apiError represents an error response from the Ollama API with error details.
 type apiError struct {
 	Error string `json:"error"`
 }

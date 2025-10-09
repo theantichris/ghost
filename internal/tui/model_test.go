@@ -6,11 +6,18 @@ import (
 	"io"
 	"strings"
 	"testing"
+	"time"
 
+	"github.com/charmbracelet/bubbles/viewport"
 	"github.com/charmbracelet/log"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/theantichris/ghost/internal/llm"
+)
+
+const (
+	testTerminalWidth  = 80 // Standard terminal width for tests
+	testTerminalHeight = 24 // Standard terminal height for tests
 )
 
 func TestNewModel(t *testing.T) {
@@ -21,7 +28,7 @@ func TestNewModel(t *testing.T) {
 		logger := log.New(io.Discard)
 		systemPrompt := "This is the system prompt."
 
-		actualModel := NewModel(&llmClient, systemPrompt, logger)
+		actualModel := NewModel(context.Background(), &llmClient, 2*time.Minute, systemPrompt, logger)
 
 		if actualModel.llmClient == nil {
 			t.Errorf("expected llmClient to be set")
@@ -68,6 +75,7 @@ func TestInit(t *testing.T) {
 		t.Parallel()
 
 		model := Model{
+			ctx: context.Background(),
 			chatHistory: []llm.ChatMessage{
 				{Role: llm.SystemRole, Content: "test system prompt"},
 				{Role: llm.SystemRole, Content: "test greeting prompt"},
@@ -80,14 +88,26 @@ func TestInit(t *testing.T) {
 			t.Fatal("expected command to send greeting, got nil")
 		}
 	})
+
+	t.Run("returns nil if chat history is empty", func(t *testing.T) {
+		t.Parallel()
+
+		model := Model{}
+
+		actualCmd := model.Init()
+
+		if actualCmd != nil {
+			t.Errorf("expected command to be nil, got %v", actualCmd)
+		}
+	})
 }
 
 func TestUpdate(t *testing.T) {
 	t.Run("handles window size message", func(t *testing.T) {
 		t.Parallel()
 
-		model := Model{}
-		sizeMsg := tea.WindowSizeMsg{Width: 80, Height: 24}
+		model := Model{ctx: context.Background()}
+		sizeMsg := tea.WindowSizeMsg{Width: testTerminalWidth, Height: testTerminalHeight}
 
 		returnedModel, _ := model.Update(sizeMsg)
 
@@ -96,8 +116,8 @@ func TestUpdate(t *testing.T) {
 			t.Fatal("expected model to be of type Model")
 		}
 
-		expectedWidth := 80
-		expectedHeight := 24
+		expectedWidth := testTerminalWidth
+		expectedHeight := testTerminalHeight
 
 		if actualModel.width != expectedWidth {
 			t.Errorf("expected width %d, got %d", expectedWidth, actualModel.width)
@@ -111,7 +131,7 @@ func TestUpdate(t *testing.T) {
 	t.Run("handles regular key press", func(t *testing.T) {
 		t.Parallel()
 
-		model := Model{}
+		model := Model{ctx: context.Background()}
 		keyMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'h'}}
 
 		returnedModel, _ := model.Update(keyMsg)
@@ -131,7 +151,7 @@ func TestUpdate(t *testing.T) {
 	t.Run("handles space key press", func(t *testing.T) {
 		t.Parallel()
 
-		model := Model{input: "hello"}
+		model := Model{ctx: context.Background(), input: "hello"}
 		keyMsg := tea.KeyMsg{Type: tea.KeySpace}
 
 		returnedModel, _ := model.Update(keyMsg)
@@ -151,7 +171,7 @@ func TestUpdate(t *testing.T) {
 	t.Run("handles backspace key", func(t *testing.T) {
 		t.Parallel()
 
-		model := Model{input: "hello"}
+		model := Model{ctx: context.Background(), input: "hello"}
 		keyMsg := tea.KeyMsg{Type: tea.KeyBackspace}
 
 		returnedModel, _ := model.Update(keyMsg)
@@ -171,7 +191,7 @@ func TestUpdate(t *testing.T) {
 	t.Run("handles ctrl+d to exit", func(t *testing.T) {
 		t.Parallel()
 
-		model := Model{}
+		model := Model{ctx: context.Background()}
 		keyMsg := tea.KeyMsg{Type: tea.KeyCtrlD}
 
 		returnedModel, actualCmd := model.Update(keyMsg)
@@ -194,7 +214,7 @@ func TestUpdate(t *testing.T) {
 	t.Run("handles ctrl+c to exit", func(t *testing.T) {
 		t.Parallel()
 
-		model := Model{}
+		model := Model{ctx: context.Background()}
 		keyMsg := tea.KeyMsg{Type: tea.KeyCtrlC}
 
 		returnedModel, actualCmd := model.Update(keyMsg)
@@ -214,10 +234,51 @@ func TestUpdate(t *testing.T) {
 		}
 	})
 
+	t.Run("handles arrow keys update viewport", func(t *testing.T) {
+		tests := []struct {
+			name    string
+			keyType tea.KeyType
+		}{
+			{"KeyUp updates viewport", tea.KeyUp},
+			{"KeyDown updates viewport", tea.KeyDown},
+			{"KeyPgUp updates viewport", tea.KeyPgUp},
+			{"KeyPgDown updates viewport", tea.KeyPgDown},
+		}
+
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				model := Model{viewport: viewport.New(testTerminalWidth, 2)}
+
+				model.viewport.SetContent("Line 1\nLine 2\nLine 3\nLine 4\n")
+
+				if tt.keyType == tea.KeyUp || tt.keyType == tea.KeyPgUp {
+					model.viewport.GotoBottom()
+				}
+
+				initialYOffset := model.viewport.YOffset
+
+				keyMsg := tea.KeyMsg{Type: tt.keyType}
+				returnedModel, _ := model.Update(keyMsg)
+
+				actualModel, ok := returnedModel.(Model)
+				if !ok {
+					t.Fatalf("expected model to be of type Model")
+				}
+
+				actualYOffset := actualModel.viewport.YOffset
+
+				if actualYOffset == initialYOffset {
+					t.Errorf("viewport not updated: YOffset remained %d", initialYOffset)
+				}
+			})
+
+		}
+	})
+
 	t.Run("enter key clears input", func(t *testing.T) {
 		t.Parallel()
 
-		model := Model{input: "hello"}
+		model := Model{ctx: context.Background(), input: "hello"}
 		keyMsg := tea.KeyMsg{Type: tea.KeyEnter}
 
 		returnedModel, _ := model.Update(keyMsg)
@@ -237,7 +298,7 @@ func TestUpdate(t *testing.T) {
 	t.Run("enter key adds message to chat history", func(t *testing.T) {
 		t.Parallel()
 
-		model := Model{input: "hello"}
+		model := Model{ctx: context.Background(), input: "hello"}
 		keyMsg := tea.KeyMsg{Type: tea.KeyEnter}
 
 		returnedModel, _ := model.Update(keyMsg)
@@ -268,7 +329,7 @@ func TestUpdate(t *testing.T) {
 	t.Run("enter key adds user message to display messages", func(t *testing.T) {
 		t.Parallel()
 
-		model := Model{input: "hello"}
+		model := Model{ctx: context.Background(), input: "hello"}
 		keyMsg := tea.KeyMsg{Type: tea.KeyEnter}
 
 		returnedModel, _ := model.Update(keyMsg)
@@ -305,6 +366,7 @@ func TestUpdate(t *testing.T) {
 		}
 
 		model := Model{
+			ctx:       context.Background(),
 			input:     "hello",
 			llmClient: mockClient,
 		}
@@ -348,7 +410,7 @@ func TestUpdate(t *testing.T) {
 	t.Run("/exit command quits chat", func(t *testing.T) {
 		t.Parallel()
 
-		model := Model{input: "/exit"}
+		model := Model{ctx: context.Background(), input: "/exit"}
 		keyMsg := tea.KeyMsg{Type: tea.KeyEnter}
 
 		returnedModel, _ := model.Update(keyMsg)
@@ -376,7 +438,7 @@ func TestUpdate(t *testing.T) {
 	t.Run("handles stream chunk message", func(t *testing.T) {
 		t.Parallel()
 
-		model := Model{}
+		model := Model{ctx: context.Background()}
 		msg := streamingChunkMsg{content: "Hello"}
 
 		returnedModel, _ := model.Update(msg)
@@ -400,7 +462,7 @@ func TestUpdate(t *testing.T) {
 	t.Run("appends multiple stream chunks", func(t *testing.T) {
 		t.Parallel()
 
-		model := Model{currentMsg: "Hello", streaming: true}
+		model := Model{ctx: context.Background(), currentMsg: "Hello", streaming: true}
 		msg := streamingChunkMsg{content: " world"}
 
 		returnedModel, _ := model.Update(msg)
@@ -421,6 +483,7 @@ func TestUpdate(t *testing.T) {
 		t.Parallel()
 
 		model := Model{
+			ctx:        context.Background(),
 			currentMsg: "Hello, how can I help?",
 			streaming:  true,
 		}
@@ -478,6 +541,7 @@ func TestUpdate(t *testing.T) {
 		testError := errors.New("connection failed")
 
 		model := Model{
+			ctx:        context.Background(),
 			currentMsg: "Hello",
 			streaming:  true,
 		}
@@ -513,9 +577,10 @@ func TestView(t *testing.T) {
 		t.Parallel()
 
 		model := Model{
+			ctx:    context.Background(),
 			input:  "hello",
-			width:  80,
-			height: 24,
+			width:  testTerminalWidth,
+			height: testTerminalHeight,
 		}
 
 		actualView := model.View()
@@ -531,8 +596,8 @@ func TestView(t *testing.T) {
 		t.Parallel()
 
 		model := Model{
-			width:  80,
-			height: 24,
+			width:  testTerminalWidth,
+			height: testTerminalHeight,
 		}
 
 		actualView := model.View()
@@ -547,8 +612,13 @@ func TestView(t *testing.T) {
 	t.Run("renders chat messages", func(t *testing.T) {
 		t.Parallel()
 
+		messages := []string{"Hello, how are you?", "I'm doing great!"}
+		viewport := viewport.New(80, 24)
+		viewport.SetContent(strings.Join(messages, "\n"))
+
 		model := Model{
-			messages: []string{"Hello, how are you?", "I'm doing great!"},
+			ctx:      context.Background(),
+			viewport: viewport,
 			width:    80,
 			height:   24,
 		}
@@ -582,17 +652,49 @@ func TestSendChatRequest(t *testing.T) {
 		}
 
 		model := Model{
+			ctx:       context.Background(),
 			llmClient: &mockClient,
 			chatHistory: []llm.ChatMessage{
 				{Role: llm.SystemRole, Content: "test"},
 			},
 		}
 
-		msg := model.sendChatRequest()
+		cmd := model.sendChatRequest()
+		msg := cmd()
+
+		for {
+			if chunkMsg, ok := msg.(streamingChunkMsg); ok {
+				msg = waitForActivity(chunkMsg.sub)()
+			} else {
+				break
+			}
+		}
 
 		_, ok := msg.(streamCompleteMsg)
 		if !ok {
 			t.Errorf("expected streamCompleteMsg, got %T", msg)
+		}
+	})
+
+	t.Run("returns stream chat error message if LLM Client is not set", func(t *testing.T) {
+		t.Parallel()
+
+		model := Model{}
+
+		cmd := model.sendChatRequest()
+		returnedMsg := cmd()
+
+		actualMsg, ok := returnedMsg.(streamErrorMsg)
+		if !ok {
+			t.Fatal("expected message to be of type streamErrorMsg")
+		}
+
+		if actualMsg.err == nil {
+			t.Fatal("expected error message, got nil")
+		}
+
+		if !errors.Is(actualMsg.err, ErrLLMClientInit) {
+			t.Errorf("expected ErrLLMClientInit, got %v", actualMsg.err)
 		}
 	})
 
@@ -605,13 +707,15 @@ func TestSendChatRequest(t *testing.T) {
 		}
 
 		model := Model{
+			ctx:       context.Background(),
 			llmClient: mockClient,
 			chatHistory: []llm.ChatMessage{
 				{Role: llm.SystemRole, Content: "test"},
 			},
 		}
 
-		msg := model.sendChatRequest()
+		cmd := model.sendChatRequest()
+		msg := cmd()
 
 		errMsg, ok := msg.(streamErrorMsg)
 		if !ok {
@@ -637,13 +741,23 @@ func TestSendChatRequest(t *testing.T) {
 		}
 
 		model := Model{
+			ctx:       context.Background(),
 			llmClient: mockClient,
 			chatHistory: []llm.ChatMessage{
 				{Role: llm.SystemRole, Content: "test"},
 			},
 		}
 
-		msg := model.sendChatRequest()
+		cmd := model.sendChatRequest()
+		msg := cmd()
+
+		for {
+			if chunkMsg, ok := msg.(streamingChunkMsg); ok {
+				msg = waitForActivity(chunkMsg.sub)()
+			} else {
+				break
+			}
+		}
 
 		completeMsg, ok := msg.(streamCompleteMsg)
 		if !ok {

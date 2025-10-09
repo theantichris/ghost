@@ -10,13 +10,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// errorReader simulates read errors.
+// errorReader simulates read errors for testing purposes.
 type errorReader struct {
-	failAt int
-	calls  int
+	failAt int // Number of calls before simulating an error
+	calls  int // Current number of Read calls
 }
 
-// Read handles read operations for errorReader.
+// Read simulates read operations with configurable failure points for errorReader.
 func (err *errorReader) Read(p []byte) (int, error) {
 	err.calls++
 
@@ -72,7 +72,7 @@ func TestGetUserInput(t *testing.T) {
 		t.Parallel()
 
 		logger := log.New(io.Discard)
-		reader := &inputReader{
+		reader := &InputReader{
 			logger: logger,
 			stdinDetector: func() (bool, error) {
 				return false, nil
@@ -96,7 +96,7 @@ func TestGetUserInput(t *testing.T) {
 		t.Parallel()
 
 		logger := log.New(io.Discard)
-		reader := &inputReader{
+		reader := &InputReader{
 			logger: logger,
 			stdinDetector: func() (bool, error) {
 				return false, nil
@@ -121,7 +121,7 @@ func TestGetUserInput(t *testing.T) {
 		t.Parallel()
 
 		logger := log.New(io.Discard)
-		reader := &inputReader{
+		reader := &InputReader{
 			logger: logger,
 			stdinDetector: func() (bool, error) {
 				return true, nil
@@ -147,7 +147,7 @@ func TestGetUserInput(t *testing.T) {
 		t.Parallel()
 
 		logger := log.New(io.Discard)
-		reader := &inputReader{
+		reader := &InputReader{
 			logger: logger,
 			stdinDetector: func() (bool, error) {
 				return true, nil
@@ -180,7 +180,7 @@ func TestGetUserInput(t *testing.T) {
 		t.Parallel()
 
 		logger := log.New(io.Discard)
-		reader := &inputReader{
+		reader := &InputReader{
 			logger: logger,
 			stdinDetector: func() (bool, error) {
 				return false, errors.New("stat error")
@@ -204,7 +204,7 @@ func TestGetUserInput(t *testing.T) {
 		t.Parallel()
 
 		logger := log.New(io.Discard)
-		reader := &inputReader{
+		reader := &InputReader{
 			logger: logger,
 			stdinDetector: func() (bool, error) {
 				return true, nil

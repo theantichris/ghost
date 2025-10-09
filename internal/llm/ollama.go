@@ -10,7 +10,6 @@ import (
 	"io"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/charmbracelet/log"
 )
@@ -23,7 +22,8 @@ type OllamaClient struct {
 	logger       *log.Logger  // Logger for structured logging
 }
 
-// NewOllamaClient initializes a new OllamaClient with the given baseURL and defaultModel.
+// NewOllamaClient initializes a new OllamaClient with the given baseURL, defaultModel,
+// httpClient, and logger, validating that baseURL and defaultModel are non-empty.
 func NewOllamaClient(baseURL, defaultModel string, httpClient *http.Client, logger *log.Logger) (*OllamaClient, error) {
 	if strings.TrimSpace(baseURL) == "" {
 		logger.Error("Ollama client initialization failed", "error", ErrValidation)
@@ -47,19 +47,18 @@ func NewOllamaClient(baseURL, defaultModel string, httpClient *http.Client, logg
 	}, nil
 }
 
-// Chat sends a message to the Ollama API and streams the response.
+// Chat sends a message to the Ollama API and streams the response by invoking
+// the onToken callback for each token received from the streaming endpoint.
 func (ollama *OllamaClient) Chat(ctx context.Context, chatHistory []ChatMessage, onToken func(string)) error {
 	requestBody, err := ollama.preparePayload(chatHistory, true)
 	if err != nil {
 		return err
 	}
 
-	request, cancel, err := ollama.createHTTPRequest(ctx, requestBody)
+	request, err := ollama.createHTTPRequest(ctx, requestBody)
 	if err != nil {
 		return err
 	}
-
-	defer cancel()
 
 	ollama.logger.Info("sending chat request to Ollama API", "url", ollama.baseURL+"/api/chat", "method", http.MethodPost, "queryLength", len(string(requestBody)))
 
@@ -72,6 +71,8 @@ func (ollama *OllamaClient) Chat(ctx context.Context, chatHistory []ChatMessage,
 
 	err = ollama.checkForHTTPError(response.StatusCode, response.Body)
 	if err != nil {
+		_ = response.Body.Close()
+
 		return err
 	}
 
@@ -80,8 +81,9 @@ func (ollama *OllamaClient) Chat(ctx context.Context, chatHistory []ChatMessage,
 	}()
 
 	scanner := bufio.NewScanner(response.Body)
-	const maxTokenBytes = 1024 * 1024
-	buffer := make([]byte, 0, 64+1024)
+	const maxTokenBytes = 1024 * 1024   // 1MB maximum token size
+	const initialBufferSize = 64 + 1024 // 64 bytes + 1KB initial capacity
+	buffer := make([]byte, 0, initialBufferSize)
 	scanner.Buffer(buffer, maxTokenBytes)
 
 	for scanner.Scan() {
@@ -116,7 +118,7 @@ func (ollama *OllamaClient) Chat(ctx context.Context, chatHistory []ChatMessage,
 	return nil
 }
 
-// preparePayload takes the chat history and returns the marshaled request body.
+// preparePayload marshals the chat history into a JSON request body for the Ollama API.
 func (ollama *OllamaClient) preparePayload(chatHistory []ChatMessage, stream bool) ([]byte, error) {
 	if len(chatHistory) == 0 {
 		return nil, fmt.Errorf("%w: chat history is empty", ErrValidation)
@@ -136,23 +138,19 @@ func (ollama *OllamaClient) preparePayload(chatHistory []ChatMessage, stream boo
 	return requestBody, nil
 }
 
-// createHTTPRequest creates the HTTP request with timeout and headers.
-func (ollama *OllamaClient) createHTTPRequest(ctx context.Context, requestBody []byte) (*http.Request, context.CancelFunc, error) {
-	requestCTX, cancel := context.WithTimeout(ctx, 2*time.Minute)
-
-	clientRequest, err := http.NewRequestWithContext(requestCTX, http.MethodPost, ollama.baseURL+"/api/chat", bytes.NewReader(requestBody))
+// createHTTPRequest creates an HTTP POST request with timeout and headers for the Ollama chat endpoint.
+func (ollama *OllamaClient) createHTTPRequest(ctx context.Context, requestBody []byte) (*http.Request, error) {
+	clientRequest, err := http.NewRequestWithContext(ctx, http.MethodPost, ollama.baseURL+"/api/chat", bytes.NewReader(requestBody))
 	if err != nil {
-		cancel()
-
-		return nil, nil, fmt.Errorf("%w: %w", ErrRequest, err)
+		return nil, fmt.Errorf("%w: %w", ErrRequest, err)
 	}
 
 	clientRequest.Header.Set("Content-Type", "application/json")
 
-	return clientRequest, cancel, nil
+	return clientRequest, nil
 }
 
-// checkForHTTPError returns the correct error for the HTTP status code.
+// checkForHTTPError validates the HTTP response status code and returns an error for non-2xx responses.
 func (ollama *OllamaClient) checkForHTTPError(statusCode int, body io.ReadCloser) error {
 	if statusCode/100 != 2 {
 		responseBody, err := io.ReadAll(body)

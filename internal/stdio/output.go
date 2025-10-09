@@ -8,7 +8,9 @@ import (
 )
 
 const (
-	openTag  string = "<think>"
+	// openTag is the opening delimiter for think blocks in LLM responses.
+	openTag string = "<think>"
+	// closeTag is the closing delimiter for think blocks in LLM responses.
 	closeTag string = "</think>"
 )
 
@@ -16,13 +18,13 @@ const (
 // It accumulates all tokens while stripping <think>...</think> blocks from
 // the output stream. State must be reset between LLM calls using reset().
 type OutputWriter struct {
-	Logger           *log.Logger
-	Output           io.Writer
-	Tokens           *string
-	buffer           strings.Builder
-	insideThinkBlock bool
-	canPassThrough   bool
-	newlinesTrimmed  bool
+	Logger           *log.Logger     // Logger for structured logging of stream processing
+	Output           io.Writer       // Output destination for filtered content (without think blocks)
+	Tokens           *string         // Accumulator for all tokens including think blocks
+	buffer           strings.Builder // Internal buffer for stream parsing
+	insideThinkBlock bool            // Tracks whether currently inside a think block
+	canPassThrough   bool            // Enables direct write mode after think block detection
+	newlinesTrimmed  bool            // Tracks whether leading whitespace has been trimmed
 }
 
 // Write processes a single token from the LLM stream, accumulating it while
@@ -106,8 +108,8 @@ func (writer *OutputWriter) Write(token string) {
 	}
 }
 
-// reset clears all outputWriter state for reuse with a new LLM response.
-// This includes the buffer, state flags, and tokens pointer.
+// Reset clears all outputWriter state for reuse with a new LLM response.
+// Reset includes the buffer, state flags, and tokens pointer.
 func (writer *OutputWriter) Reset() {
 	writer.Logger.Debug("writer reset", "tokensLength", len(*writer.Tokens), "buffLength", writer.buffer.Len(), "insideThinkBlock", writer.insideThinkBlock, "canPassThrough", writer.canPassThrough)
 
@@ -156,8 +158,8 @@ func isOpenTag(content string) bool {
 	return strings.HasPrefix(content, openTag)
 }
 
-// isCloseTag checks if content contains the think block closing tag.
-// Returns true and the tag's index if found, false and -1 otherwise.
+// isCloseTag checks if content contains the think block closing tag and returns
+// true and the tag's index if found, false and -1 otherwise.
 func isCloseTag(content string) (bool, int) {
 	index := strings.Index(content, closeTag)
 
@@ -165,7 +167,17 @@ func isCloseTag(content string) (bool, int) {
 }
 
 // thinkBlockNotPossible determines if the buffered content cannot possibly
-// start a think block, enabling pass-through mode for better performance.
+// start a think block by checking if the content is too long without matching
+// the opening tag prefix or if it's too short to be a complete opening tag.
 func thinkBlockNotPossible(content string) bool {
-	return (len(content) >= 7 && !strings.HasPrefix(content, "<think>")) || (len(content) < len(openTag) && !strings.HasPrefix("<think>", content))
+	contentLength := len(content)
+	tagLength := len(openTag)
+
+	// If there is enough content to determine if in think tag.
+	if contentLength >= tagLength {
+		return !strings.HasPrefix(content, openTag)
+	}
+
+	// If content is shorter than the tag, check if it could be the start.
+	return !strings.HasPrefix(openTag, content)
 }

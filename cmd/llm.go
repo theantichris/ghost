@@ -9,11 +9,12 @@ import (
 	"github.com/theantichris/ghost/internal/llm"
 )
 
+// systemPrompt defines the default system-level instruction for Ghost's LLM interactions.
 const systemPrompt = "You are Ghost, a cyberpunk inspired terminal based assistant. Answer requests directly and briefly."
 
-// initializeLLMClient creates and configures an LLM client using configuration from viper.
-// It requires OLLAMA_BASE_URL and DEFAULT_MODEL to be set via environment variables,
-// config file, or command-line flags.
+// initializeLLMClient creates and configures an LLM client using configuration from viper,
+// requiring OLLAMA_BASE_URL and DEFAULT_MODEL to be set via environment variables, config
+// file, or command-line flags.
 func initializeLLMClient(logger *log.Logger) (llm.LLMClient, error) {
 	ollamaBaseURL := viper.GetString("ollama")
 	model := viper.GetString("model")
@@ -26,11 +27,7 @@ func initializeLLMClient(logger *log.Logger) (llm.LLMClient, error) {
 		return nil, fmt.Errorf("%w: set DEFAULT_MODEL via environment variable, config file, or --model flag", ErrConfig)
 	}
 
-	timeout := viper.GetDuration("timeout")
-
-	logger.Info("creating Ollama client", "baseURL", ollamaBaseURL, "model", model, "timeout", timeout)
-
-	httpClient := &http.Client{Timeout: timeout}
+	httpClient := &http.Client{}
 
 	llmClient, err := llm.NewOllamaClient(ollamaBaseURL, model, httpClient, logger)
 	if err != nil {

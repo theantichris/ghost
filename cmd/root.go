@@ -1,9 +1,13 @@
+// Package cmd provides the command-line interface for Ghost, including
+// the root command configuration, subcommands (ask, chat), and shared
+// functionality like LLM client initialization.
 package cmd
 
 import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/charmbracelet/log"
 	"github.com/joho/godotenv"
@@ -31,6 +35,12 @@ func NewRootCmd(logger *log.Logger) *cobra.Command {
 
 			logger.Debug("bound persistent flag", "flag", "model", "value", viper.GetString("model"))
 
+			if err := viper.BindPFlag("timeout", cmd.PersistentFlags().Lookup("timeout")); err != nil {
+				return fmt.Errorf("%w: %w", ErrConfig, err)
+			}
+
+			logger.Debug("bound persistent flag", "flag", "timeout", "value", viper.GetString("timeout"))
+
 			return nil
 		},
 	}
@@ -38,6 +48,7 @@ func NewRootCmd(logger *log.Logger) *cobra.Command {
 	cmd.PersistentFlags().String("config", "", "config file (default is $HOME/.config/ghost/config.toml)")
 	cmd.PersistentFlags().String("model", "", "LLM model to use")
 	cmd.PersistentFlags().String("ollama", "", "Ollama API base URL")
+	cmd.PersistentFlags().Duration("timeout", 2*time.Minute, "HTTP client timeout for LLM requests")
 
 	cmd.AddCommand(NewAskCmd(logger))
 	cmd.AddCommand(NewChatCmd(logger))
@@ -62,10 +73,10 @@ func Execute() *cobra.Command {
 	return NewRootCmd(logger)
 }
 
-// initConfig initializes the configuration for the Ghost CLI application.
-// It loads environment variables from .env file, sets up viper configuration paths,
-// binds environment variables (OLLAMA_BASE_URL to ollama, DEFAULT_MODEL to model),
-// and attempts to read the config file from multiple locations.
+// initConfig initializes the configuration for the Ghost CLI application by loading
+// environment variables from .env file, setting up viper configuration paths, binding
+// environment variables (OLLAMA_BASE_URL to ollama, DEFAULT_MODEL to model), and
+// attempting to read the config file from multiple locations.
 func initConfig(logger *log.Logger) {
 	if err := godotenv.Load(); err != nil {
 		logger.Debug(".env file not found, using environment variables")
@@ -79,14 +90,20 @@ func initConfig(logger *log.Logger) {
 		viper.SetConfigFile(config)
 	} else {
 		home, err := os.UserHomeDir()
-		cobra.CheckErr(err)
-
-		viper.AddConfigPath(filepath.Join(home, ".config", "ghost"))
-		viper.SetConfigName("config")
-		viper.SetConfigType("toml")
+		if err != nil {
+			logger.Error(ErrHomeDir.Error(), "error", err)
+			logger.Debug("skipping home directory config path")
+		} else {
+			viper.AddConfigPath(filepath.Join(home, ".config", "ghost"))
+			viper.SetConfigName("config")
+			viper.SetConfigType("toml")
+		}
 	}
 
 	viper.AutomaticEnv()
+
+	// Environment variable binding errors are logged but not returned as they are
+	// non-fatal. Configuration can still be loaded from flags or config file.
 	if err := viper.BindEnv("ollama", "OLLAMA_BASE_URL"); err != nil {
 		logger.Error("failed to bind ollama config", "error", err)
 	}
@@ -109,6 +126,8 @@ func initConfig(logger *log.Logger) {
 		logger.Debug("using config file", "file", viper.ConfigFileUsed())
 	}
 
+	viper.SetDefault("timeout", 2*time.Minute)
+
 	logger.Debug("configuration loaded successfully", "ollama", viper.GetString("ollama"), "model", viper.GetString("model"), "debug", viper.GetBool("debug"))
 
 	if err := initLogger(logger); err != nil {
@@ -116,7 +135,7 @@ func initConfig(logger *log.Logger) {
 	}
 }
 
-// initLogger configures file logging to ~/.config/ghost/ghost.log
+// initLogger configures file logging to ~/.config/ghost/ghost.log for debug output.
 func initLogger(logger *log.Logger) error {
 	home, err := os.UserHomeDir()
 	if err != nil {
@@ -135,6 +154,9 @@ func initLogger(logger *log.Logger) error {
 		return fmt.Errorf("%w: failed to open log file: %w", ErrLogging, err)
 	}
 
+	// logFile is intentionally not closed here as the logger needs to write to
+	// it for the program's lifecycle. The file will be closed by the OS when the
+	// program exits.
 	logger.SetOutput(logFile)
 
 	logger.SetLevel(log.DebugLevel)

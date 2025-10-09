@@ -101,6 +101,7 @@ ghost chat
 
 - `--ollama` — Override the Ollama API base URL.
 - `--model` — Override the default LLM model
+- `--timeout` — Override the HTTP timeout for LLM requests (e.g., `5m`, `30s`)
 - `--config` — Specify config file location (default: `$HOME/.config/ghost/config.toml`)
 
 ### Environment Variables
@@ -125,26 +126,29 @@ Create a `config.toml` file in `~/.config/ghost/` to set default configuration:
 # ~/.config/ghost/config.toml
 ollama = "http://localhost:11434"
 model = "llama3.1"
+timeout = "5m"  # Optional: custom timeout for LLM requests
 ```
 
 Configuration options:
 
 - `ollama` — Ollama API base URL (default: `http://localhost:11434`)
 - `model` — LLM model to use (default: `llama3.1`)
+- `timeout` — HTTP client timeout for LLM requests (default: `2m`)
 
 ## Features
 
 - **CLI Command Interface**: Enhanced command-line interface using Fang
   (built on Cobra framework) with styled help pages and improved user
   experience
-- **Interactive Chat Mode**: Multi-turn conversations with in-memory history
-  and graceful exit commands
+- **Interactive Chat Mode**: Multi-turn conversations with in-memory history,
+  real-time streaming responses, and graceful exit commands
 - **Pipe Support**: Process files, logs, or command output by piping to Ghost
-- **Streaming Output**: Real-time token streaming for responsive user experience
+- **Streaming Output**: Real-time token-by-token streaming for responsive user
+  experience in both ask and chat modes
 - **Think Block Filtering**: Automatically filters out `<think>` blocks from
   model responses in both ask and chat modes
 - **Flexible Configuration**: Support for environment variables, config
-  files, and command-line flags
+  files, and command-line flags with sensible defaults
 - **File Logging**: All operations logged to `~/.config/ghost/ghost.log` for debugging
   and troubleshooting (credentials never logged)
 - **Error Handling**: Comprehensive error messages with clear guidance on

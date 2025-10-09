@@ -5,6 +5,7 @@ import (
 
 	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"github.com/theantichris/ghost/internal/llm"
 	"github.com/theantichris/ghost/internal/tui"
 )
@@ -15,8 +16,8 @@ type chatCmd struct {
 	llmClient llm.LLMClient
 }
 
-// NewChatCmd creates a new chat command that sends queries to the configured LLM.
-// It supports both direct command-line queries and piped input from stdin.
+// NewChatCmd creates a new chat command that launches an interactive TUI session
+// for multi-turn conversations with the configured LLM.
 func NewChatCmd(logger *log.Logger) *cobra.Command {
 	chatCmd := &chatCmd{
 		logger: logger,
@@ -36,6 +37,7 @@ func NewChatCmd(logger *log.Logger) *cobra.Command {
 	return cmd
 }
 
+// run initializes the LLM client and launches the interactive TUI chat interface.
 func (chatCmd *chatCmd) run(cmd *cobra.Command, args []string) error {
 	if chatCmd.llmClient == nil {
 		llmClient, err := initializeLLMClient(chatCmd.logger)
@@ -46,7 +48,7 @@ func (chatCmd *chatCmd) run(cmd *cobra.Command, args []string) error {
 		chatCmd.llmClient = llmClient
 	}
 
-	model := tui.NewModel(chatCmd.llmClient, systemPrompt, chatCmd.logger)
+	model := tui.NewModel(cmd.Context(), chatCmd.llmClient, viper.GetDuration("timeout"), systemPrompt, chatCmd.logger)
 
 	return tui.Run(model)
 }

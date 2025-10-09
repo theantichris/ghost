@@ -1,3 +1,6 @@
+// Package stdio provides utilities for handling standard input/output operations,
+// including piped input detection, output filtering, and think block processing
+// for LLM streaming responses.
 package stdio
 
 import (
@@ -11,33 +14,36 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// inputReader handles user input retrieval with injectable stdin detection.
-type inputReader struct {
+// InputReader handles user input retrieval with injectable stdin detection.
+type InputReader struct {
 	logger        *log.Logger
 	stdinDetector func() (bool, error)
 }
 
-// newInputReader creates an inputReader with the default stdin detector.
-func NewInputReader(logger *log.Logger) *inputReader {
-	inputReader := inputReader{
-		logger: logger,
-		stdinDetector: func() (bool, error) {
-			stat, err := os.Stdin.Stat()
-			if err != nil {
-				return false, err
-			}
-
-			return (stat.Mode() & os.ModeCharDevice) == 0, nil
-		},
+// NewInputReader creates an InputReader with the default stdin detector.
+func NewInputReader(logger *log.Logger) *InputReader {
+	inputReader := InputReader{
+		logger:        logger,
+		stdinDetector: isPiped,
 	}
 
 	return &inputReader
 }
 
-// Read retrieves user input from either piped stdin or command-line arguments.
-// It handles both piped input and direct arguments, combining them when both are provided.
-// Returns an error if no input is available from either source.
-func (inputReader *inputReader) Read(cmd *cobra.Command, args []string) (string, error) {
+// isPiped checks if stdin is piped by examining the file mode of os.Stdin.
+func isPiped() (bool, error) {
+	stat, err := os.Stdin.Stat()
+	if err != nil {
+		return false, err
+	}
+
+	return (stat.Mode() & os.ModeCharDevice) == 0, nil
+}
+
+// Read retrieves user input from either piped stdin or command-line arguments,
+// combining them when both are provided. Read returns an error if no input is
+// available from either source.
+func (inputReader *InputReader) Read(cmd *cobra.Command, args []string) (string, error) {
 	isPiped, err := inputReader.stdinDetector()
 	if err != nil {
 		return "", fmt.Errorf("%w: %w", ErrIO, err)
@@ -74,7 +80,6 @@ func (inputReader *inputReader) Read(cmd *cobra.Command, args []string) (string,
 }
 
 // readPipedInput reads all input from the provided reader until EOF.
-// It's used to capture piped input from stdin.
 func readPipedInput(input io.Reader) (string, error) {
 	reader := bufio.NewReader(input)
 

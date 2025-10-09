@@ -3,6 +3,9 @@ package tui
 import "errors"
 
 var (
-	ErrLLMClientInit = errors.New("LLM client not initialized")
-	ErrLLMRequest    = errors.New("failed to process LLM request")
+	// ErrLLMClientInit indicates the LLM client was not properly initialized before use.
+	ErrLLMClientInit = errors.New("failed to initialize LLM client")
+
+	// ErrLLMRequest indicates an LLM request processing failure in the TUI context.
+	ErrLLMRequest = errors.New("failed to process LLM request")
 )

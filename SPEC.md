@@ -32,9 +32,14 @@ generating images, executing tasks, setting up reminders, and chatting.
   - Seeds CLI sessions with the Ghost system prompt, captures the initial
     greeting before user input, maintains in-memory turn history, and exits
     on the `/bye` or `/exit` commands (or EOF/Ctrl+D).
-  - Streaming responses implemented with real-time token output and think
-    block filtering for thinking models.
-  - Implemented via the `chat` command (`cmd/chat.go`) with interactive loop.
+  - Streaming responses implemented with real-time token-by-token output using
+    BubbleTea's channel-based message passing pattern.
+  - Implemented via the `chat` command (`cmd/chat.go`) with BubbleTea TUI interface
+    (`internal/tui/model.go`).
+  - Streaming architecture: LLM client callback sends tokens through a Go channel
+    as `streamingChunkMsg` messages, each carrying the channel reference for
+    continuous listening via `waitForActivity()` helper.
+  - Viewport rendering includes `currentMsg` during streaming for real-time display.
 - **Output Handler**: Streaming token processor with think block filtering
   - `OutputWriter` struct in `internal/stdio/output.go` manages streaming output
   - State machine tracks think block boundaries (`<think>...</think>`)
@@ -85,11 +90,12 @@ The assistant should demonstrate:
 ### Performance
 
 - Efficient vector search for large knowledge bases
-- Streaming responses for better user experience with real-time token output
+- Streaming responses for better user experience with real-time token-by-token output
 - Context window management for long conversations
 - Resource usage optimization for local execution
 - Think block filtering preserves full context while hiding reasoning from display
 - Stateful output buffering minimizes overhead once think block presence is determined
+- Channel-based streaming architecture ensures responsive UI updates without blocking
 
 ### Security
 
@@ -137,12 +143,19 @@ Tool permission gating is deferred until tools beyond web search are added.
 
 ## Configuration Precedence
 
-Flags override environment variables, which override internal defaults.
+Flags override environment variables, which override config file, which override
+internal defaults.
 
-| Concern | Flag     | Env             | Default (MVP)         |
-| ------- | -------- | --------------- | --------------------- |
-| Model   | `-model` | `DEFAULT_MODEL` | (required if not set) |
+| Concern | Flag       | Env               | Config | Default |
+| ------- | ---------- | ----------------- | ------ | ------- |
+| Model   | `--model`  | `DEFAULT_MODEL`   | `model` | (required) |
+| Ollama  | `--ollama` | `OLLAMA_BASE_URL` | `ollama` | `localhost:11434` |
+| Timeout | `--timeout`| N/A               | `timeout` | `2m` |
 
+- Timeout configuration requires a default value via
+  `viper.SetDefault("timeout", 2*time.Minute)` to ensure
+  `context.WithTimeout` receives a valid duration (zero duration creates
+  already-expired contexts).
 - Recoverable LLM failures (transport, non-2xx, decode) surface as system
   messages so sessions can continue without exiting.
 
@@ -288,6 +301,11 @@ is auto-generated from commits (excluding docs and test commits).
 - Cancel on context done; ensure goroutines exit (no leaks).
 - Backpressure: token writer checks context and downstream errors; do not
   buffer unbounded.
+- **BubbleTea Streaming Pattern**: Commands return `tea.Cmd` (not `tea.Msg`).
+  Create a channel in the command's goroutine, send streaming chunks as messages
+  that include the channel reference, and use a helper command (`waitForActivity`)
+  to continue listening for subsequent messages. Close the channel when streaming
+  completes.
 
 ## Style & Conventions (Summary)
 
