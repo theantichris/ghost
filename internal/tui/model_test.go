@@ -659,7 +659,16 @@ func TestSendChatRequest(t *testing.T) {
 			},
 		}
 
-		msg := model.sendChatRequest()
+		cmd := model.sendChatRequest()
+		msg := cmd()
+
+		for {
+			if chunkMsg, ok := msg.(streamingChunkMsg); ok {
+				msg = waitForActivity(chunkMsg.sub)()
+			} else {
+				break
+			}
+		}
 
 		_, ok := msg.(streamCompleteMsg)
 		if !ok {
@@ -672,7 +681,8 @@ func TestSendChatRequest(t *testing.T) {
 
 		model := Model{}
 
-		returnedMsg := model.sendChatRequest()
+		cmd := model.sendChatRequest()
+		returnedMsg := cmd()
 
 		actualMsg, ok := returnedMsg.(streamErrorMsg)
 		if !ok {
@@ -704,7 +714,8 @@ func TestSendChatRequest(t *testing.T) {
 			},
 		}
 
-		msg := model.sendChatRequest()
+		cmd := model.sendChatRequest()
+		msg := cmd()
 
 		errMsg, ok := msg.(streamErrorMsg)
 		if !ok {
@@ -737,7 +748,16 @@ func TestSendChatRequest(t *testing.T) {
 			},
 		}
 
-		msg := model.sendChatRequest()
+		cmd := model.sendChatRequest()
+		msg := cmd()
+
+		for {
+			if chunkMsg, ok := msg.(streamingChunkMsg); ok {
+				msg = waitForActivity(chunkMsg.sub)()
+			} else {
+				break
+			}
+		}
 
 		completeMsg, ok := msg.(streamCompleteMsg)
 		if !ok {

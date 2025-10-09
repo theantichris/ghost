@@ -19,6 +19,7 @@ import (
 // streamingChunkMsg carries a single token from the LLM stream.
 type streamingChunkMsg struct {
 	content string
+	sub     <-chan tea.Msg
 }
 
 // streamCompleteMsg signals that streaming is complete and carries the full accumulated response.
@@ -52,8 +53,8 @@ type Model struct {
 	currentMsg string // Current message being streamed
 
 	// Exit state
-	exiting bool
-	err     error
+	exiting bool  // Indicates the mdel is exiting streaming
+	err     error // Exit error
 }
 
 // NewModel creates a new TUI model initialized with the provided dependencies.
@@ -83,7 +84,7 @@ func NewModel(ctx context.Context, llmClient llm.LLMClient, timeout time.Duratio
 // This is called once when the BubbleTea program starts.
 func (model Model) Init() tea.Cmd {
 	if len(model.chatHistory) > 0 {
-		return model.sendChatRequest
+		return model.sendChatRequest()
 	}
 
 	return nil
@@ -142,13 +143,18 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				model.viewport.SetContent(model.wordwrap())
 				model.viewport.GotoBottom()
 
-				return model, model.sendChatRequest
+				return model, model.sendChatRequest()
 			}
 		}
 
 	case streamingChunkMsg:
 		model.streaming = true
 		model.currentMsg += msg.content
+
+		model.viewport.SetContent(model.wordwrap())
+		model.viewport.GotoBottom()
+
+		return model, waitForActivity(msg.sub)
 
 	case streamCompleteMsg:
 		model.streaming = false
@@ -192,6 +198,11 @@ func (model Model) wordwrap() string {
 		wrapped = append(wrapped, wrappedMsg)
 	}
 
+	if model.streaming && model.currentMsg != "" {
+		wrappedCurrentMsg := lipgloss.NewStyle().Width(model.width).Render(model.currentMsg)
+		wrapped = append(wrapped, wrappedCurrentMsg)
+	}
+
 	messages := strings.Join(wrapped, "\n")
 
 	return messages
@@ -199,24 +210,43 @@ func (model Model) wordwrap() string {
 
 // sendChatRequest sends the current chat history to the LLM and accumulates the
 // streamed response, returning streamCompleteMsg on success or streamErrorMsg on failure.
-func (model Model) sendChatRequest() tea.Msg {
-	if model.llmClient == nil {
-		return streamErrorMsg{err: ErrLLMClientInit}
+func (model Model) sendChatRequest() tea.Cmd {
+	return func() tea.Msg {
+		sub := make(chan tea.Msg)
+
+		go func() {
+			defer close(sub)
+
+			if model.llmClient == nil {
+				sub <- streamErrorMsg{err: ErrLLMClientInit}
+				return
+			}
+
+			ctx, cancel := context.WithTimeout(model.ctx, model.timeout)
+			defer cancel()
+
+			var content strings.Builder
+
+			err := model.llmClient.Chat(ctx, model.chatHistory, func(token string) {
+				sub <- streamingChunkMsg{content: token, sub: sub}
+				content.WriteString(token)
+			})
+
+			if err != nil {
+				sub <- streamErrorMsg{err: fmt.Errorf("%w: %w", ErrLLMRequest, err)}
+
+				return
+			}
+
+			sub <- streamCompleteMsg{content: content.String()}
+		}()
+
+		return <-sub
 	}
+}
 
-	ctx, cancel := context.WithTimeout(model.ctx, model.timeout)
-	defer cancel()
-
-	var content strings.Builder
-	err := model.llmClient.Chat(ctx, model.chatHistory, func(token string) {
-		content.WriteString(token)
-	})
-
-	if err != nil {
-		return streamErrorMsg{err: fmt.Errorf("%w: %w", ErrLLMRequest, err)}
+func waitForActivity(sub <-chan tea.Msg) tea.Cmd {
+	return func() tea.Msg {
+		return <-sub
 	}
-
-	completeMsg := streamCompleteMsg{content: content.String()}
-
-	return completeMsg
 }
