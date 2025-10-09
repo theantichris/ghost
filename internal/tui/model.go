@@ -66,7 +66,7 @@ func NewModel(ctx context.Context, llmClient llm.LLMClient, timeout time.Duratio
 		{Role: llm.SystemRole, Content: "Greet the user."},
 	}
 
-	viewport := viewport.New(80, 20)
+	viewport := viewport.New(80, 24)
 
 	model := Model{
 		ctx:         ctx,
@@ -137,9 +137,7 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				})
 
 				model.messages = append(model.messages, "You: "+input)
-
 				model.input = ""
-
 				model.viewport.SetContent(model.wordwrap())
 				model.viewport.GotoBottom()
 

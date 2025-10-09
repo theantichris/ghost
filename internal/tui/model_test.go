@@ -38,6 +38,18 @@ func TestNewModel(t *testing.T) {
 			t.Error("expected logger to be set")
 		}
 
+		if actualModel.timeout != 2*time.Minute {
+			t.Errorf("expected timeout to be 2 minutes, got %v", actualModel.timeout)
+		}
+
+		if actualModel.viewport.Width != testTerminalWidth {
+			t.Errorf("expected viewport to have width of %d, got %d", testTerminalWidth, actualModel.viewport.Width)
+		}
+
+		if actualModel.viewport.Height != testTerminalHeight {
+			t.Errorf("expected viewport to have height of %d, got %d", testTerminalHeight, actualModel.viewport.Height)
+		}
+
 		expectedChatLength := 2
 
 		if len(actualModel.chatHistory) != expectedChatLength {
