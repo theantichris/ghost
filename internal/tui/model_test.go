@@ -248,7 +248,7 @@ func TestUpdate(t *testing.T) {
 			t.Run(tt.name, func(t *testing.T) {
 				model := Model{viewport: viewport.New(testTerminalWidth, 2)}
 
-				model.viewport.SetContent("Line 1\nLine 2\nLine3\nLine4\n")
+				model.viewport.SetContent("Line 1\nLine 2\nLine 3\nLine 4\n")
 
 				if tt.keyType == tea.KeyUp || tt.keyType == tea.KeyPgUp {
 					model.viewport.GotoBottom()
