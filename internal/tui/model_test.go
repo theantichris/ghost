@@ -671,9 +671,9 @@ func TestSendChatRequest(t *testing.T) {
 
 		model := Model{}
 
-		retrunedMsg := model.sendChatRequest()
+		returnedMsg := model.sendChatRequest()
 
-		actualMsg, ok := retrunedMsg.(streamErrorMsg)
+		actualMsg, ok := returnedMsg.(streamErrorMsg)
 		if !ok {
 			t.Fatal("expected message to be of type streamErrorMsg")
 		}
