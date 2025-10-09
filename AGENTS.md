@@ -18,6 +18,28 @@ See [SPEC.md](/SPEC.md) for full technical architecture, error handling patterns
 - **Release**: `git tag vX.Y.Z && git push origin vX.Y.Z` (triggers
  GoReleaser via GitHub Actions)
 
+## Streaming Implementation Pattern
+
+The chat command uses BubbleTea's channel-based streaming pattern for
+real-time token display:
+
+1. **Command Structure**: `sendChatRequest()` returns `tea.Cmd` (not `tea.Msg`)
+2. **Channel Creation**: Create a channel in the command's goroutine:
+   `sub := make(chan tea.Msg)`
+3. **Token Delivery**: Send each token as
+   `streamingChunkMsg{content: token, sub: sub}` including the channel reference
+4. **Continuous Listening**: Use `waitForActivity(msg.sub)` in `Update()` to
+   return a command that waits for the next message
+5. **Completion**: Send `streamCompleteMsg` when streaming finishes, close
+   the channel
+6. **Viewport Rendering**: Include `model.currentMsg` in `wordwrap()` to
+   display streaming tokens in real-time
+
+**Critical Configuration**: Timeout must have a default value via
+`viper.SetDefault("timeout", 2*time.Minute)` in `initConfig()`. Without this,
+`viper.GetDuration("timeout")` returns 0, causing `context.WithTimeout` to
+create already-expired contexts that fail immediately.
+
 ## Code Style
 
 - **Imports**: Standard library first, then third-party, then internal packages
@@ -75,7 +97,11 @@ Standard input/output handling utilities used by command implementations:
 
 Terminal user interface implementation for interactive chat:
 
-- **`model.go`** - BubbleTea model implementation with message handling and LLM integration
+- **`model.go`** - BubbleTea model implementation with streaming message handling,
+  viewport rendering, and LLM integration. Implements channel-based streaming
+  pattern where `sendChatRequest()` returns `tea.Cmd`, tokens are sent as
+  `streamingChunkMsg` with channel reference, and `waitForActivity()` continues
+  listening for streaming messages.
 - **`run.go`** - TUI program entry point
 - **`errors.go`** - TUI-specific sentinel errors (`ErrLLMClientInit`, `ErrLLMRequest`)
 

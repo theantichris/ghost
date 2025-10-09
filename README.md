@@ -140,14 +140,15 @@ Configuration options:
 - **CLI Command Interface**: Enhanced command-line interface using Fang
   (built on Cobra framework) with styled help pages and improved user
   experience
-- **Interactive Chat Mode**: Multi-turn conversations with in-memory history
-  and graceful exit commands
+- **Interactive Chat Mode**: Multi-turn conversations with in-memory history,
+  real-time streaming responses, and graceful exit commands
 - **Pipe Support**: Process files, logs, or command output by piping to Ghost
-- **Streaming Output**: Real-time token streaming for responsive user experience
+- **Streaming Output**: Real-time token-by-token streaming for responsive user
+  experience in both ask and chat modes
 - **Think Block Filtering**: Automatically filters out `<think>` blocks from
   model responses in both ask and chat modes
 - **Flexible Configuration**: Support for environment variables, config
-  files, and command-line flags
+  files, and command-line flags with sensible defaults
 - **File Logging**: All operations logged to `~/.config/ghost/ghost.log` for debugging
   and troubleshooting (credentials never logged)
 - **Error Handling**: Comprehensive error messages with clear guidance on
