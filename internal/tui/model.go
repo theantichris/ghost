@@ -245,6 +245,7 @@ func (model Model) sendChatRequest() tea.Cmd {
 	}
 }
 
+// waitForActivity returns a command that waits for the next message from the subscription channel.
 func waitForActivity(sub <-chan tea.Msg) tea.Cmd {
 	return func() tea.Msg {
 		return <-sub
