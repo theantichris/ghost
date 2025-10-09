@@ -53,7 +53,7 @@ type Model struct {
 	currentMsg string // Current message being streamed
 
 	// Exit state
-	exiting bool  // Indicates the mdel is exiting streaming
+	exiting bool  // Indicates the model is exiting streaming
 	err     error // Exit error
 }
 
