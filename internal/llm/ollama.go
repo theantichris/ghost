@@ -71,6 +71,8 @@ func (ollama *OllamaClient) Chat(ctx context.Context, chatHistory []ChatMessage,
 
 	err = ollama.checkForHTTPError(response.StatusCode, response.Body)
 	if err != nil {
+		_ = response.Body.Close()
+
 		return err
 	}
 
