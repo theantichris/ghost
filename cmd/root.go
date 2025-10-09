@@ -126,6 +126,8 @@ func initConfig(logger *log.Logger) {
 		logger.Debug("using config file", "file", viper.ConfigFileUsed())
 	}
 
+	viper.SetDefault("timeout", 2*time.Minute)
+
 	logger.Debug("configuration loaded successfully", "ollama", viper.GetString("ollama"), "model", viper.GetString("model"), "debug", viper.GetBool("debug"))
 
 	if err := initLogger(logger); err != nil {
