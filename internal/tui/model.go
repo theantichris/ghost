@@ -29,8 +29,6 @@ type Model struct {
 	viewport viewport.Model // Chat message viewport
 	messages []string       // Rendered messages for display
 	input    string         // Current user input
-	width    int            // Terminal width
-	height   int            // Terminal height
 
 	// Streaming state
 	streaming  bool   // True if currently receiving a stream
@@ -80,13 +78,10 @@ func (model Model) Init() tea.Cmd {
 func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		model.width = msg.Width
-		model.height = msg.Height
+		model.viewport.Width = msg.Width
 
 		// Save 3 lines for spacing, divider, and user input.
 		viewportHeight := max(msg.Height-3, 1)
-
-		model.viewport.Width = msg.Width
 		model.viewport.Height = viewportHeight
 
 	case tea.KeyMsg:
@@ -163,7 +158,7 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 // View renders the TUI layout with the chat viewport, separator, and input field.
 func (model Model) View() string {
-	separator := strings.Repeat("─", model.width)
+	separator := strings.Repeat("─", model.viewport.Width)
 
 	view := model.viewport.View() + "\n" + separator + "\n" + model.input
 
@@ -176,12 +171,12 @@ func (model Model) wordwrap() string {
 	var wrapped []string
 
 	for _, msg := range model.messages {
-		wrappedMsg := lipgloss.NewStyle().Width(model.width).Render(msg)
+		wrappedMsg := lipgloss.NewStyle().Width(model.viewport.Width).Render(msg)
 		wrapped = append(wrapped, wrappedMsg)
 	}
 
 	if model.streaming && model.currentMsg != "" {
-		wrappedCurrentMsg := lipgloss.NewStyle().Width(model.width).Render(model.currentMsg)
+		wrappedCurrentMsg := lipgloss.NewStyle().Width(model.viewport.Width).Render(model.currentMsg)
 		wrapped = append(wrapped, wrappedCurrentMsg)
 	}
 

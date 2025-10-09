@@ -115,7 +115,7 @@ func TestInit(t *testing.T) {
 }
 
 func TestUpdate(t *testing.T) {
-	t.Run("handles window size message", func(t *testing.T) {
+	t.Run("window size message updates viewport size", func(t *testing.T) {
 		t.Parallel()
 
 		model := Model{ctx: context.Background()}
@@ -129,14 +129,14 @@ func TestUpdate(t *testing.T) {
 		}
 
 		expectedWidth := testTerminalWidth
-		expectedHeight := testTerminalHeight
+		expectedHeight := testTerminalHeight - 3 // spacing, divider, user input
 
-		if actualModel.width != expectedWidth {
-			t.Errorf("expected width %d, got %d", expectedWidth, actualModel.width)
+		if actualModel.viewport.Width != expectedWidth {
+			t.Errorf("expected width %d, got %d", expectedWidth, actualModel.viewport.Width)
 		}
 
-		if actualModel.height != expectedHeight {
-			t.Errorf("expected height %d, got %d", expectedHeight, actualModel.height)
+		if actualModel.viewport.Height != expectedHeight {
+			t.Errorf("expected height %d, got %d", expectedHeight, actualModel.viewport.Height)
 		}
 	})
 
@@ -589,10 +589,8 @@ func TestView(t *testing.T) {
 		t.Parallel()
 
 		model := Model{
-			ctx:    context.Background(),
-			input:  "hello",
-			width:  testTerminalWidth,
-			height: testTerminalHeight,
+			ctx:   context.Background(),
+			input: "hello",
 		}
 
 		actualView := model.View()
@@ -608,13 +606,12 @@ func TestView(t *testing.T) {
 		t.Parallel()
 
 		model := Model{
-			width:  testTerminalWidth,
-			height: testTerminalHeight,
+			viewport: viewport.Model{Width: testTerminalWidth},
 		}
 
 		actualView := model.View()
 
-		expectedSeparator := strings.Repeat("─", 80)
+		expectedSeparator := strings.Repeat("─", testTerminalWidth)
 
 		if !strings.Contains(actualView, expectedSeparator) {
 			t.Errorf("expected view to contain separator line of 80 characters, got %q", actualView)
@@ -625,14 +622,12 @@ func TestView(t *testing.T) {
 		t.Parallel()
 
 		messages := []string{"Hello, how are you?", "I'm doing great!"}
-		viewport := viewport.New(80, 24)
+		viewport := viewport.New(testTerminalWidth, testTerminalHeight)
 		viewport.SetContent(strings.Join(messages, "\n"))
 
 		model := Model{
 			ctx:      context.Background(),
 			viewport: viewport,
-			width:    80,
-			height:   24,
 		}
 
 		actualView := model.View()
