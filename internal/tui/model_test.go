@@ -100,18 +100,6 @@ func TestInit(t *testing.T) {
 			t.Fatal("expected command to send greeting, got nil")
 		}
 	})
-
-	t.Run("returns nil if chat history is empty", func(t *testing.T) {
-		t.Parallel()
-
-		model := Model{}
-
-		actualCmd := model.Init()
-
-		if actualCmd != nil {
-			t.Errorf("expected command to be nil, got %v", actualCmd)
-		}
-	})
 }
 
 func TestUpdate(t *testing.T) {

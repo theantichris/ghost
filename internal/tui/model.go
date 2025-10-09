@@ -65,11 +65,7 @@ func NewModel(ctx context.Context, llmClient llm.LLMClient, timeout time.Duratio
 // Init initializes the TUI and returns a command to send the initial greeting.
 // This is called once when the BubbleTea program starts.
 func (model Model) Init() tea.Cmd {
-	if len(model.chatHistory) > 0 {
-		return model.sendChatRequest()
-	}
-
-	return nil
+	return model.sendChatRequest()
 }
 
 // Update handles all incoming messages and updates the model state accordingly.
