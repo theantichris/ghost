@@ -27,10 +27,6 @@ func initializeLLMClient(logger *log.Logger) (llm.LLMClient, error) {
 		return nil, fmt.Errorf("%w: set DEFAULT_MODEL via environment variable, config file, or --model flag", ErrConfig)
 	}
 
-	timeout := viper.GetDuration("timeout")
-
-	logger.Info("creating Ollama client", "baseURL", ollamaBaseURL, "model", model, "timeout", timeout)
-
 	httpClient := &http.Client{}
 
 	llmClient, err := llm.NewOllamaClient(ollamaBaseURL, model, httpClient, logger)
