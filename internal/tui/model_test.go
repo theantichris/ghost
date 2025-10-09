@@ -6,6 +6,7 @@ import (
 	"io"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/charmbracelet/bubbles/viewport"
 	"github.com/charmbracelet/log"
@@ -27,7 +28,7 @@ func TestNewModel(t *testing.T) {
 		logger := log.New(io.Discard)
 		systemPrompt := "This is the system prompt."
 
-		actualModel := NewModel(context.Background(), &llmClient, systemPrompt, logger)
+		actualModel := NewModel(context.Background(), &llmClient, 2*time.Minute, systemPrompt, logger)
 
 		if actualModel.llmClient == nil {
 			t.Errorf("expected llmClient to be set")

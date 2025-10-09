@@ -5,6 +5,7 @@ import (
 
 	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"github.com/theantichris/ghost/internal/llm"
 	"github.com/theantichris/ghost/internal/tui"
 )
@@ -47,7 +48,7 @@ func (chatCmd *chatCmd) run(cmd *cobra.Command, args []string) error {
 		chatCmd.llmClient = llmClient
 	}
 
-	model := tui.NewModel(cmd.Context(), chatCmd.llmClient, systemPrompt, chatCmd.logger)
+	model := tui.NewModel(cmd.Context(), chatCmd.llmClient, viper.GetDuration("timeout"), systemPrompt, chatCmd.logger)
 
 	return tui.Run(model)
 }

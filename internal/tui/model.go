@@ -35,6 +35,7 @@ type streamErrorMsg struct {
 // It implements the BubbleTea Model interface (Init, Update, View).
 type Model struct {
 	ctx         context.Context
+	timeout     time.Duration
 	logger      *log.Logger
 	llmClient   llm.LLMClient
 	chatHistory []llm.ChatMessage
@@ -58,7 +59,7 @@ type Model struct {
 // NewModel creates a new TUI model initialized with the provided dependencies.
 // The model is pre-configured with a system prompt and greeting instruction
 // that will be sent to the LLM on initialization.
-func NewModel(ctx context.Context, llmClient llm.LLMClient, systemPrompt string, logger *log.Logger) Model {
+func NewModel(ctx context.Context, llmClient llm.LLMClient, timeout time.Duration, systemPrompt string, logger *log.Logger) Model {
 	chatHistory := []llm.ChatMessage{
 		{Role: llm.SystemRole, Content: systemPrompt},
 		{Role: llm.SystemRole, Content: "Greet the user."},
@@ -68,6 +69,7 @@ func NewModel(ctx context.Context, llmClient llm.LLMClient, systemPrompt string,
 
 	model := Model{
 		ctx:         ctx,
+		timeout:     timeout,
 		llmClient:   llmClient,
 		logger:      logger,
 		viewport:    viewport,
@@ -202,7 +204,7 @@ func (model Model) sendChatRequest() tea.Msg {
 		return streamErrorMsg{err: ErrLLMClientInit}
 	}
 
-	ctx, cancel := context.WithTimeout(model.ctx, 2*time.Minute)
+	ctx, cancel := context.WithTimeout(model.ctx, model.timeout)
 	defer cancel()
 
 	var content strings.Builder
