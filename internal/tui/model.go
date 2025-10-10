@@ -57,6 +57,7 @@ func NewModel(ctx context.Context, llmClient llm.LLMClient, timeout time.Duratio
 		logger:    logger,
 		chatArea:  viewport.New(80, 24),
 		spinner:   s,
+		waiting:   true,
 	}
 
 	return model
@@ -65,8 +66,6 @@ func NewModel(ctx context.Context, llmClient llm.LLMClient, timeout time.Duratio
 // Init initializes the TUI and returns a command to send the initial greeting.
 // This is called once when the BubbleTea program starts.
 func (model Model) Init() tea.Cmd {
-	model.waiting = true
-
 	return tea.Batch(model.spinner.Tick, model.sendChatRequest())
 }
 
