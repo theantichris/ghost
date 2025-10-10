@@ -27,7 +27,7 @@ type Model struct {
 
 	// UI state
 	chatArea viewport.Model // Chat message area
-	messages []string       // Rendered messages for display
+	messages []string       // Holds the messages for display
 	input    string         // Current user input
 
 	// Streaming state
