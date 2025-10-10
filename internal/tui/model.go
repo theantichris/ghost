@@ -9,28 +9,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss/v2"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
 	"github.com/theantichris/ghost/internal/llm"
 )
-
-// streamingChunkMsg carries a single token from the LLM stream.
-type streamingChunkMsg struct {
-	content string
-	sub     <-chan tea.Msg
-}
-
-// streamCompleteMsg signals that streaming is complete and carries the full accumulated response.
-type streamCompleteMsg struct {
-	content string
-}
-
-// streamErrorMsg carries error information when an LLM request fails.
-type streamErrorMsg struct {
-	err error
-}
 
 // Model represents the TUI application state for the chat interface.
 // It implements the BubbleTea Model interface (Init, Update, View).
@@ -42,15 +27,15 @@ type Model struct {
 	chatHistory []llm.ChatMessage
 
 	// UI state
-	viewport viewport.Model // Chat message viewport
-	messages []string       // Rendered messages for display
+	chatArea viewport.Model // Chat message area
+	messages []string       // Holds the messages for display
 	input    string         // Current user input
-	width    int            // Terminal width
-	height   int            // Terminal height
+	spinner  spinner.Model  // Waiting for LLM spinner
 
 	// Streaming state
 	streaming  bool   // True if currently receiving a stream
 	currentMsg string // Current message being streamed
+	waiting    bool   // True if waiting for LLM to start streaming
 
 	// Exit state
 	exiting bool  // Indicates the model is exiting streaming
@@ -60,21 +45,19 @@ type Model struct {
 // NewModel creates a new TUI model initialized with the provided dependencies.
 // The model is pre-configured with a system prompt and greeting instruction
 // that will be sent to the LLM on initialization.
-func NewModel(ctx context.Context, llmClient llm.LLMClient, timeout time.Duration, systemPrompt string, logger *log.Logger) Model {
-	chatHistory := []llm.ChatMessage{
-		{Role: llm.SystemRole, Content: systemPrompt},
-		{Role: llm.SystemRole, Content: "Greet the user."},
-	}
-
-	viewport := viewport.New(80, 20)
+func NewModel(ctx context.Context, llmClient llm.LLMClient, timeout time.Duration, logger *log.Logger) Model {
+	s := spinner.New()
+	s.Spinner = spinner.Dot
+	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
 
 	model := Model{
-		ctx:         ctx,
-		timeout:     timeout,
-		llmClient:   llmClient,
-		logger:      logger,
-		viewport:    viewport,
-		chatHistory: chatHistory,
+		ctx:       ctx,
+		timeout:   timeout,
+		llmClient: llmClient,
+		logger:    logger,
+		chatArea:  viewport.New(80, 24),
+		spinner:   s,
+		waiting:   true,
 	}
 
 	return model
@@ -83,11 +66,7 @@ func NewModel(ctx context.Context, llmClient llm.LLMClient, timeout time.Duratio
 // Init initializes the TUI and returns a command to send the initial greeting.
 // This is called once when the BubbleTea program starts.
 func (model Model) Init() tea.Cmd {
-	if len(model.chatHistory) > 0 {
-		return model.sendChatRequest()
-	}
-
-	return nil
+	return tea.Batch(model.spinner.Tick, model.sendChatRequest())
 }
 
 // Update handles all incoming messages and updates the model state accordingly.
@@ -96,63 +75,75 @@ func (model Model) Init() tea.Cmd {
 func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		model.width = msg.Width
-		model.height = msg.Height
+		model.chatArea.Width = msg.Width
 
 		// Save 3 lines for spacing, divider, and user input.
 		viewportHeight := max(msg.Height-3, 1)
+		model.chatArea.Height = viewportHeight
 
-		model.viewport.Width = msg.Width
-		model.viewport.Height = viewportHeight
+	case spinner.TickMsg:
+		var cmd tea.Cmd
+		model.spinner, cmd = model.spinner.Update(msg)
+
+		return model, cmd
 
 	case tea.KeyMsg:
 		switch msg.Type {
 		case tea.KeyRunes:
 			model.input += string(msg.Runes)
+
 		case tea.KeySpace:
 			model.input += " "
+
 		case tea.KeyBackspace:
 			if len(model.input) > 0 {
 				model.input = model.input[:len(model.input)-1]
 			}
+
 		case tea.KeyCtrlD, tea.KeyCtrlC:
 			model.exiting = true
+
 			return model, tea.Quit
+
 		case tea.KeyUp, tea.KeyDown, tea.KeyPgUp, tea.KeyPgDown:
 			var cmd tea.Cmd
-			model.viewport, cmd = model.viewport.Update(msg)
-			return model, cmd
-		case tea.KeyEnter:
-			if model.input != "" {
-				input := model.input
+			model.chatArea, cmd = model.chatArea.Update(msg)
 
-				if input == "/bye" || input == "/exit" {
+			return model, cmd
+
+		case tea.KeyEnter:
+			model.input = strings.TrimSpace(model.input)
+
+			if model.input != "" {
+				if model.input == "/bye" || model.input == "/exit" {
 					model.exiting = true
-					input = "Goodbye!"
+					model.input = "Goodbye!"
 				}
 
 				model.chatHistory = append(model.chatHistory, llm.ChatMessage{
 					Role:    llm.UserRole,
-					Content: input,
+					Content: model.input,
 				})
 
-				model.messages = append(model.messages, "You: "+input)
+				model.messages = append(model.messages, "You: "+model.input)
 
 				model.input = ""
+				model.waiting = true
 
-				model.viewport.SetContent(model.wordwrap())
-				model.viewport.GotoBottom()
+				model.chatArea.SetContent(model.wordwrap())
+				model.chatArea.GotoBottom()
 
-				return model, model.sendChatRequest()
+				return model, tea.Batch(model.spinner.Tick, model.sendChatRequest())
 			}
 		}
 
 	case streamingChunkMsg:
+		model.waiting = false
 		model.streaming = true
 		model.currentMsg += msg.content
 
-		model.viewport.SetContent(model.wordwrap())
-		model.viewport.GotoBottom()
+		model.chatArea.SetContent(model.wordwrap())
+		model.chatArea.GotoBottom()
 
 		return model, waitForActivity(msg.sub)
 
@@ -167,13 +158,20 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		model.currentMsg = ""
 
-		model.viewport.SetContent(model.wordwrap())
-		model.viewport.GotoBottom()
+		model.chatArea.SetContent(model.wordwrap())
+		model.chatArea.GotoBottom()
 
 	case streamErrorMsg:
+		model.waiting = false
 		model.streaming = false
 		model.err = msg.err
+
+		model.messages = append(model.messages, msg.err.Error())
+
 		model.currentMsg = ""
+
+		model.chatArea.SetContent(model.wordwrap())
+		model.chatArea.GotoBottom()
 	}
 
 	return model, nil
@@ -181,9 +179,14 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 // View renders the TUI layout with the chat viewport, separator, and input field.
 func (model Model) View() string {
-	separator := strings.Repeat("─", model.width)
+	separator := strings.Repeat("─", model.chatArea.Width)
 
-	view := model.viewport.View() + "\n" + separator + "\n" + model.input
+	inputArea := model.input
+	if model.waiting {
+		inputArea = model.spinner.View() + " " + inputArea
+	}
+
+	view := model.chatArea.View() + "\n" + separator + "\n" + inputArea
 
 	return view
 }
@@ -194,12 +197,12 @@ func (model Model) wordwrap() string {
 	var wrapped []string
 
 	for _, msg := range model.messages {
-		wrappedMsg := lipgloss.NewStyle().Width(model.width).Render(msg)
+		wrappedMsg := lipgloss.NewStyle().Width(model.chatArea.Width).Render(msg)
 		wrapped = append(wrapped, wrappedMsg)
 	}
 
 	if model.streaming && model.currentMsg != "" {
-		wrappedCurrentMsg := lipgloss.NewStyle().Width(model.width).Render(model.currentMsg)
+		wrappedCurrentMsg := lipgloss.NewStyle().Width(model.chatArea.Width).Render(model.currentMsg)
 		wrapped = append(wrapped, wrappedCurrentMsg)
 	}
 
@@ -216,11 +219,6 @@ func (model Model) sendChatRequest() tea.Cmd {
 
 		go func() {
 			defer close(sub)
-
-			if model.llmClient == nil {
-				sub <- streamErrorMsg{err: ErrLLMClientInit}
-				return
-			}
 
 			ctx, cancel := context.WithTimeout(model.ctx, model.timeout)
 			defer cancel()

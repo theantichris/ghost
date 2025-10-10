@@ -81,8 +81,8 @@ func (ollama *OllamaClient) Chat(ctx context.Context, chatHistory []ChatMessage,
 	}()
 
 	scanner := bufio.NewScanner(response.Body)
-	const maxTokenBytes = 1024 * 1024   // 1MB maximum token size
-	const initialBufferSize = 64 + 1024 // 64 bytes + 1KB initial capacity
+	const maxTokenBytes = 1024 * 1024   // 1MB max supports large reasoning blocks.
+	const initialBufferSize = 64 + 1024 // 64 + 1024 initial balances memory with typical JSON response sizes.
 	buffer := make([]byte, 0, initialBufferSize)
 	scanner.Buffer(buffer, maxTokenBytes)
 

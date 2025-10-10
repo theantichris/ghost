@@ -48,7 +48,7 @@ func (chatCmd *chatCmd) run(cmd *cobra.Command, args []string) error {
 		chatCmd.llmClient = llmClient
 	}
 
-	model := tui.NewModel(cmd.Context(), chatCmd.llmClient, viper.GetDuration("timeout"), systemPrompt, chatCmd.logger)
+	model := tui.NewModel(cmd.Context(), chatCmd.llmClient, viper.GetDuration("timeout"), chatCmd.logger)
 
-	return tui.Run(model)
+	return tui.Run(model, systemPrompt, greetingPrompt)
 }

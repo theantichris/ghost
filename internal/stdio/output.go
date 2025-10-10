@@ -39,7 +39,7 @@ func (writer *OutputWriter) Write(token string) {
 		output := token
 
 		if !writer.newlinesTrimmed {
-			output = strings.TrimLeft(output, " \n\r\t")
+			output = trimLeadingWhiteSpace(output)
 
 			if output != "" {
 				writer.newlinesTrimmed = true
@@ -66,7 +66,7 @@ func (writer *OutputWriter) Write(token string) {
 
 			writer.Logger.Debug("think block opened")
 		} else if thinkBlockNotPossible(output) {
-			output = strings.TrimLeft(output, " \n\r\t")
+			output = trimLeadingWhiteSpace(output)
 
 			writer.Logger.Debug("writing to output", "content", output, "length", len(output))
 
@@ -88,7 +88,7 @@ func (writer *OutputWriter) Write(token string) {
 
 		if isCloseTag {
 			output := output[index+len(closeTag):]
-			output = strings.TrimLeft(output, " \n\r\t")
+			output = trimLeadingWhiteSpace(output)
 
 			if output != "" {
 				writer.Logger.Debug("writing to output", "content", output, "length", len(output))
@@ -142,7 +142,7 @@ func (writer *OutputWriter) Flush() {
 		return
 	}
 
-	bufferContent = strings.TrimLeft(bufferContent, " \n\r\t")
+	bufferContent = trimLeadingWhiteSpace(bufferContent)
 
 	if bufferContent != "" {
 		writer.Logger.Debug("writing buffered content", "content", bufferContent, "length", len(bufferContent))
@@ -180,4 +180,9 @@ func thinkBlockNotPossible(content string) bool {
 
 	// If content is shorter than the tag, check if it could be the start.
 	return !strings.HasPrefix(openTag, content)
+}
+
+// trimLeadingWhiteSpace removes spaces, \n, \r, \t and returns a new string.
+func trimLeadingWhiteSpace(content string) string {
+	return strings.TrimLeft(content, " \n\r\t")
 }

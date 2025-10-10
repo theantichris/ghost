@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/viewport"
 	"github.com/charmbracelet/log"
 
@@ -26,9 +27,8 @@ func TestNewModel(t *testing.T) {
 
 		llmClient := llm.MockLLMClient{}
 		logger := log.New(io.Discard)
-		systemPrompt := "This is the system prompt."
 
-		actualModel := NewModel(context.Background(), &llmClient, 2*time.Minute, systemPrompt, logger)
+		actualModel := NewModel(context.Background(), &llmClient, 2*time.Minute, logger)
 
 		if actualModel.llmClient == nil {
 			t.Errorf("expected llmClient to be set")
@@ -38,30 +38,16 @@ func TestNewModel(t *testing.T) {
 			t.Error("expected logger to be set")
 		}
 
-		expectedChatLength := 2
-
-		if len(actualModel.chatHistory) != expectedChatLength {
-			t.Fatalf("expected chat to contain %d items, got %d", expectedChatLength, len(actualModel.chatHistory))
+		if actualModel.timeout != 2*time.Minute {
+			t.Errorf("expected timeout to be 2 minutes, got %v", actualModel.timeout)
 		}
 
-		actualSystemPrompt := actualModel.chatHistory[0]
-
-		if actualSystemPrompt.Role != llm.SystemRole {
-			t.Errorf("expected system prompt to have user role, got %q", actualSystemPrompt.Role)
+		if actualModel.chatArea.Width != testTerminalWidth {
+			t.Errorf("expected chatArea to have width of %d, got %d", testTerminalWidth, actualModel.chatArea.Width)
 		}
 
-		if actualSystemPrompt.Content != systemPrompt {
-			t.Errorf("expected system prompt, got %q", actualSystemPrompt.Content)
-		}
-
-		actualGreetingPrompt := actualModel.chatHistory[1]
-
-		if actualGreetingPrompt.Role != llm.SystemRole {
-			t.Errorf("expected greeting prompt to have user role, got %q", actualGreetingPrompt.Role)
-		}
-
-		if actualGreetingPrompt.Content != "Greet the user." {
-			t.Errorf("expected greeting prompt, got %q", actualGreetingPrompt.Content)
+		if actualModel.chatArea.Height != testTerminalHeight {
+			t.Errorf("expected chatArea to have height of %d, got %d", testTerminalHeight, actualModel.chatArea.Height)
 		}
 
 		if actualModel.input != "" {
@@ -88,22 +74,10 @@ func TestInit(t *testing.T) {
 			t.Fatal("expected command to send greeting, got nil")
 		}
 	})
-
-	t.Run("returns nil if chat history is empty", func(t *testing.T) {
-		t.Parallel()
-
-		model := Model{}
-
-		actualCmd := model.Init()
-
-		if actualCmd != nil {
-			t.Errorf("expected command to be nil, got %v", actualCmd)
-		}
-	})
 }
 
 func TestUpdate(t *testing.T) {
-	t.Run("handles window size message", func(t *testing.T) {
+	t.Run("window size message updates chat area size", func(t *testing.T) {
 		t.Parallel()
 
 		model := Model{ctx: context.Background()}
@@ -117,14 +91,14 @@ func TestUpdate(t *testing.T) {
 		}
 
 		expectedWidth := testTerminalWidth
-		expectedHeight := testTerminalHeight
+		expectedHeight := testTerminalHeight - 3 // spacing, divider, user input
 
-		if actualModel.width != expectedWidth {
-			t.Errorf("expected width %d, got %d", expectedWidth, actualModel.width)
+		if actualModel.chatArea.Width != expectedWidth {
+			t.Errorf("expected width %d, got %d", expectedWidth, actualModel.chatArea.Width)
 		}
 
-		if actualModel.height != expectedHeight {
-			t.Errorf("expected height %d, got %d", expectedHeight, actualModel.height)
+		if actualModel.chatArea.Height != expectedHeight {
+			t.Errorf("expected height %d, got %d", expectedHeight, actualModel.chatArea.Height)
 		}
 	})
 
@@ -234,28 +208,28 @@ func TestUpdate(t *testing.T) {
 		}
 	})
 
-	t.Run("handles arrow keys update viewport", func(t *testing.T) {
+	t.Run("handles arrow keys update chat area", func(t *testing.T) {
 		tests := []struct {
 			name    string
 			keyType tea.KeyType
 		}{
-			{"KeyUp updates viewport", tea.KeyUp},
-			{"KeyDown updates viewport", tea.KeyDown},
-			{"KeyPgUp updates viewport", tea.KeyPgUp},
-			{"KeyPgDown updates viewport", tea.KeyPgDown},
+			{"KeyUp updates chat area", tea.KeyUp},
+			{"KeyDown updates chat area", tea.KeyDown},
+			{"KeyPgUp updates chat area", tea.KeyPgUp},
+			{"KeyPgDown updates chat area", tea.KeyPgDown},
 		}
 
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
-				model := Model{viewport: viewport.New(testTerminalWidth, 2)}
+				model := Model{chatArea: viewport.New(testTerminalWidth, 2)}
 
-				model.viewport.SetContent("Line 1\nLine 2\nLine 3\nLine 4\n")
+				model.chatArea.SetContent("Line 1\nLine 2\nLine 3\nLine 4\n")
 
 				if tt.keyType == tea.KeyUp || tt.keyType == tea.KeyPgUp {
-					model.viewport.GotoBottom()
+					model.chatArea.GotoBottom()
 				}
 
-				initialYOffset := model.viewport.YOffset
+				initialYOffset := model.chatArea.YOffset
 
 				keyMsg := tea.KeyMsg{Type: tt.keyType}
 				returnedModel, _ := model.Update(keyMsg)
@@ -265,10 +239,10 @@ func TestUpdate(t *testing.T) {
 					t.Fatalf("expected model to be of type Model")
 				}
 
-				actualYOffset := actualModel.viewport.YOffset
+				actualYOffset := actualModel.chatArea.YOffset
 
 				if actualYOffset == initialYOffset {
-					t.Errorf("viewport not updated: YOffset remained %d", initialYOffset)
+					t.Errorf("chat area not updated: YOffset remained %d", initialYOffset)
 				}
 			})
 
@@ -577,10 +551,8 @@ func TestView(t *testing.T) {
 		t.Parallel()
 
 		model := Model{
-			ctx:    context.Background(),
-			input:  "hello",
-			width:  testTerminalWidth,
-			height: testTerminalHeight,
+			ctx:   context.Background(),
+			input: "hello",
 		}
 
 		actualView := model.View()
@@ -596,13 +568,12 @@ func TestView(t *testing.T) {
 		t.Parallel()
 
 		model := Model{
-			width:  testTerminalWidth,
-			height: testTerminalHeight,
+			chatArea: viewport.Model{Width: testTerminalWidth},
 		}
 
 		actualView := model.View()
 
-		expectedSeparator := strings.Repeat("─", 80)
+		expectedSeparator := strings.Repeat("─", testTerminalWidth)
 
 		if !strings.Contains(actualView, expectedSeparator) {
 			t.Errorf("expected view to contain separator line of 80 characters, got %q", actualView)
@@ -613,14 +584,12 @@ func TestView(t *testing.T) {
 		t.Parallel()
 
 		messages := []string{"Hello, how are you?", "I'm doing great!"}
-		viewport := viewport.New(80, 24)
-		viewport.SetContent(strings.Join(messages, "\n"))
+		chatArea := viewport.New(testTerminalWidth, testTerminalHeight)
+		chatArea.SetContent(strings.Join(messages, "\n"))
 
 		model := Model{
 			ctx:      context.Background(),
-			viewport: viewport,
-			width:    80,
-			height:   24,
+			chatArea: chatArea,
 		}
 
 		actualView := model.View()
@@ -634,6 +603,29 @@ func TestView(t *testing.T) {
 
 		if !strings.Contains(actualView, expectedMessage2) {
 			t.Errorf("expected view to contain %q, got %q", expectedMessage2, actualView)
+		}
+	})
+
+	t.Run("renders spinner when waiting", func(t *testing.T) {
+		t.Parallel()
+
+		chatArea := viewport.New(testTerminalWidth, testTerminalHeight)
+		chatArea.SetContent("")
+
+		s := spinner.New()
+		s.Spinner = spinner.Dot
+
+		model := Model{
+			ctx:      context.Background(),
+			chatArea: chatArea,
+			waiting:  true,
+			spinner:  s,
+		}
+
+		actualView := model.View()
+
+		if !strings.Contains(actualView, "⣾") {
+			t.Errorf("expected spinner, got %q", actualView)
 		}
 	})
 }
@@ -673,28 +665,6 @@ func TestSendChatRequest(t *testing.T) {
 		_, ok := msg.(streamCompleteMsg)
 		if !ok {
 			t.Errorf("expected streamCompleteMsg, got %T", msg)
-		}
-	})
-
-	t.Run("returns stream chat error message if LLM Client is not set", func(t *testing.T) {
-		t.Parallel()
-
-		model := Model{}
-
-		cmd := model.sendChatRequest()
-		returnedMsg := cmd()
-
-		actualMsg, ok := returnedMsg.(streamErrorMsg)
-		if !ok {
-			t.Fatal("expected message to be of type streamErrorMsg")
-		}
-
-		if actualMsg.err == nil {
-			t.Fatal("expected error message, got nil")
-		}
-
-		if !errors.Is(actualMsg.err, ErrLLMClientInit) {
-			t.Errorf("expected ErrLLMClientInit, got %v", actualMsg.err)
 		}
 	})
 
