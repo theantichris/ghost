@@ -26,9 +26,8 @@ func TestNewModel(t *testing.T) {
 
 		llmClient := llm.MockLLMClient{}
 		logger := log.New(io.Discard)
-		systemPrompt := "This is the system prompt."
 
-		actualModel := NewModel(context.Background(), &llmClient, 2*time.Minute, systemPrompt, logger)
+		actualModel := NewModel(context.Background(), &llmClient, 2*time.Minute, logger)
 
 		if actualModel.llmClient == nil {
 			t.Errorf("expected llmClient to be set")
@@ -48,32 +47,6 @@ func TestNewModel(t *testing.T) {
 
 		if actualModel.viewport.Height != testTerminalHeight {
 			t.Errorf("expected viewport to have height of %d, got %d", testTerminalHeight, actualModel.viewport.Height)
-		}
-
-		expectedChatLength := 2
-
-		if len(actualModel.chatHistory) != expectedChatLength {
-			t.Fatalf("expected chat to contain %d items, got %d", expectedChatLength, len(actualModel.chatHistory))
-		}
-
-		actualSystemPrompt := actualModel.chatHistory[0]
-
-		if actualSystemPrompt.Role != llm.SystemRole {
-			t.Errorf("expected system prompt to have user role, got %q", actualSystemPrompt.Role)
-		}
-
-		if actualSystemPrompt.Content != systemPrompt {
-			t.Errorf("expected system prompt, got %q", actualSystemPrompt.Content)
-		}
-
-		actualGreetingPrompt := actualModel.chatHistory[1]
-
-		if actualGreetingPrompt.Role != llm.SystemRole {
-			t.Errorf("expected greeting prompt to have user role, got %q", actualGreetingPrompt.Role)
-		}
-
-		if actualGreetingPrompt.Content != "Greet the user." {
-			t.Errorf("expected greeting prompt, got %q", actualGreetingPrompt.Content)
 		}
 
 		if actualModel.input != "" {

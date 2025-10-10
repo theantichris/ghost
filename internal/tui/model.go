@@ -42,21 +42,13 @@ type Model struct {
 // NewModel creates a new TUI model initialized with the provided dependencies.
 // The model is pre-configured with a system prompt and greeting instruction
 // that will be sent to the LLM on initialization.
-func NewModel(ctx context.Context, llmClient llm.LLMClient, timeout time.Duration, systemPrompt string, logger *log.Logger) Model {
-	chatHistory := []llm.ChatMessage{
-		{Role: llm.SystemRole, Content: systemPrompt},
-		{Role: llm.SystemRole, Content: "Greet the user."},
-	}
-
-	viewport := viewport.New(80, 24)
-
+func NewModel(ctx context.Context, llmClient llm.LLMClient, timeout time.Duration, logger *log.Logger) Model {
 	model := Model{
-		ctx:         ctx,
-		timeout:     timeout,
-		llmClient:   llmClient,
-		logger:      logger,
-		viewport:    viewport,
-		chatHistory: chatHistory,
+		ctx:       ctx,
+		timeout:   timeout,
+		llmClient: llmClient,
+		logger:    logger,
+		viewport:  viewport.New(80, 24),
 	}
 
 	return model

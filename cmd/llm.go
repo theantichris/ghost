@@ -9,8 +9,13 @@ import (
 	"github.com/theantichris/ghost/internal/llm"
 )
 
-// systemPrompt defines the default system-level instruction for Ghost's LLM interactions.
-const systemPrompt = "You are Ghost, a cyberpunk inspired terminal based assistant. Answer requests directly and briefly."
+const (
+	// systemPrompt defines the default system level instruction for Ghost's LLM interactions.
+	systemPrompt = "You are Ghost, a cyberpunk inspired terminal based assistant. Answer requests directly and briefly."
+
+	// greetingPrompt instructs the LLM to greet the user.
+	greetingPrompt = "Greet the user."
+)
 
 // initializeLLMClient creates and configures an LLM client using configuration from viper,
 // requiring OLLAMA_BASE_URL and DEFAULT_MODEL to be set via environment variables, config
