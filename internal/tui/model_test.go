@@ -668,28 +668,6 @@ func TestSendChatRequest(t *testing.T) {
 		}
 	})
 
-	t.Run("returns stream chat error message if LLM Client is not set", func(t *testing.T) {
-		t.Parallel()
-
-		model := Model{}
-
-		cmd := model.sendChatRequest()
-		returnedMsg := cmd()
-
-		actualMsg, ok := returnedMsg.(streamErrorMsg)
-		if !ok {
-			t.Fatal("expected message to be of type streamErrorMsg")
-		}
-
-		if actualMsg.err == nil {
-			t.Fatal("expected error message, got nil")
-		}
-
-		if !errors.Is(actualMsg.err, ErrLLMClientInit) {
-			t.Errorf("expected ErrLLMClientInit, got %v", actualMsg.err)
-		}
-	})
-
 	t.Run("returns stream error message on chat error", func(t *testing.T) {
 		t.Parallel()
 

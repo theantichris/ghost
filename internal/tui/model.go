@@ -214,11 +214,6 @@ func (model Model) sendChatRequest() tea.Cmd {
 		go func() {
 			defer close(sub)
 
-			if model.llmClient == nil {
-				sub <- streamErrorMsg{err: ErrLLMClientInit}
-				return
-			}
-
 			ctx, cancel := context.WithTimeout(model.ctx, model.timeout)
 			defer cancel()
 
