@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/viewport"
 	"github.com/charmbracelet/log"
 
@@ -602,6 +603,29 @@ func TestView(t *testing.T) {
 
 		if !strings.Contains(actualView, expectedMessage2) {
 			t.Errorf("expected view to contain %q, got %q", expectedMessage2, actualView)
+		}
+	})
+
+	t.Run("renders spinner when waiting", func(t *testing.T) {
+		t.Parallel()
+
+		chatArea := viewport.New(testTerminalWidth, testTerminalHeight)
+		chatArea.SetContent("")
+
+		s := spinner.New()
+		s.Spinner = spinner.Dot
+
+		model := Model{
+			ctx:      context.Background(),
+			chatArea: chatArea,
+			waiting:  true,
+			spinner:  s,
+		}
+
+		actualView := model.View()
+
+		if !strings.Contains(actualView, "⣾") {
+			t.Errorf("expected spinner, got %q", actualView)
 		}
 	})
 }
