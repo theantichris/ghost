@@ -99,10 +99,7 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return model, tea.Quit
 
 		case tea.KeyUp, tea.KeyDown, tea.KeyPgUp, tea.KeyPgDown:
-			var cmd tea.Cmd
-			model.chatArea, cmd = model.chatArea.Update(msg)
-
-			return model, cmd
+			return model.scrollChatArea(msg)
 
 		case tea.KeyEnter:
 			model.input = strings.TrimSpace(model.input)
@@ -170,7 +167,15 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return model, nil
 }
 
-func (model *Model) updateSpinner(msg spinner.TickMsg) (tea.Model, tea.Cmd) {
+func (model Model) scrollChatArea(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	var cmd tea.Cmd
+	model.chatArea, cmd = model.chatArea.Update(msg)
+
+	return model, cmd
+}
+
+// updateSpinner updates the waiting spinner each tick.
+func (model Model) updateSpinner(msg spinner.TickMsg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	model.spinner, cmd = model.spinner.Update(msg)
 
