@@ -63,7 +63,7 @@ func Execute() *cobra.Command {
 		Formatter:       log.JSONFormatter,
 		ReportCaller:    true,
 		ReportTimestamp: true,
-		Level:           log.WarnLevel,
+		Level:           log.DebugLevel,
 	})
 
 	cobra.OnInitialize(func() {
@@ -158,8 +158,6 @@ func initLogger(logger *log.Logger) error {
 	// it for the program's lifecycle. The file will be closed by the OS when the
 	// program exits.
 	logger.SetOutput(logFile)
-
-	logger.SetLevel(log.DebugLevel)
 
 	return nil
 }
