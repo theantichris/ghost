@@ -26,7 +26,7 @@ type Model struct {
 	chatHistory []llm.ChatMessage
 
 	// UI state
-	viewport viewport.Model // Chat message viewport
+	chatArea viewport.Model // Chat message area
 	messages []string       // Rendered messages for display
 	input    string         // Current user input
 
@@ -48,7 +48,7 @@ func NewModel(ctx context.Context, llmClient llm.LLMClient, timeout time.Duratio
 		timeout:   timeout,
 		llmClient: llmClient,
 		logger:    logger,
-		viewport:  viewport.New(80, 24),
+		chatArea:  viewport.New(80, 24),
 	}
 
 	return model
@@ -66,47 +66,55 @@ func (model Model) Init() tea.Cmd {
 func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		model.viewport.Width = msg.Width
+		model.chatArea.Width = msg.Width
 
 		// Save 3 lines for spacing, divider, and user input.
 		viewportHeight := max(msg.Height-3, 1)
-		model.viewport.Height = viewportHeight
+		model.chatArea.Height = viewportHeight
 
 	case tea.KeyMsg:
 		switch msg.Type {
 		case tea.KeyRunes:
 			model.input += string(msg.Runes)
+
 		case tea.KeySpace:
 			model.input += " "
+
 		case tea.KeyBackspace:
 			if len(model.input) > 0 {
 				model.input = model.input[:len(model.input)-1]
 			}
+
 		case tea.KeyCtrlD, tea.KeyCtrlC:
 			model.exiting = true
+
 			return model, tea.Quit
+
 		case tea.KeyUp, tea.KeyDown, tea.KeyPgUp, tea.KeyPgDown:
 			var cmd tea.Cmd
-			model.viewport, cmd = model.viewport.Update(msg)
-			return model, cmd
-		case tea.KeyEnter:
-			if model.input != "" {
-				input := model.input
+			model.chatArea, cmd = model.chatArea.Update(msg)
 
-				if input == "/bye" || input == "/exit" {
+			return model, cmd
+
+		case tea.KeyEnter:
+			model.input = strings.TrimSpace(model.input)
+
+			if model.input != "" {
+				if model.input == "/bye" || model.input == "/exit" {
 					model.exiting = true
-					input = "Goodbye!"
+					model.input = "Goodbye!"
 				}
 
 				model.chatHistory = append(model.chatHistory, llm.ChatMessage{
 					Role:    llm.UserRole,
-					Content: input,
+					Content: model.input,
 				})
 
-				model.messages = append(model.messages, "You: "+input)
+				model.messages = append(model.messages, "You: "+model.input)
 				model.input = ""
-				model.viewport.SetContent(model.wordwrap())
-				model.viewport.GotoBottom()
+
+				model.chatArea.SetContent(model.wordwrap())
+				model.chatArea.GotoBottom()
 
 				return model, model.sendChatRequest()
 			}
@@ -116,8 +124,8 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		model.streaming = true
 		model.currentMsg += msg.content
 
-		model.viewport.SetContent(model.wordwrap())
-		model.viewport.GotoBottom()
+		model.chatArea.SetContent(model.wordwrap())
+		model.chatArea.GotoBottom()
 
 		return model, waitForActivity(msg.sub)
 
@@ -132,8 +140,8 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		model.currentMsg = ""
 
-		model.viewport.SetContent(model.wordwrap())
-		model.viewport.GotoBottom()
+		model.chatArea.SetContent(model.wordwrap())
+		model.chatArea.GotoBottom()
 
 	case streamErrorMsg:
 		model.streaming = false
@@ -146,9 +154,9 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 // View renders the TUI layout with the chat viewport, separator, and input field.
 func (model Model) View() string {
-	separator := strings.Repeat("─", model.viewport.Width)
+	separator := strings.Repeat("─", model.chatArea.Width)
 
-	view := model.viewport.View() + "\n" + separator + "\n" + model.input
+	view := model.chatArea.View() + "\n" + separator + "\n" + model.input
 
 	return view
 }
@@ -159,12 +167,12 @@ func (model Model) wordwrap() string {
 	var wrapped []string
 
 	for _, msg := range model.messages {
-		wrappedMsg := lipgloss.NewStyle().Width(model.viewport.Width).Render(msg)
+		wrappedMsg := lipgloss.NewStyle().Width(model.chatArea.Width).Render(msg)
 		wrapped = append(wrapped, wrappedMsg)
 	}
 
 	if model.streaming && model.currentMsg != "" {
-		wrappedCurrentMsg := lipgloss.NewStyle().Width(model.viewport.Width).Render(model.currentMsg)
+		wrappedCurrentMsg := lipgloss.NewStyle().Width(model.chatArea.Width).Render(model.currentMsg)
 		wrapped = append(wrapped, wrappedCurrentMsg)
 	}
 

@@ -41,12 +41,12 @@ func TestNewModel(t *testing.T) {
 			t.Errorf("expected timeout to be 2 minutes, got %v", actualModel.timeout)
 		}
 
-		if actualModel.viewport.Width != testTerminalWidth {
-			t.Errorf("expected viewport to have width of %d, got %d", testTerminalWidth, actualModel.viewport.Width)
+		if actualModel.chatArea.Width != testTerminalWidth {
+			t.Errorf("expected chatArea to have width of %d, got %d", testTerminalWidth, actualModel.chatArea.Width)
 		}
 
-		if actualModel.viewport.Height != testTerminalHeight {
-			t.Errorf("expected viewport to have height of %d, got %d", testTerminalHeight, actualModel.viewport.Height)
+		if actualModel.chatArea.Height != testTerminalHeight {
+			t.Errorf("expected chatArea to have height of %d, got %d", testTerminalHeight, actualModel.chatArea.Height)
 		}
 
 		if actualModel.input != "" {
@@ -76,7 +76,7 @@ func TestInit(t *testing.T) {
 }
 
 func TestUpdate(t *testing.T) {
-	t.Run("window size message updates viewport size", func(t *testing.T) {
+	t.Run("window size message updates chat area size", func(t *testing.T) {
 		t.Parallel()
 
 		model := Model{ctx: context.Background()}
@@ -92,12 +92,12 @@ func TestUpdate(t *testing.T) {
 		expectedWidth := testTerminalWidth
 		expectedHeight := testTerminalHeight - 3 // spacing, divider, user input
 
-		if actualModel.viewport.Width != expectedWidth {
-			t.Errorf("expected width %d, got %d", expectedWidth, actualModel.viewport.Width)
+		if actualModel.chatArea.Width != expectedWidth {
+			t.Errorf("expected width %d, got %d", expectedWidth, actualModel.chatArea.Width)
 		}
 
-		if actualModel.viewport.Height != expectedHeight {
-			t.Errorf("expected height %d, got %d", expectedHeight, actualModel.viewport.Height)
+		if actualModel.chatArea.Height != expectedHeight {
+			t.Errorf("expected height %d, got %d", expectedHeight, actualModel.chatArea.Height)
 		}
 	})
 
@@ -207,28 +207,28 @@ func TestUpdate(t *testing.T) {
 		}
 	})
 
-	t.Run("handles arrow keys update viewport", func(t *testing.T) {
+	t.Run("handles arrow keys update chat area", func(t *testing.T) {
 		tests := []struct {
 			name    string
 			keyType tea.KeyType
 		}{
-			{"KeyUp updates viewport", tea.KeyUp},
-			{"KeyDown updates viewport", tea.KeyDown},
-			{"KeyPgUp updates viewport", tea.KeyPgUp},
-			{"KeyPgDown updates viewport", tea.KeyPgDown},
+			{"KeyUp updates chat area", tea.KeyUp},
+			{"KeyDown updates chat area", tea.KeyDown},
+			{"KeyPgUp updates chat area", tea.KeyPgUp},
+			{"KeyPgDown updates chat area", tea.KeyPgDown},
 		}
 
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
-				model := Model{viewport: viewport.New(testTerminalWidth, 2)}
+				model := Model{chatArea: viewport.New(testTerminalWidth, 2)}
 
-				model.viewport.SetContent("Line 1\nLine 2\nLine 3\nLine 4\n")
+				model.chatArea.SetContent("Line 1\nLine 2\nLine 3\nLine 4\n")
 
 				if tt.keyType == tea.KeyUp || tt.keyType == tea.KeyPgUp {
-					model.viewport.GotoBottom()
+					model.chatArea.GotoBottom()
 				}
 
-				initialYOffset := model.viewport.YOffset
+				initialYOffset := model.chatArea.YOffset
 
 				keyMsg := tea.KeyMsg{Type: tt.keyType}
 				returnedModel, _ := model.Update(keyMsg)
@@ -238,10 +238,10 @@ func TestUpdate(t *testing.T) {
 					t.Fatalf("expected model to be of type Model")
 				}
 
-				actualYOffset := actualModel.viewport.YOffset
+				actualYOffset := actualModel.chatArea.YOffset
 
 				if actualYOffset == initialYOffset {
-					t.Errorf("viewport not updated: YOffset remained %d", initialYOffset)
+					t.Errorf("chat area not updated: YOffset remained %d", initialYOffset)
 				}
 			})
 
@@ -567,7 +567,7 @@ func TestView(t *testing.T) {
 		t.Parallel()
 
 		model := Model{
-			viewport: viewport.Model{Width: testTerminalWidth},
+			chatArea: viewport.Model{Width: testTerminalWidth},
 		}
 
 		actualView := model.View()
@@ -583,12 +583,12 @@ func TestView(t *testing.T) {
 		t.Parallel()
 
 		messages := []string{"Hello, how are you?", "I'm doing great!"}
-		viewport := viewport.New(testTerminalWidth, testTerminalHeight)
-		viewport.SetContent(strings.Join(messages, "\n"))
+		chatArea := viewport.New(testTerminalWidth, testTerminalHeight)
+		chatArea.SetContent(strings.Join(messages, "\n"))
 
 		model := Model{
 			ctx:      context.Background(),
-			viewport: viewport,
+			chatArea: chatArea,
 		}
 
 		actualView := model.View()
