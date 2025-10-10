@@ -9,9 +9,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss/v2"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
 	"github.com/theantichris/ghost/internal/llm"
 )
@@ -29,10 +30,12 @@ type Model struct {
 	chatArea viewport.Model // Chat message area
 	messages []string       // Holds the messages for display
 	input    string         // Current user input
+	spinner  spinner.Model  // Waiting for LLM spinner
 
 	// Streaming state
 	streaming  bool   // True if currently receiving a stream
 	currentMsg string // Current message being streamed
+	waiting    bool   // True if waiting for LLM to start streaming
 
 	// Exit state
 	exiting bool  // Indicates the model is exiting streaming
@@ -43,12 +46,17 @@ type Model struct {
 // The model is pre-configured with a system prompt and greeting instruction
 // that will be sent to the LLM on initialization.
 func NewModel(ctx context.Context, llmClient llm.LLMClient, timeout time.Duration, logger *log.Logger) Model {
+	s := spinner.New()
+	s.Spinner = spinner.Dot
+	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
+
 	model := Model{
 		ctx:       ctx,
 		timeout:   timeout,
 		llmClient: llmClient,
 		logger:    logger,
 		chatArea:  viewport.New(80, 24),
+		spinner:   s,
 	}
 
 	return model
@@ -57,7 +65,9 @@ func NewModel(ctx context.Context, llmClient llm.LLMClient, timeout time.Duratio
 // Init initializes the TUI and returns a command to send the initial greeting.
 // This is called once when the BubbleTea program starts.
 func (model Model) Init() tea.Cmd {
-	return model.sendChatRequest()
+	model.waiting = true
+
+	return tea.Batch(model.spinner.Tick, model.sendChatRequest())
 }
 
 // Update handles all incoming messages and updates the model state accordingly.
@@ -71,6 +81,12 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// Save 3 lines for spacing, divider, and user input.
 		viewportHeight := max(msg.Height-3, 1)
 		model.chatArea.Height = viewportHeight
+
+	case spinner.TickMsg:
+		var cmd tea.Cmd
+		model.spinner, cmd = model.spinner.Update(msg)
+
+		return model, cmd
 
 	case tea.KeyMsg:
 		switch msg.Type {
@@ -111,16 +127,19 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				})
 
 				model.messages = append(model.messages, "You: "+model.input)
+
 				model.input = ""
+				model.waiting = true
 
 				model.chatArea.SetContent(model.wordwrap())
 				model.chatArea.GotoBottom()
 
-				return model, model.sendChatRequest()
+				return model, tea.Batch(model.spinner.Tick, model.sendChatRequest())
 			}
 		}
 
 	case streamingChunkMsg:
+		model.waiting = false
 		model.streaming = true
 		model.currentMsg += msg.content
 
@@ -144,6 +163,7 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		model.chatArea.GotoBottom()
 
 	case streamErrorMsg:
+		model.waiting = false
 		model.streaming = false
 		model.err = msg.err
 		model.currentMsg = ""
@@ -156,7 +176,12 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (model Model) View() string {
 	separator := strings.Repeat("─", model.chatArea.Width)
 
-	view := model.chatArea.View() + "\n" + separator + "\n" + model.input
+	inputArea := model.input
+	if model.waiting {
+		inputArea = model.spinner.View() + " " + inputArea
+	}
+
+	view := model.chatArea.View() + "\n" + separator + "\n" + inputArea
 
 	return view
 }
