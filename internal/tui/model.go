@@ -75,7 +75,7 @@ func (model Model) Init() tea.Cmd {
 func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		model.updateWindowSize(msg)
+		return model.updateWindowSize(msg), nil
 
 	case spinner.TickMsg:
 		return model.updateSpinner(msg)
@@ -183,12 +183,17 @@ func (model Model) updateSpinner(msg spinner.TickMsg) (tea.Model, tea.Cmd) {
 }
 
 // updateWindowSize adjusts the application windows size, leaving 3 lines for user input.
-func (model *Model) updateWindowSize(msg tea.WindowSizeMsg) {
+func (model Model) updateWindowSize(msg tea.WindowSizeMsg) tea.Model {
 	model.chatArea.Width = msg.Width
 
 	// Save 3 lines for spacing, divider, and user input.
 	chatAreaHeight := max(msg.Height-3, 1)
 	model.chatArea.Height = chatAreaHeight
+
+	// Rerender messages after resize.
+	model.chatArea.SetContent(model.wordwrap())
+
+	return model
 }
 
 // View renders the TUI layout with the chat viewport, separator, and input field.
