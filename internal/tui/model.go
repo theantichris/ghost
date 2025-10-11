@@ -152,17 +152,24 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		model.chatArea.GotoBottom()
 
 	case streamErrorMsg:
-		model.waiting = false
-		model.streaming = false
-		model.err = msg.err
-
-		model.messages = append(model.messages, msg.err.Error())
-
-		model.currentMsg = ""
-
-		model.chatArea.SetContent(model.wordwrap())
-		model.chatArea.GotoBottom()
+		return model.handleStreamError(msg)
 	}
+
+	return model, nil
+}
+
+// handleStreamError prints errors from the LLM request/response to the chat area.
+func (model Model) handleStreamError(msg streamErrorMsg) (tea.Model, tea.Cmd) {
+	model.waiting = false
+	model.streaming = false
+	model.err = msg.err
+
+	model.messages = append(model.messages, msg.err.Error())
+
+	model.currentMsg = ""
+
+	model.chatArea.SetContent(model.wordwrap())
+	model.chatArea.GotoBottom()
 
 	return model, nil
 }
