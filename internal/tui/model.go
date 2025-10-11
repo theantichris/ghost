@@ -75,17 +75,10 @@ func (model Model) Init() tea.Cmd {
 func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		model.chatArea.Width = msg.Width
-
-		// Save 3 lines for spacing, divider, and user input.
-		viewportHeight := max(msg.Height-3, 1)
-		model.chatArea.Height = viewportHeight
+		return model.updateWindowSize(msg), nil
 
 	case spinner.TickMsg:
-		var cmd tea.Cmd
-		model.spinner, cmd = model.spinner.Update(msg)
-
-		return model, cmd
+		return model.updateSpinner(msg)
 
 	case tea.KeyMsg:
 		switch msg.Type {
@@ -106,75 +99,128 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return model, tea.Quit
 
 		case tea.KeyUp, tea.KeyDown, tea.KeyPgUp, tea.KeyPgDown:
-			var cmd tea.Cmd
-			model.chatArea, cmd = model.chatArea.Update(msg)
-
-			return model, cmd
+			return model.scrollChatArea(msg)
 
 		case tea.KeyEnter:
-			model.input = strings.TrimSpace(model.input)
-
-			if model.input != "" {
-				if model.input == "/bye" || model.input == "/exit" {
-					model.exiting = true
-					model.input = "Goodbye!"
-				}
-
-				model.chatHistory = append(model.chatHistory, llm.ChatMessage{
-					Role:    llm.UserRole,
-					Content: model.input,
-				})
-
-				model.messages = append(model.messages, "You: "+model.input)
-
-				model.input = ""
-				model.waiting = true
-
-				model.chatArea.SetContent(model.wordwrap())
-				model.chatArea.GotoBottom()
-
-				return model, tea.Batch(model.spinner.Tick, model.sendChatRequest())
-			}
+			return model.handleUserInput()
 		}
 
 	case streamingChunkMsg:
-		model.waiting = false
-		model.streaming = true
-		model.currentMsg += msg.content
-
-		model.chatArea.SetContent(model.wordwrap())
-		model.chatArea.GotoBottom()
-
-		return model, waitForActivity(msg.sub)
+		return model.handleStreamingChunkMsg(msg)
 
 	case streamCompleteMsg:
-		model.streaming = false
-		model.messages = append(model.messages, msg.content)
-
-		model.chatHistory = append(model.chatHistory, llm.ChatMessage{
-			Role:    llm.AssistantRole,
-			Content: msg.content,
-		})
-
-		model.currentMsg = ""
-
-		model.chatArea.SetContent(model.wordwrap())
-		model.chatArea.GotoBottom()
+		return model.handleStreamComplete(msg)
 
 	case streamErrorMsg:
-		model.waiting = false
-		model.streaming = false
-		model.err = msg.err
-
-		model.messages = append(model.messages, msg.err.Error())
-
-		model.currentMsg = ""
-
-		model.chatArea.SetContent(model.wordwrap())
-		model.chatArea.GotoBottom()
+		return model.handleStreamError(msg)
 	}
 
 	return model, nil
+}
+
+// handleStreamComplete is called when all tokens have been streamed. It sets streaming to false, appends to the messages state, adds the response to the chat history, and updates the chat area.
+func (model Model) handleStreamComplete(msg streamCompleteMsg) (tea.Model, tea.Cmd) {
+	model.streaming = false
+	model.messages = append(model.messages, msg.content)
+
+	model.chatHistory = append(model.chatHistory, llm.ChatMessage{
+		Role:    llm.AssistantRole,
+		Content: msg.content,
+	})
+
+	model.currentMsg = ""
+
+	model.chatArea.SetContent(model.wordwrap())
+	model.chatArea.GotoBottom()
+
+	return model, nil
+}
+
+// handleStreamingChunkMsg sets waiting to false and streaming to true then adds the current stream tokens to the chat area.
+func (model Model) handleStreamingChunkMsg(msg streamingChunkMsg) (tea.Model, tea.Cmd) {
+	model.waiting = false
+	model.streaming = true
+	model.currentMsg += msg.content
+
+	model.chatArea.SetContent(model.wordwrap())
+	model.chatArea.GotoBottom()
+
+	return model, waitForActivity(msg.sub)
+}
+
+// handleUserInput looks for any user input after trimming spaces. It will run the goodbye routine if triggered, otherwise sends the user input to the LLM and updates the chat area.
+func (model Model) handleUserInput() (tea.Model, tea.Cmd) {
+	model.input = strings.TrimSpace(model.input)
+
+	if model.input != "" {
+		if model.input == "/bye" || model.input == "/exit" {
+			model.exiting = true
+			model.input = "Goodbye!"
+		}
+
+		model.chatHistory = append(model.chatHistory, llm.ChatMessage{
+			Role:    llm.UserRole,
+			Content: model.input,
+		})
+
+		model.messages = append(model.messages, "You: "+model.input)
+
+		model.input = ""
+		model.waiting = true
+
+		model.chatArea.SetContent(model.wordwrap())
+		model.chatArea.GotoBottom()
+
+		return model, tea.Batch(model.spinner.Tick, model.sendChatRequest())
+	}
+
+	return model, nil
+}
+
+// handleStreamError prints errors from the LLM request/response to the chat area.
+func (model Model) handleStreamError(msg streamErrorMsg) (tea.Model, tea.Cmd) {
+	model.waiting = false
+	model.streaming = false
+	model.err = msg.err
+
+	model.messages = append(model.messages, msg.err.Error())
+
+	model.currentMsg = ""
+
+	model.chatArea.SetContent(model.wordwrap())
+	model.chatArea.GotoBottom()
+
+	return model, nil
+}
+
+// scrollChatArea handles keyboard scrolling events for the chat viewport.
+func (model Model) scrollChatArea(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	var cmd tea.Cmd
+	model.chatArea, cmd = model.chatArea.Update(msg)
+
+	return model, cmd
+}
+
+// updateSpinner updates the waiting spinner each tick.
+func (model Model) updateSpinner(msg spinner.TickMsg) (tea.Model, tea.Cmd) {
+	var cmd tea.Cmd
+	model.spinner, cmd = model.spinner.Update(msg)
+
+	return model, cmd
+}
+
+// updateWindowSize adjusts the application window's size, leaving 3 lines for user input.
+func (model Model) updateWindowSize(msg tea.WindowSizeMsg) tea.Model {
+	model.chatArea.Width = msg.Width
+
+	// Save 3 lines for spacing, divider, and user input.
+	chatAreaHeight := max(msg.Height-3, 1)
+	model.chatArea.Height = chatAreaHeight
+
+	// Rerender messages after resize.
+	model.chatArea.SetContent(model.wordwrap())
+
+	return model
 }
 
 // View renders the TUI layout with the chat viewport, separator, and input field.
@@ -211,8 +257,9 @@ func (model Model) wordwrap() string {
 	return messages
 }
 
-// sendChatRequest sends the current chat history to the LLM and accumulates the
-// streamed response, returning streamCompleteMsg on success or streamErrorMsg on failure.
+// sendChatRequest sends the current chat history to the LLM and returns a tea.Cmd
+// that streams tokens via streamingChunkMsg and completes with streamCompleteMsg on
+// success or streamErrorMsg on failure.
 func (model Model) sendChatRequest() tea.Cmd {
 	return func() tea.Msg {
 		sub := make(chan tea.Msg)

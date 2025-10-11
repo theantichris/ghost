@@ -208,7 +208,7 @@ func TestUpdate(t *testing.T) {
 		}
 	})
 
-	t.Run("handles arrow keys update chat area", func(t *testing.T) {
+	t.Run("arrow keys update chat area", func(t *testing.T) {
 		tests := []struct {
 			name    string
 			keyType tea.KeyType
@@ -236,7 +236,7 @@ func TestUpdate(t *testing.T) {
 
 				actualModel, ok := returnedModel.(Model)
 				if !ok {
-					t.Fatalf("expected model to be of type Model")
+					t.Fatalf("expected model to be of type %T, got %T", Model{}, actualModel)
 				}
 
 				actualYOffset := actualModel.chatArea.YOffset
