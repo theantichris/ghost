@@ -148,6 +148,7 @@ func (model Model) handleStreamingChunkMsg(msg streamingChunkMsg) (tea.Model, te
 	return model, waitForActivity(msg.sub)
 }
 
+// handleUserInput looks for any user input after trimming spaces. It will run the goodbye routine if triggered, otherwise sends the user input to the LLM and updates the chat area.
 func (model Model) handleUserInput() (tea.Model, tea.Cmd) {
 	model.input = strings.TrimSpace(model.input)
 
