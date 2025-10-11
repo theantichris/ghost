@@ -209,7 +209,7 @@ func (model Model) updateSpinner(msg spinner.TickMsg) (tea.Model, tea.Cmd) {
 	return model, cmd
 }
 
-// updateWindowSize adjusts the application windows size, leaving 3 lines for user input.
+// updateWindowSize adjusts the application window's size, leaving 3 lines for user input.
 func (model Model) updateWindowSize(msg tea.WindowSizeMsg) tea.Model {
 	model.chatArea.Width = msg.Width
 
