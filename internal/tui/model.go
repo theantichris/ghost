@@ -109,22 +109,29 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return model.handleStreamingChunkMsg(msg)
 
 	case streamCompleteMsg:
-		model.streaming = false
-		model.messages = append(model.messages, msg.content)
-
-		model.chatHistory = append(model.chatHistory, llm.ChatMessage{
-			Role:    llm.AssistantRole,
-			Content: msg.content,
-		})
-
-		model.currentMsg = ""
-
-		model.chatArea.SetContent(model.wordwrap())
-		model.chatArea.GotoBottom()
+		return model.handleStreamComplete(msg)
 
 	case streamErrorMsg:
 		return model.handleStreamError(msg)
 	}
+
+	return model, nil
+}
+
+// handleStreamComplete is called when all tokens have been streamed. It sets streaming to false, appeneds to the messages state, adds the response to the chat history, and updates the chat area.
+func (model Model) handleStreamComplete(msg streamCompleteMsg) (tea.Model, tea.Cmd) {
+	model.streaming = false
+	model.messages = append(model.messages, msg.content)
+
+	model.chatHistory = append(model.chatHistory, llm.ChatMessage{
+		Role:    llm.AssistantRole,
+		Content: msg.content,
+	})
+
+	model.currentMsg = ""
+
+	model.chatArea.SetContent(model.wordwrap())
+	model.chatArea.GotoBottom()
 
 	return model, nil
 }
