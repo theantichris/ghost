@@ -106,14 +106,7 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 	case streamingChunkMsg:
-		model.waiting = false
-		model.streaming = true
-		model.currentMsg += msg.content
-
-		model.chatArea.SetContent(model.wordwrap())
-		model.chatArea.GotoBottom()
-
-		return model, waitForActivity(msg.sub)
+		return model.handleStreamingChunkMsg(msg)
 
 	case streamCompleteMsg:
 		model.streaming = false
@@ -134,6 +127,18 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	return model, nil
+}
+
+// handleStreamingChunkMsg sets waiting to false and streaming to true then adds the current stream tokens to the chat area.
+func (model Model) handleStreamingChunkMsg(msg streamingChunkMsg) (tea.Model, tea.Cmd) {
+	model.waiting = false
+	model.streaming = true
+	model.currentMsg += msg.content
+
+	model.chatArea.SetContent(model.wordwrap())
+	model.chatArea.GotoBottom()
+
+	return model, waitForActivity(msg.sub)
 }
 
 func (model Model) handleUserInput() (tea.Model, tea.Cmd) {
