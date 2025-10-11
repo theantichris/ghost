@@ -162,52 +162,6 @@ func TestUpdate(t *testing.T) {
 		}
 	})
 
-	t.Run("handles ctrl+d to exit", func(t *testing.T) {
-		t.Parallel()
-
-		model := Model{ctx: context.Background()}
-		keyMsg := tea.KeyMsg{Type: tea.KeyCtrlD}
-
-		returnedModel, actualCmd := model.Update(keyMsg)
-
-		actualModel, ok := returnedModel.(Model)
-		if !ok {
-			t.Fatal("expected model to be of type model")
-		}
-
-		if !actualModel.exiting {
-			t.Errorf("expected model exiting to be true, got false")
-		}
-
-		quitMsg := actualCmd()
-		if _, ok := quitMsg.(tea.QuitMsg); !ok {
-			t.Errorf("expected command to return tea.QuitMsg, got %T", quitMsg)
-		}
-	})
-
-	t.Run("handles ctrl+c to exit", func(t *testing.T) {
-		t.Parallel()
-
-		model := Model{ctx: context.Background()}
-		keyMsg := tea.KeyMsg{Type: tea.KeyCtrlC}
-
-		returnedModel, actualCmd := model.Update(keyMsg)
-
-		actualModel, ok := returnedModel.(Model)
-		if !ok {
-			t.Fatal("expected model to be of type model")
-		}
-
-		if !actualModel.exiting {
-			t.Errorf("expected model exiting to be true, got false")
-		}
-
-		quitMsg := actualCmd()
-		if _, ok := quitMsg.(tea.QuitMsg); !ok {
-			t.Errorf("expected command to return tea.QuitMsg, got %T", quitMsg)
-		}
-	})
-
 	t.Run("arrow keys update chat area", func(t *testing.T) {
 		tests := []struct {
 			name    string
@@ -353,60 +307,77 @@ func TestUpdate(t *testing.T) {
 		}
 	})
 
-	t.Run("/bye command quits chat", func(t *testing.T) {
-		t.Parallel()
-
-		model := Model{input: "/bye"}
-		keyMsg := tea.KeyMsg{Type: tea.KeyEnter}
-
-		returnedModel, _ := model.Update(keyMsg)
-
-		actualModel, ok := returnedModel.(Model)
-		if !ok {
-			t.Fatal("expected model to be of type Model")
+	t.Run("ctrl+d and ctrl+c quit application", func(t *testing.T) {
+		tests := []struct {
+			name    string
+			keyType tea.KeyType
+		}{
+			{"ctrl+d exits application", tea.KeyCtrlD},
+			{"ctrl+c exits application", tea.KeyCtrlC},
 		}
 
-		if !actualModel.exiting {
-			t.Error("expected model exiting to be true, got false")
-		}
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				model := Model{ctx: context.Background()}
+				keyMsg := tea.KeyMsg{Type: tt.keyType}
 
-		expectedContent := "Goodbye!"
+				returnedModel, actualCmd := model.Update(keyMsg)
 
-		if len(actualModel.chatHistory) != 1 {
-			t.Errorf("expected chat history length %d, got %d", 1, len(actualModel.chatHistory))
-		}
+				actualModel, ok := returnedModel.(Model)
+				if !ok {
+					t.Fatal("expected model to be of type model")
+				}
 
-		if actualModel.chatHistory[0].Content != expectedContent {
-			t.Errorf("expected message content %q, got %q", expectedContent, actualModel.chatHistory[0].Content)
+				if !actualModel.exiting {
+					t.Errorf("expected model exiting to be true, got false")
+				}
+
+				quitMsg := actualCmd()
+				if _, ok := quitMsg.(tea.QuitMsg); !ok {
+					t.Errorf("expected command to return tea.QuitMsg, got %T", quitMsg)
+				}
+			})
 		}
 	})
 
-	t.Run("/exit command quits chat", func(t *testing.T) {
-		t.Parallel()
-
-		model := Model{ctx: context.Background(), input: "/exit"}
-		keyMsg := tea.KeyMsg{Type: tea.KeyEnter}
-
-		returnedModel, _ := model.Update(keyMsg)
-
-		actualModel, ok := returnedModel.(Model)
-		if !ok {
-			t.Fatal("expected model to be of type Model")
+	t.Run("starts exit routine", func(t *testing.T) {
+		tests := []struct {
+			name  string
+			input string
+		}{
+			{"/bye starts exit routine", "/bye"},
+			{"/exit starts exit routine", "/exit"},
 		}
 
-		if !actualModel.exiting {
-			t.Error("expected model exiting to be true, got false")
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+
+				model := Model{input: tt.input}
+				keyMsg := tea.KeyMsg{Type: tea.KeyEnter}
+
+				returnedModel, _ := model.Update(keyMsg)
+
+				actualModel, ok := returnedModel.(Model)
+				if !ok {
+					t.Fatal("expected model to be of type Model")
+				}
+
+				if !actualModel.exiting {
+					t.Error("expected model exiting to be true, got false")
+				}
+
+				expectedContent := "Goodbye!"
+
+				if len(actualModel.chatHistory) != 1 {
+					t.Errorf("expected chat history length %d, got %d", 1, len(actualModel.chatHistory))
+				}
+
+				if actualModel.chatHistory[0].Content != expectedContent {
+					t.Errorf("expected message content %q, got %q", expectedContent, actualModel.chatHistory[0].Content)
+				}
+			})
 		}
 
-		expectedContent := "Goodbye!"
-
-		if len(actualModel.chatHistory) != 1 {
-			t.Errorf("expected chat history length %d, got %d", 1, len(actualModel.chatHistory))
-		}
-
-		if actualModel.chatHistory[0].Content != expectedContent {
-			t.Errorf("expected message content %q, got %q", expectedContent, actualModel.chatHistory[0].Content)
-		}
 	})
 
 	t.Run("handles stream chunk message", func(t *testing.T) {
