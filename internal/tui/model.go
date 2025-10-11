@@ -118,7 +118,7 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return model, nil
 }
 
-// handleStreamComplete is called when all tokens have been streamed. It sets streaming to false, appeneds to the messages state, adds the response to the chat history, and updates the chat area.
+// handleStreamComplete is called when all tokens have been streamed. It sets streaming to false, appends to the messages state, adds the response to the chat history, and updates the chat area.
 func (model Model) handleStreamComplete(msg streamCompleteMsg) (tea.Model, tea.Cmd) {
 	model.streaming = false
 	model.messages = append(model.messages, msg.content)
@@ -193,6 +193,7 @@ func (model Model) handleStreamError(msg streamErrorMsg) (tea.Model, tea.Cmd) {
 	return model, nil
 }
 
+// scrollChatArea handles keyboard scrolling events for the chat viewport.
 func (model Model) scrollChatArea(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	model.chatArea, cmd = model.chatArea.Update(msg)
@@ -256,8 +257,9 @@ func (model Model) wordwrap() string {
 	return messages
 }
 
-// sendChatRequest sends the current chat history to the LLM and accumulates the
-// streamed response, returning streamCompleteMsg on success or streamErrorMsg on failure.
+// sendChatRequest sends the current chat history to the LLM and returns a tea.Cmd
+// that streams tokens via streamingChunkMsg and completes with streamCompleteMsg on
+// success or streamErrorMsg on failure.
 func (model Model) sendChatRequest() tea.Cmd {
 	return func() tea.Msg {
 		sub := make(chan tea.Msg)
