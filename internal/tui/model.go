@@ -133,6 +133,10 @@ func (model Model) handleStreamComplete(msg streamCompleteMsg) (tea.Model, tea.C
 	model.chatArea.SetContent(model.wordwrap())
 	model.chatArea.GotoBottom()
 
+	if model.exiting {
+		return model, tea.Quit
+	}
+
 	return model, nil
 }
 

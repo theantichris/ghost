@@ -480,6 +480,30 @@ func TestUpdate(t *testing.T) {
 		}
 	})
 
+	t.Run("quits application if exiting is true", func(t *testing.T) {
+		t.Parallel()
+
+		model := Model{
+			ctx:        context.Background(),
+			currentMsg: "Hello, how can I help?",
+			streaming:  true,
+			exiting:    true,
+		}
+		msg := streamCompleteMsg{"Hello, how can I help?"}
+
+		returnedModel, actualCmd := model.Update(msg)
+
+		actualModel, ok := returnedModel.(Model)
+		if !ok {
+			t.Fatalf("expected model to be of type Model, got %T", actualModel)
+		}
+
+		quitMsg := actualCmd()
+		if _, ok := quitMsg.(tea.QuitMsg); !ok {
+			t.Errorf("expected command to return tea.QuitMsg, got %T", quitMsg)
+		}
+	})
+
 	t.Run("handles stream error message", func(t *testing.T) {
 		t.Parallel()
 
