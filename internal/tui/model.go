@@ -33,13 +33,14 @@ type Model struct {
 	spinner  spinner.Model  // Waiting for LLM spinner
 
 	// Streaming state
-	streaming  bool   // True if currently receiving a stream
-	currentMsg string // Current message being streamed
-	waiting    bool   // True if waiting for LLM to start streaming
+	streaming     bool   // True if currently receiving a stream
+	currentMsg    string // Current message being streamed
+	waitingForLLM bool   // True if waiting for LLM to start streaming
 
 	// Exit state
-	exiting bool  // Indicates the model is exiting streaming
-	err     error // Exit error
+	awaitingExit bool  // Sets the application to wait for user input to quit application.
+	exiting      bool  // Indicates the model is exiting streaming
+	err          error // Exit error
 }
 
 // NewModel creates a new TUI model initialized with the provided dependencies.
@@ -51,13 +52,13 @@ func NewModel(ctx context.Context, llmClient llm.LLMClient, timeout time.Duratio
 	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
 
 	model := Model{
-		ctx:       ctx,
-		timeout:   timeout,
-		llmClient: llmClient,
-		logger:    logger,
-		chatArea:  viewport.New(80, 24),
-		spinner:   s,
-		waiting:   true,
+		ctx:           ctx,
+		timeout:       timeout,
+		llmClient:     llmClient,
+		logger:        logger,
+		chatArea:      viewport.New(80, 24),
+		spinner:       s,
+		waitingForLLM: true,
 	}
 
 	return model
@@ -142,7 +143,7 @@ func (model Model) handleStreamComplete(msg streamCompleteMsg) (tea.Model, tea.C
 
 // handleStreamingChunkMsg sets waiting to false and streaming to true then adds the current stream tokens to the chat area.
 func (model Model) handleStreamingChunkMsg(msg streamingChunkMsg) (tea.Model, tea.Cmd) {
-	model.waiting = false
+	model.waitingForLLM = false
 	model.streaming = true
 	model.currentMsg += msg.content
 
@@ -170,7 +171,8 @@ func (model Model) handleUserInput() (tea.Model, tea.Cmd) {
 		model.messages = append(model.messages, "You: "+model.input)
 
 		model.input = ""
-		model.waiting = true
+		model.waitingForLLM = true
+		model.awaitingExit = true
 
 		model.chatArea.SetContent(model.wordwrap())
 		model.chatArea.GotoBottom()
@@ -183,7 +185,7 @@ func (model Model) handleUserInput() (tea.Model, tea.Cmd) {
 
 // handleStreamError prints errors from the LLM request/response to the chat area.
 func (model Model) handleStreamError(msg streamErrorMsg) (tea.Model, tea.Cmd) {
-	model.waiting = false
+	model.waitingForLLM = false
 	model.streaming = false
 	model.err = msg.err
 
@@ -232,7 +234,7 @@ func (model Model) View() string {
 	separator := strings.Repeat("─", model.chatArea.Width)
 
 	inputArea := model.input
-	if model.waiting {
+	if model.waitingForLLM {
 		inputArea = model.spinner.View() + " " + inputArea
 	}
 

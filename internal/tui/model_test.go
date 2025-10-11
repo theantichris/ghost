@@ -366,6 +366,10 @@ func TestUpdate(t *testing.T) {
 					t.Error("expected model exiting to be true, got false")
 				}
 
+				if !actualModel.awaitingExit {
+					t.Error("expected awaiting exit to be true, got false")
+				}
+
 				expectedContent := "Goodbye!"
 
 				if len(actualModel.chatHistory) != 1 {
@@ -377,7 +381,6 @@ func TestUpdate(t *testing.T) {
 				}
 			})
 		}
-
 	})
 
 	t.Run("handles stream chunk message", func(t *testing.T) {
@@ -424,7 +427,7 @@ func TestUpdate(t *testing.T) {
 		}
 	})
 
-	t.Run("handles stream complete message", func(t *testing.T) {
+	t.Run("adds LLM response to chat history", func(t *testing.T) {
 		t.Parallel()
 
 		model := Model{
@@ -611,10 +614,10 @@ func TestView(t *testing.T) {
 		s.Spinner = spinner.Dot
 
 		model := Model{
-			ctx:      context.Background(),
-			chatArea: chatArea,
-			waiting:  true,
-			spinner:  s,
+			ctx:           context.Background(),
+			chatArea:      chatArea,
+			waitingForLLM: true,
+			spinner:       s,
 		}
 
 		actualView := model.View()
