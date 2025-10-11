@@ -174,7 +174,7 @@ func (model Model) handleUserInput() (tea.Model, tea.Cmd) {
 		return model, tea.Batch(model.spinner.Tick, model.sendChatRequest())
 	}
 
-	return nil, nil
+	return model, nil
 }
 
 // handleStreamError prints errors from the LLM request/response to the chat area.
