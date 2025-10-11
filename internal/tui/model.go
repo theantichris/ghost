@@ -102,29 +102,7 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return model.scrollChatArea(msg)
 
 		case tea.KeyEnter:
-			model.input = strings.TrimSpace(model.input)
-
-			if model.input != "" {
-				if model.input == "/bye" || model.input == "/exit" {
-					model.exiting = true
-					model.input = "Goodbye!"
-				}
-
-				model.chatHistory = append(model.chatHistory, llm.ChatMessage{
-					Role:    llm.UserRole,
-					Content: model.input,
-				})
-
-				model.messages = append(model.messages, "You: "+model.input)
-
-				model.input = ""
-				model.waiting = true
-
-				model.chatArea.SetContent(model.wordwrap())
-				model.chatArea.GotoBottom()
-
-				return model, tea.Batch(model.spinner.Tick, model.sendChatRequest())
-			}
+			return model.handleUserInput()
 		}
 
 	case streamingChunkMsg:
@@ -156,6 +134,34 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	return model, nil
+}
+
+func (model Model) handleUserInput() (tea.Model, tea.Cmd) {
+	model.input = strings.TrimSpace(model.input)
+
+	if model.input != "" {
+		if model.input == "/bye" || model.input == "/exit" {
+			model.exiting = true
+			model.input = "Goodbye!"
+		}
+
+		model.chatHistory = append(model.chatHistory, llm.ChatMessage{
+			Role:    llm.UserRole,
+			Content: model.input,
+		})
+
+		model.messages = append(model.messages, "You: "+model.input)
+
+		model.input = ""
+		model.waiting = true
+
+		model.chatArea.SetContent(model.wordwrap())
+		model.chatArea.GotoBottom()
+
+		return model, tea.Batch(model.spinner.Tick, model.sendChatRequest())
+	}
+
+	return nil, nil
 }
 
 // handleStreamError prints errors from the LLM request/response to the chat area.
