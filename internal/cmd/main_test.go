@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"os"
-	"path/filepath"
 	"testing"
+
+	"github.com/sebdah/goldie/v2"
 )
 
 // errorWrite is used to test output errors.
@@ -34,14 +34,8 @@ func TestRun(t *testing.T) {
 			t.Fatalf("expect no error got, %s", err)
 		}
 
-		golden, err := os.ReadFile(filepath.Join("../../testdata", t.Name()+".golden"))
-		if err != nil {
-			t.Fatalf("error reading golden file, %s", err)
-		}
-
-		if !bytes.Equal(writer.Bytes(), golden) {
-			t.Errorf("written output does not matching golden")
-		}
+		g := goldie.New(t)
+		g.Assert(t, t.Name(), writer.Bytes())
 	})
 
 	t.Run("returns error for bad output", func(t *testing.T) {
