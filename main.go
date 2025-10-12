@@ -9,7 +9,7 @@ import (
 	"github.com/theantichris/ghost/internal/cmd"
 )
 
-// main initializes and executes the Ghost CLI application using the fang framework.
+// main initializes and executes the root command (ghost).
 func main() {
 	if err := cmd.Run(context.Background(), os.Args); err != nil {
 		log.Fatal(err)
