@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -29,14 +31,16 @@ func TestRun(t *testing.T) {
 
 		err := Run(context.Background(), []string{}, &writer)
 		if err != nil {
-			t.Fatalf("expect no error got, %v", err)
+			t.Fatalf("expect no error got, %s", err)
 		}
 
-		actualOutput := writer.String()
-		expectedOutput := "ghost system online\n"
+		golden, err := os.ReadFile(filepath.Join("../../testdata", t.Name()+".golden"))
+		if err != nil {
+			t.Fatalf("error reading golden file, %s", err)
+		}
 
-		if actualOutput != expectedOutput {
-			t.Errorf("expected output %q, got %q", expectedOutput, actualOutput)
+		if !bytes.Equal(writer.Bytes(), golden) {
+			t.Errorf("written output does not matching golden")
 		}
 	})
 
