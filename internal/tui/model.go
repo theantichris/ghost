@@ -82,6 +82,11 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return model.updateSpinner(msg)
 
 	case tea.KeyMsg:
+		// Await user input if exit routine.
+		if model.awaitingExit {
+			return model, tea.Quit
+		}
+
 		switch msg.Type {
 		case tea.KeyRunes:
 			model.input += string(msg.Runes)
@@ -135,7 +140,9 @@ func (model Model) handleStreamComplete(msg streamCompleteMsg) (tea.Model, tea.C
 	model.chatArea.GotoBottom()
 
 	if model.exiting {
-		return model, tea.Quit
+		model.awaitingExit = true
+		model.waitingForLLM = true
+		return model, nil
 	}
 
 	return model, nil
@@ -172,7 +179,6 @@ func (model Model) handleUserInput() (tea.Model, tea.Cmd) {
 
 		model.input = ""
 		model.waitingForLLM = true
-		model.awaitingExit = true
 
 		model.chatArea.SetContent(model.wordwrap())
 		model.chatArea.GotoBottom()
@@ -234,7 +240,10 @@ func (model Model) View() string {
 	separator := strings.Repeat("─", model.chatArea.Width)
 
 	inputArea := model.input
-	if model.waitingForLLM {
+
+	if model.awaitingExit {
+		inputArea = "Press any key to exit"
+	} else if model.waitingForLLM {
 		inputArea = model.spinner.View() + " " + inputArea
 	}
 

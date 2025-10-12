@@ -366,10 +366,6 @@ func TestUpdate(t *testing.T) {
 					t.Error("expected model exiting to be true, got false")
 				}
 
-				if !actualModel.awaitingExit {
-					t.Error("expected awaiting exit to be true, got false")
-				}
-
 				expectedContent := "Goodbye!"
 
 				if len(actualModel.chatHistory) != 1 {
@@ -480,30 +476,6 @@ func TestUpdate(t *testing.T) {
 
 		if actualChatMessage.Content != expectedMessage {
 			t.Errorf("expected chat message %q, got %q", expectedMessage, actualChatMessage.Content)
-		}
-	})
-
-	t.Run("quits application if exiting is true", func(t *testing.T) {
-		t.Parallel()
-
-		model := Model{
-			ctx:        context.Background(),
-			currentMsg: "Hello, how can I help?",
-			streaming:  true,
-			exiting:    true,
-		}
-		msg := streamCompleteMsg{"Hello, how can I help?"}
-
-		returnedModel, actualCmd := model.Update(msg)
-
-		actualModel, ok := returnedModel.(Model)
-		if !ok {
-			t.Fatalf("expected model to be of type Model, got %T", actualModel)
-		}
-
-		quitMsg := actualCmd()
-		if _, ok := quitMsg.(tea.QuitMsg); !ok {
-			t.Errorf("expected command to return tea.QuitMsg, got %T", quitMsg)
 		}
 	})
 
