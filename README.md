@@ -93,8 +93,8 @@ ghost chat
 **Chat controls:**
 
 - Type your messages and press Enter to send
-- `/bye` or `/exit` - End the chat with a goodbye message
-- `Ctrl+D` (EOF) - Exit immediately
+- `/bye` or `/exit` - Display goodbye message and wait for any keypress to exit
+- `Ctrl+D` or `Ctrl+C` - Exit immediately without goodbye
 - Empty input is ignored (just press Enter again)
 
 ### Global Flags

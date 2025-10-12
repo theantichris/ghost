@@ -101,7 +101,9 @@ Terminal user interface implementation for interactive chat:
   viewport rendering, and LLM integration. Implements channel-based streaming
   pattern where `sendChatRequest()` returns `tea.Cmd`, tokens are sent as
   `streamingChunkMsg` with channel reference, and `waitForActivity()` continues
-  listening for streaming messages.
+  listening for streaming messages. Exit handling distinguishes between immediate
+  exit (Ctrl+D/Ctrl+C) and graceful exit routine (`/bye`, `/exit`) which displays
+  a goodbye message and awaits user keypress via the `awaitingExit` state.
 - **`run.go`** - TUI program entry point
 - **`errors.go`** - TUI-specific sentinel errors (`ErrLLMClientInit`, `ErrLLMRequest`)
 
