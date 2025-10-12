@@ -30,7 +30,7 @@ func Run(ctx context.Context, args []string, output io.Writer) error {
 		Name:  commands["ghost"].Name,
 		Usage: commands["ghost"].Usage,
 		Action: func(context.Context, *cli.Command) error {
-			if _, err := fmt.Fprintln(output, "ghost system online"); err != nil {
+			if _, err := fmt.Fprintln(output, args[1]); err != nil {
 				return fmt.Errorf("%w: %w", ErrOutput, err)
 			}
 

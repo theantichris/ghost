@@ -24,12 +24,14 @@ func (writer *errorWriter) Write(str []byte) (int, error) {
 }
 
 func TestRun(t *testing.T) {
-	t.Run("writes default text", func(t *testing.T) {
+	t.Run("writes user prompt", func(t *testing.T) {
 		t.Parallel()
 
 		var writer bytes.Buffer
 
-		err := Run(context.Background(), []string{}, &writer)
+		args := []string{"ghost", "what is the capital of nashville"}
+
+		err := Run(context.Background(), args, &writer)
 		if err != nil {
 			t.Fatalf("expect no error got, %s", err)
 		}
@@ -43,7 +45,7 @@ func TestRun(t *testing.T) {
 
 		writer := errorWriter{err: errors.New("error printing output")}
 
-		err := Run(context.Background(), []string{}, &writer)
+		err := Run(context.Background(), []string{"ghost", "test"}, &writer)
 		if err == nil {
 			t.Fatal("expect error, got nil")
 		}
