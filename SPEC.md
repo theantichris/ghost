@@ -31,7 +31,8 @@ generating images, executing tasks, setting up reminders, and chatting.
 - **Conversation Manager**: Handle chat flow, context windows, streaming
   - Seeds CLI sessions with the Ghost system prompt, captures the initial
     greeting before user input, maintains in-memory turn history, and exits
-    on the `/bye` or `/exit` commands (or EOF/Ctrl+D).
+    on the `/bye` or `/exit` commands (which trigger a graceful exit routine
+    displaying "Goodbye!" and awaiting keypress) or immediately on EOF/Ctrl+D/Ctrl+C.
   - Streaming responses implemented with real-time token-by-token output using
     BubbleTea's channel-based message passing pattern.
   - Implemented via the `chat` command (`cmd/chat.go`) with BubbleTea TUI interface
@@ -40,6 +41,8 @@ generating images, executing tasks, setting up reminders, and chatting.
     as `streamingChunkMsg` messages, each carrying the channel reference for
     continuous listening via `waitForActivity()` helper.
   - Viewport rendering includes `currentMsg` during streaming for real-time display.
+  - Exit flow uses `awaitingExit` state to pause application after `/bye` or `/exit`
+    commands, waiting for user input before final quit.
 - **Output Handler**: Streaming token processor with think block filtering
   - `OutputWriter` struct in `internal/stdio/output.go` manages streaming output
   - State machine tracks think block boundaries (`<think>...</think>`)
