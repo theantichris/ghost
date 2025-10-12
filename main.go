@@ -11,7 +11,7 @@ import (
 
 // main initializes and executes the root command (ghost).
 func main() {
-	if err := cmd.Run(context.Background(), os.Args); err != nil {
+	if err := cmd.Run(context.Background(), os.Args, os.Stdout); err != nil {
 		log.Fatal(err)
 	}
 }
