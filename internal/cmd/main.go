@@ -10,15 +10,23 @@ import (
 
 // Run executes the root command (ghost) printing out a test string.
 func Run(ctx context.Context, args []string, output io.Writer) error {
+	var prompt string
+
 	cmd := &cli.Command{
 		Name:  commands["ghost"].Name,
 		Usage: commands["ghost"].Usage,
+		Arguments: []cli.Argument{
+			&cli.StringArg{
+				Name:        "prompt",
+				Destination: &prompt,
+			},
+		},
 		Action: func(ctx context.Context, cmd *cli.Command) error {
-			if cmd.Args().Len() < 1 {
+			if prompt == "" {
 				return fmt.Errorf("%w", ErrNoPrompt)
 			}
 
-			if _, err := fmt.Fprintln(output, cmd.Args().Get(0)); err != nil {
+			if _, err := fmt.Fprintln(output, prompt); err != nil {
 				return fmt.Errorf("%w: %w", ErrOutput, err)
 			}
 
