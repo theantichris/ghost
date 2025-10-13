@@ -14,12 +14,12 @@ func Run(ctx context.Context, args []string, output io.Writer, logger *log.Logge
 	var prompt string
 
 	cmd := &cli.Command{
-		Name:  commands["ghost"].Name,
-		Usage: commands["ghost"].Usage,
+		Name:      commands["ghost"].Name,
+		Usage:     commands["ghost"].Usage,
+		ArgsUsage: "[prompt]",
 		Arguments: []cli.Argument{
 			&cli.StringArg{
 				Name:        "prompt",
-				UsageText:   "[prompt]",
 				Destination: &prompt,
 			},
 		},
