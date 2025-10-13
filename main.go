@@ -52,6 +52,7 @@ func initLogger() (*log.Logger, error) {
 		return nil, fmt.Errorf("%w: %w", ErrLogger, err)
 	}
 
+	// logger will be closed automatically by the OS on application exit.
 	logger.SetOutput(logFile)
 
 	return logger, nil
