@@ -27,14 +27,15 @@ var commands = commandList{
 
 // Run executes the root command (ghost) printing out a test string.
 func Run(ctx context.Context, args []string, output io.Writer) error {
-	if len(args) < 2 {
-		return fmt.Errorf("%w", ErrNoPrompt)
-	}
 	cmd := &cli.Command{
 		Name:  commands["ghost"].Name,
 		Usage: commands["ghost"].Usage,
-		Action: func(context.Context, *cli.Command) error {
-			if _, err := fmt.Fprintln(output, args[1]); err != nil {
+		Action: func(ctx context.Context, cmd *cli.Command) error {
+			if cmd.Args().Len() < 1 {
+				return fmt.Errorf("%w", ErrNoPrompt)
+			}
+
+			if _, err := fmt.Fprintln(output, cmd.Args().Get(0)); err != nil {
 				return fmt.Errorf("%w: %w", ErrOutput, err)
 			}
 
