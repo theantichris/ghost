@@ -29,7 +29,7 @@ func TestRun(t *testing.T) {
 
 		var writer bytes.Buffer
 
-		args := []string{"ghost", "what is the capital of nashville"}
+		args := []string{"ghost", "what is the capital of tennessee"}
 
 		err := Run(context.Background(), args, &writer)
 		if err != nil {
