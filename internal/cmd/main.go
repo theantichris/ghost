@@ -10,6 +10,7 @@ import (
 )
 
 var ErrOutput = errors.New("failed to write output")
+var ErrNoPrompt = errors.New("prompt not found")
 
 // command holds information about the application commands.
 type command struct {
@@ -26,6 +27,9 @@ var commands = commandList{
 
 // Run executes the root command (ghost) printing out a test string.
 func Run(ctx context.Context, args []string, output io.Writer) error {
+	if len(args) < 2 {
+		return fmt.Errorf("%w", ErrNoPrompt)
+	}
 	cmd := &cli.Command{
 		Name:  commands["ghost"].Name,
 		Usage: commands["ghost"].Usage,

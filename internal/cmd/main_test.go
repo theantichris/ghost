@@ -28,7 +28,6 @@ func TestRun(t *testing.T) {
 		t.Parallel()
 
 		var writer bytes.Buffer
-
 		args := []string{"ghost", "what is the capital of tennessee"}
 
 		err := Run(context.Background(), args, &writer)
@@ -52,6 +51,22 @@ func TestRun(t *testing.T) {
 
 		if !errors.Is(err, ErrOutput) {
 			t.Errorf("expected error %v, got %v", ErrOutput, err)
+		}
+	})
+
+	t.Run("returns error for no prompt", func(t *testing.T) {
+		t.Parallel()
+
+		var writer bytes.Buffer
+		args := []string{"ghost"}
+
+		err := Run(context.Background(), args, &writer)
+		if err == nil {
+			t.Fatal("expected error, got nil")
+		}
+
+		if !errors.Is(err, ErrNoPrompt) {
+			t.Errorf("expected error %v, got %v", ErrNoPrompt, err)
 		}
 	})
 }
