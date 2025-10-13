@@ -7,6 +7,7 @@ import (
 	"io"
 	"testing"
 
+	"github.com/charmbracelet/log"
 	"github.com/sebdah/goldie/v2"
 )
 
@@ -60,7 +61,8 @@ func TestRun(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := Run(context.Background(), tt.args, tt.writer)
+			logger := log.New(io.Discard)
+			err := Run(context.Background(), tt.args, tt.writer, logger)
 
 			if !tt.isError && err != nil {
 				t.Fatalf("expected no error got, %s", err)

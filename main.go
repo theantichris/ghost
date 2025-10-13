@@ -3,15 +3,22 @@ package main
 
 import (
 	"context"
-	"log"
 	"os"
 
+	"github.com/charmbracelet/log"
 	"github.com/theantichris/ghost/internal/cmd"
 )
 
 // main initializes and executes the root command (ghost).
 func main() {
-	if err := cmd.Run(context.Background(), os.Args, os.Stdout); err != nil {
+	logger := log.NewWithOptions(os.Stderr, log.Options{
+		Formatter:       log.JSONFormatter,
+		ReportCaller:    true,
+		ReportTimestamp: true,
+		Level:           log.DebugLevel,
+	})
+
+	if err := cmd.Run(context.Background(), os.Args, os.Stdout, logger); err != nil {
 		log.Fatal(err)
 	}
 }

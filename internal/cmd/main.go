@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/charmbracelet/log"
 	"github.com/urfave/cli/v3"
 )
 
 // Run executes the root command (ghost) printing out a test string.
-func Run(ctx context.Context, args []string, output io.Writer) error {
+func Run(ctx context.Context, args []string, output io.Writer, logger *log.Logger) error {
 	var prompt string
 
 	cmd := &cli.Command{
