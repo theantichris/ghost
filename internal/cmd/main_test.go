@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"io"
 	"testing"
 
 	"github.com/sebdah/goldie/v2"
@@ -24,49 +25,66 @@ func (writer *errorWriter) Write(str []byte) (int, error) {
 }
 
 func TestRun(t *testing.T) {
-	t.Run("writes user prompt", func(t *testing.T) {
-		t.Parallel()
+	tests := []struct {
+		name     string
+		writer   io.Writer
+		args     []string
+		isGolden bool
+		isError  bool
+		Error    error
+	}{
+		{
+			name:     "writes user prompt",
+			writer:   &bytes.Buffer{},
+			args:     []string{"ghost", "what is the capital of tennessee"},
+			isGolden: true,
+			isError:  false,
+		},
+		{
+			name:     "returns error for bad output",
+			writer:   &errorWriter{err: errors.New("error printing output")},
+			args:     []string{"ghost", "test"},
+			isGolden: false,
+			isError:  true,
+			Error:    ErrOutput,
+		},
+		{
+			name:     "returns error for no prompt",
+			writer:   &bytes.Buffer{},
+			args:     []string{"ghost"},
+			isGolden: false,
+			isError:  true,
+			Error:    ErrNoPrompt,
+		},
+	}
 
-		var writer bytes.Buffer
-		args := []string{"ghost", "what is the capital of tennessee"}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := Run(context.Background(), tt.args, tt.writer)
 
-		err := Run(context.Background(), args, &writer)
-		if err != nil {
-			t.Fatalf("expect no error got, %s", err)
-		}
+			if !tt.isError && err != nil {
+				t.Fatalf("expected no error got, %s", err)
+			}
 
-		g := goldie.New(t)
-		g.Assert(t, t.Name(), writer.Bytes())
-	})
+			if tt.isError {
+				if err == nil {
+					t.Fatal("expected error, got nil")
+				}
 
-	t.Run("returns error for bad output", func(t *testing.T) {
-		t.Parallel()
+				if !errors.Is(err, tt.Error) {
+					t.Errorf("expected error %v, got %v", tt.Error, err)
+				}
+			}
 
-		writer := errorWriter{err: errors.New("error printing output")}
+			if tt.isGolden {
+				buffer, ok := tt.writer.(*bytes.Buffer)
+				if !ok {
+					t.Fatalf("expected writer to be of type %T, got %T", &bytes.Buffer{}, buffer)
+				}
 
-		err := Run(context.Background(), []string{"ghost", "test"}, &writer)
-		if err == nil {
-			t.Fatal("expect error, got nil")
-		}
-
-		if !errors.Is(err, ErrOutput) {
-			t.Errorf("expected error %v, got %v", ErrOutput, err)
-		}
-	})
-
-	t.Run("returns error for no prompt", func(t *testing.T) {
-		t.Parallel()
-
-		var writer bytes.Buffer
-		args := []string{"ghost"}
-
-		err := Run(context.Background(), args, &writer)
-		if err == nil {
-			t.Fatal("expected error, got nil")
-		}
-
-		if !errors.Is(err, ErrNoPrompt) {
-			t.Errorf("expected error %v, got %v", ErrNoPrompt, err)
-		}
-	})
+				g := goldie.New(t)
+				g.Assert(t, t.Name(), buffer.Bytes())
+			}
+		})
+	}
 }
