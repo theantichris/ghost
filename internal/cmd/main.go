@@ -10,6 +10,7 @@ import (
 )
 
 // TODO: setup config files
+// TODO: setup TUI
 // TODO: Ollama URL, default model, system prompt
 // TODO: handle LLM request and response
 
