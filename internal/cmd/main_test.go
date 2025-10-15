@@ -59,6 +59,7 @@ func TestRun(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			logger := log.New(io.Discard)
+
 			err := Run(context.Background(), tt.args, tt.writer, logger)
 
 			if !tt.isError && err != nil {
