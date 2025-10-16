@@ -18,16 +18,19 @@ var ErrLogger = errors.New("failed to create logger")
 func main() {
 	logger, err := initLogger()
 	if err != nil {
-		_, _ = fmt.Fprintln(os.Stdout, "failed to initialize logger: "+err.Error())
+		fmt.Printf("failed to initialize logger: %s\n", err.Error())
+		os.Exit(int(cmd.ExSoftware))
 	}
 
 	if err := cmd.Run(context.Background(), os.Args, os.Stdout, logger); err != nil {
 		if errors.Is(err, cmd.ErrNoPrompt) {
-			_, _ = fmt.Fprintln(os.Stdout, cmd.ErrNoPrompt.Error()+": supply a prompt to ghost")
-			os.Exit(0)
+			fmt.Printf("%s, supply a prompt to ghost\n", err)
+			os.Exit(int(cmd.ExUsage))
 		}
 
-		logger.Fatal(err)
+		fmt.Printf("failed to run ghost: %s\n", err)
+		logger.Error("failed to run ghost", "error", err)
+		os.Exit(int(cmd.ExSoftware))
 	}
 }
 
