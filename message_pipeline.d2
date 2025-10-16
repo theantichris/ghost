@@ -1,0 +1,41 @@
+vars: {
+  d2-config: {
+    layout-engine: elk
+    theme-id: 300
+  }
+}
+
+main: {
+  label: "CLI/TUI Input"
+  shape: rectangle
+}
+
+inputFormatter: {
+  label: "Input Formatter\nParse flags, normalize text, attach session IDs"
+}
+
+requestBuilder: {
+  label: "Request Builder\nSystem Message, Persona/Card, Conversation Context, User Message, Tool Schema"
+  shape: rectangle
+}
+
+llmAPI: {
+  label: "LLM API (Ollama: /chat for multi-turn, /generate for single-shot\nStream tokens -> token handler, tool calls -> tool router)"
+  shape: rectangle
+}
+
+postProcessor: {
+  label: "Post Processor\nDetokenize/repair markdown, content filters, extract artifacts, event bus"
+  shape: rectangle
+}
+
+renderer: {
+  label: "Renderer\nTUI view, ANSI styling & persona accents, transcript save/export"
+  shape: rectangle
+}
+
+main -> inputFormatter
+inputFormatter -> requestBuilder
+requestBuilder -> llmAPI
+llmAPI -> postProcessor
+postProcessor -> renderer
