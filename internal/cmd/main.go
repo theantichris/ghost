@@ -14,6 +14,15 @@ import (
 // TODO: Ollama URL, default model, system prompt
 // TODO: handle LLM request and response
 
+const (
+
+	// model is the Ollama model name.
+	model = "dolphin-mixtral:8x22b"
+
+	// ollamaURL is the base address to the Ollama API
+	ollamaURL = "http://100.92.199.66:11434"
+)
+
 // Run executes the root command (ghost) printing out a test string.
 func Run(ctx context.Context, args []string, output io.Writer, logger *log.Logger) error {
 	var prompt string
@@ -33,7 +42,7 @@ func Run(ctx context.Context, args []string, output io.Writer, logger *log.Logge
 				return fmt.Errorf("%w", ErrNoPrompt)
 			}
 
-			if _, err := fmt.Fprintln(output, prompt); err != nil {
+			if _, err := fmt.Fprintf(output, "Sending %q to model %q at URL %q\n", prompt, model, ollamaURL); err != nil {
 				return fmt.Errorf("%w: %w", ErrOutput, err)
 			}
 
