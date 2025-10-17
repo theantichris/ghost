@@ -11,7 +11,7 @@ import (
 
 const (
 	// model is the Ollama model name.
-	model = "dolphin-mixtral:8x22b"
+	model = "dolphin-mixtral:8x7b"
 
 	// ollamaURL is the base address to the Ollama API
 	ollamaURL = "http://100.92.199.66:11434"
