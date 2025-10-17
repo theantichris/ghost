@@ -54,7 +54,6 @@ func NewOllama(baseURL, defaultModel string, httpClient *http.Client, logger *lo
 
 // Generate sends a request to /api/generate and returns the response
 func (ollama Ollama) Generate(systemPrompt, userPrompt string) string {
-	// Create request body
 	ollamaRequest := ollamaRequest{
 		Model:        ollama.defaultModel,
 		Stream:       false,
@@ -64,20 +63,16 @@ func (ollama Ollama) Generate(systemPrompt, userPrompt string) string {
 
 	requestBody, _ := json.Marshal(ollamaRequest)
 
-	// Create HTTP request
 	httpRequest, _ := http.NewRequestWithContext(context.Background(), http.MethodPost, ollama.baseURL+"/api/generate", bytes.NewReader(requestBody))
 	httpRequest.Header.Set("Content-Type", "application/json")
 
-	// Send HTTP request
 	httpResponse, _ := ollama.httpClient.Do(httpRequest)
 
 	// Check status code
 
-	// Progress response
 	body, _ := io.ReadAll(httpResponse.Body)
 	var response ollamaResponse
 	_ = json.Unmarshal(body, &response)
 
-	// Return response
 	return response.Response
 }
