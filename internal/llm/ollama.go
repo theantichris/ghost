@@ -35,3 +35,12 @@ func NewOllama(baseURL, defaultModel string, httpClient *http.Client, logger *lo
 
 	return ollama, nil
 }
+
+// Generate sends a request to /api/generate and returns the response
+func (ollama Ollama) Generate() {
+	// Create request body
+	// Create HTTP request
+	// Send HTTP request
+	// Progress response
+	// Return response
+}
