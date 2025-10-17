@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/charmbracelet/log"
@@ -67,5 +68,37 @@ func TestNewOllama(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestGenerate(t *testing.T) {
+	logger := log.New(io.Discard)
+
+	httpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+
+		response := `{"response": "Hello, chummer!"}`
+
+		_, _ = w.Write([]byte(response))
+	}))
+
+	defer httpServer.Close()
+
+	httpClient := &http.Client{Transport: httpServer.Client().Transport}
+
+	ollama, err := NewOllama(httpServer.URL, "test:model", httpClient, logger)
+
+	if err != nil {
+		t.Fatalf("expect no error, got %v", err)
+	}
+
+	systemPrompt := "test system prompt"
+	userPrompt := "test user prompt"
+
+	response := ollama.Generate(systemPrompt, userPrompt)
+
+	expectedResponse := "Hello, chummer!"
+	if response != expectedResponse {
+		t.Errorf("expected response %q, got %q", expectedResponse, response)
 	}
 }
