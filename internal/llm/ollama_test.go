@@ -73,36 +73,47 @@ func TestNewOllama(t *testing.T) {
 }
 
 func TestGenerate(t *testing.T) {
-	t.Run("generates a response from the API", func(t *testing.T) {
-		t.Parallel()
+	tests := []struct {
+		name       string
+		httpStatus int
+		isError    bool
+	}{
+		{
+			name:       "returns response from API",
+			httpStatus: http.StatusOK,
+		},
+	}
 
-		logger := log.New(io.Discard)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			logger := log.New(io.Discard)
 
-		httpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.WriteHeader(http.StatusOK)
+			httpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(tt.httpStatus)
 
-			response := `{"response": "Hello, chummer!"}`
+				response := `{"response": "Hello, chummer!"}`
 
-			_, _ = w.Write([]byte(response))
-		}))
+				_, _ = w.Write([]byte(response))
+			}))
 
-		defer httpServer.Close()
+			defer httpServer.Close()
 
-		httpClient := &http.Client{Transport: httpServer.Client().Transport}
+			httpClient := &http.Client{Transport: httpServer.Client().Transport}
 
-		ollama, err := NewOllama(httpServer.URL, "test:model", httpClient, logger)
-		if err != nil {
-			t.Fatalf("expect no error, got %v", err)
-		}
+			ollama, err := NewOllama(httpServer.URL, "test:model", httpClient, logger)
+			if err != nil {
+				t.Fatalf("expect no error, got %v", err)
+			}
 
-		systemPrompt := "test system prompt"
-		userPrompt := "test user prompt"
+			systemPrompt := "test system prompt"
+			userPrompt := "test user prompt"
 
-		response := ollama.Generate(context.Background(), systemPrompt, userPrompt)
+			response := ollama.Generate(context.Background(), systemPrompt, userPrompt)
 
-		expectedResponse := "Hello, chummer!"
-		if response != expectedResponse {
-			t.Errorf("expected response %q, got %q", expectedResponse, response)
-		}
-	})
+			expectedResponse := "Hello, chummer!"
+			if response != expectedResponse {
+				t.Errorf("expected response %q, got %q", expectedResponse, response)
+			}
+		})
+	}
 }
