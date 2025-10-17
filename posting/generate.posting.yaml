@@ -1,0 +1,16 @@
+name: Generate
+method: POST
+url: http://100.92.199.66:11434/api/generate
+body:
+  content: |-
+    {
+      "model": "dolphin-mixtral:8x7b",
+      "prompt": "what is the best deck for a netrunner?",
+      "stream": false
+    }
+  content_type: application/json
+headers:
+- name: content-type
+  value: application/json
+options:
+  timeout: 300.0
