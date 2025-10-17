@@ -1,17 +1,11 @@
 package llm
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"strings"
 
 	"github.com/charmbracelet/log"
-)
-
-var (
-	ErrNoBaseURL      = errors.New("no base URL provided")
-	ErrNoDefaultModel = errors.New("no default model provided")
 )
 
 // Ollama is the client for the Ollama API.
