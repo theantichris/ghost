@@ -30,7 +30,7 @@ func TestHandleLLMRequest(t *testing.T) {
 		prompt   string
 		isGolden bool
 		isError  bool
-		Error    error
+		err      error
 	}{
 		{
 			name:     "writes user prompt",
@@ -43,13 +43,13 @@ func TestHandleLLMRequest(t *testing.T) {
 			writer:  &errorWriter{err: errors.New("error printing output")},
 			prompt:  "what is the capital of tennessee",
 			isError: true,
-			Error:   ErrOutput,
+			err:     ErrOutput,
 		},
 		{
 			name:    "returns error for no prompt",
 			writer:  &bytes.Buffer{},
 			isError: true,
-			Error:   ErrNoPrompt,
+			err:     ErrNoPrompt,
 		},
 	}
 
@@ -66,8 +66,8 @@ func TestHandleLLMRequest(t *testing.T) {
 					t.Fatal("expected error, got nil")
 				}
 
-				if !errors.Is(err, tt.Error) {
-					t.Errorf("expected error %v, got %v", tt.Error, err)
+				if !errors.Is(err, tt.err) {
+					t.Errorf("expected error %v, got %v", tt.err, err)
 				}
 			}
 
