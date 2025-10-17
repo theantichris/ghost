@@ -9,13 +9,7 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-// TODO: setup config files
-// TODO: setup TUI
-// TODO: Ollama URL, default model, system prompt
-// TODO: handle LLM request and response
-
 const (
-
 	// model is the Ollama model name.
 	model = "dolphin-mixtral:8x22b"
 
@@ -26,6 +20,8 @@ const (
 // Run executes the root command (ghost) printing out a test string.
 func Run(ctx context.Context, args []string, output io.Writer, logger *log.Logger) error {
 	var prompt string
+
+	// Init LLM client
 
 	cmd := &cli.Command{
 		Name:      commands["ghost"].Name,
@@ -38,17 +34,26 @@ func Run(ctx context.Context, args []string, output io.Writer, logger *log.Logge
 			},
 		},
 		Action: func(ctx context.Context, cmd *cli.Command) error {
-			if prompt == "" {
-				return fmt.Errorf("%w", ErrNoPrompt)
-			}
-
-			if _, err := fmt.Fprintf(output, "Sending %q to model %q at URL %q\n", prompt, model, ollamaURL); err != nil {
-				return fmt.Errorf("%w: %w", ErrOutput, err)
-			}
-
-			return nil
+			return handleLLMRequest(prompt, output)
 		},
 	}
 
 	return cmd.Run(ctx, args)
+}
+
+// handleLLMRequeset sends the prompt to the LLM API, processes the response, and displays the results.
+func handleLLMRequest(prompt string, output io.Writer) error {
+	if prompt == "" {
+		return fmt.Errorf("%w", ErrNoPrompt)
+	}
+
+	// Create system message
+	// Send message
+	// Handle response
+
+	if _, err := fmt.Fprintf(output, "Sending %q to model %q at URL %q\n", prompt, model, ollamaURL); err != nil {
+		return fmt.Errorf("%w: %w", ErrOutput, err)
+	}
+
+	return nil
 }

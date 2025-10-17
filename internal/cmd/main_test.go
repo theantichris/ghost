@@ -2,12 +2,10 @@ package cmd
 
 import (
 	"bytes"
-	"context"
 	"errors"
 	"io"
 	"testing"
 
-	"github.com/charmbracelet/log"
 	"github.com/sebdah/goldie/v2"
 )
 
@@ -25,11 +23,11 @@ func (writer *errorWriter) Write(str []byte) (int, error) {
 	return len(str), nil
 }
 
-func TestRun(t *testing.T) {
+func TestHandleLLMRequest(t *testing.T) {
 	tests := []struct {
 		name     string
 		writer   io.Writer
-		args     []string
+		prompt   string
 		isGolden bool
 		isError  bool
 		Error    error
@@ -37,20 +35,19 @@ func TestRun(t *testing.T) {
 		{
 			name:     "writes user prompt",
 			writer:   &bytes.Buffer{},
-			args:     []string{"ghost", "what is the capital of tennessee"},
+			prompt:   "what is the capital of tennessee",
 			isGolden: true,
 		},
 		{
 			name:    "returns error for bad output",
 			writer:  &errorWriter{err: errors.New("error printing output")},
-			args:    []string{"ghost", "test"},
+			prompt:  "what is the capital of tennessee",
 			isError: true,
 			Error:   ErrOutput,
 		},
 		{
 			name:    "returns error for no prompt",
 			writer:  &bytes.Buffer{},
-			args:    []string{"ghost"},
 			isError: true,
 			Error:   ErrNoPrompt,
 		},
@@ -58,9 +55,7 @@ func TestRun(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			logger := log.New(io.Discard)
-
-			err := Run(context.Background(), tt.args, tt.writer, logger)
+			err := handleLLMRequest(tt.prompt, tt.writer)
 
 			if !tt.isError && err != nil {
 				t.Fatalf("expected no error got, %s", err)
