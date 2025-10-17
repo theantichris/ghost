@@ -1,14 +1,12 @@
 package llm
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"strings"
 
+	"github.com/carlmjohnson/requests"
 	"github.com/charmbracelet/log"
 )
 
@@ -61,19 +59,15 @@ func (ollama Ollama) Generate(systemPrompt, userPrompt string) string {
 		UserPrompt:   userPrompt,
 	}
 
-	requestBody, _ := json.Marshal(ollamaRequest)
+	var ollamaResponse ollamaResponse
 
 	// TODO: pass in root context.
-	httpRequest, _ := http.NewRequestWithContext(context.Background(), http.MethodPost, ollama.baseURL+"/api/generate", bytes.NewReader(requestBody))
-	httpRequest.Header.Set("Content-Type", "application/json")
-
-	httpResponse, _ := ollama.httpClient.Do(httpRequest)
-
 	// TODO: check status code
+	_ = requests.
+		URL(ollama.baseURL + "/api/generate").
+		BodyJSON(&ollamaRequest).
+		ToJSON(&ollamaResponse).
+		Fetch(context.Background())
 
-	body, _ := io.ReadAll(httpResponse.Body)
-	var response ollamaResponse
-	_ = json.Unmarshal(body, &response)
-
-	return response.Response
+	return ollamaResponse.Response
 }

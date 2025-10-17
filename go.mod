@@ -3,6 +3,7 @@ module github.com/theantichris/ghost
 go 1.24.2
 
 require (
+	github.com/carlmjohnson/requests v0.25.1
 	github.com/charmbracelet/log v0.4.2
 	github.com/sebdah/goldie/v2 v2.8.0
 	github.com/urfave/cli/v3 v3.4.1
@@ -25,5 +26,6 @@ require (
 	github.com/sergi/go-diff v1.0.0 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d // indirect
-	golang.org/x/sys v0.30.0 // indirect
+	golang.org/x/net v0.38.0 // indirect
+	golang.org/x/sys v0.31.0 // indirect
 )
