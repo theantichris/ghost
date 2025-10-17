@@ -1,6 +1,7 @@
 package llm
 
 import (
+	"context"
 	"errors"
 	"io"
 	"net/http"
@@ -94,7 +95,7 @@ func TestGenerate(t *testing.T) {
 	systemPrompt := "test system prompt"
 	userPrompt := "test user prompt"
 
-	response := ollama.Generate(systemPrompt, userPrompt)
+	response := ollama.Generate(context.Background(), systemPrompt, userPrompt)
 
 	expectedResponse := "Hello, chummer!"
 	if response != expectedResponse {

@@ -51,7 +51,7 @@ func NewOllama(baseURL, defaultModel string, httpClient *http.Client, logger *lo
 }
 
 // Generate sends a request to /api/generate and returns the response
-func (ollama Ollama) Generate(systemPrompt, userPrompt string) string {
+func (ollama Ollama) Generate(ctx context.Context, systemPrompt, userPrompt string) string {
 	ollamaRequest := ollamaRequest{
 		Model:        ollama.defaultModel,
 		Stream:       false,
@@ -62,12 +62,11 @@ func (ollama Ollama) Generate(systemPrompt, userPrompt string) string {
 	var ollamaResponse ollamaResponse
 
 	// TODO: pass in root context.
-	// TODO: check status code
 	_ = requests.
 		URL(ollama.baseURL + "/api/generate").
 		BodyJSON(&ollamaRequest).
 		ToJSON(&ollamaResponse).
-		Fetch(context.Background())
+		Fetch(ctx)
 
 	return ollamaResponse.Response
 }
