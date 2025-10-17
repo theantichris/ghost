@@ -77,10 +77,17 @@ func TestGenerate(t *testing.T) {
 		name       string
 		httpStatus int
 		isError    bool
+		err        error
 	}{
 		{
 			name:       "returns response from API",
 			httpStatus: http.StatusOK,
+		},
+		{
+			name:       "returns API error",
+			httpStatus: http.StatusNotFound,
+			isError:    true,
+			err:        ErrOllama,
 		},
 	}
 
@@ -108,11 +115,27 @@ func TestGenerate(t *testing.T) {
 			systemPrompt := "test system prompt"
 			userPrompt := "test user prompt"
 
-			response := ollama.Generate(context.Background(), systemPrompt, userPrompt)
+			response, err := ollama.Generate(context.Background(), systemPrompt, userPrompt)
 
-			expectedResponse := "Hello, chummer!"
-			if response != expectedResponse {
-				t.Errorf("expected response %q, got %q", expectedResponse, response)
+			if !tt.isError && err != nil {
+				t.Fatalf("expected no error, got %v", err)
+			}
+
+			if tt.isError {
+				if err == nil {
+					t.Fatal("expected error, got nil")
+				}
+
+				if !errors.Is(err, tt.err) {
+					t.Errorf("expected error %v, got %v", tt.err, err)
+				}
+			}
+
+			if !tt.isError {
+				expectedResponse := "Hello, chummer!"
+				if response != expectedResponse {
+					t.Errorf("expected response %q, got %q", expectedResponse, response)
+				}
 			}
 		})
 	}

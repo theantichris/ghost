@@ -2,6 +2,7 @@ package llm
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -31,6 +32,8 @@ type Ollama struct {
 	logger       *log.Logger
 }
 
+var ErrOllama = errors.New("failed to get API response")
+
 // NewOllama creates and returns a new Ollama client.
 func NewOllama(baseURL, defaultModel string, httpClient *http.Client, logger *log.Logger) (Ollama, error) {
 	if strings.TrimSpace(baseURL) == "" {
@@ -52,7 +55,7 @@ func NewOllama(baseURL, defaultModel string, httpClient *http.Client, logger *lo
 }
 
 // Generate sends a request to /api/generate and returns the response
-func (ollama Ollama) Generate(ctx context.Context, systemPrompt, userPrompt string) string {
+func (ollama Ollama) Generate(ctx context.Context, systemPrompt, userPrompt string) (string, error) {
 	ollamaRequest := ollamaRequest{
 		Model:        ollama.defaultModel,
 		Stream:       false,
@@ -62,11 +65,15 @@ func (ollama Ollama) Generate(ctx context.Context, systemPrompt, userPrompt stri
 
 	var ollamaResponse ollamaResponse
 
-	_ = requests.
+	err := requests.
 		URL(ollama.baseURL + "/api/generate").
 		BodyJSON(&ollamaRequest).
 		ToJSON(&ollamaResponse).
 		Fetch(ctx)
 
-	return ollamaResponse.Response
+	if err != nil {
+		return ollamaResponse.Response, fmt.Errorf("%w: %w", ErrOllama, err)
+	}
+
+	return ollamaResponse.Response, nil
 }
