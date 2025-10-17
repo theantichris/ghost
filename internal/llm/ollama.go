@@ -1,9 +1,17 @@
 package llm
 
 import (
+	"errors"
+	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/charmbracelet/log"
+)
+
+var (
+	ErrNoBaseURL      = errors.New("no base URL provided")
+	ErrNoDefaultModel = errors.New("no default model provided")
 )
 
 // Ollama is the client for the Ollama API.
@@ -16,6 +24,14 @@ type Ollama struct {
 
 // NewOllama creates and returns a new Ollama client.
 func NewOllama(baseURL, defaultModel string, httpClient *http.Client, logger *log.Logger) (Ollama, error) {
+	if strings.TrimSpace(baseURL) == "" {
+		return Ollama{}, fmt.Errorf("%w", ErrNoBaseURL)
+	}
+
+	if strings.TrimSpace(defaultModel) == "" {
+		return Ollama{}, fmt.Errorf("%w", ErrNoDefaultModel)
+	}
+
 	ollama := Ollama{
 		baseURL:      baseURL,
 		defaultModel: defaultModel,

@@ -1,6 +1,7 @@
 package llm
 
 import (
+	"errors"
 	"io"
 	"net/http"
 	"testing"
@@ -14,11 +15,24 @@ func TestNewOllama(t *testing.T) {
 		baseURL      string
 		defaultModel string
 		isError      bool
+		err          error
 	}{
 		{
 			name:         "creates a new Ollama client",
 			baseURL:      "http://test.dev",
 			defaultModel: "default:model",
+		},
+		{
+			name:         "returns error for no base URL",
+			defaultModel: "default:model",
+			isError:      true,
+			err:          ErrNoBaseURL,
+		},
+		{
+			name:    "returns error for no default model",
+			baseURL: "http://test.dev",
+			isError: true,
+			err:     ErrNoDefaultModel,
 		},
 	}
 
@@ -33,12 +47,24 @@ func TestNewOllama(t *testing.T) {
 				t.Fatalf("expect no error, got %v", err)
 			}
 
-			if ollama.baseURL != tt.baseURL {
-				t.Errorf("expected base URL %q, got %q", tt.baseURL, ollama.baseURL)
+			if tt.isError {
+				if err == nil {
+					t.Fatal("expected error, got nil")
+				}
+
+				if !errors.Is(err, tt.err) {
+					t.Errorf("expected error %v, got %v", tt.err, err)
+				}
 			}
 
-			if ollama.defaultModel != tt.defaultModel {
-				t.Errorf("expected default model %q, got %q", tt.defaultModel, ollama.defaultModel)
+			if !tt.isError {
+				if ollama.baseURL != tt.baseURL {
+					t.Errorf("expected base URL %q, got %q", tt.baseURL, ollama.baseURL)
+				}
+
+				if ollama.defaultModel != tt.defaultModel {
+					t.Errorf("expected default model %q, got %q", tt.defaultModel, ollama.defaultModel)
+				}
 			}
 		})
 	}
