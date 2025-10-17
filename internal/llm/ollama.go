@@ -18,6 +18,7 @@ type ollamaRequest struct {
 	UserPrompt   string `json:"prompt"` // The prompt to generate a response for
 }
 
+// ollamaResponse holds the information from the API request.
 type ollamaResponse struct {
 	Response string `json:"response"`
 }
