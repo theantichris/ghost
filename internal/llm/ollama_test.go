@@ -87,7 +87,6 @@ func TestGenerate(t *testing.T) {
 	httpClient := &http.Client{Transport: httpServer.Client().Transport}
 
 	ollama, err := NewOllama(httpServer.URL, "test:model", httpClient, logger)
-
 	if err != nil {
 		t.Fatalf("expect no error, got %v", err)
 	}

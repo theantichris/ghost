@@ -63,12 +63,13 @@ func (ollama Ollama) Generate(systemPrompt, userPrompt string) string {
 
 	requestBody, _ := json.Marshal(ollamaRequest)
 
+	// TODO: pass in root context.
 	httpRequest, _ := http.NewRequestWithContext(context.Background(), http.MethodPost, ollama.baseURL+"/api/generate", bytes.NewReader(requestBody))
 	httpRequest.Header.Set("Content-Type", "application/json")
 
 	httpResponse, _ := ollama.httpClient.Do(httpRequest)
 
-	// Check status code
+	// TODO: check status code
 
 	body, _ := io.ReadAll(httpResponse.Body)
 	var response ollamaResponse
