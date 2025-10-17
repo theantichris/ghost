@@ -73,32 +73,36 @@ func TestNewOllama(t *testing.T) {
 }
 
 func TestGenerate(t *testing.T) {
-	logger := log.New(io.Discard)
+	t.Run("generates a response from the API", func(t *testing.T) {
+		t.Parallel()
 
-	httpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
+		logger := log.New(io.Discard)
 
-		response := `{"response": "Hello, chummer!"}`
+		httpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
 
-		_, _ = w.Write([]byte(response))
-	}))
+			response := `{"response": "Hello, chummer!"}`
 
-	defer httpServer.Close()
+			_, _ = w.Write([]byte(response))
+		}))
 
-	httpClient := &http.Client{Transport: httpServer.Client().Transport}
+		defer httpServer.Close()
 
-	ollama, err := NewOllama(httpServer.URL, "test:model", httpClient, logger)
-	if err != nil {
-		t.Fatalf("expect no error, got %v", err)
-	}
+		httpClient := &http.Client{Transport: httpServer.Client().Transport}
 
-	systemPrompt := "test system prompt"
-	userPrompt := "test user prompt"
+		ollama, err := NewOllama(httpServer.URL, "test:model", httpClient, logger)
+		if err != nil {
+			t.Fatalf("expect no error, got %v", err)
+		}
 
-	response := ollama.Generate(context.Background(), systemPrompt, userPrompt)
+		systemPrompt := "test system prompt"
+		userPrompt := "test user prompt"
 
-	expectedResponse := "Hello, chummer!"
-	if response != expectedResponse {
-		t.Errorf("expected response %q, got %q", expectedResponse, response)
-	}
+		response := ollama.Generate(context.Background(), systemPrompt, userPrompt)
+
+		expectedResponse := "Hello, chummer!"
+		if response != expectedResponse {
+			t.Errorf("expected response %q, got %q", expectedResponse, response)
+		}
+	})
 }

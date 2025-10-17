@@ -62,7 +62,6 @@ func (ollama Ollama) Generate(ctx context.Context, systemPrompt, userPrompt stri
 
 	var ollamaResponse ollamaResponse
 
-	// TODO: pass in root context.
 	_ = requests.
 		URL(ollama.baseURL + "/api/generate").
 		BodyJSON(&ollamaRequest).
