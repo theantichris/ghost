@@ -28,10 +28,10 @@ func TestMockClientGenerate(t *testing.T) {
 	t.Run("mocks an error return", func(t *testing.T) {
 		t.Parallel()
 
-		error := errors.New("llm client error")
+		llmError := errors.New("llm client error")
 
 		llmClient := MockLLMClient{
-			Error: error,
+			Error: llmError,
 		}
 
 		_, err := llmClient.Generate(context.Background(), "system prompt", "user prompt")
@@ -40,8 +40,8 @@ func TestMockClientGenerate(t *testing.T) {
 			t.Fatal("expected error, got nil")
 		}
 
-		if !errors.Is(err, error) {
-			t.Errorf("expected error %v, got %v", error, err)
+		if !errors.Is(err, llmError) {
+			t.Errorf("expected error %v, got %v", llmError, err)
 		}
 	})
 }
