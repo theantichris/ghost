@@ -61,6 +61,16 @@ func TestHandleLLMRequest(t *testing.T) {
 			isError:   true,
 			err:       ErrNoPrompt,
 		},
+		{
+			name: "returns LLM error",
+			llmClient: llm.MockLLMClient{
+				Error: llm.ErrOllama,
+			},
+			writer:  &bytes.Buffer{},
+			prompt:  "what is the capital of tennessee",
+			isError: true,
+			err:     llm.ErrOllama,
+		},
 	}
 
 	for _, tt := range tests {

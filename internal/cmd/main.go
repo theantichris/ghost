@@ -55,7 +55,10 @@ func handleLLMRequest(ctx context.Context, prompt string, llmClient llm.LLMClien
 		return fmt.Errorf("%w", ErrNoPrompt)
 	}
 
-	response, _ := llmClient.Generate(ctx, systemPrompt, prompt)
+	response, err := llmClient.Generate(ctx, systemPrompt, prompt)
+	if err != nil {
+		return err
+	}
 
 	if _, err := fmt.Fprintln(output, response); err != nil {
 		return fmt.Errorf("%w: %w", ErrOutput, err)
