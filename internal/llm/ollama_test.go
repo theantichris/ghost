@@ -64,6 +64,10 @@ func TestNewOllama(t *testing.T) {
 					t.Errorf("expected base URL %q, got %q", tt.baseURL, ollama.baseURL)
 				}
 
+				if ollama.generateURL != tt.baseURL+"/api/generate" {
+					t.Errorf("expected generate URL %q, got %q", tt.baseURL+"/api/generate", ollama.generateURL)
+				}
+
 				if ollama.defaultModel != tt.defaultModel {
 					t.Errorf("expected default model %q, got %q", tt.defaultModel, ollama.defaultModel)
 				}

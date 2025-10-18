@@ -13,7 +13,7 @@ import (
 // ollamaRequest holds the information for the API request.
 type ollamaRequest struct {
 	Model        string `json:"model"`  // The model name
-	Stream       bool   `json:"bool"`   // If false the response is returned as a single object
+	Stream       bool   `json:"stream"` // If false the response is returned as a single object
 	SystemPrompt string `json:"system"` // System message to override what is in the model file
 	UserPrompt   string `json:"prompt"` // The prompt to generate a response for
 }
@@ -26,6 +26,7 @@ type ollamaResponse struct {
 // Ollama is the client for the Ollama API.
 type Ollama struct {
 	baseURL      string
+	generateURL  string
 	defaultModel string
 	httpClient   *http.Client
 	logger       *log.Logger
@@ -43,10 +44,13 @@ func NewOllama(baseURL, defaultModel string, httpClient *http.Client, logger *lo
 
 	ollama := Ollama{
 		baseURL:      baseURL,
+		generateURL:  baseURL + "/api/generate",
 		defaultModel: defaultModel,
 		httpClient:   httpClient,
 		logger:       logger,
 	}
+
+	logger.Info("initialized Ollama client", "url", ollama.baseURL, "model", ollama.defaultModel)
 
 	return ollama, nil
 }
@@ -60,10 +64,11 @@ func (ollama Ollama) Generate(ctx context.Context, systemPrompt, userPrompt stri
 		UserPrompt:   userPrompt,
 	}
 
-	var ollamaResponse ollamaResponse
+	ollama.logger.Debug("sending generate request to Ollama API", "url", ollama.generateURL, "model", ollama.defaultModel, "request", ollamaRequest)
 
+	var ollamaResponse ollamaResponse
 	err := requests.
-		URL(ollama.baseURL + "/api/generate").
+		URL(ollama.generateURL).
 		BodyJSON(&ollamaRequest).
 		ToJSON(&ollamaResponse).
 		Fetch(ctx)
@@ -71,6 +76,8 @@ func (ollama Ollama) Generate(ctx context.Context, systemPrompt, userPrompt stri
 	if err != nil {
 		return ollamaResponse.Response, fmt.Errorf("%w: %w", ErrOllama, err)
 	}
+
+	ollama.logger.Debug("response received from Ollama API", "response", ollamaResponse)
 
 	return ollamaResponse.Response, nil
 }
