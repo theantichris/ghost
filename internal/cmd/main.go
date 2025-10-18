@@ -42,15 +42,15 @@ func Run(ctx context.Context, args []string, output io.Writer, logger *log.Logge
 			},
 		},
 		Action: func(ctx context.Context, cmd *cli.Command) error {
-			return handleLLMRequest(ctx, prompt, llmClient, output)
+			return generate(ctx, prompt, llmClient, output)
 		},
 	}
 
 	return cmd.Run(ctx, args)
 }
 
-// handleLLMRequeset sends the prompt to the LLM API, processes the response, and displays the results.
-func handleLLMRequest(ctx context.Context, prompt string, llmClient llm.LLMClient, output io.Writer) error {
+// generate sends the prompt to the LLM API, processes the response, and displays the results.
+func generate(ctx context.Context, prompt string, llmClient llm.LLMClient, output io.Writer) error {
 	if prompt == "" {
 		return fmt.Errorf("%w", ErrNoPrompt)
 	}
