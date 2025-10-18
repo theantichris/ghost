@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"net/http"
 
 	"github.com/charmbracelet/log"
 	"github.com/theantichris/ghost/internal/llm"
@@ -26,7 +25,7 @@ const (
 func Run(ctx context.Context, args []string, output io.Writer, logger *log.Logger) error {
 	var prompt string
 
-	llmClient, err := llm.NewOllama(ollamaURL, model, http.DefaultClient, logger)
+	llmClient, err := llm.NewOllama(ollamaURL, model, logger)
 	if err != nil {
 		return err
 	}

@@ -3,7 +3,6 @@ package llm
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"strings"
 
 	"github.com/carlmjohnson/requests"
@@ -28,12 +27,11 @@ type Ollama struct {
 	baseURL      string
 	generateURL  string
 	defaultModel string
-	httpClient   *http.Client
 	logger       *log.Logger
 }
 
 // NewOllama creates and returns a new Ollama client.
-func NewOllama(baseURL, defaultModel string, httpClient *http.Client, logger *log.Logger) (Ollama, error) {
+func NewOllama(baseURL, defaultModel string, logger *log.Logger) (Ollama, error) {
 	if strings.TrimSpace(baseURL) == "" {
 		return Ollama{}, fmt.Errorf("%w", ErrNoBaseURL)
 	}
@@ -46,7 +44,6 @@ func NewOllama(baseURL, defaultModel string, httpClient *http.Client, logger *lo
 		baseURL:      baseURL,
 		generateURL:  baseURL + "/api/generate",
 		defaultModel: defaultModel,
-		httpClient:   httpClient,
 		logger:       logger,
 	}
 

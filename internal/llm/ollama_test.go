@@ -40,10 +40,9 @@ func TestNewOllama(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			httpClient := http.DefaultClient
 			logger := log.New(io.Discard)
 
-			ollama, err := NewOllama(tt.baseURL, tt.defaultModel, httpClient, logger)
+			ollama, err := NewOllama(tt.baseURL, tt.defaultModel, logger)
 
 			if !tt.isError && err != nil {
 				t.Fatalf("expect no error, got %v", err)
@@ -109,9 +108,7 @@ func TestGenerate(t *testing.T) {
 
 			defer httpServer.Close()
 
-			httpClient := &http.Client{Transport: httpServer.Client().Transport}
-
-			ollama, err := NewOllama(httpServer.URL, "test:model", httpClient, logger)
+			ollama, err := NewOllama(httpServer.URL, "test:model", logger)
 			if err != nil {
 				t.Fatalf("expect no error, got %v", err)
 			}
