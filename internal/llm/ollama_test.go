@@ -9,118 +9,135 @@ import (
 	"testing"
 
 	"github.com/charmbracelet/log"
-	"github.com/google/go-cmp/cmp"
 )
 
-var logger *log.Logger = log.New(io.Discard)
+func TestNewOllama(t *testing.T) {
+	tests := []struct {
+		name         string
+		baseURL      string
+		defaultModel string
+		isError      bool
+		err          error
+	}{
+		{
+			name:         "creates a new Ollama client",
+			baseURL:      "http://test.dev",
+			defaultModel: "default:model",
+		},
+		{
+			name:         "returns error for no base URL",
+			defaultModel: "default:model",
+			isError:      true,
+			err:          ErrNoBaseURL,
+		},
+		{
+			name:    "returns error for no default model",
+			baseURL: "http://test.dev",
+			isError: true,
+			err:     ErrNoDefaultModel,
+		},
+	}
 
-func TestNewOllamaClient(t *testing.T) {
-	t.Run("creates new Ollama client with default", func(t *testing.T) {
-		t.Parallel()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			logger := log.New(io.Discard)
 
-		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.WriteHeader(http.StatusOK)
-			_, _ = w.Write([]byte(`{"response": "Hello, user!"}`))
-		}))
-		defer server.Close()
+			ollama, err := NewOllama(tt.baseURL, tt.defaultModel, logger)
 
-		client, err := NewOllamaClient("http://test.dev", "llama2", http.DefaultClient, logger)
+			if !tt.isError && err != nil {
+				t.Fatalf("expect no error, got %v", err)
+			}
 
-		if err != nil {
-			t.Fatalf("expected no error, got %v", err)
-		}
+			if tt.isError {
+				if err == nil {
+					t.Fatal("expected error, got nil")
+				}
 
-		if client.baseURL != "http://test.dev" {
-			t.Errorf("expected baseURL to be 'http://test.dev', got '%s'", client.baseURL)
-		}
+				if !errors.Is(err, tt.err) {
+					t.Errorf("expected error %v, got %v", tt.err, err)
+				}
+			}
 
-		if client.defaultModel != "llama2" {
-			t.Errorf("expected defaultModel to be 'llama2', got '%s'", client.defaultModel)
-		}
-	})
+			if !tt.isError {
+				if ollama.baseURL != tt.baseURL {
+					t.Errorf("expected base URL %q, got %q", tt.baseURL, ollama.baseURL)
+				}
 
-	t.Run("returns error for empty baseURL", func(t *testing.T) {
-		t.Parallel()
+				if ollama.generateURL != tt.baseURL+"/api/generate" {
+					t.Errorf("expected generate URL %q, got %q", tt.baseURL+"/api/generate", ollama.generateURL)
+				}
 
-		_, err := NewOllamaClient("", "llama2", http.DefaultClient, logger)
-
-		if err == nil {
-			t.Fatal("expected error for empty baseURL, got nil")
-		}
-
-		if !errors.Is(err, ErrValidation) {
-			t.Errorf("expected ErrValidation, got %v", err)
-		}
-	})
-
-	t.Run("returns error for empty defaultModel", func(t *testing.T) {
-		t.Parallel()
-
-		_, err := NewOllamaClient("http://test.dev", "", http.DefaultClient, logger)
-
-		if err == nil {
-			t.Fatal("expected error for empty defaultModel, got nil")
-		}
-
-		if !errors.Is(err, ErrValidation) {
-			t.Errorf("expected ErrValidation, got %v", err)
-		}
-	})
+				if ollama.defaultModel != tt.defaultModel {
+					t.Errorf("expected default model %q, got %q", tt.defaultModel, ollama.defaultModel)
+				}
+			}
+		})
+	}
 }
 
-func TestChat(t *testing.T) {
-	t.Run("streams chat without error", func(t *testing.T) {
-		t.Parallel()
+func TestGenerate(t *testing.T) {
+	tests := []struct {
+		name       string
+		httpStatus int
+		isError    bool
+		err        error
+	}{
+		{
+			name:       "returns response from API",
+			httpStatus: http.StatusOK,
+		},
+		{
+			name:       "returns API error",
+			httpStatus: http.StatusNotFound,
+			isError:    true,
+			err:        ErrOllama,
+		},
+	}
 
-		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.WriteHeader(http.StatusOK)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			logger := log.New(io.Discard)
 
-			flusher, ok := w.(http.Flusher)
-			if !ok {
-				t.Fatalf("expected response writer to support flushing")
+			httpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(tt.httpStatus)
+
+				response := `{"response": "Hello, chummer!"}`
+
+				_, _ = w.Write([]byte(response))
+			}))
+
+			defer httpServer.Close()
+
+			ollama, err := NewOllama(httpServer.URL, "test:model", logger)
+			if err != nil {
+				t.Fatalf("expect no error, got %v", err)
 			}
 
-			chunks := []string{
-				`{"message":{"content":"Hello, "},"done":false}`,
-				`{"message":{"content":"user!"},"done":false}`,
-				`{"message":{"content":""},"done":true}`,
+			systemPrompt := "test system prompt"
+			userPrompt := "test user prompt"
+
+			response, err := ollama.Generate(context.Background(), systemPrompt, userPrompt)
+
+			if !tt.isError && err != nil {
+				t.Fatalf("expected no error, got %v", err)
 			}
 
-			for _, chunk := range chunks {
-				_, _ = w.Write([]byte(chunk + "\n"))
-				flusher.Flush()
+			if tt.isError {
+				if err == nil {
+					t.Fatal("expected error, got nil")
+				}
+
+				if !errors.Is(err, tt.err) {
+					t.Errorf("expected error %v, got %v", tt.err, err)
+				}
 			}
-		}))
 
-		defer server.Close()
-
-		httpClient := &http.Client{
-			Transport: server.Client().Transport,
-		}
-
-		client, err := NewOllamaClient(server.URL, "llama2", httpClient, logger)
-		if err != nil {
-			t.Fatalf("expected no error creating client, got %v", err)
-		}
-
-		chatHistory := []ChatMessage{
-			{Role: UserRole, Content: "Hello, there!"},
-		}
-
-		var actual []string
-		onToken := func(token string) {
-			actual = append(actual, token)
-		}
-
-		err = client.Chat(context.Background(), chatHistory, onToken)
-		if err != nil {
-			t.Fatalf("expected no error calling StreamChat, got %v", err)
-		}
-
-		expected := []string{"Hello, ", "user!"}
-
-		if !cmp.Equal(actual, expected) {
-			t.Errorf("expected tokens %v, got %v", expected, actual)
-		}
-	})
+			if !tt.isError {
+				expectedResponse := "Hello, chummer!"
+				if response != expectedResponse {
+					t.Errorf("expected response %q, got %q", expectedResponse, response)
+				}
+			}
+		})
+	}
 }

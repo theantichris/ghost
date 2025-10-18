@@ -1,14 +1,18 @@
 package llm
 
-import "errors"
+import (
+	"errors"
+
+	"github.com/theantichris/ghost/internal/exitcode"
+)
 
 var (
-	// ErrValidation indicates input validation failure for LLM requests.
-	ErrValidation = errors.New("failed to validate input")
+	// ErrNoBaseURL indicates the Ollama base URL was not provided or is empty.
+	ErrNoBaseURL = exitcode.New(errors.New("no base URL provided"), exitcode.ExConfig)
 
-	// ErrRequest indicates HTTP request creation or marshaling failure.
-	ErrRequest = errors.New("failed to create request")
+	// ErrNoDefaultModel indicates the default model name was not provided or is empty.
+	ErrNoDefaultModel = exitcode.New(errors.New("no default model provided"), exitcode.ExConfig)
 
-	// ErrResponse indicates HTTP response processing or parsing failure.
-	ErrResponse = errors.New("failed to process response")
+	// ErrOllama indicates the Ollama API failed to return a valid response.
+	ErrOllama = exitcode.New(errors.New("failed to get API response"), exitcode.ExUnavailable)
 )
