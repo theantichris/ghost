@@ -1,3 +1,4 @@
 NewOllama
+errorWrite
 handleLLMRequeset
 ollamaURL

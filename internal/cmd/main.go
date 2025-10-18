@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net/http"
 
 	"github.com/charmbracelet/log"
+	"github.com/theantichris/ghost/internal/llm"
 	"github.com/urfave/cli/v3"
 )
 
@@ -15,13 +17,19 @@ const (
 
 	// ollamaURL is the base address to the Ollama API
 	ollamaURL = "http://100.92.199.66:11434"
+
+	// systemPrompt defines the default system level instruction for Ghost's LLM interactions
+	systemPrompt = "You are Ghost, a cyberpunk inspired terminal based assistant. Answer requests directly and briefly."
 )
 
 // Run executes the root command (ghost) printing out a test string.
 func Run(ctx context.Context, args []string, output io.Writer, logger *log.Logger) error {
 	var prompt string
 
-	// Init LLM client
+	llmClient, err := llm.NewOllama(ollamaURL, model, http.DefaultClient, logger)
+	if err != nil {
+		return err
+	}
 
 	cmd := &cli.Command{
 		Name:      commands["ghost"].Name,
@@ -34,7 +42,7 @@ func Run(ctx context.Context, args []string, output io.Writer, logger *log.Logge
 			},
 		},
 		Action: func(ctx context.Context, cmd *cli.Command) error {
-			return handleLLMRequest(prompt, output)
+			return handleLLMRequest(ctx, prompt, llmClient, output)
 		},
 	}
 
@@ -42,16 +50,14 @@ func Run(ctx context.Context, args []string, output io.Writer, logger *log.Logge
 }
 
 // handleLLMRequeset sends the prompt to the LLM API, processes the response, and displays the results.
-func handleLLMRequest(prompt string, output io.Writer) error {
+func handleLLMRequest(ctx context.Context, prompt string, llmClient llm.LLMClient, output io.Writer) error {
 	if prompt == "" {
 		return fmt.Errorf("%w", ErrNoPrompt)
 	}
 
-	// Create system message
-	// Send message
-	// Handle response
+	response, _ := llmClient.Generate(ctx, systemPrompt, prompt)
 
-	if _, err := fmt.Fprintf(output, "Sending %q to model %q at URL %q\n", prompt, model, ollamaURL); err != nil {
+	if _, err := fmt.Fprintln(output, response); err != nil {
 		return fmt.Errorf("%w: %w", ErrOutput, err)
 	}
 

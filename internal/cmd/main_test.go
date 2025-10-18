@@ -2,11 +2,13 @@ package cmd
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"io"
 	"testing"
 
 	"github.com/sebdah/goldie/v2"
+	"github.com/theantichris/ghost/internal/llm"
 )
 
 // errorWrite is used to test output errors.
@@ -25,37 +27,45 @@ func (writer *errorWriter) Write(str []byte) (int, error) {
 
 func TestHandleLLMRequest(t *testing.T) {
 	tests := []struct {
-		name     string
-		writer   io.Writer
-		prompt   string
-		isGolden bool
-		isError  bool
-		err      error
+		name      string
+		llmClient llm.LLMClient
+		writer    io.Writer
+		prompt    string
+		isGolden  bool
+		isError   bool
+		err       error
 	}{
 		{
-			name:     "writes user prompt",
-			writer:   &bytes.Buffer{},
+			name:   "generates a LLM response",
+			writer: &bytes.Buffer{},
+			llmClient: llm.MockLLMClient{
+				GenerateFunc: func(ctx context.Context, systemPrompt, userPrompt string) (string, error) {
+					return "The capital of Tennessee is Nashville.", nil
+				},
+			},
 			prompt:   "what is the capital of tennessee",
 			isGolden: true,
 		},
 		{
-			name:    "returns error for bad output",
-			writer:  &errorWriter{err: errors.New("error printing output")},
-			prompt:  "what is the capital of tennessee",
-			isError: true,
-			err:     ErrOutput,
+			name:      "returns error for bad output",
+			llmClient: llm.MockLLMClient{},
+			writer:    &errorWriter{err: errors.New("error printing output")},
+			prompt:    "what is the capital of tennessee",
+			isError:   true,
+			err:       ErrOutput,
 		},
 		{
-			name:    "returns error for no prompt",
-			writer:  &bytes.Buffer{},
-			isError: true,
-			err:     ErrNoPrompt,
+			name:      "returns error for no prompt",
+			llmClient: llm.MockLLMClient{},
+			writer:    &bytes.Buffer{},
+			isError:   true,
+			err:       ErrNoPrompt,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := handleLLMRequest(tt.prompt, tt.writer)
+			err := handleLLMRequest(context.Background(), tt.prompt, tt.llmClient, tt.writer)
 
 			if !tt.isError && err != nil {
 				t.Fatalf("expected no error got, %s", err)
