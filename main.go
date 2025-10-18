@@ -10,6 +10,7 @@ import (
 
 	"github.com/charmbracelet/log"
 	"github.com/theantichris/ghost/internal/cmd"
+	"github.com/theantichris/ghost/internal/exitcode"
 )
 
 var ErrLogger = errors.New("failed to create logger")
@@ -19,18 +20,18 @@ func main() {
 	logger, err := initLogger()
 	if err != nil {
 		fmt.Printf("failed to initialize logger: %s\n", err.Error())
-		os.Exit(int(cmd.ExSoftware))
+		os.Exit(int(exitcode.ExSoftware))
 	}
 
 	if err := cmd.Run(context.Background(), os.Args, os.Stdout, logger); err != nil {
 		if errors.Is(err, cmd.ErrNoPrompt) {
 			fmt.Printf("%s, supply a prompt to ghost\n", err)
-			os.Exit(int(cmd.ExUsage))
+			os.Exit(int(exitcode.ExUsage))
 		}
 
 		fmt.Printf("failed to run ghost: %s\n", err)
 		logger.Error("failed to run ghost", "error", err)
-		os.Exit(int(cmd.ExSoftware))
+		os.Exit(int(exitcode.ExSoftware))
 	}
 }
 

@@ -1,4 +1,4 @@
-package cmd
+package exitcode
 
 // ExitCode represents exit codes.
 type ExitCode int
