@@ -1,0 +1,143 @@
+package llm
+
+import (
+	"context"
+	"errors"
+	"io"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
+	"github.com/charmbracelet/log"
+)
+
+func TestNewOllama(t *testing.T) {
+	tests := []struct {
+		name         string
+		baseURL      string
+		defaultModel string
+		isError      bool
+		err          error
+	}{
+		{
+			name:         "creates a new Ollama client",
+			baseURL:      "http://test.dev",
+			defaultModel: "default:model",
+		},
+		{
+			name:         "returns error for no base URL",
+			defaultModel: "default:model",
+			isError:      true,
+			err:          ErrNoBaseURL,
+		},
+		{
+			name:    "returns error for no default model",
+			baseURL: "http://test.dev",
+			isError: true,
+			err:     ErrNoDefaultModel,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			logger := log.New(io.Discard)
+
+			ollama, err := NewOllama(tt.baseURL, tt.defaultModel, logger)
+
+			if !tt.isError && err != nil {
+				t.Fatalf("expect no error, got %v", err)
+			}
+
+			if tt.isError {
+				if err == nil {
+					t.Fatal("expected error, got nil")
+				}
+
+				if !errors.Is(err, tt.err) {
+					t.Errorf("expected error %v, got %v", tt.err, err)
+				}
+			}
+
+			if !tt.isError {
+				if ollama.baseURL != tt.baseURL {
+					t.Errorf("expected base URL %q, got %q", tt.baseURL, ollama.baseURL)
+				}
+
+				if ollama.generateURL != tt.baseURL+"/api/generate" {
+					t.Errorf("expected generate URL %q, got %q", tt.baseURL+"/api/generate", ollama.generateURL)
+				}
+
+				if ollama.defaultModel != tt.defaultModel {
+					t.Errorf("expected default model %q, got %q", tt.defaultModel, ollama.defaultModel)
+				}
+			}
+		})
+	}
+}
+
+func TestGenerate(t *testing.T) {
+	tests := []struct {
+		name       string
+		httpStatus int
+		isError    bool
+		err        error
+	}{
+		{
+			name:       "returns response from API",
+			httpStatus: http.StatusOK,
+		},
+		{
+			name:       "returns API error",
+			httpStatus: http.StatusNotFound,
+			isError:    true,
+			err:        ErrOllama,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			logger := log.New(io.Discard)
+
+			httpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(tt.httpStatus)
+
+				response := `{"response": "Hello, chummer!"}`
+
+				_, _ = w.Write([]byte(response))
+			}))
+
+			defer httpServer.Close()
+
+			ollama, err := NewOllama(httpServer.URL, "test:model", logger)
+			if err != nil {
+				t.Fatalf("expect no error, got %v", err)
+			}
+
+			systemPrompt := "test system prompt"
+			userPrompt := "test user prompt"
+
+			response, err := ollama.Generate(context.Background(), systemPrompt, userPrompt)
+
+			if !tt.isError && err != nil {
+				t.Fatalf("expected no error, got %v", err)
+			}
+
+			if tt.isError {
+				if err == nil {
+					t.Fatal("expected error, got nil")
+				}
+
+				if !errors.Is(err, tt.err) {
+					t.Errorf("expected error %v, got %v", tt.err, err)
+				}
+			}
+
+			if !tt.isError {
+				expectedResponse := "Hello, chummer!"
+				if response != expectedResponse {
+					t.Errorf("expected response %q, got %q", expectedResponse, response)
+				}
+			}
+		})
+	}
+}

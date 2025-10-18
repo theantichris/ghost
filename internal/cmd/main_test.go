@@ -7,8 +7,8 @@ import (
 	"io"
 	"testing"
 
-	"github.com/charmbracelet/log"
 	"github.com/sebdah/goldie/v2"
+	"github.com/theantichris/ghost/internal/llm"
 )
 
 // errorWrite is used to test output errors.
@@ -25,41 +25,57 @@ func (writer *errorWriter) Write(str []byte) (int, error) {
 	return len(str), nil
 }
 
-func TestRun(t *testing.T) {
+func TestHandleLLMRequest(t *testing.T) {
 	tests := []struct {
-		name     string
-		writer   io.Writer
-		args     []string
-		isGolden bool
-		isError  bool
-		Error    error
+		name      string
+		llmClient llm.LLMClient
+		writer    io.Writer
+		prompt    string
+		isGolden  bool
+		isError   bool
+		err       error
 	}{
 		{
-			name:     "writes user prompt",
-			writer:   &bytes.Buffer{},
-			args:     []string{"ghost", "what is the capital of tennessee"},
+			name:   "generates a LLM response",
+			writer: &bytes.Buffer{},
+			llmClient: llm.MockLLMClient{
+				GenerateFunc: func(ctx context.Context, systemPrompt, userPrompt string) (string, error) {
+					return "The terms are often interchangeable.", nil
+				},
+			},
+			prompt:   "What is the difference between a netrunner and a decker?",
 			isGolden: true,
 		},
 		{
-			name:    "returns error for bad output",
-			writer:  &errorWriter{err: errors.New("error printing output")},
-			args:    []string{"ghost", "test"},
-			isError: true,
-			Error:   ErrOutput,
+			name:      "returns error for bad output",
+			llmClient: llm.MockLLMClient{},
+			writer:    &errorWriter{err: errors.New("error printing output")},
+			prompt:    "What is the difference between a netrunner and a decker?",
+			isError:   true,
+			err:       ErrOutput,
 		},
 		{
-			name:    "returns error for no prompt",
+			name:      "returns error for no prompt",
+			llmClient: llm.MockLLMClient{},
+			writer:    &bytes.Buffer{},
+			isError:   true,
+			err:       ErrNoPrompt,
+		},
+		{
+			name: "returns LLM error",
+			llmClient: llm.MockLLMClient{
+				Error: llm.ErrOllama,
+			},
 			writer:  &bytes.Buffer{},
-			args:    []string{"ghost"},
+			prompt:  "What is the difference between a netrunning and a decker?",
 			isError: true,
-			Error:   ErrNoPrompt,
+			err:     llm.ErrOllama,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			logger := log.New(io.Discard)
-			err := Run(context.Background(), tt.args, tt.writer, logger)
+			err := generate(context.Background(), tt.prompt, tt.llmClient, tt.writer)
 
 			if !tt.isError && err != nil {
 				t.Fatalf("expected no error got, %s", err)
@@ -70,8 +86,8 @@ func TestRun(t *testing.T) {
 					t.Fatal("expected error, got nil")
 				}
 
-				if !errors.Is(err, tt.Error) {
-					t.Errorf("expected error %v, got %v", tt.Error, err)
+				if !errors.Is(err, tt.err) {
+					t.Errorf("expected error %v, got %v", tt.err, err)
 				}
 			}
 

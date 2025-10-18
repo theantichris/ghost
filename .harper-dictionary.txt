@@ -1,0 +1,5 @@
+NewOllama
+errorWrite
+handleLLMRequest
+ollamaRequest
+ollamaURL
