@@ -106,25 +106,21 @@ All pre-commit hooks must pass after editing files.
 
 Before submitting a pull request, ensure all items are completed:
 
-1. **All tests pass**: `go test -v ./...`
+1. **Pre-commit hooks pass**: All hooks run automatically (go-fmt, go-mod-tidy,
+ go-unit-tests, golangci-lint, markdownlint, codespell)
 2. **Build succeeds**: `go build -v ./...`
-3. **Code is formatted**: `go fmt ./...`
-4. **Dependencies are tidy**: `go mod tidy`
-5. **Linting passes**: `golangci-lint run`
-6. **Pre-commit hooks pass**: All hooks (go-fmt, go-mod-tidy, go-unit-tests,
- golangci-lint, markdownlint, codespell)
-7. **Docblocks verified**: All exported and unexported types/functions have
+3. **Docblocks verified**: All exported and unexported types/functions have
  proper doc comments starting with the name
-8. **API documentation**: Verify GoDoc comments render correctly via `go doc`
-9. **Error handling correct**: Sentinel errors use `exitcode.New()` with appropriate
+4. **API documentation**: Verify GoDoc comments render correctly via `go doc`
+5. **Error handling correct**: Sentinel errors use `exitcode.New()` with appropriate
  exit codes
-10. **Code style followed**: Imports ordered, naming conventions, context passing
-11. **Security audit**: No secrets/keys exposed or logged, proper input validation,
+6. **Code style followed**: Imports ordered, naming conventions, context passing
+7. **Security audit**: No secrets/keys exposed or logged, proper input validation,
  error sanitization
-12. **No TODOs remaining**: Search for TODO comments with `rg -i "TODO|FIXME|XXX|HACK"`
+8. **No TODOs remaining**: Search for TODO comments with `rg -i "TODO|FIXME|XXX|HACK"`
  and resolve or document them
-13. **README.md updated**: If feature/usage changes, update examples and documentation
-14. **AGENTS.md updated**: If new patterns, commands, or guidelines emerge
-15. **Golden files updated**: If test output changes, regenerate with
+9. **README.md updated**: If feature/usage changes, update examples and documentation
+10. **AGENTS.md updated**: If new patterns, commands, or guidelines emerge
+11. **Golden files updated**: If test output changes, regenerate with
  `go test -update`
-16. **Code review**: Review code for best practices, patterns, and potential issues
+12. **Code review**: Review code for best practices, patterns, and potential issues
