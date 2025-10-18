@@ -1,5 +1,5 @@
 NewOllama
 errorWrite
-handleLLMRequeset
+handleLLMRequest
 ollamaRequest
 ollamaURL
