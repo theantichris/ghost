@@ -71,7 +71,7 @@ func (ollama Ollama) Generate(ctx context.Context, systemPrompt, userPrompt stri
 		Fetch(ctx)
 
 	if err != nil {
-		return ollamaResponse.Response, fmt.Errorf("%w: %w", ErrOllama, err)
+		return "", fmt.Errorf("%w: %w", ErrOllama, err)
 	}
 
 	ollama.logger.Debug("response received from Ollama API", "response", ollamaResponse)
