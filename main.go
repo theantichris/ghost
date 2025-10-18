@@ -24,14 +24,11 @@ func main() {
 	}
 
 	if err := cmd.Run(context.Background(), os.Args, os.Stdout, logger); err != nil {
-		if errors.Is(err, cmd.ErrNoPrompt) {
-			fmt.Printf("%s, supply a prompt to ghost\n", err)
-			os.Exit(int(exitcode.ExUsage))
-		}
+		exitCode := exitcode.GetExitCode(err)
 
 		fmt.Printf("failed to run ghost: %s\n", err)
 		logger.Error("failed to run ghost", "error", err)
-		os.Exit(int(exitcode.ExSoftware))
+		os.Exit(int(exitCode))
 	}
 }
 

@@ -2,7 +2,6 @@ package llm
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -31,8 +30,6 @@ type Ollama struct {
 	httpClient   *http.Client
 	logger       *log.Logger
 }
-
-var ErrOllama = errors.New("failed to get API response")
 
 // NewOllama creates and returns a new Ollama client.
 func NewOllama(baseURL, defaultModel string, httpClient *http.Client, logger *log.Logger) (Ollama, error) {
