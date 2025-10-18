@@ -40,17 +40,17 @@ func TestHandleLLMRequest(t *testing.T) {
 			writer: &bytes.Buffer{},
 			llmClient: llm.MockLLMClient{
 				GenerateFunc: func(ctx context.Context, systemPrompt, userPrompt string) (string, error) {
-					return "The capital of Tennessee is Nashville.", nil
+					return "The terms are often interchangeable.", nil
 				},
 			},
-			prompt:   "what is the capital of tennessee",
+			prompt:   "What is the difference between a netrunner and a decker?",
 			isGolden: true,
 		},
 		{
 			name:      "returns error for bad output",
 			llmClient: llm.MockLLMClient{},
 			writer:    &errorWriter{err: errors.New("error printing output")},
-			prompt:    "what is the capital of tennessee",
+			prompt:    "What is the difference between a netrunner and a decker?",
 			isError:   true,
 			err:       ErrOutput,
 		},
@@ -67,7 +67,7 @@ func TestHandleLLMRequest(t *testing.T) {
 				Error: llm.ErrOllama,
 			},
 			writer:  &bytes.Buffer{},
-			prompt:  "what is the capital of tennessee",
+			prompt:  "What is the difference between a netrunning and a decker?",
 			isError: true,
 			err:     llm.ErrOllama,
 		},
