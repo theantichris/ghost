@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestMockClientGenearte(t *testing.T) {
+func TestMockClientGenerate(t *testing.T) {
 	t.Run("mocks the Generate function", func(t *testing.T) {
 		t.Parallel()
 
