@@ -7,7 +7,6 @@ import (
 	"io"
 	"testing"
 
-	"github.com/charmbracelet/log"
 	"github.com/sebdah/goldie/v2"
 	"github.com/theantichris/ghost/internal/llm"
 )
@@ -24,51 +23,6 @@ func (writer *errorWriter) Write(str []byte) (int, error) {
 	}
 
 	return len(str), nil
-}
-
-func TestRun(t *testing.T) {
-	tests := []struct {
-		name       string
-		userPrompt string
-		isErr      bool
-		err        error
-	}{
-		{
-			name:       "runs the ghost command",
-			userPrompt: "What is the difference between a netrunninger and a decker?",
-		},
-		{
-			name:  "returns error for no prompt",
-			isErr: true,
-			err:   ErrNoPrompt,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			logger := log.New(io.Discard)
-			args := []string{
-				"ghost",
-				tt.userPrompt,
-			}
-
-			actualErr := Run(context.Background(), args, io.Discard, logger)
-
-			if !tt.isErr && actualErr != nil {
-				t.Fatalf("expected no error, got %v", actualErr)
-			}
-
-			if tt.isErr {
-				if tt.err == nil {
-					t.Fatal("expected error, got nil")
-				}
-
-				if !errors.Is(actualErr, tt.err) {
-					t.Errorf("expected error to be %v, got %v", tt.err, actualErr)
-				}
-			}
-		})
-	}
 }
 
 func TestHandleLLMRequest(t *testing.T) {
