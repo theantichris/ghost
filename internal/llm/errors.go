@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	// ErrNoHostURL indicates the Ollama base URL was not provided or is empty.
+	// ErrNoHostURL indicates the Ollama host URL was not provided or is empty.
 	ErrNoHostURL = exitcode.New(errors.New("no base URL provided"), exitcode.ExConfig)
 
 	// ErrNoDefaultModel indicates the default model name was not provided or is empty.
