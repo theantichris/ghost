@@ -25,6 +25,8 @@ const (
 func Run(ctx context.Context, args []string, output io.Writer, logger *log.Logger) error {
 	var userPrompt string
 
+	// TODO: add model flag
+
 	cmd := &cli.Command{
 		Name:      commands["ghost"].Name,
 		Usage:     commands["ghost"].Usage,
@@ -35,10 +37,19 @@ func Run(ctx context.Context, args []string, output io.Writer, logger *log.Logge
 				Destination: &userPrompt,
 			},
 		},
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:     "host",
+				Usage:    "Ollama API URL",
+				Required: true,
+			},
+		},
 		Action: func(ctx context.Context, cmd *cli.Command) error {
 			if userPrompt == "" {
 				return fmt.Errorf("%w", ErrNoPrompt)
 			}
+
+			// TODO: rename ollamaURL/baseURL to host
 
 			llmClient, err := llm.NewOllama(ollamaURL, model, logger)
 			if err != nil {

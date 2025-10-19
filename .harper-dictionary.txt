@@ -1,4 +1,5 @@
 NewOllama
+baseURL
 errorWrite
 handleLLMRequest
 ollamaRequest
