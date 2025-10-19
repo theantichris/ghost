@@ -23,7 +23,7 @@ const (
 
 // Run executes the root command (ghost) printing out a test string.
 func Run(ctx context.Context, args []string, output io.Writer, logger *log.Logger) error {
-	var prompt string
+	var userPrompt string
 
 	llmClient, err := llm.NewOllama(ollamaURL, model, logger)
 	if err != nil {
@@ -37,11 +37,15 @@ func Run(ctx context.Context, args []string, output io.Writer, logger *log.Logge
 		Arguments: []cli.Argument{
 			&cli.StringArg{
 				Name:        "prompt",
-				Destination: &prompt,
+				Destination: &userPrompt,
 			},
 		},
 		Action: func(ctx context.Context, cmd *cli.Command) error {
-			return generate(ctx, prompt, llmClient, output)
+			if userPrompt == "" {
+				return fmt.Errorf("%w", ErrNoPrompt)
+			}
+
+			return generate(ctx, userPrompt, llmClient, output)
 		},
 	}
 
@@ -50,10 +54,6 @@ func Run(ctx context.Context, args []string, output io.Writer, logger *log.Logge
 
 // generate sends the prompt to the LLM API, processes the response, and displays the results.
 func generate(ctx context.Context, userPrompt string, llmClient llm.LLMClient, output io.Writer) error {
-	if userPrompt == "" {
-		return fmt.Errorf("%w", ErrNoPrompt)
-	}
-
 	response, err := llmClient.Generate(ctx, systemPrompt, userPrompt)
 	if err != nil {
 		return err

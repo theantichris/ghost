@@ -7,6 +7,7 @@ import (
 	"io"
 	"testing"
 
+	"github.com/charmbracelet/log"
 	"github.com/sebdah/goldie/v2"
 	"github.com/theantichris/ghost/internal/llm"
 )
@@ -25,6 +26,51 @@ func (writer *errorWriter) Write(str []byte) (int, error) {
 	return len(str), nil
 }
 
+func TestRun(t *testing.T) {
+	tests := []struct {
+		name       string
+		userPrompt string
+		isErr      bool
+		err        error
+	}{
+		{
+			name:       "runs the ghost command",
+			userPrompt: "What is the difference between a netrunninger and a decker?",
+		},
+		{
+			name:  "returns error for no prompt",
+			isErr: true,
+			err:   ErrNoPrompt,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			logger := log.New(io.Discard)
+			args := []string{
+				"ghost",
+				tt.userPrompt,
+			}
+
+			actualErr := Run(context.Background(), args, io.Discard, logger)
+
+			if !tt.isErr && actualErr != nil {
+				t.Fatalf("expected no error, got %v", actualErr)
+			}
+
+			if tt.isErr {
+				if tt.err == nil {
+					t.Fatal("expected error, got nil")
+				}
+
+				if !errors.Is(actualErr, tt.err) {
+					t.Errorf("expected error to be %v, got %v", tt.err, actualErr)
+				}
+			}
+		})
+	}
+}
+
 func TestHandleLLMRequest(t *testing.T) {
 	tests := []struct {
 		name      string
@@ -32,7 +78,7 @@ func TestHandleLLMRequest(t *testing.T) {
 		writer    io.Writer
 		prompt    string
 		isGolden  bool
-		isError   bool
+		isErr     bool
 		err       error
 	}{
 		{
@@ -51,25 +97,18 @@ func TestHandleLLMRequest(t *testing.T) {
 			llmClient: llm.MockLLMClient{},
 			writer:    &errorWriter{err: errors.New("error printing output")},
 			prompt:    "What is the difference between a netrunner and a decker?",
-			isError:   true,
+			isErr:     true,
 			err:       ErrOutput,
-		},
-		{
-			name:      "returns error for no prompt",
-			llmClient: llm.MockLLMClient{},
-			writer:    &bytes.Buffer{},
-			isError:   true,
-			err:       ErrNoPrompt,
 		},
 		{
 			name: "returns LLM error",
 			llmClient: llm.MockLLMClient{
 				Error: llm.ErrOllama,
 			},
-			writer:  &bytes.Buffer{},
-			prompt:  "What is the difference between a netrunning and a decker?",
-			isError: true,
-			err:     llm.ErrOllama,
+			writer: &bytes.Buffer{},
+			prompt: "What is the difference between a netrunning and a decker?",
+			isErr:  true,
+			err:    llm.ErrOllama,
 		},
 	}
 
@@ -77,11 +116,11 @@ func TestHandleLLMRequest(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			err := generate(context.Background(), tt.prompt, tt.llmClient, tt.writer)
 
-			if !tt.isError && err != nil {
+			if !tt.isErr && err != nil {
 				t.Fatalf("expected no error got, %s", err)
 			}
 
-			if tt.isError {
+			if tt.isErr {
 				if err == nil {
 					t.Fatal("expected error, got nil")
 				}
