@@ -18,7 +18,7 @@
 [![Go ReportCard](https://goreportcard.com/badge/theantichris/ghost)](https://goreportcard.com/report/theantichris/ghost)
 ![license](https://img.shields.io/badge/license-MIT-informational?style=flat)
 
-Ghost is a local, AI assistant CLI tool built in Go and powered by Ollama.
+Ghost is a local, AI assistant CLI tool built-in Go and powered by Ollama.
 
 The vision for Ghost is inspired by cyberpunk media such as _Shadowrun_,
 _Cyberpunk 2077_, and _The Matrix_, bringing a versatile, always-on AI
@@ -27,7 +27,7 @@ companion into a terminal-first experience.
 ## Prerequisites
 
 - [Ollama](https://ollama.ai) installed and running
-- Ollama model `dolphin-mixtral:8x7b` pulled and available
+- A model of your choice pulled (defaults to `llama3.1:8b`)
 
 ## Installation
 
@@ -50,7 +50,7 @@ Invoke Ghost with a prompt to get instant AI assistance in your terminal:
 ghost "your prompt here"
 ```
 
-### Examples
+### Basic Examples
 
 ```bash
 # Get intel on tech
@@ -63,6 +63,19 @@ ghost "What's the difference between a netrunner and a decker?"
 ghost "Write a Go function to encrypt data with AES-256"
 ```
 
+### Using Custom Configuration
+
+```bash
+# Use a specific model
+ghost --model "codellama:13b" "write a function to parse JSON"
+
+# Connect to a remote Ollama instance
+ghost --host "http://192.168.1.50:11434" "your prompt here"
+
+# Override system prompt for specialized tasks
+ghost --system "You are an expert Go developer" "how do I handle context cancellation?"
+```
+
 ### Help
 
 ```bash
@@ -71,9 +84,42 @@ ghost --help
 
 ## Configuration
 
-Ghost currently connects to Ollama at `http://100.92.199.66:11434` and uses the
-`dolphin-mixtral:8x7b` model. Configuration options are planned for future
-releases.
+Ghost can be configured via CLI flags or an optional TOML configuration file.
+
+### CLI Flags
+
+- `--host`: Ollama API URL (default: `http://localhost:11434`)
+- `--model`: LLM model name (default: `llama3.1:8b`)
+- `--system`: System prompt override (optional)
+
+### Configuration File
+
+Create a config file at `~/.config/ghost/config.toml`:
+
+```toml
+host = "http://localhost:11434"
+model = "llama3.1:8b"
+system = "You are Ghost, a cyberpunk inspired terminal based assistant."
+```
+
+Settings in the config file are used as defaults. CLI flags override config file
+values.
+
+### Examples with Flags
+
+```bash
+# Use a different Ollama host
+ghost --host "http://192.168.1.100:11434" "your prompt"
+
+# Use a different model
+ghost --model "dolphin-mixtral:8x7b" "your prompt"
+
+# Override the system prompt
+ghost --system "You are a helpful coding assistant" "explain async/await in Go"
+
+# Combine multiple flags
+ghost --host "http://remote:11434" --model "llama3.1:70b" "your prompt"
+```
 
 ## License
 

@@ -38,6 +38,46 @@
   - `Info`: Important user-facing events (reserved for significant milestones)
   - `Debug`: Internal operations, initialization, config loading, API calls/responses,
     troubleshooting details
+- **Configuration**: Ghost uses CLI flags with optional TOML config file support:
+  - Config file location: `~/.config/ghost/config.toml`
+  - Settings: `host` (Ollama API URL), `model` (LLM model name), `system` (system
+   prompt override)
+  - Defaults: `host="http://localhost:11434"`, `model="llama3.1:8b"`, `system=""`
+   (optional)
+  - Use `urfave/cli-altsrc/v3` with `OnlyOnce: true` for flags that load from config
+  - Config file is optional; all settings can be provided via CLI flags
+
+## Configuration File Pattern
+
+Ghost loads configuration from `~/.config/ghost/config.toml` if present. The TOML
+file structure:
+
+```toml
+host = "http://localhost:11434"
+model = "llama3.1:8b"
+system = "You are Ghost, a cyberpunk inspired terminal based assistant."
+```
+
+Flags are defined with the following pattern:
+
+```go
+&cli.StringFlag{
+    Name:     "host",
+    Usage:    "Ollama API URL",
+    Value:    "http://localhost:11434",
+    Sources:  cli.NewValueSourceChain(toml.TOML("host", configFile)),
+    OnlyOnce: true,
+}
+```
+
+The `OnlyOnce: true` flag ensures the value is loaded only once from the config
+file, preventing repeated parsing. Config file loading uses:
+
+```go
+homeDir, err := os.UserHomeDir()
+configFile := filepath.Join(homeDir, ".config/ghost", "config.toml")
+sourcer := altsrc.NewStringPtrSourcer(&configFile)
+```
 
 ## Error Handling Pattern
 

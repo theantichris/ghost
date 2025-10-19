@@ -1,7 +1,8 @@
 NewOllama
+OnlyOnce
+Shadowrun
 baseURL
 errorWrite
 handleLLMRequest
 ollamaRequest
 ollamaURL
-OnlyOnce
