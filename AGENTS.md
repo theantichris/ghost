@@ -33,6 +33,11 @@
   method)
 - **Context**: Pass `context.Context` as first parameter to functions that make
   external calls
+- **Logging**: Use `charmbracelet/log` with appropriate levels:
+  - `Error`: Fatal failures, application errors requiring immediate attention
+  - `Info`: Important user-facing events (reserved for significant milestones)
+  - `Debug`: Internal operations, initialization, config loading, API calls/responses,
+    troubleshooting details
 
 ## Error Handling Pattern
 

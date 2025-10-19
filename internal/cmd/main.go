@@ -23,8 +23,6 @@ func Run(ctx context.Context, args []string, output io.Writer, logger *log.Logge
 		return err
 	}
 
-	// TODO: evaluate log levels
-
 	cmd := &cli.Command{
 		Name:      commands["ghost"].Name,
 		Usage:     commands["ghost"].Usage,

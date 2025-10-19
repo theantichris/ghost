@@ -47,7 +47,7 @@ func NewOllama(host, defaultModel string, logger *log.Logger) (Ollama, error) {
 		logger:       logger,
 	}
 
-	logger.Info("initialized Ollama client", "url", ollama.host, "model", ollama.defaultModel)
+	logger.Debug("initialized Ollama client", "url", ollama.host, "model", ollama.defaultModel)
 
 	return ollama, nil
 }
