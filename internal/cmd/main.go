@@ -25,11 +25,6 @@ const (
 func Run(ctx context.Context, args []string, output io.Writer, logger *log.Logger) error {
 	var userPrompt string
 
-	llmClient, err := llm.NewOllama(ollamaURL, model, logger)
-	if err != nil {
-		return err
-	}
-
 	cmd := &cli.Command{
 		Name:      commands["ghost"].Name,
 		Usage:     commands["ghost"].Usage,
@@ -43,6 +38,11 @@ func Run(ctx context.Context, args []string, output io.Writer, logger *log.Logge
 		Action: func(ctx context.Context, cmd *cli.Command) error {
 			if userPrompt == "" {
 				return fmt.Errorf("%w", ErrNoPrompt)
+			}
+
+			llmClient, err := llm.NewOllama(ollamaURL, model, logger)
+			if err != nil {
+				return err
 			}
 
 			return generate(ctx, userPrompt, llmClient, output)
