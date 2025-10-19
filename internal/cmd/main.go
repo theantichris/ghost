@@ -36,17 +36,15 @@ func Run(ctx context.Context, args []string, output io.Writer, logger *log.Logge
 		},
 		Flags: []cli.Flag{
 			&cli.StringFlag{
-				Name:     "host",
-				Usage:    "Ollama API URL",
-				Required: true,
+				Name:  "host",
+				Usage: "Ollama API URL",
+				Value: "http://localhost:11434",
 			},
 		},
 		Action: func(ctx context.Context, cmd *cli.Command) error {
 			if userPrompt == "" {
 				return fmt.Errorf("%w", ErrNoPrompt)
 			}
-
-			// TODO: rename ollamaURL/baseURL to host
 
 			llmClient, err := llm.NewOllama(cmd.String("host"), model, logger)
 			if err != nil {
