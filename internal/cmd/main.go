@@ -15,9 +15,6 @@ import (
 )
 
 const (
-	// model is the Ollama model name.
-	model = "dolphin-mixtral:8x7b"
-
 	// systemPrompt defines the default system level instruction for Ghost's LLM interactions
 	systemPrompt = "You are Ghost, a cyberpunk inspired terminal based assistant. Answer requests directly and briefly."
 )
@@ -31,7 +28,7 @@ func Run(ctx context.Context, args []string, output io.Writer, logger *log.Logge
 		return err
 	}
 
-	// TODO: add model flag
+	// TODO: create flag for system prompt
 	// TODO: rename baseURL
 	// TODO: evaluate log levels
 
@@ -53,13 +50,20 @@ func Run(ctx context.Context, args []string, output io.Writer, logger *log.Logge
 				Sources:  cli.NewValueSourceChain(toml.TOML("host", configFile)),
 				OnlyOnce: true,
 			},
+			&cli.StringFlag{
+				Name:     "model",
+				Usage:    "default LLM",
+				Value:    "llama3.1:8b",
+				Sources:  cli.NewValueSourceChain(toml.TOML("model", configFile)),
+				OnlyOnce: true,
+			},
 		},
 		Action: func(ctx context.Context, cmd *cli.Command) error {
 			if userPrompt == "" {
 				return fmt.Errorf("%w", ErrNoPrompt)
 			}
 
-			llmClient, err := llm.NewOllama(cmd.String("host"), model, logger)
+			llmClient, err := llm.NewOllama(cmd.String("host"), cmd.String("model"), logger)
 			if err != nil {
 				return err
 			}
