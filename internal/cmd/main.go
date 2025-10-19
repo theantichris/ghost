@@ -49,12 +49,12 @@ func Run(ctx context.Context, args []string, output io.Writer, logger *log.Logge
 }
 
 // generate sends the prompt to the LLM API, processes the response, and displays the results.
-func generate(ctx context.Context, prompt string, llmClient llm.LLMClient, output io.Writer) error {
-	if prompt == "" {
+func generate(ctx context.Context, userPrompt string, llmClient llm.LLMClient, output io.Writer) error {
+	if userPrompt == "" {
 		return fmt.Errorf("%w", ErrNoPrompt)
 	}
 
-	response, err := llmClient.Generate(ctx, systemPrompt, prompt)
+	response, err := llmClient.Generate(ctx, systemPrompt, userPrompt)
 	if err != nil {
 		return err
 	}
