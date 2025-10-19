@@ -4,9 +4,13 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"os"
+	"path/filepath"
 
 	"github.com/charmbracelet/log"
 	"github.com/theantichris/ghost/internal/llm"
+	altsrc "github.com/urfave/cli-altsrc/v3"
+	toml "github.com/urfave/cli-altsrc/v3/toml"
 	"github.com/urfave/cli/v3"
 )
 
@@ -22,7 +26,15 @@ const (
 func Run(ctx context.Context, args []string, output io.Writer, logger *log.Logger) error {
 	var userPrompt string
 
+	// TODO: Check for config file.
+	homeDir, _ := os.UserHomeDir()
+	configFile := filepath.Join(homeDir, ".config/ghost", "config.toml")
+	logger.Debug("loading config file", "file", configFile)
+	sourcer := altsrc.NewStringPtrSourcer(&configFile)
+
 	// TODO: add model flag
+	// TODO: rename baseURL
+	// TODO: evaluate log levels
 
 	cmd := &cli.Command{
 		Name:      commands["ghost"].Name,
@@ -38,7 +50,8 @@ func Run(ctx context.Context, args []string, output io.Writer, logger *log.Logge
 			&cli.StringFlag{
 				Name:  "host",
 				Usage: "Ollama API URL",
-				Value: "http://localhost:11434",
+				// Value:   "http://localhost:11434",
+				Sources: cli.NewValueSourceChain(toml.TOML("host", sourcer)),
 			},
 		},
 		Action: func(ctx context.Context, cmd *cli.Command) error {
