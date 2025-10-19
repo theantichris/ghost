@@ -47,10 +47,11 @@ func Run(ctx context.Context, args []string, output io.Writer, logger *log.Logge
 		},
 		Flags: []cli.Flag{
 			&cli.StringFlag{
-				Name:    "host",
-				Usage:   "Ollama API URL",
-				Value:   "http://localhost:11434",
-				Sources: cli.NewValueSourceChain(toml.TOML("host", configFile)),
+				Name:     "host",
+				Usage:    "Ollama API URL",
+				Value:    "http://localhost:11434",
+				Sources:  cli.NewValueSourceChain(toml.TOML("host", configFile)),
+				OnlyOnce: true,
 			},
 		},
 		Action: func(ctx context.Context, cmd *cli.Command) error {
