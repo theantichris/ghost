@@ -24,16 +24,16 @@ type ollamaResponse struct {
 
 // Ollama is the client for the Ollama API.
 type Ollama struct {
-	baseURL      string
+	host         string
 	generateURL  string
 	defaultModel string
 	logger       *log.Logger
 }
 
 // NewOllama creates and returns a new Ollama client.
-func NewOllama(baseURL, defaultModel string, logger *log.Logger) (Ollama, error) {
-	if strings.TrimSpace(baseURL) == "" {
-		return Ollama{}, fmt.Errorf("%w", ErrNoBaseURL)
+func NewOllama(host, defaultModel string, logger *log.Logger) (Ollama, error) {
+	if strings.TrimSpace(host) == "" {
+		return Ollama{}, fmt.Errorf("%w", ErrNoHostURL)
 	}
 
 	if strings.TrimSpace(defaultModel) == "" {
@@ -41,13 +41,13 @@ func NewOllama(baseURL, defaultModel string, logger *log.Logger) (Ollama, error)
 	}
 
 	ollama := Ollama{
-		baseURL:      baseURL,
-		generateURL:  baseURL + "/api/generate",
+		host:         host,
+		generateURL:  host + "/api/generate",
 		defaultModel: defaultModel,
 		logger:       logger,
 	}
 
-	logger.Info("initialized Ollama client", "url", ollama.baseURL, "model", ollama.defaultModel)
+	logger.Info("initialized Ollama client", "url", ollama.host, "model", ollama.defaultModel)
 
 	return ollama, nil
 }

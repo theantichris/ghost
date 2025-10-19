@@ -23,7 +23,6 @@ func Run(ctx context.Context, args []string, output io.Writer, logger *log.Logge
 		return err
 	}
 
-	// TODO: rename baseURL
 	// TODO: evaluate log levels
 
 	cmd := &cli.Command{
