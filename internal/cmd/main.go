@@ -14,9 +14,6 @@ const (
 	// model is the Ollama model name.
 	model = "dolphin-mixtral:8x7b"
 
-	// ollamaURL is the base address to the Ollama API
-	ollamaURL = "http://100.92.199.66:11434"
-
 	// systemPrompt defines the default system level instruction for Ghost's LLM interactions
 	systemPrompt = "You are Ghost, a cyberpunk inspired terminal based assistant. Answer requests directly and briefly."
 )
@@ -51,7 +48,7 @@ func Run(ctx context.Context, args []string, output io.Writer, logger *log.Logge
 
 			// TODO: rename ollamaURL/baseURL to host
 
-			llmClient, err := llm.NewOllama(ollamaURL, model, logger)
+			llmClient, err := llm.NewOllama(cmd.String("host"), model, logger)
 			if err != nil {
 				return err
 			}
