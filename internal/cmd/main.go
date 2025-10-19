@@ -26,11 +26,10 @@ const (
 func Run(ctx context.Context, args []string, output io.Writer, logger *log.Logger) error {
 	var userPrompt string
 
-	// TODO: Check for config file.
-	homeDir, _ := os.UserHomeDir()
-	configFile := filepath.Join(homeDir, ".config/ghost", "config.toml")
-	logger.Debug("loading config file", "file", configFile)
-	sourcer := altsrc.NewStringPtrSourcer(&configFile)
+	configFile, err := loadConfigFile(logger)
+	if err != nil {
+		return err
+	}
 
 	// TODO: add model flag
 	// TODO: rename baseURL
@@ -48,10 +47,10 @@ func Run(ctx context.Context, args []string, output io.Writer, logger *log.Logge
 		},
 		Flags: []cli.Flag{
 			&cli.StringFlag{
-				Name:  "host",
-				Usage: "Ollama API URL",
-				// Value:   "http://localhost:11434",
-				Sources: cli.NewValueSourceChain(toml.TOML("host", sourcer)),
+				Name:    "host",
+				Usage:   "Ollama API URL",
+				Value:   "http://localhost:11434",
+				Sources: cli.NewValueSourceChain(toml.TOML("host", configFile)),
 			},
 		},
 		Action: func(ctx context.Context, cmd *cli.Command) error {
@@ -83,4 +82,24 @@ func generate(ctx context.Context, userPrompt string, llmClient llm.LLMClient, o
 	}
 
 	return nil
+}
+
+// loadConfigFile attempts to load config.toml from ~/.config/ghost.
+func loadConfigFile(logger *log.Logger) (altsrc.StringPtrSourcer, error) {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return altsrc.StringPtrSourcer{}, fmt.Errorf("%w", ErrConfigFile)
+	}
+
+	configFile := filepath.Join(homeDir, ".config/ghost", "config.toml")
+
+	var sourcer altsrc.StringPtrSourcer
+	if _, err := os.Stat(configFile); err != nil {
+		logger.Debug("config file not found", "file", configFile)
+	} else {
+		sourcer = altsrc.NewStringPtrSourcer(&configFile)
+		logger.Debug("loading config file", "file", configFile)
+	}
+
+	return sourcer, nil
 }
