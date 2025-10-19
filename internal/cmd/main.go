@@ -14,11 +14,6 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-const (
-	// systemPrompt defines the default system level instruction for Ghost's LLM interactions
-	systemPrompt = "You are Ghost, a cyberpunk inspired terminal based assistant. Answer requests directly and briefly."
-)
-
 // Run executes the root command (ghost) printing out a test string.
 func Run(ctx context.Context, args []string, output io.Writer, logger *log.Logger) error {
 	var userPrompt string
@@ -28,7 +23,6 @@ func Run(ctx context.Context, args []string, output io.Writer, logger *log.Logge
 		return err
 	}
 
-	// TODO: create flag for system prompt
 	// TODO: rename baseURL
 	// TODO: evaluate log levels
 
@@ -57,6 +51,13 @@ func Run(ctx context.Context, args []string, output io.Writer, logger *log.Logge
 				Sources:  cli.NewValueSourceChain(toml.TOML("model", configFile)),
 				OnlyOnce: true,
 			},
+			&cli.StringFlag{
+				Name:     "system",
+				Usage:    "the system prompt to override the model's",
+				Value:    "",
+				Sources:  cli.NewValueSourceChain(toml.TOML("system", configFile)),
+				OnlyOnce: true,
+			},
 		},
 		Action: func(ctx context.Context, cmd *cli.Command) error {
 			if userPrompt == "" {
@@ -68,7 +69,7 @@ func Run(ctx context.Context, args []string, output io.Writer, logger *log.Logge
 				return err
 			}
 
-			return generate(ctx, userPrompt, llmClient, output)
+			return generate(ctx, cmd.String("system"), userPrompt, llmClient, output)
 		},
 	}
 
@@ -76,7 +77,7 @@ func Run(ctx context.Context, args []string, output io.Writer, logger *log.Logge
 }
 
 // generate sends the prompt to the LLM API, processes the response, and displays the results.
-func generate(ctx context.Context, userPrompt string, llmClient llm.LLMClient, output io.Writer) error {
+func generate(ctx context.Context, systemPrompt, userPrompt string, llmClient llm.LLMClient, output io.Writer) error {
 	response, err := llmClient.Generate(ctx, systemPrompt, userPrompt)
 	if err != nil {
 		return err

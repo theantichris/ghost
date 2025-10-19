@@ -68,7 +68,7 @@ func TestHandleLLMRequest(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := generate(context.Background(), tt.prompt, tt.llmClient, tt.writer)
+			err := generate(context.Background(), "system prompt", tt.prompt, tt.llmClient, tt.writer)
 
 			if !tt.isErr && err != nil {
 				t.Fatalf("expected no error got, %s", err)
