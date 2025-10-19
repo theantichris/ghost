@@ -32,7 +32,7 @@ func TestHandleLLMRequest(t *testing.T) {
 		writer    io.Writer
 		prompt    string
 		isGolden  bool
-		isError   bool
+		isErr     bool
 		err       error
 	}{
 		{
@@ -51,37 +51,30 @@ func TestHandleLLMRequest(t *testing.T) {
 			llmClient: llm.MockLLMClient{},
 			writer:    &errorWriter{err: errors.New("error printing output")},
 			prompt:    "What is the difference between a netrunner and a decker?",
-			isError:   true,
+			isErr:     true,
 			err:       ErrOutput,
-		},
-		{
-			name:      "returns error for no prompt",
-			llmClient: llm.MockLLMClient{},
-			writer:    &bytes.Buffer{},
-			isError:   true,
-			err:       ErrNoPrompt,
 		},
 		{
 			name: "returns LLM error",
 			llmClient: llm.MockLLMClient{
 				Error: llm.ErrOllama,
 			},
-			writer:  &bytes.Buffer{},
-			prompt:  "What is the difference between a netrunning and a decker?",
-			isError: true,
-			err:     llm.ErrOllama,
+			writer: &bytes.Buffer{},
+			prompt: "What is the difference between a netrunning and a decker?",
+			isErr:  true,
+			err:    llm.ErrOllama,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := generate(context.Background(), tt.prompt, tt.llmClient, tt.writer)
+			err := generate(context.Background(), "system prompt", tt.prompt, tt.llmClient, tt.writer)
 
-			if !tt.isError && err != nil {
+			if !tt.isErr && err != nil {
 				t.Fatalf("expected no error got, %s", err)
 			}
 
-			if tt.isError {
+			if tt.isErr {
 				if err == nil {
 					t.Fatal("expected error, got nil")
 				}
