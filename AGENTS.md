@@ -1,5 +1,7 @@
 # Agent Guidelines for Ghost
 
+When you need to search docs, use `context7` tools.
+
 ## Build/Test/Lint Commands
 
 - **Build**: `go build -v ./...`
