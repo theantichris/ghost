@@ -21,9 +21,13 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 	}
 
 	cmd := &cli.Command{
-		Name:      commands["ghost"].Name,
-		Usage:     commands["ghost"].Usage,
-		Version:   version,
+		Name:    commands["ghost"].Name,
+		Usage:   commands["ghost"].Usage,
+		Version: version,
+		Metadata: map[string]any{
+			"output": output,
+			"logger": logger,
+		},
 		ArgsUsage: "[prompt]",
 		Arguments: []cli.Argument{
 			&cli.StringArg{
@@ -69,15 +73,9 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 		},
 		Commands: []*cli.Command{
 			{
-				Name:  commands["health"].Name,
-				Usage: commands["health"].Usage,
-				Action: func(ctx context.Context, cmd *cli.Command) error {
-					if _, err := fmt.Fprintln(output, "ghost is healthy"); err != nil {
-						return fmt.Errorf("%w: %w", ErrOutput, err)
-					}
-
-					return nil
-				},
+				Name:   commands["health"].Name,
+				Usage:  commands["health"].Usage,
+				Action: health,
 			},
 		},
 	}
