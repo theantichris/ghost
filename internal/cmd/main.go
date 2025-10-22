@@ -64,7 +64,21 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 				return err
 			}
 
+			// TODO: Should return the output and print it here.
 			return generate(ctx, cmd.String("system"), userPrompt, llmClient, output)
+		},
+		Commands: []*cli.Command{
+			{
+				Name:  commands["health"].Name,
+				Usage: commands["health"].Usage,
+				Action: func(ctx context.Context, cmd *cli.Command) error {
+					if _, err := fmt.Fprintln(output, "ghost is healthy"); err != nil {
+						return fmt.Errorf("%w: %w", ErrOutput, err)
+					}
+
+					return nil
+				},
+			},
 		},
 	}
 

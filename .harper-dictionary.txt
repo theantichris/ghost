@@ -2,7 +2,9 @@ NewOllama
 OnlyOnce
 Shadowrun
 baseURL
+commandList
 errorWrite
 handleLLMRequest
 ollamaRequest
 ollamaURL
+runHealth

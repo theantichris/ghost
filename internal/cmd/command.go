@@ -10,5 +10,6 @@ type command struct {
 type commandList map[string]command
 
 var commands = commandList{
-	"ghost": {Name: "ghost", Usage: "send ghost a prompt"},
+	"ghost":  {Name: "ghost", Usage: "send ghost a prompt"},
+	"health": {Name: "health", Usage: "check ghost's health"},
 }
