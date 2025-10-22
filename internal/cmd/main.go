@@ -15,7 +15,7 @@ import (
 )
 
 // Run executes the root command (ghost) printing out a test string.
-func Run(ctx context.Context, args []string, output io.Writer, logger *log.Logger) error {
+func Run(ctx context.Context, args []string, version string, output io.Writer, logger *log.Logger) error {
 	var userPrompt string
 
 	configFile, err := loadConfigFile(logger)
@@ -26,6 +26,7 @@ func Run(ctx context.Context, args []string, output io.Writer, logger *log.Logge
 	cmd := &cli.Command{
 		Name:      commands["ghost"].Name,
 		Usage:     commands["ghost"].Usage,
+		Version:   version,
 		ArgsUsage: "[prompt]",
 		Arguments: []cli.Argument{
 			&cli.StringArg{

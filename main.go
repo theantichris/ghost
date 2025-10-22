@@ -13,6 +13,10 @@ import (
 	"github.com/theantichris/ghost/internal/exitcode"
 )
 
+// version holds the application version, defaults to "dev".
+var version = "dev"
+
+// ErrLogger is used when there is an error initializing the logger.
 var ErrLogger = errors.New("failed to create logger")
 
 // main initializes and executes the root command (ghost).
@@ -23,7 +27,7 @@ func main() {
 		os.Exit(int(exitcode.ExSoftware))
 	}
 
-	if err := cmd.Run(context.Background(), os.Args, os.Stdout, logger); err != nil {
+	if err := cmd.Run(context.Background(), os.Args, version, os.Stdout, logger); err != nil {
 		exitCode := exitcode.GetExitCode(err)
 
 		fmt.Printf("failed to run ghost: %s\n", err)
