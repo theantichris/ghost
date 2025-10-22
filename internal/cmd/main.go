@@ -21,8 +21,8 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 	}
 
 	cmd := &cli.Command{
-		Name:    commands["ghost"].Name,
-		Usage:   commands["ghost"].Usage,
+		Name:    "ghost",
+		Usage:   "send a prompt to ghost",
 		Version: version,
 		Metadata: map[string]any{
 			"output": output,
@@ -73,8 +73,8 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 		},
 		Commands: []*cli.Command{
 			{
-				Name:   commands["health"].Name,
-				Usage:  commands["health"].Usage,
+				Name:   "health",
+				Usage:  "check ghost's health",
 				Action: health,
 			},
 		},
