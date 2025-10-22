@@ -28,7 +28,6 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 			"output": output,
 			"logger": logger,
 		},
-		ArgsUsage: "[prompt]",
 		Arguments: []cli.Argument{
 			&cli.StringArg{
 				Name:        "prompt",
