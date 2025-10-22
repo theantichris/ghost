@@ -13,8 +13,10 @@ import (
 	"github.com/theantichris/ghost/internal/exitcode"
 )
 
+// version holds the application version, defaults to "dev".
 var version = "dev"
 
+// ErrLogger is used when there is an error initializing the logger.
 var ErrLogger = errors.New("failed to create logger")
 
 // main initializes and executes the root command (ghost).
