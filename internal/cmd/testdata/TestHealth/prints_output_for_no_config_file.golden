@@ -1,7 +1,7 @@
 >> initializing ghost diagnostics...
 
 SYSTEM CONFIG
-  ◆ host: 
+  ◆ host: http://localhost:11434
   ◆ model: test:model
   ◆ config: 
 

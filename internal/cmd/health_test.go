@@ -70,6 +70,10 @@ func TestHealth(t *testing.T) {
 				},
 				Flags: []cli.Flag{
 					&cli.StringFlag{
+						Name:  "host",
+						Value: "http://localhost:11434",
+					},
+					&cli.StringFlag{
 						Name:  "model",
 						Value: "test:model",
 					},
