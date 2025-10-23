@@ -9,4 +9,7 @@ type LLMClient interface {
 
 	// Version gets the installed version of Ollama.
 	Version(ctx context.Context) (string, error)
+
+	// Show calls the show endpoint and returns an error if any.
+	Show(ctx context.Context) error
 }
