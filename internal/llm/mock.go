@@ -38,7 +38,7 @@ func (llm MockLLMClient) Version(ctx context.Context) (string, error) {
 	return "", nil
 }
 
-// Show mocks the Show method by calling ShowFunc if set, returning Error if set, or returning an empty string.
+// Show mocks the Show method by calling ShowFunc if set, returning Error if set, or returning nil.
 func (llm MockLLMClient) Show(ctx context.Context) error {
 	if llm.ShowFunc != nil {
 		return llm.ShowFunc(ctx)
