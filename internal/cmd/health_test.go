@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/sebdah/goldie/v2"
+	"github.com/theantichris/ghost/internal/llm"
 	altsrc "github.com/urfave/cli-altsrc/v3"
 	"github.com/urfave/cli/v3"
 )
@@ -13,16 +14,33 @@ import (
 func TestHealth(t *testing.T) {
 	tests := []struct {
 		name       string
+		llmClient  llm.LLMClient
 		configFile string
 		isError    bool
 	}{
 		{
 			name:       "prints output for no config file",
+			llmClient:  llm.MockLLMClient{},
 			configFile: "",
 		},
 		{
 			name:       "prints output for loading config file",
+			llmClient:  llm.MockLLMClient{},
 			configFile: "/home/.config/ghost/config.toml",
+		},
+		{
+			name: "prints output for Ollama API version",
+			llmClient: llm.MockLLMClient{
+				VersionFunc: func(ctx context.Context) (string, error) {
+					return "0.12.6", nil
+				},
+			},
+		},
+		{
+			name: "prints output for Ollama API error",
+			llmClient: llm.MockLLMClient{
+				Error: llm.ErrOllama,
+			},
 		},
 	}
 
@@ -34,6 +52,7 @@ func TestHealth(t *testing.T) {
 				Metadata: map[string]any{
 					"output":     output,
 					"configFile": altsrc.NewStringPtrSourcer(&tt.configFile),
+					"llmClient":  tt.llmClient,
 				},
 			}
 

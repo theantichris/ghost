@@ -92,7 +92,7 @@ func (ollama Ollama) Version(ctx context.Context) (string, error) {
 
 	var response versionResponse
 	err := requests.
-		URL(ollama.generateURL).
+		URL(ollama.versionURL).
 		ToJSON(&response).
 		Fetch(ctx)
 

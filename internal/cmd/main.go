@@ -58,15 +58,23 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 				OnlyOnce: true,
 			},
 		},
+		Before: func(ctx context.Context, cmd *cli.Command) (context.Context, error) {
+
+			llmClient, err := llm.NewOllama(cmd.String("host"), cmd.String("model"), logger)
+			if err != nil {
+				return ctx, err
+			}
+
+			cmd.Metadata["llmClient"] = llmClient
+
+			return ctx, nil
+		},
 		Action: func(ctx context.Context, cmd *cli.Command) error {
 			if userPrompt == "" {
 				return fmt.Errorf("%w", ErrNoPrompt)
 			}
 
-			llmClient, err := llm.NewOllama(cmd.String("host"), cmd.String("model"), logger)
-			if err != nil {
-				return err
-			}
+			llmClient := cmd.Metadata["llmClient"].(llm.LLMClient)
 
 			// TODO: Should return the output and print it here.
 			// TODO: Move generate to its own file.
