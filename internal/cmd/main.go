@@ -93,7 +93,7 @@ var ghost = func(ctx context.Context, cmd *cli.Command) error {
 
 	llmClient := cmd.Metadata["llmClient"].(llm.LLMClient)
 
-	response, err := generate(ctx, cmd.String("system"), cmd.StringArg("prompt"), llmClient)
+	response, err := llmClient.Generate(ctx, cmd.String("system"), cmd.StringArg("prompt"))
 	if err != nil {
 		return err
 	}
