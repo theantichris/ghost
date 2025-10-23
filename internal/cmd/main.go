@@ -76,9 +76,15 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 
 			llmClient := cmd.Metadata["llmClient"].(llm.LLMClient)
 
-			// TODO: Should return the output and print it here.
 			// TODO: Move generate to its own file.
-			return generate(ctx, cmd.String("system"), userPrompt, llmClient, output)
+			response, err := generate(ctx, cmd.String("system"), userPrompt, llmClient)
+			if err != nil {
+				return err
+			}
+
+			_, _ = fmt.Fprintln(output, response)
+
+			return nil
 		},
 		Commands: []*cli.Command{
 			{
@@ -92,16 +98,12 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 	return cmd.Run(ctx, args)
 }
 
-// generate sends the prompt to the LLM API, processes the response, and displays the results.
-func generate(ctx context.Context, systemPrompt, userPrompt string, llmClient llm.LLMClient, output io.Writer) error {
+// generate sends the prompt to the LLM API and returns the response
+func generate(ctx context.Context, systemPrompt, userPrompt string, llmClient llm.LLMClient) (string, error) {
 	response, err := llmClient.Generate(ctx, systemPrompt, userPrompt)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	if _, err := fmt.Fprintln(output, response); err != nil {
-		return fmt.Errorf("%w: %w", ErrOutput, err)
-	}
-
-	return nil
+	return response, nil
 }
