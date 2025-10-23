@@ -68,6 +68,7 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 			}
 
 			// TODO: Should return the output and print it here.
+			// TODO: Move generate to its own file.
 			return generate(ctx, cmd.String("system"), userPrompt, llmClient, output)
 		},
 		Commands: []*cli.Command{
