@@ -40,10 +40,10 @@ var health = func(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	if err = llmClient.Show(ctx); err == nil {
-		_, _ = fmt.Fprintf(output, "  ◆ model %s active\n\n", model)
+		fmt.Fprintf(output, "  ◆ model %s active\n\n", model)
 	} else {
 		errors++
-		_, _ = fmt.Fprintf(output, "  ✗ model %s not loaded: %s\n\n", model, err.Error())
+		fmt.Fprintf(output, "  ✗ model %s not loaded: %s\n\n", model, err.Error())
 	}
 
 	if errors < 1 {
