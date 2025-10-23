@@ -9,7 +9,7 @@ import (
 	"github.com/charmbracelet/log"
 )
 
-// generateRequest represents the JSON payload sent to the OpenAI /api/generate endpoint.
+// generateRequest represents the JSON payload sent to the Ollama /api/generate endpoint.
 type generateRequest struct {
 	Model        string `json:"model"`  // The model name
 	Stream       bool   `json:"stream"` // If false the response is returned as a single object
@@ -17,17 +17,17 @@ type generateRequest struct {
 	UserPrompt   string `json:"prompt"` // The prompt to generate a response for
 }
 
-// generateResponse represents the JSON response received from the OpenAI /api/generate endpoint.
+// generateResponse represents the JSON response received from the Ollama /api/generate endpoint.
 type generateResponse struct {
 	Response string `json:"response"`
 }
 
-// versionResponse represents the JSON response received from the OpenAI /api/version endpoint.
+// versionResponse represents the JSON response received from the Ollama /api/version endpoint.
 type versionResponse struct {
 	Version string `json:"version"`
 }
 
-// showRequest represents the JSON payload sent to the OpenAI /api/show endpoint.
+// showRequest represents the JSON payload sent to the Ollama /api/show endpoint.
 type showRequest struct {
 	Model string `json:"model"`
 }
