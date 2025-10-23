@@ -99,7 +99,7 @@ var ghost = func(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	output := cmd.Metadata["output"].(io.Writer)
-	_, _ = fmt.Fprintln(output, response)
+	fmt.Fprintln(output, response)
 
 	return nil
 }
