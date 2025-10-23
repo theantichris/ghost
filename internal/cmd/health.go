@@ -52,7 +52,7 @@ var health = func(ctx context.Context, cmd *cli.Command) error {
 		fmt.Fprintf(output, "  ✗ model %s not loaded: %s\n\n", model, err.Error())
 	}
 
-	if errors < 1 {
+	if errors == 0 {
 		fmt.Fprintln(output, ">> ghost online :: all systems nominal")
 	} else {
 		fmt.Fprintf(output, ">> ghost offline :: %d critical errors detected", errors)
