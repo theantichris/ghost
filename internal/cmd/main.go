@@ -11,7 +11,9 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-// Run executes the root command (ghost) printing out a test string.
+// Run executes the root ghost command with the given context, arguments, version, output writer, and logger.
+// It loads the configuration file, initializes the CLI command structure with flags and subcommands,
+// and returns any errors that occur during execution.
 func Run(ctx context.Context, args []string, version string, output io.Writer, logger *log.Logger) error {
 	configFile, err := loadConfigFile(logger)
 	if err != nil {
@@ -69,7 +71,7 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 	return cmd.Run(ctx, args)
 }
 
-// before initializes the LLM client and adds it to the root command's meta data.
+// before initializes the LLM client and adds it to the root command's metadata.
 var before = func(ctx context.Context, cmd *cli.Command) (context.Context, error) {
 	logger := cmd.Metadata["logger"].(*log.Logger)
 
@@ -83,7 +85,7 @@ var before = func(ctx context.Context, cmd *cli.Command) (context.Context, error
 	return ctx, nil
 }
 
-// ghost is the action for the main ghost command.
+// ghost is the action handler for the main ghost command that processes user prompts and generates LLM responses.
 var ghost = func(ctx context.Context, cmd *cli.Command) error {
 	if cmd.StringArg("prompt") == "" {
 		return fmt.Errorf("%w", ErrNoPrompt)

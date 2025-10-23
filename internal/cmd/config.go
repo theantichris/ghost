@@ -9,7 +9,8 @@ import (
 	altsrc "github.com/urfave/cli-altsrc/v3"
 )
 
-// loadConfigFile attempts to load config.toml from ~/.config/ghost.
+// loadConfigFile attempts to load config.toml from ~/.config/ghost and returns a StringPtrSourcer.
+// If the config file does not exist, it returns an empty sourcer without error allowing the application to use default flag values. Returns ErrConfigFile if the home directory cannot be determined.
 func loadConfigFile(logger *log.Logger) (altsrc.StringPtrSourcer, error) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {

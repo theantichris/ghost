@@ -9,7 +9,7 @@ import (
 	"github.com/charmbracelet/log"
 )
 
-// generateRequest holds the information for the generate endpoint.
+// generateRequest represents the JSON payload sent to the OpenAI /api/generate endpoint.
 type generateRequest struct {
 	Model        string `json:"model"`  // The model name
 	Stream       bool   `json:"stream"` // If false the response is returned as a single object
@@ -17,17 +17,17 @@ type generateRequest struct {
 	UserPrompt   string `json:"prompt"` // The prompt to generate a response for
 }
 
-// generateResponse holds the information from the generate endpoint
+// generateResponse represents the JSON response received from the OpenAI /api/generate endpoint.
 type generateResponse struct {
 	Response string `json:"response"`
 }
 
-// versionResponse is the response for the version endpoint.
+// versionResponse represents the JSON response received from the OpenAI /api/version endpoint.
 type versionResponse struct {
 	Version string `json:"version"`
 }
 
-// showRequest holds the information for the show endpoint.
+// showRequest represents the JSON payload sent to the OpenAI /api/show endpoint.
 type showRequest struct {
 	Model string `json:"model"`
 }
@@ -66,7 +66,8 @@ func NewOllama(host, defaultModel string, logger *log.Logger) (Ollama, error) {
 	return ollama, nil
 }
 
-// Generate sends a request to /api/generate and returns the response
+// Generate sends a request to /api/generate with the system and user prompt and returns the generated response.
+// Returns ErrOllama wrapped with the underlying error if the API request fails.
 func (ollama Ollama) Generate(ctx context.Context, systemPrompt, userPrompt string) (string, error) {
 	request := generateRequest{
 		Model:        ollama.defaultModel,
@@ -93,7 +94,8 @@ func (ollama Ollama) Generate(ctx context.Context, systemPrompt, userPrompt stri
 	return response.Response, nil
 }
 
-// Version gets the installed version of Ollama.
+// Version calls the /api/version endpoint to and returns the version string.
+// Returns an error if the API request fails.
 func (ollama Ollama) Version(ctx context.Context) (string, error) {
 	ollama.logger.Debug("sending version request to Ollama API", "url", ollama.versionURL)
 
@@ -112,7 +114,8 @@ func (ollama Ollama) Version(ctx context.Context) (string, error) {
 	return response.Version, nil
 }
 
-// Show calls the show endpoint and returns an error if any.
+// Show calls the /api/show endpoint to verify the configured model exists and is accessible.
+// Returns an error if the model is not found or the API request fails.
 func (ollama Ollama) Show(ctx context.Context) error {
 	request := showRequest{
 		Model: ollama.defaultModel,

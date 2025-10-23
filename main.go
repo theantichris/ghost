@@ -16,7 +16,7 @@ import (
 // version holds the application version, defaults to "dev".
 var version = "dev"
 
-// ErrLogger is used when there is an error initializing the logger.
+// ErrLogger indicates a failure to create or initialize the application logger.
 var ErrLogger = errors.New("failed to create logger")
 
 // main initializes and executes the root command (ghost).
@@ -36,7 +36,9 @@ func main() {
 	}
 }
 
-// initLogger creates and returns the logger.
+// initLogger creates and configures the application logger with JSON formatting and file output.
+// The log is written to ~/.config/ghost/ghost.log and includes caller information and timestamps.
+// Returns ErrLogger wrapped with the underlying error if initialization fails.
 func initLogger() (*log.Logger, error) {
 	logger := log.NewWithOptions(os.Stderr, log.Options{
 		Formatter:       log.JSONFormatter,
