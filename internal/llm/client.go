@@ -6,4 +6,7 @@ import "context"
 type LLMClient interface {
 	// Generate sends a request to the generate endpoint and returns the response.
 	Generate(ctx context.Context, systemPrompt, userPrompt string) (string, error)
+
+	// Version gets the installed version of Ollama.
+	Version(ctx context.Context) (string, error)
 }
