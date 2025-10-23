@@ -18,9 +18,9 @@ var health = func(ctx context.Context, cmd *cli.Command) error {
 
 	configFile := cmd.Root().Metadata["configFile"].(altsrc.StringPtrSourcer)
 	if configFile.SourceURI() == "" {
-		_, _ = fmt.Fprint(output, "config file not found\n")
+		_, _ = fmt.Fprintln(output, "config file not found")
 	} else {
-		_, _ = fmt.Fprint(output, "config file loaded\n")
+		_, _ = fmt.Fprintln(output, "config file loaded")
 	}
 
 	llmClient := cmd.Root().Metadata["llmClient"].(llm.LLMClient)
