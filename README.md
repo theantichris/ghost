@@ -44,6 +44,8 @@ Download the latest release for your platform from the
 
 ## Usage
 
+### Quick Start
+
 Invoke Ghost with a prompt to get instant AI assistance in your terminal:
 
 ```bash
@@ -63,6 +65,54 @@ ghost "What's the difference between a netrunner and a decker?"
 ghost "Write a Go function to encrypt data with AES-256"
 ```
 
+### Health Check
+
+Run diagnostics to verify Ghost is properly configured and connected:
+
+```bash
+ghost health
+```
+
+The health command performs comprehensive system checks:
+
+- **System Configuration**: Displays active host, model, and config file location
+- **Neural Link Status**: Verifies Ollama API connectivity and version
+- **Model Validation**: Confirms the configured model is loaded and available
+
+#### Example Output (All Systems Nominal)
+
+```text
+>> initializing ghost diagnostics...
+
+SYSTEM CONFIG
+  ◆ host: http://localhost:11434
+  ◆ model: llama3.1:8b
+  ◆ config: /home/user/.config/ghost/config.toml
+
+NEURAL LINK STATUS
+  ◆ ollama api CONNECTED [v0.1.32]
+  ◆ model llama3.1:8b active
+
+>> ghost online :: all systems nominal
+```
+
+#### Example Output (Critical Errors)
+
+```text
+>> initializing ghost diagnostics...
+
+SYSTEM CONFIG
+  ◆ host: http://localhost:11434
+  ◆ model: llama3.1:8b
+  ◆ config:
+
+NEURAL LINK STATUS
+  ✗ ollama api CONNECTION FAILED: connection refused
+  ✗ model llama3.1:8b not loaded: connection refused
+
+>> ghost offline :: 2 critical errors detected
+```
+
 ### Using Custom Configuration
 
 ```bash
@@ -74,12 +124,16 @@ ghost --host "http://192.168.1.50:11434" "your prompt here"
 
 # Override system prompt for specialized tasks
 ghost --system "You are an expert Go developer" "how do I handle context cancellation?"
+
+# Check health with custom configuration
+ghost --host "http://192.168.1.50:11434" --model "codellama:13b" health
 ```
 
 ### Help
 
 ```bash
 ghost --help
+ghost health --help
 ```
 
 ## Configuration
