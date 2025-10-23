@@ -1,0 +1,13 @@
+>> initializing ghost diagnostics...
+
+SYSTEM CONFIG
+  ◆ host: http://localhost:11434
+  ◆ model: test:model
+  ◆ config: /home/.config/ghost/config.toml
+  ◆ system prompt: 
+
+NEURAL LINK STATUS
+  ◆ ollama api CONNECTED [v]
+  ◆ model test:model active
+
+>> ghost online :: all systems nominal

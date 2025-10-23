@@ -1,6 +1,6 @@
 name: Generate
 method: POST
-url: http://100.92.199.66:11434/api/generate
+url: http://localhost:11434/api/generate
 body:
   content: |-
     {

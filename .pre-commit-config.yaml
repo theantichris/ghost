@@ -27,7 +27,9 @@ repos:
     rev: v5.0.0
     hooks:
       - id: trailing-whitespace
+        exclude: '\.golden$'
       - id: end-of-file-fixer
+        exclude: '\.golden$'
       - id: check-yaml
       - id: check-added-large-files
         args: ['--maxkb=5000']

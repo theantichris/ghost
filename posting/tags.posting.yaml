@@ -1,2 +1,2 @@
 name: Tags
-url: http://100.92.199.66:11434/api/tags
+url: http://localhost:11434/api/tags
