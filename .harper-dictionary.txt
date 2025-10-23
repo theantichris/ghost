@@ -1,11 +1,17 @@
 LLMClient
 NewOllama
 OnlyOnce
+PR
+PascalCase
 Shadowrun
+TODOs
 baseURL
+camelCase
 commandList
 errorWrite
+funcs
 handleLLMRequest
 ollamaRequest
 ollamaURL
 runHealth
+unexported
