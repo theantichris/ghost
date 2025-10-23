@@ -55,16 +55,7 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 				OnlyOnce: true,
 			},
 		},
-		Before: func(ctx context.Context, cmd *cli.Command) (context.Context, error) {
-			llmClient, err := llm.NewOllama(cmd.String("host"), cmd.String("model"), logger)
-			if err != nil {
-				return ctx, err
-			}
-
-			cmd.Metadata["llmClient"] = llmClient
-
-			return ctx, nil
-		},
+		Before: before,
 		Action: ghost,
 		Commands: []*cli.Command{
 			{
@@ -76,6 +67,20 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 	}
 
 	return cmd.Run(ctx, args)
+}
+
+// before initializes the LLM client and adds it to the root command's meta data.
+var before = func(ctx context.Context, cmd *cli.Command) (context.Context, error) {
+	logger := cmd.Metadata["logger"].(*log.Logger)
+
+	llmClient, err := llm.NewOllama(cmd.String("host"), cmd.String("model"), logger)
+	if err != nil {
+		return ctx, err
+	}
+
+	cmd.Metadata["llmClient"] = llmClient
+
+	return ctx, nil
 }
 
 // ghost is the action for the main ghost command.
