@@ -59,7 +59,6 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 			},
 		},
 		Before: func(ctx context.Context, cmd *cli.Command) (context.Context, error) {
-
 			llmClient, err := llm.NewOllama(cmd.String("host"), cmd.String("model"), logger)
 			if err != nil {
 				return ctx, err
@@ -76,7 +75,6 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 
 			llmClient := cmd.Metadata["llmClient"].(llm.LLMClient)
 
-			// TODO: Move generate to its own file.
 			response, err := generate(ctx, cmd.String("system"), userPrompt, llmClient)
 			if err != nil {
 				return err
@@ -96,14 +94,4 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 	}
 
 	return cmd.Run(ctx, args)
-}
-
-// generate sends the prompt to the LLM API and returns the response
-func generate(ctx context.Context, systemPrompt, userPrompt string, llmClient llm.LLMClient) (string, error) {
-	response, err := llmClient.Generate(ctx, systemPrompt, userPrompt)
-	if err != nil {
-		return "", err
-	}
-
-	return response, nil
 }
