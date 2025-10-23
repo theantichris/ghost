@@ -22,5 +22,8 @@ var health = func(ctx context.Context, cmd *cli.Command) error {
 		_, _ = fmt.Fprintln(output, "config file loaded")
 	}
 
+	// Check API
+	// Check model
+
 	return nil
 }

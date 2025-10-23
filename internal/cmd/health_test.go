@@ -42,7 +42,7 @@ func TestHealth(t *testing.T) {
 				t.Fatalf("expect no error, got %v", err)
 			}
 
-			g := goldie.New(t)
+			g := goldie.New(t, goldie.WithDiffEngine(goldie.ColoredDiff))
 			g.Assert(t, t.Name(), output.Bytes())
 		})
 	}
