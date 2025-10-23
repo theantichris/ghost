@@ -1,4 +1,12 @@
-checking ghost health...
-config file not found
-Ollama version 0.12.6
-model "test:model" found
+>> initializing ghost diagnostics...
+
+SYSTEM CONFIG
+  ◆ host: 
+  ◆ model: test:model
+  ◆ config: 
+
+NEURAL LINK STATUS
+  ◆ ollama api CONNECTED [v0.12.6]
+  ◆ model test:model active
+
+>> ghost online :: all systems nominal

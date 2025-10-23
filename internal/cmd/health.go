@@ -14,28 +14,41 @@ import (
 var health = func(ctx context.Context, cmd *cli.Command) error {
 	output := cmd.Root().Metadata["output"].(io.Writer)
 
-	_, _ = fmt.Fprint(output, "checking ghost health...\n")
-
+	host := cmd.String("host")
+	model := cmd.String("model")
 	configFile := cmd.Root().Metadata["configFile"].(altsrc.StringPtrSourcer)
-	if configFile.SourceURI() == "" {
-		_, _ = fmt.Fprintln(output, "config file not found")
-	} else {
-		_, _ = fmt.Fprintln(output, "config file loaded")
-	}
+
+	errors := 0
+
+	fmt.Fprint(output, ">> initializing ghost diagnostics...\n\n")
+
+	fmt.Fprintln(output, "SYSTEM CONFIG")
+	fmt.Fprintf(output, "  ◆ host: %s\n", host)
+	fmt.Fprintf(output, "  ◆ model: %s\n", model)
+	fmt.Fprintf(output, "  ◆ config: %s\n\n", configFile.SourceURI())
+
+	fmt.Fprintln(output, "NEURAL LINK STATUS")
 
 	llmClient := cmd.Root().Metadata["llmClient"].(llm.LLMClient)
 	version, err := llmClient.Version(ctx)
-	if err != nil {
-		_, _ = fmt.Fprintf(output, "failed to reach Ollama API: %v\n", err)
+	if err == nil {
+		fmt.Fprintf(output, "  ◆ ollama api CONNECTED [v%s]\n", version)
 	} else {
-		_, _ = fmt.Fprintf(output, "Ollama version %s\n", version)
+		errors++
+		fmt.Fprintf(output, "  ✗ ollama api CONNECTION FAILED: %s\n", err.Error())
 	}
 
-	model := cmd.String("model")
-	if err = llmClient.Show(ctx); err != nil {
-		_, _ = fmt.Fprintf(output, "model %q not found %v\n", model, err)
+	if err = llmClient.Show(ctx); err == nil {
+		_, _ = fmt.Fprintf(output, "  ◆ model %s active\n\n", model)
 	} else {
-		_, _ = fmt.Fprintf(output, "model %q found\n", model)
+		errors++
+		_, _ = fmt.Fprintf(output, "  ✗ model %s not loaded: %s\n\n", model, err.Error())
+	}
+
+	if errors < 1 {
+		fmt.Fprintln(output, ">> ghost online :: all systems nominal")
+	} else {
+		fmt.Fprintf(output, ">> ghost offline :: %d critical errors detected", errors)
 	}
 
 	return nil
