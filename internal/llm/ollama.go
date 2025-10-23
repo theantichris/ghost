@@ -9,17 +9,22 @@ import (
 	"github.com/charmbracelet/log"
 )
 
-// ollamaRequest holds the information for the API request.
-type ollamaRequest struct {
+// generateRequest holds the information for the API request.
+type generateRequest struct {
 	Model        string `json:"model"`  // The model name
 	Stream       bool   `json:"stream"` // If false the response is returned as a single object
 	SystemPrompt string `json:"system"` // System message to override what is in the model file
 	UserPrompt   string `json:"prompt"` // The prompt to generate a response for
 }
 
-// ollamaResponse holds the information from the API request.
-type ollamaResponse struct {
+// generateResponse holds the information from the API request.
+type generateResponse struct {
 	Response string `json:"response"`
+}
+
+// versionResponse is the response for the /version endpoint.
+type versionResponse struct {
+	Version string `json:"version"`
 }
 
 // Ollama is the client for the Ollama API.
@@ -56,34 +61,29 @@ func NewOllama(host, defaultModel string, logger *log.Logger) (Ollama, error) {
 
 // Generate sends a request to /api/generate and returns the response
 func (ollama Ollama) Generate(ctx context.Context, systemPrompt, userPrompt string) (string, error) {
-	ollamaRequest := ollamaRequest{
+	generateRequest := generateRequest{
 		Model:        ollama.defaultModel,
 		Stream:       false,
 		SystemPrompt: systemPrompt,
 		UserPrompt:   userPrompt,
 	}
 
-	ollama.logger.Debug("sending generate request to Ollama API", "url", ollama.generateURL, "model", ollama.defaultModel, "request", ollamaRequest)
+	ollama.logger.Debug("sending generate request to Ollama API", "url", ollama.generateURL, "model", ollama.defaultModel, "request", generateRequest)
 
-	var ollamaResponse ollamaResponse
+	var response generateResponse
 	err := requests.
 		URL(ollama.generateURL).
-		BodyJSON(&ollamaRequest).
-		ToJSON(&ollamaResponse).
+		BodyJSON(&generateRequest).
+		ToJSON(&response).
 		Fetch(ctx)
 
 	if err != nil {
 		return "", fmt.Errorf("%w: %w", ErrOllama, err)
 	}
 
-	ollama.logger.Debug("response received from Ollama API", "response", ollamaResponse)
+	ollama.logger.Debug("response received from Ollama API", "response", response)
 
-	return ollamaResponse.Response, nil
-}
-
-// versionResponse is the response for the /version endpoint.
-type versionResponse struct {
-	Version string `json:"version"`
+	return response.Response, nil
 }
 
 // Version gets the installed version of Ollama.
