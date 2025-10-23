@@ -7,7 +7,7 @@ SYSTEM CONFIG
   ◆ system prompt: 
 
 NEURAL LINK STATUS
-  ◆ ollama api CONNECTED [v0.12.6]
+  ✗ ollama api CONNECTION FAILED: failed to get API response
   ◆ model test:model active
 
->> ghost online :: all systems nominal
+>> ghost offline :: 1 critical errors detected

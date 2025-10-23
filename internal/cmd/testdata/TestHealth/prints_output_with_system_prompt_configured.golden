@@ -4,10 +4,10 @@ SYSTEM CONFIG
   ◆ host: http://localhost:11434
   ◆ model: test:model
   ◆ config: 
-  ◆ system prompt: 
+  ◆ system prompt: You are Ghost, a cyberpunk AI assistant
 
 NEURAL LINK STATUS
-  ◆ ollama api CONNECTED [v0.12.6]
+  ◆ ollama api CONNECTED [v]
   ◆ model test:model active
 
 >> ghost online :: all systems nominal

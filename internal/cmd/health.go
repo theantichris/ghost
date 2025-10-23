@@ -21,6 +21,7 @@ var health = func(ctx context.Context, cmd *cli.Command) error {
 
 	host := cmd.String("host")
 	model := cmd.String("model")
+	systemPrompt := cmd.String("system")
 	configFile := cmd.Root().Metadata["configFile"].(altsrc.StringPtrSourcer)
 
 	errors := 0
@@ -30,7 +31,8 @@ var health = func(ctx context.Context, cmd *cli.Command) error {
 	fmt.Fprintln(output, "SYSTEM CONFIG")
 	fmt.Fprintf(output, "  ◆ host: %s\n", host)
 	fmt.Fprintf(output, "  ◆ model: %s\n", model)
-	fmt.Fprintf(output, "  ◆ config: %s\n\n", configFile.SourceURI())
+	fmt.Fprintf(output, "  ◆ config: %s\n", configFile.SourceURI())
+	fmt.Fprintf(output, "  ◆ system prompt: %s\n\n", systemPrompt)
 
 	fmt.Fprintln(output, "NEURAL LINK STATUS")
 
