@@ -9,7 +9,7 @@ import (
 	"github.com/charmbracelet/log"
 )
 
-// generateRequest holds the information for the API request.
+// generateRequest holds the information for the generate endpoint.
 type generateRequest struct {
 	Model        string `json:"model"`  // The model name
 	Stream       bool   `json:"stream"` // If false the response is returned as a single object
@@ -17,14 +17,19 @@ type generateRequest struct {
 	UserPrompt   string `json:"prompt"` // The prompt to generate a response for
 }
 
-// generateResponse holds the information from the API request.
+// generateResponse holds the information from the generate endpoint
 type generateResponse struct {
 	Response string `json:"response"`
 }
 
-// versionResponse is the response for the /version endpoint.
+// versionResponse is the response for the version endpoint.
 type versionResponse struct {
 	Version string `json:"version"`
+}
+
+// showRequest holds the information for the show endpoint.
+type showRequest struct {
+	Model string `json:"model"`
 }
 
 // Ollama is the client for the Ollama API.
@@ -32,6 +37,7 @@ type Ollama struct {
 	host         string
 	generateURL  string
 	versionURL   string
+	showURL      string
 	defaultModel string
 	logger       *log.Logger
 }
@@ -50,6 +56,7 @@ func NewOllama(host, defaultModel string, logger *log.Logger) (Ollama, error) {
 		host:         host,
 		generateURL:  host + "/api/generate",
 		versionURL:   host + "/api/version",
+		showURL:      host + "/api/show",
 		defaultModel: defaultModel,
 		logger:       logger,
 	}
@@ -61,19 +68,19 @@ func NewOllama(host, defaultModel string, logger *log.Logger) (Ollama, error) {
 
 // Generate sends a request to /api/generate and returns the response
 func (ollama Ollama) Generate(ctx context.Context, systemPrompt, userPrompt string) (string, error) {
-	generateRequest := generateRequest{
+	request := generateRequest{
 		Model:        ollama.defaultModel,
 		Stream:       false,
 		SystemPrompt: systemPrompt,
 		UserPrompt:   userPrompt,
 	}
 
-	ollama.logger.Debug("sending generate request to Ollama API", "url", ollama.generateURL, "model", ollama.defaultModel, "request", generateRequest)
+	ollama.logger.Debug("sending generate request to Ollama API", "url", ollama.generateURL, "model", ollama.defaultModel, "request", request)
 
 	var response generateResponse
 	err := requests.
 		URL(ollama.generateURL).
-		BodyJSON(&generateRequest).
+		BodyJSON(&request).
 		ToJSON(&response).
 		Fetch(ctx)
 
@@ -103,4 +110,18 @@ func (ollama Ollama) Version(ctx context.Context) (string, error) {
 	ollama.logger.Debug("response received from Ollama API", "response", response)
 
 	return response.Version, nil
+}
+
+// Show calls the show endpoint and returns an error if any.
+func (ollama Ollama) Show(ctx context.Context) error {
+	request := showRequest{
+		Model: ollama.defaultModel,
+	}
+
+	err := requests.
+		URL(ollama.showURL).
+		BodyJSON(&request).
+		Fetch(ctx)
+
+	return err
 }

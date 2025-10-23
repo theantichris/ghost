@@ -193,3 +193,52 @@ func TestVersion(t *testing.T) {
 		})
 	}
 }
+
+func TestShow(t *testing.T) {
+	tests := []struct {
+		name       string
+		httpStatus int
+		isError    bool
+	}{
+		{
+			name:       "returns ok for model found",
+			httpStatus: http.StatusOK,
+		},
+		{
+			name:       "returns API error",
+			httpStatus: http.StatusNotFound,
+			isError:    true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			logger := log.New(io.Discard)
+
+			httpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(tt.httpStatus)
+
+				response := `{"version": "0.12.6"}`
+
+				_, _ = w.Write([]byte(response))
+			}))
+
+			defer httpServer.Close()
+
+			ollama, err := NewOllama(httpServer.URL, "test:model", logger)
+			if !tt.isError && err != nil {
+				t.Fatalf("expect no error, got %v", err)
+			}
+
+			err = ollama.Show(context.Background())
+
+			if tt.isError && err == nil {
+				t.Error("expected error, got nil")
+			}
+
+			if !tt.isError && err != nil {
+				t.Errorf("expected no error, got %v", err)
+			}
+		})
+	}
+}
