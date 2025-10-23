@@ -13,8 +13,6 @@ import (
 
 // Run executes the root command (ghost) printing out a test string.
 func Run(ctx context.Context, args []string, version string, output io.Writer, logger *log.Logger) error {
-	var userPrompt string
-
 	configFile, err := loadConfigFile(logger)
 	if err != nil {
 		return err
@@ -31,8 +29,7 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 		},
 		Arguments: []cli.Argument{
 			&cli.StringArg{
-				Name:        "prompt",
-				Destination: &userPrompt,
+				Name: "prompt",
 			},
 		},
 		Flags: []cli.Flag{
@@ -68,22 +65,7 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 
 			return ctx, nil
 		},
-		Action: func(ctx context.Context, cmd *cli.Command) error {
-			if userPrompt == "" {
-				return fmt.Errorf("%w", ErrNoPrompt)
-			}
-
-			llmClient := cmd.Metadata["llmClient"].(llm.LLMClient)
-
-			response, err := generate(ctx, cmd.String("system"), userPrompt, llmClient)
-			if err != nil {
-				return err
-			}
-
-			_, _ = fmt.Fprintln(output, response)
-
-			return nil
-		},
+		Action: ghost,
 		Commands: []*cli.Command{
 			{
 				Name:   "health",
@@ -94,4 +76,23 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 	}
 
 	return cmd.Run(ctx, args)
+}
+
+// ghost is the action for the main ghost command.
+var ghost = func(ctx context.Context, cmd *cli.Command) error {
+	if cmd.StringArg("prompt") == "" {
+		return fmt.Errorf("%w", ErrNoPrompt)
+	}
+
+	llmClient := cmd.Metadata["llmClient"].(llm.LLMClient)
+
+	response, err := generate(ctx, cmd.String("system"), cmd.StringArg("prompt"), llmClient)
+	if err != nil {
+		return err
+	}
+
+	output := cmd.Metadata["output"].(io.Writer)
+	_, _ = fmt.Fprintln(output, response)
+
+	return nil
 }
