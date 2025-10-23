@@ -6,15 +6,24 @@ import (
 	"testing"
 
 	"github.com/sebdah/goldie/v2"
+	altsrc "github.com/urfave/cli-altsrc/v3"
 	"github.com/urfave/cli/v3"
 )
 
 func TestHealth(t *testing.T) {
 	tests := []struct {
-		name    string
-		isError bool
+		name       string
+		configFile string
+		isError    bool
 	}{
-		{name: "prints output"},
+		{
+			name:       "prints output for no config file",
+			configFile: "",
+		},
+		{
+			name:       "prints output for loading config file",
+			configFile: "/home/.config/ghost/config.toml",
+		},
 	}
 
 	for _, tt := range tests {
@@ -23,7 +32,8 @@ func TestHealth(t *testing.T) {
 
 			cmd := &cli.Command{
 				Metadata: map[string]any{
-					"output": output,
+					"output":     output,
+					"configFile": altsrc.NewStringPtrSourcer(&tt.configFile),
 				},
 			}
 

@@ -25,8 +25,9 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 		Usage:   "send a prompt to ghost",
 		Version: version,
 		Metadata: map[string]any{
-			"output": output,
-			"logger": logger,
+			"output":     output,
+			"logger":     logger,
+			"configFile": configFile,
 		},
 		Arguments: []cli.Argument{
 			&cli.StringArg{
@@ -74,7 +75,7 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 		Commands: []*cli.Command{
 			{
 				Name:   "health",
-				Usage:  "check ghost's health",
+				Usage:  "check ghost environment and dependencies",
 				Action: health,
 			},
 		},

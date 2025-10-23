@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 
+	altsrc "github.com/urfave/cli-altsrc/v3"
 	"github.com/urfave/cli/v3"
 )
 
@@ -12,8 +13,13 @@ import (
 var health = func(ctx context.Context, cmd *cli.Command) error {
 	output := cmd.Root().Metadata["output"].(io.Writer)
 
-	if _, err := fmt.Fprintln(output, "ghost is healthy"); err != nil {
-		return fmt.Errorf("%w: %w", ErrOutput, err)
+	_, _ = fmt.Fprintln(output, "checking ghost health...")
+
+	configFile := cmd.Root().Metadata["configFile"].(altsrc.StringPtrSourcer)
+	if configFile.SourceURI() == "" {
+		_, _ = fmt.Fprintln(output, "config file not found")
+	} else {
+		_, _ = fmt.Fprintln(output, "config file loaded")
 	}
 
 	return nil
