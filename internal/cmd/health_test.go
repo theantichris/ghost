@@ -42,6 +42,20 @@ func TestHealth(t *testing.T) {
 				Error: llm.ErrOllama,
 			},
 		},
+		{
+			name: "prints output for model check",
+			llmClient: llm.MockLLMClient{
+				ShowFunc: func(ctx context.Context) error {
+					return nil
+				},
+			},
+		},
+		{
+			name: "prints output model check error",
+			llmClient: llm.MockLLMClient{
+				Error: llm.ErrOllama,
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -53,6 +67,12 @@ func TestHealth(t *testing.T) {
 					"output":     output,
 					"configFile": altsrc.NewStringPtrSourcer(&tt.configFile),
 					"llmClient":  tt.llmClient,
+				},
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:  "model",
+						Value: "test:model",
+					},
 				},
 			}
 

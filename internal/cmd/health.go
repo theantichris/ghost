@@ -31,7 +31,12 @@ var health = func(ctx context.Context, cmd *cli.Command) error {
 		_, _ = fmt.Fprintf(output, "Ollama version %s\n", version)
 	}
 
-	// Check model
+	model := cmd.String("model")
+	if err = llmClient.Show(ctx); err != nil {
+		_, _ = fmt.Fprintf(output, "model %q not found %v\n", model, err)
+	} else {
+		_, _ = fmt.Fprintf(output, "model %q found\n", model)
+	}
 
 	return nil
 }
