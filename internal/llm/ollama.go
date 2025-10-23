@@ -126,5 +126,9 @@ func (ollama Ollama) Show(ctx context.Context) error {
 		BodyJSON(&request).
 		Fetch(ctx)
 
-	return err
+	if err != nil {
+		return fmt.Errorf("%w: %w", ErrOllama, err)
+	}
+
+	return nil
 }
