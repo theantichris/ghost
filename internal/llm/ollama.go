@@ -26,6 +26,7 @@ type ollamaResponse struct {
 type Ollama struct {
 	host         string
 	generateURL  string
+	versionURL   string
 	defaultModel string
 	logger       *log.Logger
 }
@@ -43,6 +44,7 @@ func NewOllama(host, defaultModel string, logger *log.Logger) (Ollama, error) {
 	ollama := Ollama{
 		host:         host,
 		generateURL:  host + "/api/generate",
+		versionURL:   host + "/api/version",
 		defaultModel: defaultModel,
 		logger:       logger,
 	}
@@ -77,4 +79,28 @@ func (ollama Ollama) Generate(ctx context.Context, systemPrompt, userPrompt stri
 	ollama.logger.Debug("response received from Ollama API", "response", ollamaResponse)
 
 	return ollamaResponse.Response, nil
+}
+
+// versionResponse is the response for the /version endpoint.
+type versionResponse struct {
+	Version string `json:"version"`
+}
+
+// Version gets the installed version of Ollama.
+func (ollama Ollama) Version(ctx context.Context) (string, error) {
+	ollama.logger.Debug("sending version request to Ollama API", "url", ollama.versionURL)
+
+	var response versionResponse
+	err := requests.
+		URL(ollama.generateURL).
+		ToJSON(&response).
+		Fetch(ctx)
+
+	if err != nil {
+		return "", fmt.Errorf("%w: %w", ErrOllama, err)
+	}
+
+	ollama.logger.Debug("response received from Ollama API", "response", response)
+
+	return response.Version, nil
 }

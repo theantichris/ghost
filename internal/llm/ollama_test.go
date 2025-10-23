@@ -141,3 +141,55 @@ func TestGenerate(t *testing.T) {
 		})
 	}
 }
+
+func TestVersion(t *testing.T) {
+	tests := []struct {
+		name       string
+		httpStatus int
+		isError    bool
+		err        error
+	}{
+		{
+			name:       "returns API version",
+			httpStatus: http.StatusOK,
+		},
+		{
+			name:       "returns API error",
+			httpStatus: http.StatusNotFound,
+			isError:    true,
+			err:        ErrOllama,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			logger := log.New(io.Discard)
+
+			httpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(tt.httpStatus)
+
+				response := `{"version": "0.12.6"}`
+
+				_, _ = w.Write([]byte(response))
+			}))
+
+			defer httpServer.Close()
+
+			ollama, err := NewOllama(httpServer.URL, "test:model", logger)
+			if !tt.isError && err != nil {
+				t.Fatalf("expect no error, got %v", err)
+			}
+
+			version, err := ollama.Version(context.Background())
+			if !tt.isError && err != nil {
+				t.Fatalf("expect no error, got %v", err)
+			}
+
+			if !tt.isError {
+				if version != "0.12.6" {
+					t.Errorf("expected version 0.12.6, got %q", version)
+				}
+			}
+		})
+	}
+}
