@@ -13,6 +13,9 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
+// maxPipedInputSize sets the maximum size for piped input to 10 megabytes.
+const maxPipedInputSize = 10 << 20
+
 // Run executes the root ghost command with the given context, arguments, version, output writer, and logger.
 // It loads the configuration file, initializes the CLI command structure with flags and subcommands,
 // and returns any errors that occur during execution.
@@ -96,12 +99,16 @@ var ghost = func(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	if hasPipedInput() {
-		pipedInput, err := io.ReadAll(io.LimitReader(os.Stdin, 10<<20)) // 10 megabytes
+		pipedInput, err := io.ReadAll(io.LimitReader(os.Stdin, maxPipedInputSize))
 		if err != nil {
 			return fmt.Errorf("%w: %w", ErrInput, err)
 		}
 
-		prompt = fmt.Sprintf("%s\n\n%s", prompt, pipedInput)
+		input := strings.TrimSpace(string(pipedInput))
+
+		if input != "" {
+			prompt = fmt.Sprintf("%s\n\n%s", prompt, input)
+		}
 	}
 
 	llmClient := cmd.Metadata["llmClient"].(llm.LLMClient)
@@ -119,7 +126,10 @@ var ghost = func(ctx context.Context, cmd *cli.Command) error {
 
 // hasPipedInput checks standard input for piped input and returns true if found.
 func hasPipedInput() bool {
-	fileInfo, _ := os.Stdin.Stat()
+	fileInfo, err := os.Stdin.Stat()
+	if err != nil {
+		return false
+	}
 
 	return fileInfo.Mode()&os.ModeCharDevice == 0
 }
