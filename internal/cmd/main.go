@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"os"
+	"strings"
 
 	"github.com/charmbracelet/log"
 	"github.com/theantichris/ghost/internal/llm"
@@ -87,13 +89,24 @@ var before = func(ctx context.Context, cmd *cli.Command) (context.Context, error
 
 // ghost is the action handler for the main ghost command that processes user prompts and generates LLM responses.
 var ghost = func(ctx context.Context, cmd *cli.Command) error {
-	if cmd.StringArg("prompt") == "" {
+	prompt := strings.TrimSpace(cmd.StringArg("prompt"))
+
+	if prompt == "" {
 		return fmt.Errorf("%w", ErrNoPrompt)
+	}
+
+	if hasPipedInput() {
+		pipedInput, err := io.ReadAll(io.LimitReader(os.Stdin, 10<<20)) // 10 megabytes
+		if err != nil {
+			return fmt.Errorf("%w: %w", ErrInput, err)
+		}
+
+		prompt = fmt.Sprintf("%s\n\n%s", prompt, pipedInput)
 	}
 
 	llmClient := cmd.Metadata["llmClient"].(llm.LLMClient)
 
-	response, err := llmClient.Generate(ctx, cmd.String("system"), cmd.StringArg("prompt"))
+	response, err := llmClient.Generate(ctx, cmd.String("system"), prompt)
 	if err != nil {
 		return err
 	}
@@ -102,4 +115,11 @@ var ghost = func(ctx context.Context, cmd *cli.Command) error {
 	fmt.Fprintln(output, response)
 
 	return nil
+}
+
+// hasPipedInput checks standard input for piped input and returns true if found.
+func hasPipedInput() bool {
+	fileInfo, _ := os.Stdin.Stat()
+
+	return fileInfo.Mode()&os.ModeCharDevice == 0
 }
