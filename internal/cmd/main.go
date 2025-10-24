@@ -4,12 +4,17 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"os"
+	"strings"
 
 	"github.com/charmbracelet/log"
 	"github.com/theantichris/ghost/internal/llm"
 	toml "github.com/urfave/cli-altsrc/v3/toml"
 	"github.com/urfave/cli/v3"
 )
+
+// maxPipedInputSize sets the maximum size for piped input to 10 megabytes.
+const maxPipedInputSize = 10 << 20
 
 // Run executes the root ghost command with the given context, arguments, version, output writer, and logger.
 // It loads the configuration file, initializes the CLI command structure with flags and subcommands,
@@ -87,13 +92,28 @@ var before = func(ctx context.Context, cmd *cli.Command) (context.Context, error
 
 // ghost is the action handler for the main ghost command that processes user prompts and generates LLM responses.
 var ghost = func(ctx context.Context, cmd *cli.Command) error {
-	if cmd.StringArg("prompt") == "" {
+	prompt := strings.TrimSpace(cmd.StringArg("prompt"))
+
+	if prompt == "" {
 		return fmt.Errorf("%w", ErrNoPrompt)
+	}
+
+	if hasPipedInput() {
+		pipedInput, err := io.ReadAll(io.LimitReader(os.Stdin, maxPipedInputSize))
+		if err != nil {
+			return fmt.Errorf("%w: %w", ErrInput, err)
+		}
+
+		input := strings.TrimSpace(string(pipedInput))
+
+		if input != "" {
+			prompt = fmt.Sprintf("%s\n\n%s", prompt, input)
+		}
 	}
 
 	llmClient := cmd.Metadata["llmClient"].(llm.LLMClient)
 
-	response, err := llmClient.Generate(ctx, cmd.String("system"), cmd.StringArg("prompt"))
+	response, err := llmClient.Generate(ctx, cmd.String("system"), prompt)
 	if err != nil {
 		return err
 	}
@@ -102,4 +122,14 @@ var ghost = func(ctx context.Context, cmd *cli.Command) error {
 	fmt.Fprintln(output, response)
 
 	return nil
+}
+
+// hasPipedInput checks standard input for piped input and returns true if found.
+func hasPipedInput() bool {
+	fileInfo, err := os.Stdin.Stat()
+	if err != nil {
+		return false
+	}
+
+	return fileInfo.Mode()&os.ModeCharDevice == 0
 }

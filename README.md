@@ -65,6 +65,26 @@ ghost "What's the difference between a netrunner and a decker?"
 ghost "Write a Go function to encrypt data with AES-256"
 ```
 
+### Piped Input
+
+Ghost accepts piped input, turning it into a data processing pipeline for your
+neural interface. Stream files, command output, or net traffic directly to your
+ AI companion.
+
+```bash
+# Jack in with inline code
+echo "func decrypt(key []byte) error" | ghost "analyze this encryption routine"
+
+# Scan system logs for intrusions
+cat /var/log/auth.log | ghost "detect any unauthorized access attempts"
+
+# Pull intel from the net
+curl -s https://api.github.com/users/torvalds | ghost "profile this netrunner"
+```
+
+**Note:** Input stream limited to 10 MB. For larger data dumps, filter with `head`
+ or `tail` before jacking in.
+
 ### Health Check
 
 Run diagnostics to verify Ghost is properly configured and connected:

@@ -1,3 +1,7 @@
+ErrConfigFile
+ErrInput
+ErrNoPrompt
+ErrOutput
 LLMClient
 NewOllama
 OnlyOnce
