@@ -9,6 +9,7 @@ PR
 PascalCase
 Shadowrun
 TODOs
+base64
 baseURL
 camelCase
 commandList

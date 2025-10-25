@@ -61,6 +61,10 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 				Sources:  cli.NewValueSourceChain(toml.TOML("system", configFile)),
 				OnlyOnce: true,
 			},
+			&cli.StringSliceFlag{
+				Name:  "image",
+				Usage: "path to an image (can be used multiple times)",
+			},
 		},
 		Before: before,
 		Action: ghost,
@@ -90,7 +94,9 @@ var before = func(ctx context.Context, cmd *cli.Command) (context.Context, error
 	return ctx, nil
 }
 
-// ghost is the action handler for the main ghost command that processes user prompts and generates LLM responses.
+// ghost is the action handler for the root command.
+// It checks for piped input, processes user prompt, sends the prompt to the LLM
+// client, and returns the response
 var ghost = func(ctx context.Context, cmd *cli.Command) error {
 	prompt := strings.TrimSpace(cmd.StringArg("prompt"))
 
@@ -111,9 +117,12 @@ var ghost = func(ctx context.Context, cmd *cli.Command) error {
 		}
 	}
 
+	// Get images.
+	// Send images to LLMClient.
+
 	llmClient := cmd.Metadata["llmClient"].(llm.LLMClient)
 
-	response, err := llmClient.Generate(ctx, cmd.String("system"), prompt)
+	response, err := llmClient.Generate(ctx, cmd.String("system"), prompt, []string{})
 	if err != nil {
 		return err
 	}
@@ -132,4 +141,21 @@ func hasPipedInput() bool {
 	}
 
 	return fileInfo.Mode()&os.ModeCharDevice == 0
+}
+
+func EncodeImages(paths []string) ([]string, error) {
+	if len(paths) == 0 {
+		return nil, nil
+	}
+
+	encoded := make([]string, 0, len(paths))
+
+	// for _, path := range paths {
+	// read file using os.Readfile
+	// encode to base64
+	// append to encoded slice
+	// return error for failure
+	// }
+
+	return encoded, nil
 }

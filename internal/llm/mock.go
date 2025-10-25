@@ -13,7 +13,7 @@ type MockLLMClient struct {
 }
 
 // Generate mocks the Generate method by calling GenerateFunc if set, returning Error if set, or returning an empty string.
-func (llm MockLLMClient) Generate(ctx context.Context, systemPrompt, userPrompt string) (string, error) {
+func (llm MockLLMClient) Generate(ctx context.Context, systemPrompt, userPrompt string, images []string) (string, error) {
 	if llm.GenerateFunc != nil {
 		return llm.GenerateFunc(ctx, systemPrompt, userPrompt)
 	}

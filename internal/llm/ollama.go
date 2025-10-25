@@ -11,10 +11,11 @@ import (
 
 // generateRequest represents the JSON payload sent to the Ollama /api/generate endpoint.
 type generateRequest struct {
-	Model        string `json:"model"`  // The model name
-	Stream       bool   `json:"stream"` // If false the response is returned as a single object
-	SystemPrompt string `json:"system"` // System message to override what is in the model file
-	UserPrompt   string `json:"prompt"` // The prompt to generate a response for
+	Model        string   `json:"model"`            // The model name
+	Stream       bool     `json:"stream"`           // If false the response is returned as a single object
+	SystemPrompt string   `json:"system"`           // System message to override what is in the model file
+	UserPrompt   string   `json:"prompt"`           // The prompt to generate a response for
+	Images       []string `json:"images:omitempty"` // A list of base64 encoded images
 }
 
 // generateResponse represents the JSON response received from the Ollama /api/generate endpoint.
@@ -68,12 +69,13 @@ func NewOllama(host, defaultModel string, logger *log.Logger) (Ollama, error) {
 
 // Generate sends a request to /api/generate with the system and user prompt and returns the generated response.
 // Returns ErrOllama wrapped with the underlying error if the API request fails.
-func (ollama Ollama) Generate(ctx context.Context, systemPrompt, userPrompt string) (string, error) {
+func (ollama Ollama) Generate(ctx context.Context, systemPrompt, userPrompt string, images []string) (string, error) {
 	request := generateRequest{
 		Model:        ollama.defaultModel,
 		Stream:       false,
 		SystemPrompt: systemPrompt,
 		UserPrompt:   userPrompt,
+		Images:       images,
 	}
 
 	ollama.logger.Debug("sending generate request to Ollama API", "url", ollama.generateURL, "model", ollama.defaultModel, "request", request)

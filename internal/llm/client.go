@@ -6,7 +6,7 @@ import "context"
 type LLMClient interface {
 	// Generate sends a system prompt and user prompt to the LLM and returns the generated response text.
 	// Returns an error if the API request fails or the response cannot be parsed.
-	Generate(ctx context.Context, systemPrompt, userPrompt string) (string, error)
+	Generate(ctx context.Context, systemPrompt, userPrompt string, images []string) (string, error)
 
 	// Version retrieves the version string of the OpenAI API server.
 	// Returns an error if the API request fails.

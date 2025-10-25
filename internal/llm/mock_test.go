@@ -18,7 +18,7 @@ func TestMockClientGenerate(t *testing.T) {
 			GenerateFunc: mockGenerate,
 		}
 
-		response, _ := llmClient.Generate(context.Background(), "system prompt", "user prompt")
+		response, _ := llmClient.Generate(context.Background(), "system prompt", "user prompt", []string{})
 
 		if response != "Hello, chummer!" {
 			t.Errorf("expected response %q, got %q", "Hello, chummer!", response)
@@ -34,7 +34,7 @@ func TestMockClientGenerate(t *testing.T) {
 			Error: llmError,
 		}
 
-		_, err := llmClient.Generate(context.Background(), "system prompt", "user prompt")
+		_, err := llmClient.Generate(context.Background(), "system prompt", "user prompt", []string{})
 
 		if err == nil {
 			t.Fatal("expected error, got nil")

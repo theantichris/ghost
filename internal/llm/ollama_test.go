@@ -116,7 +116,7 @@ func TestGenerate(t *testing.T) {
 			systemPrompt := "test system prompt"
 			userPrompt := "test user prompt"
 
-			response, err := ollama.Generate(context.Background(), systemPrompt, userPrompt)
+			response, err := ollama.Generate(context.Background(), systemPrompt, userPrompt, []string{})
 
 			if !tt.isError && err != nil {
 				t.Fatalf("expected no error, got %v", err)
