@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"os"
@@ -117,12 +118,14 @@ var ghost = func(ctx context.Context, cmd *cli.Command) error {
 		}
 	}
 
-	// Get images.
-	// Send images to LLMClient.
-
+	imagePaths := cmd.StringSlice("image")
+	encodedImages, err := encodeImages(imagePaths)
+	if err != nil {
+		return err
+	}
 	llmClient := cmd.Metadata["llmClient"].(llm.LLMClient)
 
-	response, err := llmClient.Generate(ctx, cmd.String("system"), prompt, []string{})
+	response, err := llmClient.Generate(ctx, cmd.String("system"), prompt, encodedImages)
 	if err != nil {
 		return err
 	}
@@ -143,19 +146,22 @@ func hasPipedInput() bool {
 	return fileInfo.Mode()&os.ModeCharDevice == 0
 }
 
-func EncodeImages(paths []string) ([]string, error) {
+func encodeImages(paths []string) ([]string, error) {
 	if len(paths) == 0 {
 		return nil, nil
 	}
 
 	encoded := make([]string, 0, len(paths))
 
-	// for _, path := range paths {
-	// read file using os.Readfile
-	// encode to base64
-	// append to encoded slice
-	// return error for failure
-	// }
+	for _, path := range paths {
+		imageBytes, err := os.ReadFile(path)
+		if err != nil {
+			return nil, fmt.Errorf("%w: failed to read image %s: %w", ErrInput, path, err)
+		}
+
+		encodedImage := base64.StdEncoding.EncodeToString(imageBytes)
+		encoded = append(encoded, encodedImage)
+	}
 
 	return encoded, nil
 }
