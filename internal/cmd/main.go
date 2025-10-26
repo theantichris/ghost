@@ -59,7 +59,7 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 				Name:     "vision-model",
 				Usage:    "LLM to use for image requests",
 				Value:    "qwen2.5vl:7b",
-				Sources:  cli.NewValueSourceChain(toml.TOML("model", configFile)),
+				Sources:  cli.NewValueSourceChain(toml.TOML("vision.model", configFile)),
 				OnlyOnce: true,
 			},
 			&cli.StringFlag{
@@ -73,7 +73,7 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 				Name:     "vision-prompt",
 				Usage:    "the system prompt to override the vision model's",
 				Value:    "",
-				Sources:  cli.NewValueSourceChain(toml.TOML("system", configFile)),
+				Sources:  cli.NewValueSourceChain(toml.TOML("vision.system_prompt", configFile)),
 				OnlyOnce: true,
 			},
 			&cli.StringSliceFlag{
@@ -99,10 +99,10 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 var before = func(ctx context.Context, cmd *cli.Command) (context.Context, error) {
 	logger := cmd.Metadata["logger"].(*log.Logger)
 
-	// TODO: pass vision model and prompt
 	config := llm.Config{
 		Host:         cmd.String("host"),
 		DefaultModel: cmd.String("model"),
+		VisionModel:  cmd.String("vision-model"),
 	}
 
 	llmClient, err := llm.NewOllama(config, logger)

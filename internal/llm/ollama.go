@@ -91,6 +91,10 @@ func (ollama Ollama) Generate(ctx context.Context, systemPrompt, userPrompt stri
 		Images:       images,
 	}
 
+	// TODO: Another config struct?
+	// TODO: If images then send a request to the vision model.
+	// TODO: append the response to the prompt for the default model.
+
 	ollama.logger.Debug("sending generate request to Ollama API", "url", ollama.generateURL, "model", ollama.defaultModel, "request", request)
 
 	var response generateResponse
