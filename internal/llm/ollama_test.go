@@ -21,14 +21,16 @@ func TestNewOllama(t *testing.T) {
 		{
 			name: "creates a new Ollama client",
 			config: Config{
-				host:         "http://test.dev",
-				defaultModel: "default:model",
+				Host:         "http://test.dev",
+				DefaultModel: "default:model",
+				VisionModel:  "vision:model",
 			},
 		},
 		{
 			name: "returns error for no host URL",
 			config: Config{
-				defaultModel: "default:model",
+				DefaultModel: "default:model",
+				VisionModel:  "vision:model",
 			},
 			isError: true,
 			err:     ErrNoHostURL,
@@ -36,7 +38,8 @@ func TestNewOllama(t *testing.T) {
 		{
 			name: "returns error for no default model",
 			config: Config{
-				host: "http://test.dev",
+				Host:        "http://test.dev",
+				VisionModel: "vision:model",
 			},
 			isError: true,
 			err:     ErrNoDefaultModel,
@@ -47,7 +50,7 @@ func TestNewOllama(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			logger := log.New(io.Discard)
 
-			ollama, err := NewOllama(tt.config.host, tt.config.defaultModel, logger)
+			ollama, err := NewOllama(tt.config, logger)
 
 			if !tt.isError && err != nil {
 				t.Fatalf("expect no error, got %v", err)
@@ -64,16 +67,16 @@ func TestNewOllama(t *testing.T) {
 			}
 
 			if !tt.isError {
-				if ollama.host != tt.config.host {
-					t.Errorf("expected host URL %q, got %q", tt.config.host, ollama.host)
+				if ollama.host != tt.config.Host {
+					t.Errorf("expected host URL %q, got %q", tt.config.Host, ollama.host)
 				}
 
-				if ollama.generateURL != tt.config.host+"/api/generate" {
-					t.Errorf("expected generate URL %q, got %q", tt.config.host+"/api/generate", ollama.generateURL)
+				if ollama.generateURL != tt.config.Host+"/api/generate" {
+					t.Errorf("expected generate URL %q, got %q", tt.config.Host+"/api/generate", ollama.generateURL)
 				}
 
-				if ollama.defaultModel != tt.config.defaultModel {
-					t.Errorf("expected default model %q, got %q", tt.config.defaultModel, ollama.defaultModel)
+				if ollama.defaultModel != tt.config.DefaultModel {
+					t.Errorf("expected default model %q, got %q", tt.config.DefaultModel, ollama.defaultModel)
 				}
 			}
 		})
@@ -113,7 +116,12 @@ func TestGenerate(t *testing.T) {
 
 			defer httpServer.Close()
 
-			ollama, err := NewOllama(httpServer.URL, "test:model", logger)
+			config := Config{
+				Host:         httpServer.URL,
+				DefaultModel: "test:model",
+			}
+
+			ollama, err := NewOllama(config, logger)
 			if err != nil {
 				t.Fatalf("expect no error, got %v", err)
 			}
@@ -180,7 +188,12 @@ func TestVersion(t *testing.T) {
 
 			defer httpServer.Close()
 
-			ollama, err := NewOllama(httpServer.URL, "test:model", logger)
+			config := Config{
+				Host:         httpServer.URL,
+				DefaultModel: "test:model",
+			}
+
+			ollama, err := NewOllama(config, logger)
 			if !tt.isError && err != nil {
 				t.Fatalf("expect no error, got %v", err)
 			}
@@ -230,7 +243,12 @@ func TestShow(t *testing.T) {
 
 			defer httpServer.Close()
 
-			ollama, err := NewOllama(httpServer.URL, "test:model", logger)
+			config := Config{
+				Host:         httpServer.URL,
+				DefaultModel: "test:model",
+			}
+
+			ollama, err := NewOllama(config, logger)
 			if !tt.isError && err != nil {
 				t.Fatalf("expect no error, got %v", err)
 			}

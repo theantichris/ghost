@@ -35,8 +35,9 @@ type showRequest struct {
 
 // Config holds the configuration values for the Ollama client.
 type Config struct {
-	host         string
-	defaultModel string
+	Host         string
+	DefaultModel string
+	VisionModel  string
 }
 
 // Ollama is the client for the Ollama API.
@@ -50,21 +51,21 @@ type Ollama struct {
 }
 
 // NewOllama creates and returns a new Ollama client.
-func NewOllama(host, defaultModel string, logger *log.Logger) (Ollama, error) {
-	if strings.TrimSpace(host) == "" {
+func NewOllama(config Config, logger *log.Logger) (Ollama, error) {
+	if strings.TrimSpace(config.Host) == "" {
 		return Ollama{}, fmt.Errorf("%w", ErrNoHostURL)
 	}
 
-	if strings.TrimSpace(defaultModel) == "" {
+	if strings.TrimSpace(config.DefaultModel) == "" {
 		return Ollama{}, fmt.Errorf("%w", ErrNoDefaultModel)
 	}
 
 	ollama := Ollama{
-		host:         host,
-		generateURL:  host + "/api/generate",
-		versionURL:   host + "/api/version",
-		showURL:      host + "/api/show",
-		defaultModel: defaultModel,
+		host:         config.Host,
+		generateURL:  config.Host + "/api/generate",
+		versionURL:   config.Host + "/api/version",
+		showURL:      config.Host + "/api/show",
+		defaultModel: config.DefaultModel,
 		logger:       logger,
 	}
 

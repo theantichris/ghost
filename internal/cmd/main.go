@@ -100,8 +100,12 @@ var before = func(ctx context.Context, cmd *cli.Command) (context.Context, error
 	logger := cmd.Metadata["logger"].(*log.Logger)
 
 	// TODO: pass vision model and prompt
-	// TODO: config struct
-	llmClient, err := llm.NewOllama(cmd.String("host"), cmd.String("model"), logger)
+	config := llm.Config{
+		Host:         cmd.String("host"),
+		DefaultModel: cmd.String("model"),
+	}
+
+	llmClient, err := llm.NewOllama(config, logger)
 	if err != nil {
 		return ctx, err
 	}
