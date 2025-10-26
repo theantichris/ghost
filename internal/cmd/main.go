@@ -99,6 +99,8 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 var before = func(ctx context.Context, cmd *cli.Command) (context.Context, error) {
 	logger := cmd.Metadata["logger"].(*log.Logger)
 
+	// TODO: pass vision model and prompt
+	// TODO: config struct
 	llmClient, err := llm.NewOllama(cmd.String("host"), cmd.String("model"), logger)
 	if err != nil {
 		return ctx, err
@@ -133,6 +135,7 @@ var ghost = func(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
+
 	llmClient := cmd.Metadata["llmClient"].(llm.LLMClient)
 
 	response, err := llmClient.Generate(ctx, cmd.String("system"), prompt, encodedImages)

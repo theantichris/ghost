@@ -13,26 +13,31 @@ import (
 
 func TestNewOllama(t *testing.T) {
 	tests := []struct {
-		name         string
-		host         string
-		defaultModel string
-		isError      bool
-		err          error
+		name    string
+		config  Config
+		isError bool
+		err     error
 	}{
 		{
-			name:         "creates a new Ollama client",
-			host:         "http://test.dev",
-			defaultModel: "default:model",
+			name: "creates a new Ollama client",
+			config: Config{
+				host:         "http://test.dev",
+				defaultModel: "default:model",
+			},
 		},
 		{
-			name:         "returns error for no host URL",
-			defaultModel: "default:model",
-			isError:      true,
-			err:          ErrNoHostURL,
+			name: "returns error for no host URL",
+			config: Config{
+				defaultModel: "default:model",
+			},
+			isError: true,
+			err:     ErrNoHostURL,
 		},
 		{
-			name:    "returns error for no default model",
-			host:    "http://test.dev",
+			name: "returns error for no default model",
+			config: Config{
+				host: "http://test.dev",
+			},
 			isError: true,
 			err:     ErrNoDefaultModel,
 		},
@@ -42,7 +47,7 @@ func TestNewOllama(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			logger := log.New(io.Discard)
 
-			ollama, err := NewOllama(tt.host, tt.defaultModel, logger)
+			ollama, err := NewOllama(tt.config.host, tt.config.defaultModel, logger)
 
 			if !tt.isError && err != nil {
 				t.Fatalf("expect no error, got %v", err)
@@ -59,16 +64,16 @@ func TestNewOllama(t *testing.T) {
 			}
 
 			if !tt.isError {
-				if ollama.host != tt.host {
-					t.Errorf("expected host URL %q, got %q", tt.host, ollama.host)
+				if ollama.host != tt.config.host {
+					t.Errorf("expected host URL %q, got %q", tt.config.host, ollama.host)
 				}
 
-				if ollama.generateURL != tt.host+"/api/generate" {
-					t.Errorf("expected generate URL %q, got %q", tt.host+"/api/generate", ollama.generateURL)
+				if ollama.generateURL != tt.config.host+"/api/generate" {
+					t.Errorf("expected generate URL %q, got %q", tt.config.host+"/api/generate", ollama.generateURL)
 				}
 
-				if ollama.defaultModel != tt.defaultModel {
-					t.Errorf("expected default model %q, got %q", tt.defaultModel, ollama.defaultModel)
+				if ollama.defaultModel != tt.config.defaultModel {
+					t.Errorf("expected default model %q, got %q", tt.config.defaultModel, ollama.defaultModel)
 				}
 			}
 		})

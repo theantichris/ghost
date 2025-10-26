@@ -33,6 +33,12 @@ type showRequest struct {
 	Model string `json:"model"`
 }
 
+// Config holds the configuration values for the Ollama client.
+type Config struct {
+	host         string
+	defaultModel string
+}
+
 // Ollama is the client for the Ollama API.
 type Ollama struct {
 	host         string
