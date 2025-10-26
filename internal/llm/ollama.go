@@ -47,6 +47,7 @@ type Ollama struct {
 	versionURL   string
 	showURL      string
 	defaultModel string
+	visionModel  string
 	logger       *log.Logger
 }
 
@@ -70,6 +71,7 @@ func NewOllama(config Config, logger *log.Logger) (Ollama, error) {
 		versionURL:   config.Host + "/api/version",
 		showURL:      config.Host + "/api/show",
 		defaultModel: config.DefaultModel,
+		visionModel:  config.VisionModel,
 		logger:       logger,
 	}
 
