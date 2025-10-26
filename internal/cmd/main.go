@@ -119,19 +119,18 @@ var before = func(ctx context.Context, cmd *cli.Command) (context.Context, error
 // It checks for piped input, processes user prompt, sends the prompt to the LLM
 // client, and returns the response
 var ghost = func(ctx context.Context, cmd *cli.Command) error {
-	prompt := strings.TrimSpace(cmd.StringArg("prompt"))
-
-	if prompt == "" {
-		return fmt.Errorf("%w", ErrNoPrompt)
+	prompt, err := getPrompt(cmd)
+	if err != nil {
+		return err
 	}
 
-	if hasPipedInput() {
-		pipedPrompt, err := getPipedInput(prompt)
-		if err != nil {
-			return err
-		}
+	pipedInput, err := getPipedInput()
+	if err != nil {
+		return err
+	}
 
-		prompt = pipedPrompt
+	if pipedInput != "" {
+		prompt = fmt.Sprintf("%s\n\n%s", prompt, pipedInput)
 	}
 
 	// TODO: Check for images
@@ -156,18 +155,31 @@ var ghost = func(ctx context.Context, cmd *cli.Command) error {
 	return nil
 }
 
-// hasPipedInput checks standard input for piped input and returns true if found.
-func hasPipedInput() bool {
-	fileInfo, err := os.Stdin.Stat()
-	if err != nil {
-		return false
+// getPrompt checks the prompt argument and returns the prompt with trimmed spaces.
+// Returns ErrNoPrompt if prompt is empty.
+func getPrompt(cmd *cli.Command) (string, error) {
+	prompt := strings.TrimSpace(cmd.StringArg("prompt"))
+
+	if prompt == "" {
+		return "", fmt.Errorf("%w", ErrNoPrompt)
 	}
 
-	return fileInfo.Mode()&os.ModeCharDevice == 0
+	return prompt, nil
 }
 
-// getPipedInput appends piped input to the user prompt and returns it.
-func getPipedInput(prompt string) (string, error) {
+// getPipedInput checks for and returns any input piped to the command.
+// Returns an empty string if piped input doesn't exist or is empty.
+// Returns ErrInput if piped input cannot be read.
+func getPipedInput() (string, error) {
+	fileInfo, err := os.Stdin.Stat()
+	if err != nil {
+		return "", nil
+	}
+
+	if fileInfo.Mode()&os.ModeCharDevice != 0 {
+		return "", nil
+	}
+
 	pipedInput, err := io.ReadAll(io.LimitReader(os.Stdin, maxPipedInputSize))
 	if err != nil {
 		return "", fmt.Errorf("%w: %w", ErrInput, err)
@@ -175,11 +187,7 @@ func getPipedInput(prompt string) (string, error) {
 
 	input := strings.TrimSpace(string(pipedInput))
 
-	if input != "" {
-		prompt = fmt.Sprintf("%s\n\n%s", prompt, input)
-	}
-
-	return prompt, nil
+	return input, nil
 }
 
 // encodeImages takes a slice of paths and returns a slice of base64 encoded strings.

@@ -80,19 +80,18 @@ func NewOllama(config Config, logger *log.Logger) (Ollama, error) {
 	return ollama, nil
 }
 
-// Generate sends a request to /api/generate with the system and user prompt and returns the generated response.
+// Generate sends a request to /api/generate with the system and prompt and returns
+// the response as a string.
+// If images are includes those are added to the request.
 // Returns ErrOllama wrapped with the underlying error if the API request fails.
-func (ollama Ollama) Generate(ctx context.Context, systemPrompt, prompt string) (string, error) {
+func (ollama Ollama) Generate(ctx context.Context, systemPrompt, prompt string, images []string) (string, error) {
 	request := generateRequest{
 		Model:        ollama.defaultModel,
 		Stream:       false,
 		SystemPrompt: systemPrompt,
 		Prompt:       prompt,
+		Images:       images,
 	}
-
-	// TODO: Another config struct?
-	// TODO: If images then send a request to the vision model.
-	// TODO: append the response to the prompt for the default model.
 
 	ollama.logger.Debug("sending generate request to Ollama API", "url", ollama.generateURL, "model", ollama.defaultModel, "request", request)
 
