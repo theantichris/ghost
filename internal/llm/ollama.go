@@ -60,6 +60,10 @@ func NewOllama(config Config, logger *log.Logger) (Ollama, error) {
 		return Ollama{}, fmt.Errorf("%w", ErrNoDefaultModel)
 	}
 
+	if strings.TrimSpace(config.VisionModel) == "" {
+		return Ollama{}, fmt.Errorf("%w", ErrNoVisionModel)
+	}
+
 	ollama := Ollama{
 		host:         config.Host,
 		generateURL:  config.Host + "/api/generate",

@@ -44,6 +44,15 @@ func TestNewOllama(t *testing.T) {
 			isError: true,
 			err:     ErrNoDefaultModel,
 		},
+		{
+			name: "returns error for no vision model",
+			config: Config{
+				Host:         "http://test.dev",
+				DefaultModel: "default:model",
+			},
+			isError: true,
+			err:     ErrNoVisionModel,
+		},
 	}
 
 	for _, tt := range tests {
@@ -119,6 +128,7 @@ func TestGenerate(t *testing.T) {
 			config := Config{
 				Host:         httpServer.URL,
 				DefaultModel: "test:model",
+				VisionModel:  "vision:model",
 			}
 
 			ollama, err := NewOllama(config, logger)
@@ -191,6 +201,7 @@ func TestVersion(t *testing.T) {
 			config := Config{
 				Host:         httpServer.URL,
 				DefaultModel: "test:model",
+				VisionModel:  "vision:model",
 			}
 
 			ollama, err := NewOllama(config, logger)
@@ -246,6 +257,7 @@ func TestShow(t *testing.T) {
 			config := Config{
 				Host:         httpServer.URL,
 				DefaultModel: "test:model",
+				VisionModel:  "vision:model",
 			}
 
 			ollama, err := NewOllama(config, logger)
