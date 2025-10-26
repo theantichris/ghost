@@ -82,13 +82,12 @@ func NewOllama(config Config, logger *log.Logger) (Ollama, error) {
 
 // Generate sends a request to /api/generate with the system and user prompt and returns the generated response.
 // Returns ErrOllama wrapped with the underlying error if the API request fails.
-func (ollama Ollama) Generate(ctx context.Context, systemPrompt, prompt string, images []string) (string, error) {
+func (ollama Ollama) Generate(ctx context.Context, systemPrompt, prompt string) (string, error) {
 	request := generateRequest{
 		Model:        ollama.defaultModel,
 		Stream:       false,
 		SystemPrompt: systemPrompt,
 		Prompt:       prompt,
-		Images:       images,
 	}
 
 	// TODO: Another config struct?
