@@ -79,7 +79,7 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 			&cli.StringFlag{
 				Name:     "vision-prompt",
 				Usage:    "the prompt to send with image requests",
-				Value:    "",
+				Value:    "Analyze the attached image(s) and produce a Markdown report.\n\nInstructions for this request:\n- Treat each image independently, then include an Overall section.\n- Use headings: \"### Image img-1\", \"### Image img-2\", ... in the same order as the provided images.\n- Prefer exact strings for visible UI text, labels, error codes, dates, prices, and IDs.\n- Include brief layout notes and any visible numbers/codes.\nOutput only the report — no preamble and no code fences.",
 				Sources:  cli.NewValueSourceChain(toml.TOML("vision.prompt", configFile)),
 				OnlyOnce: true,
 			},
