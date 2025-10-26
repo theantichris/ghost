@@ -120,16 +120,12 @@ var ghost = func(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	if hasPipedInput() {
-		pipedInput, err := io.ReadAll(io.LimitReader(os.Stdin, maxPipedInputSize))
+		pipedPrompt, err := getPipedInput(prompt)
 		if err != nil {
-			return fmt.Errorf("%w: %w", ErrInput, err)
+			return err
 		}
 
-		input := strings.TrimSpace(string(pipedInput))
-
-		if input != "" {
-			prompt = fmt.Sprintf("%s\n\n%s", prompt, input)
-		}
+		prompt = pipedPrompt
 	}
 
 	imagePaths := cmd.StringSlice("image")
@@ -160,6 +156,23 @@ func hasPipedInput() bool {
 	return fileInfo.Mode()&os.ModeCharDevice == 0
 }
 
+// getPipedInput appends piped input to the user prompt and returns it.
+func getPipedInput(prompt string) (string, error) {
+	pipedInput, err := io.ReadAll(io.LimitReader(os.Stdin, maxPipedInputSize))
+	if err != nil {
+		return "", fmt.Errorf("%w: %w", ErrInput, err)
+	}
+
+	input := strings.TrimSpace(string(pipedInput))
+
+	if input != "" {
+		prompt = fmt.Sprintf("%s\n\n%s", prompt, input)
+	}
+
+	return prompt, nil
+}
+
+// encodeImages takes a slice of paths and returns a slice of base64 encoded strings.
 func encodeImages(paths []string) ([]string, error) {
 	if len(paths) == 0 {
 		return nil, nil
