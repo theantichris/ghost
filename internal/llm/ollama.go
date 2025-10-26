@@ -15,7 +15,7 @@ type generateRequest struct {
 	Stream       bool     `json:"stream"`           // If false the response is returned as a single object
 	SystemPrompt string   `json:"system"`           // System message to override what is in the model file
 	UserPrompt   string   `json:"prompt"`           // The prompt to generate a response for
-	Images       []string `json:"images:omitempty"` // A list of base64 encoded images
+	Images       []string `json:"images,omitempty"` // A list of base64 encoded images
 }
 
 // generateResponse represents the JSON response received from the Ollama /api/generate endpoint.
