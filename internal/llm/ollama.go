@@ -70,12 +70,12 @@ func NewOllama(config Config, logger *log.Logger) (Ollama, error) {
 		generateURL:  config.Host + "/api/generate",
 		versionURL:   config.Host + "/api/version",
 		showURL:      config.Host + "/api/show",
+		logger:       logger,
 		defaultModel: config.DefaultModel,
 		visionModel:  config.VisionModel,
-		logger:       logger,
 	}
 
-	logger.Debug("initialized Ollama client", "url", ollama.host, "model", ollama.defaultModel)
+	logger.Debug("initialized Ollama client", "url", ollama.host, "model", ollama.defaultModel, "vision model", ollama.visionModel)
 
 	return ollama, nil
 }
@@ -85,8 +85,15 @@ func NewOllama(config Config, logger *log.Logger) (Ollama, error) {
 // If images are includes those are added to the request.
 // Returns ErrOllama wrapped with the underlying error if the API request fails.
 func (ollama Ollama) Generate(ctx context.Context, systemPrompt, prompt string, images []string) (string, error) {
+	var model string
+	if len(images) > 0 {
+		model = ollama.visionModel
+	} else {
+		model = ollama.defaultModel
+	}
+
 	request := generateRequest{
-		Model:        ollama.defaultModel,
+		Model:        model,
 		Stream:       false,
 		SystemPrompt: systemPrompt,
 		Prompt:       prompt,

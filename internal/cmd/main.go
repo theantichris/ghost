@@ -70,10 +70,17 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 				OnlyOnce: true,
 			},
 			&cli.StringFlag{
-				Name:     "vision-prompt",
+				Name:     "vision-system",
 				Usage:    "the system prompt to override the vision model's",
 				Value:    "",
 				Sources:  cli.NewValueSourceChain(toml.TOML("vision.system_prompt", configFile)),
+				OnlyOnce: true,
+			},
+			&cli.StringFlag{
+				Name:     "vision-prompt",
+				Usage:    "the prompt to send with image requests",
+				Value:    "",
+				Sources:  cli.NewValueSourceChain(toml.TOML("vision.prompt", configFile)),
 				OnlyOnce: true,
 			},
 			&cli.StringSliceFlag{
@@ -133,18 +140,25 @@ var ghost = func(ctx context.Context, cmd *cli.Command) error {
 		prompt = fmt.Sprintf("%s\n\n%s", prompt, pipedInput)
 	}
 
-	// TODO: Check for images
-	// TODO: Send generate request for images
-	// TODO: Send images response with user prompt to Generate
-	imagePaths := cmd.StringSlice("image")
-	encodedImages, err := encodeImages(imagePaths)
-	if err != nil {
-		return err
-	}
-
 	llmClient := cmd.Metadata["llmClient"].(llm.LLMClient)
 
-	response, err := llmClient.Generate(ctx, cmd.String("system"), prompt, encodedImages)
+	images := cmd.StringSlice("image")
+	if len(images) > 0 {
+		encodedImages, err := encodeImages(images)
+		if err != nil {
+			return err
+		}
+
+		response, err := llmClient.Generate(ctx, cmd.String("vision-system"), cmd.String("vision-prompt"), encodedImages)
+		if err != nil {
+			return nil
+		}
+
+		prompt = fmt.Sprintf("%s\n\n%s", prompt, response)
+	}
+
+	// Main prompt, don't send images.
+	response, err := llmClient.Generate(ctx, cmd.String("system"), prompt, []string{})
 	if err != nil {
 		return err
 	}
