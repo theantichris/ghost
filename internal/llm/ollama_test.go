@@ -94,20 +94,26 @@ func TestNewOllama(t *testing.T) {
 
 func TestGenerate(t *testing.T) {
 	tests := []struct {
-		name       string
-		httpStatus int
-		isError    bool
-		err        error
+		name         string
+		systemPrompt string
+		prompt       string
+		httpStatus   int
+		isError      bool
+		err          error
 	}{
 		{
-			name:       "returns response from API",
-			httpStatus: http.StatusOK,
+			name:         "returns response from API",
+			systemPrompt: "test system prompt",
+			prompt:       "test user prompt",
+			httpStatus:   http.StatusOK,
 		},
 		{
-			name:       "returns API error",
-			httpStatus: http.StatusNotFound,
-			isError:    true,
-			err:        ErrOllama,
+			name:         "returns API error",
+			systemPrompt: "test system prompt",
+			prompt:       "test user prompt",
+			httpStatus:   http.StatusNotFound,
+			isError:      true,
+			err:          ErrOllama,
 		},
 	}
 
@@ -136,10 +142,7 @@ func TestGenerate(t *testing.T) {
 				t.Fatalf("expect no error, got %v", err)
 			}
 
-			systemPrompt := "test system prompt"
-			userPrompt := "test user prompt"
-
-			response, err := ollama.Generate(context.Background(), systemPrompt, userPrompt, []string{})
+			response, err := ollama.Generate(context.Background(), tt.systemPrompt, tt.prompt, []string{})
 
 			if !tt.isError && err != nil {
 				t.Fatalf("expected no error, got %v", err)
