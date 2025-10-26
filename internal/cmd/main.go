@@ -56,8 +56,22 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 				OnlyOnce: true,
 			},
 			&cli.StringFlag{
+				Name:     "vision-model",
+				Usage:    "LLM to use for image requests",
+				Value:    "qwen2.5vl:7b",
+				Sources:  cli.NewValueSourceChain(toml.TOML("model", configFile)),
+				OnlyOnce: true,
+			},
+			&cli.StringFlag{
 				Name:     "system",
 				Usage:    "the system prompt to override the model's",
+				Value:    "",
+				Sources:  cli.NewValueSourceChain(toml.TOML("system", configFile)),
+				OnlyOnce: true,
+			},
+			&cli.StringFlag{
+				Name:     "vision-prompt",
+				Usage:    "the system prompt to override the vision model's",
 				Value:    "",
 				Sources:  cli.NewValueSourceChain(toml.TOML("system", configFile)),
 				OnlyOnce: true,
