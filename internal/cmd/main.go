@@ -134,6 +134,9 @@ var ghost = func(ctx context.Context, cmd *cli.Command) error {
 		prompt = pipedPrompt
 	}
 
+	// TODO: Check for images
+	// TODO: Send generate request for images
+	// TODO: Send images response with user prompt to Generate
 	imagePaths := cmd.StringSlice("image")
 	encodedImages, err := encodeImages(imagePaths)
 	if err != nil {

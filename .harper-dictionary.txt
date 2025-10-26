@@ -1,6 +1,10 @@
 ErrConfigFile
 ErrInput
+ErrNoDefaultModel
+ErrNoHostURL
 ErrNoPrompt
+ErrNoVisionModel
+ErrOllama
 ErrOutput
 LLMClient
 NewOllama
