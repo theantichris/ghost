@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/charmbracelet/log"
@@ -97,6 +98,7 @@ func TestGenerate(t *testing.T) {
 		name         string
 		systemPrompt string
 		prompt       string
+		images       []string
 		httpStatus   int
 		isError      bool
 		err          error
@@ -105,12 +107,21 @@ func TestGenerate(t *testing.T) {
 			name:         "returns response from API",
 			systemPrompt: "test system prompt",
 			prompt:       "test user prompt",
+			images:       []string{},
+			httpStatus:   http.StatusOK,
+		},
+		{
+			name:         "uses vision model for images",
+			systemPrompt: "test system prompt",
+			prompt:       "test user prompt",
+			images:       []string{"/image/path"},
 			httpStatus:   http.StatusOK,
 		},
 		{
 			name:         "returns API error",
 			systemPrompt: "test system prompt",
 			prompt:       "test user prompt",
+			images:       []string{},
 			httpStatus:   http.StatusNotFound,
 			isError:      true,
 			err:          ErrOllama,
@@ -124,6 +135,21 @@ func TestGenerate(t *testing.T) {
 			httpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(tt.httpStatus)
 
+				body, err := io.ReadAll(r.Body)
+				if err != nil {
+					t.Fatalf("cannot read request body: %v", err)
+				}
+
+				if len(tt.images) > 0 {
+					if !strings.Contains(string(body), "vision:model") {
+						t.Errorf("expected model to be vision:model, got %s", body)
+					}
+				} else {
+					if !strings.Contains(string(body), "default:model") {
+						t.Errorf("expected model to be default:model, got %s", body)
+					}
+				}
+
 				response := `{"response": "Hello, chummer!"}`
 
 				_, _ = w.Write([]byte(response))
@@ -133,7 +159,7 @@ func TestGenerate(t *testing.T) {
 
 			config := Config{
 				Host:         httpServer.URL,
-				DefaultModel: "test:model",
+				DefaultModel: "default:model",
 				VisionModel:  "vision:model",
 			}
 
@@ -142,7 +168,7 @@ func TestGenerate(t *testing.T) {
 				t.Fatalf("expect no error, got %v", err)
 			}
 
-			response, err := ollama.Generate(context.Background(), tt.systemPrompt, tt.prompt, []string{})
+			response, err := ollama.Generate(context.Background(), tt.systemPrompt, tt.prompt, tt.images)
 
 			if !tt.isError && err != nil {
 				t.Fatalf("expected no error, got %v", err)
