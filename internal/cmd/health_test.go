@@ -126,7 +126,7 @@ func TestHealth(t *testing.T) {
 			cmd := &cli.Command{
 				Metadata: map[string]any{
 					"output":     output,
-					"configFile": altsrc.NewStringPtrSourcer(&tt.configFile),
+					"configFile": altsrc.StringSourcer(tt.configFile),
 					"llmClient":  tt.llmClient,
 				},
 				Flags: []cli.Flag{

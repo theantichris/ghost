@@ -14,6 +14,7 @@ import (
 // health is the action handler for the health subcommand that displays system diagnostics.
 // It prints the current configuration, checks Ollama API connectivity, verifies API version, and validates that the configured model is available.
 var health = func(ctx context.Context, cmd *cli.Command) error {
+	// TODO: check contexts for cancel
 	ctx, cancel := context.WithTimeout(ctx, 2*time.Minute)
 	defer cancel()
 
@@ -22,7 +23,7 @@ var health = func(ctx context.Context, cmd *cli.Command) error {
 	host := cmd.String("host")
 	model := cmd.String("model")
 	systemPrompt := cmd.String("system")
-	configFile := cmd.Root().Metadata["configFile"].(altsrc.StringPtrSourcer)
+	configFile := cmd.Root().Metadata["configFile"].(altsrc.StringSourcer)
 
 	errors := 0
 
