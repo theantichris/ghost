@@ -157,7 +157,7 @@ var ghost = func(ctx context.Context, cmd *cli.Command) error {
 		prompt = fmt.Sprintf("%s\n\n%s", prompt, response)
 	}
 
-	// Main prompt, don't send images.
+	// Main prompt, send empty images slice.
 	response, err := llmClient.Generate(ctx, cmd.String("system"), prompt, []string{})
 	if err != nil {
 		return err
