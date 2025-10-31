@@ -100,7 +100,7 @@ func (ollama Ollama) Generate(ctx context.Context, systemPrompt, prompt string, 
 		Images:       images,
 	}
 
-	ollama.logger.Debug("sending generate request to Ollama API", "url", ollama.generateURL, "model", ollama.defaultModel, "request", request)
+	ollama.logger.Debug("sending generate request to Ollama API", "url", ollama.generateURL, "model", model, "request", request)
 
 	var response generateResponse
 	err := requests.
