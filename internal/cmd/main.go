@@ -215,7 +215,7 @@ func getPipedInput() (string, error) {
 // encodeImages takes a slice of paths and returns a slice of base64 encoded strings.
 func encodeImages(paths []string) ([]string, error) {
 	if len(paths) == 0 {
-		return nil, nil
+		return []string{}, nil
 	}
 
 	encoded := make([]string, 0, len(paths))
