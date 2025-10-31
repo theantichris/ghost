@@ -57,7 +57,7 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 			},
 			&cli.StringFlag{
 				Name:     "vision-model",
-				Usage:    "LLM to use for analyizing images",
+				Usage:    "LLM to use for analyzing images",
 				Value:    "qwen2.5vl:7b",
 				Sources:  cli.NewValueSourceChain(toml.TOML("vision.model", configFile)),
 				OnlyOnce: true,
