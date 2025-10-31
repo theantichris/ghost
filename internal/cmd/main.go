@@ -114,7 +114,14 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 				}
 			}
 
-			return generate(ctx, prompt, encodedImages, cmd)
+			response, err := generate(ctx, prompt, encodedImages, cmd)
+			if err != nil {
+				return err
+			}
+
+			fmt.Fprintln(output, response)
+
+			return nil
 		},
 		Commands: []*cli.Command{
 			{
@@ -152,14 +159,14 @@ var before = func(ctx context.Context, cmd *cli.Command) (context.Context, error
 // If there is piped input it appends it to the prompt.
 // If there are images it sends those to the LLM to be analyzed and appends the
 // results to the prompt.
-func generate(ctx context.Context, prompt string, images []string, cmd *cli.Command) error {
+func generate(ctx context.Context, prompt string, images []string, cmd *cli.Command) (string, error) {
 	llmClient := cmd.Metadata["llmClient"].(llm.LLMClient)
 
 	// If images, send a request to analyze them and add the response to the prompt.
 	if len(images) > 0 {
 		response, err := llmClient.Generate(ctx, cmd.String("vision-system"), cmd.String("vision-prompt"), images)
 		if err != nil {
-			return nil
+			return "", nil
 		}
 
 		prompt = fmt.Sprintf("%s\n\n%s", prompt, response)
@@ -168,13 +175,10 @@ func generate(ctx context.Context, prompt string, images []string, cmd *cli.Comm
 	// Send the main request.
 	response, err := llmClient.Generate(ctx, cmd.String("system"), prompt, []string{})
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	output := cmd.Metadata["output"].(io.Writer)
-	fmt.Fprintln(output, response)
-
-	return nil
+	return response, nil
 }
 
 // getPipedInput checks for and returns any input piped to the command.
