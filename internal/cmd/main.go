@@ -78,7 +78,7 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 			},
 			&cli.StringFlag{
 				Name:     "vision-prompt",
-				Usage:    "the prompt to send for image analization",
+				Usage:    "the prompt to send for image analysis",
 				Value:    "Analyze the attached images(s) and produce a Markdown report containing a description of each images.",
 				Sources:  cli.NewValueSourceChain(toml.TOML("vision.prompt", configFile)),
 				OnlyOnce: true,
