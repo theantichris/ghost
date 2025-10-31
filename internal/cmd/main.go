@@ -90,7 +90,31 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 		},
 		Before: before,
 		Action: func(ctx context.Context, cmd *cli.Command) error {
-			return generate(ctx, cmd)
+			prompt := strings.TrimSpace(cmd.StringArg("prompt"))
+			if prompt == "" {
+				return fmt.Errorf("%w", ErrNoPrompt)
+			}
+
+			pipedInput, err := getPipedInput()
+			if err != nil {
+				return err
+			}
+
+			// Add piped input to the prompt.
+			if pipedInput != "" {
+				prompt = fmt.Sprintf("%s\n\n%s", prompt, pipedInput)
+			}
+
+			var encodedImages []string
+			images := cmd.StringSlice("image")
+			if len(images) > 0 {
+				encodedImages, err = encodeImages(images)
+				if err != nil {
+					return err
+				}
+			}
+
+			return generate(ctx, prompt, encodedImages, cmd)
 		},
 		Commands: []*cli.Command{
 			{
@@ -128,33 +152,12 @@ var before = func(ctx context.Context, cmd *cli.Command) (context.Context, error
 // If there is piped input it appends it to the prompt.
 // If there are images it sends those to the LLM to be analyzed and appends the
 // results to the prompt.
-func generate(ctx context.Context, cmd *cli.Command) error {
-	prompt, err := getPrompt(cmd)
-	if err != nil {
-		return err
-	}
-
-	pipedInput, err := getPipedInput()
-	if err != nil {
-		return err
-	}
-
-	// Add piped input to the prompt.
-	if pipedInput != "" {
-		prompt = fmt.Sprintf("%s\n\n%s", prompt, pipedInput)
-	}
-
+func generate(ctx context.Context, prompt string, images []string, cmd *cli.Command) error {
 	llmClient := cmd.Metadata["llmClient"].(llm.LLMClient)
 
-	// If images, sent a request to analyze them and add to the prompt.
-	images := cmd.StringSlice("image")
+	// If images, send a request to analyze them and add the response to the prompt.
 	if len(images) > 0 {
-		encodedImages, err := encodeImages(images)
-		if err != nil {
-			return err
-		}
-
-		response, err := llmClient.Generate(ctx, cmd.String("vision-system"), cmd.String("vision-prompt"), encodedImages)
+		response, err := llmClient.Generate(ctx, cmd.String("vision-system"), cmd.String("vision-prompt"), images)
 		if err != nil {
 			return nil
 		}
@@ -172,18 +175,6 @@ func generate(ctx context.Context, cmd *cli.Command) error {
 	fmt.Fprintln(output, response)
 
 	return nil
-}
-
-// getPrompt checks the prompt argument and returns the prompt with trimmed spaces.
-// Returns ErrNoPrompt if prompt is empty.
-func getPrompt(cmd *cli.Command) (string, error) {
-	prompt := strings.TrimSpace(cmd.StringArg("prompt"))
-
-	if prompt == "" {
-		return "", fmt.Errorf("%w", ErrNoPrompt)
-	}
-
-	return prompt, nil
 }
 
 // getPipedInput checks for and returns any input piped to the command.

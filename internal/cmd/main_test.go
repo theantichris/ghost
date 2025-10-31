@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"errors"
 	"io"
 	"testing"
 
@@ -62,66 +61,4 @@ func TestBefore(t *testing.T) {
 		})
 	}
 
-}
-
-func TestGetPrompt(t *testing.T) {
-	tests := []struct {
-		name  string
-		args  []string
-		isErr bool
-		error error
-	}{
-		{
-			name: "returns prompt",
-			args: []string{"ghost", "test this prompt"},
-		},
-		{
-			name:  "returns error for no prompt",
-			args:  []string{"ghost"},
-			isErr: true,
-			error: ErrNoPrompt,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var actualPrompt string
-			var actualError error
-
-			cmd := cli.Command{
-				Arguments: []cli.Argument{
-					&cli.StringArg{
-						Name: "prompt",
-					},
-				},
-				Action: func(ctx context.Context, cmd *cli.Command) error {
-					actualPrompt, actualError = getPrompt(cmd)
-
-					return nil
-				},
-			}
-
-			cmd.Run(context.Background(), tt.args)
-
-			if !tt.isErr {
-				if actualError != nil {
-					t.Fatalf("expected no error, got %v", actualError)
-				}
-
-				if actualPrompt != tt.args[1] {
-					t.Errorf("expected prompt %q, got %q", tt.args[1], actualPrompt)
-				}
-			}
-
-			if tt.isErr {
-				if actualError == nil {
-					t.Fatalf("expected error, got nil")
-				}
-
-				if !errors.Is(actualError, ErrNoPrompt) {
-					t.Errorf("expected ErrNoPrompt, got %v", actualError)
-				}
-			}
-		})
-	}
 }
