@@ -22,7 +22,7 @@ var health = func(ctx context.Context, cmd *cli.Command) error {
 	host := cmd.String("host")
 	model := cmd.String("model")
 	systemPrompt := cmd.String("system")
-	configFile := cmd.Root().Metadata["configFile"].(altsrc.StringPtrSourcer)
+	configFile := cmd.Root().Metadata["configFile"].(altsrc.StringSourcer)
 
 	errors := 0
 

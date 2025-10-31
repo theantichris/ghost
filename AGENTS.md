@@ -9,6 +9,8 @@ When you need to search docs, use `context7` tools.
 - **Lint**: `golangci-lint run`
 - **Update golden files**: `go test -update`
 - **Find TODOs**: `rg -i "TODO|FIXME|XXX|HACK"`
+- **Pre-commit setup**: `pre-commit install`
+- **Run pre-commit**: `pre-commit run --all-files`
 
 ## Code Style Essentials
 
@@ -18,8 +20,18 @@ When you need to search docs, use `context7` tools.
 - **Logging**: Use `charmbracelet/log` (`Error` for failures, `Debug` for internals,
  `Info` sparingly)
 - **Testing**: Table-driven tests with `goldie/v2` golden files
+- **Pre-commit**: Uses pre-commit hooks for code quality
+- **Spell checking**: Custom dictionary in `.harper-dictionary.txt`
+- **Golden files**: Use `goldie/v2` for snapshot testing
 
 ## Configuration Pattern
+
+Configuration uses TOML files with the following structure:
+
+- Root level: basic chat settings (host, model, system)
+- [vision] section: image analysis settings
+- CLI flags override config file values
+- Config location: `~/.config/ghost/config.toml`
 
 See [README.md](README.md#configuration) for user-facing details. For code:
 
