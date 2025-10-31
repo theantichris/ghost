@@ -181,7 +181,7 @@ func generate(ctx context.Context, prompt string, images []string, config config
 	}
 
 	// Send the main request.
-	response, err := llmClient.Generate(ctx, config.systemPrompt, prompt, []string{})
+	response, err := llmClient.Generate(ctx, config.systemPrompt, prompt, nil)
 	if err != nil {
 		return "", err
 	}
