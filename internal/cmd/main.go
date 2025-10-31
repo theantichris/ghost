@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"os"
@@ -49,21 +50,89 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 			},
 			&cli.StringFlag{
 				Name:     "model",
-				Usage:    "default LLM",
+				Usage:    "LLM to use for basic chat",
 				Value:    "llama3.1:8b",
 				Sources:  cli.NewValueSourceChain(toml.TOML("model", configFile)),
 				OnlyOnce: true,
 			},
 			&cli.StringFlag{
+				Name:     "vision-model",
+				Usage:    "LLM to use for analyzing images",
+				Value:    "qwen2.5vl:7b",
+				Sources:  cli.NewValueSourceChain(toml.TOML("vision.model", configFile)),
+				OnlyOnce: true,
+			},
+			&cli.StringFlag{
 				Name:     "system",
-				Usage:    "the system prompt to override the model's",
+				Usage:    "the system prompt to override the basic chat model",
 				Value:    "",
 				Sources:  cli.NewValueSourceChain(toml.TOML("system", configFile)),
 				OnlyOnce: true,
 			},
+			&cli.StringFlag{
+				Name:     "vision-system",
+				Usage:    "the system prompt to override the vision model",
+				Value:    "",
+				Sources:  cli.NewValueSourceChain(toml.TOML("vision.system_prompt", configFile)),
+				OnlyOnce: true,
+			},
+			&cli.StringFlag{
+				Name:     "vision-prompt",
+				Usage:    "the prompt to send for image analysis",
+				Value:    "Analyze the attached image(s) and produce a Markdown report containing a description of each image.",
+				Sources:  cli.NewValueSourceChain(toml.TOML("vision.prompt", configFile)),
+				OnlyOnce: true,
+			},
+			&cli.StringSliceFlag{
+				Name:  "image",
+				Usage: "path to an image (can be used multiple times)",
+			},
 		},
 		Before: before,
-		Action: ghost,
+		Action: func(ctx context.Context, cmd *cli.Command) error {
+			config := config{
+				host:               cmd.String("host"),
+				model:              cmd.String("model"),
+				visionModel:        cmd.String("vision-model"),
+				systemPrompt:       cmd.String("system"),
+				visionSystemPrompt: cmd.String("vision-system"),
+				visionPrompt:       cmd.String("vision-prompt"),
+			}
+
+			prompt := strings.TrimSpace(cmd.StringArg("prompt"))
+			if prompt == "" {
+				return fmt.Errorf("%w", ErrNoPrompt)
+			}
+
+			pipedInput, err := getPipedInput()
+			if err != nil {
+				return err
+			}
+
+			// Add piped input to the prompt.
+			if pipedInput != "" {
+				prompt = fmt.Sprintf("%s\n\n%s", prompt, pipedInput)
+			}
+
+			var encodedImages []string
+			images := cmd.StringSlice("image")
+			if len(images) > 0 {
+				encodedImages, err = encodeImages(images)
+				if err != nil {
+					return err
+				}
+			}
+
+			llmClient := cmd.Metadata["llmClient"].(llm.LLMClient)
+			response, err := generate(ctx, prompt, encodedImages, config, llmClient)
+			if err != nil {
+				return err
+			}
+
+			fmt.Fprintln(output, response)
+
+			return nil
+		},
 		Commands: []*cli.Command{
 			{
 				Name:   "health",
@@ -80,7 +149,13 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 var before = func(ctx context.Context, cmd *cli.Command) (context.Context, error) {
 	logger := cmd.Metadata["logger"].(*log.Logger)
 
-	llmClient, err := llm.NewOllama(cmd.String("host"), cmd.String("model"), logger)
+	config := llm.Config{
+		Host:         cmd.String("host"),
+		DefaultModel: cmd.String("model"),
+		VisionModel:  cmd.String("vision-model"),
+	}
+
+	llmClient, err := llm.NewOllama(config, logger)
 	if err != nil {
 		return ctx, err
 	}
@@ -90,46 +165,70 @@ var before = func(ctx context.Context, cmd *cli.Command) (context.Context, error
 	return ctx, nil
 }
 
-// ghost is the action handler for the main ghost command that processes user prompts and generates LLM responses.
-var ghost = func(ctx context.Context, cmd *cli.Command) error {
-	prompt := strings.TrimSpace(cmd.StringArg("prompt"))
-
-	if prompt == "" {
-		return fmt.Errorf("%w", ErrNoPrompt)
-	}
-
-	if hasPipedInput() {
-		pipedInput, err := io.ReadAll(io.LimitReader(os.Stdin, maxPipedInputSize))
+// generate sends the prompt to the LLM client's generate function.
+// If there is piped input it appends it to the prompt.
+// If there are images it sends those to the LLM to be analyzed and appends the
+// results to the prompt.
+func generate(ctx context.Context, prompt string, images []string, config config, llmClient llm.LLMClient) (string, error) {
+	// If images, send a request to analyze them and add the response to the prompt.
+	if len(images) > 0 {
+		response, err := llmClient.Generate(ctx, config.visionSystemPrompt, config.visionPrompt, images)
 		if err != nil {
-			return fmt.Errorf("%w: %w", ErrInput, err)
+			return "", err
 		}
 
-		input := strings.TrimSpace(string(pipedInput))
-
-		if input != "" {
-			prompt = fmt.Sprintf("%s\n\n%s", prompt, input)
-		}
+		prompt = fmt.Sprintf("%s\n\n%s", prompt, response)
 	}
 
-	llmClient := cmd.Metadata["llmClient"].(llm.LLMClient)
-
-	response, err := llmClient.Generate(ctx, cmd.String("system"), prompt)
+	// Send the main request.
+	response, err := llmClient.Generate(ctx, config.systemPrompt, prompt, nil)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	output := cmd.Metadata["output"].(io.Writer)
-	fmt.Fprintln(output, response)
-
-	return nil
+	return response, nil
 }
 
-// hasPipedInput checks standard input for piped input and returns true if found.
-func hasPipedInput() bool {
+// getPipedInput checks for and returns any input piped to the command.
+// Returns an empty string if piped input doesn't exist or is empty.
+// Returns ErrInput if piped input cannot be read.
+func getPipedInput() (string, error) {
 	fileInfo, err := os.Stdin.Stat()
 	if err != nil {
-		return false
+		return "", nil
 	}
 
-	return fileInfo.Mode()&os.ModeCharDevice == 0
+	if fileInfo.Mode()&os.ModeCharDevice != 0 {
+		return "", nil
+	}
+
+	pipedInput, err := io.ReadAll(io.LimitReader(os.Stdin, maxPipedInputSize))
+	if err != nil {
+		return "", fmt.Errorf("%w: %w", ErrInput, err)
+	}
+
+	input := strings.TrimSpace(string(pipedInput))
+
+	return input, nil
+}
+
+// encodeImages takes a slice of paths and returns a slice of base64 encoded strings.
+func encodeImages(paths []string) ([]string, error) {
+	if len(paths) == 0 {
+		return []string{}, nil
+	}
+
+	encoded := make([]string, 0, len(paths))
+
+	for _, path := range paths {
+		imageBytes, err := os.ReadFile(path)
+		if err != nil {
+			return nil, fmt.Errorf("%w: failed to read image %s: %w", ErrInput, path, err)
+		}
+
+		encodedImage := base64.StdEncoding.EncodeToString(imageBytes)
+		encoded = append(encoded, encodedImage)
+	}
+
+	return encoded, nil
 }

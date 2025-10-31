@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/charmbracelet/log"
@@ -13,28 +14,45 @@ import (
 
 func TestNewOllama(t *testing.T) {
 	tests := []struct {
-		name         string
-		host         string
-		defaultModel string
-		isError      bool
-		err          error
+		name    string
+		config  Config
+		isError bool
+		err     error
 	}{
 		{
-			name:         "creates a new Ollama client",
-			host:         "http://test.dev",
-			defaultModel: "default:model",
+			name: "creates a new Ollama client",
+			config: Config{
+				Host:         "http://test.dev",
+				DefaultModel: "default:model",
+				VisionModel:  "vision:model",
+			},
 		},
 		{
-			name:         "returns error for no host URL",
-			defaultModel: "default:model",
-			isError:      true,
-			err:          ErrNoHostURL,
+			name: "returns error for no host URL",
+			config: Config{
+				DefaultModel: "default:model",
+				VisionModel:  "vision:model",
+			},
+			isError: true,
+			err:     ErrNoHostURL,
 		},
 		{
-			name:    "returns error for no default model",
-			host:    "http://test.dev",
+			name: "returns error for no default model",
+			config: Config{
+				Host:        "http://test.dev",
+				VisionModel: "vision:model",
+			},
 			isError: true,
 			err:     ErrNoDefaultModel,
+		},
+		{
+			name: "returns error for no vision model",
+			config: Config{
+				Host:         "http://test.dev",
+				DefaultModel: "default:model",
+			},
+			isError: true,
+			err:     ErrNoVisionModel,
 		},
 	}
 
@@ -42,7 +60,7 @@ func TestNewOllama(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			logger := log.New(io.Discard)
 
-			ollama, err := NewOllama(tt.host, tt.defaultModel, logger)
+			ollama, err := NewOllama(tt.config, logger)
 
 			if !tt.isError && err != nil {
 				t.Fatalf("expect no error, got %v", err)
@@ -59,16 +77,16 @@ func TestNewOllama(t *testing.T) {
 			}
 
 			if !tt.isError {
-				if ollama.host != tt.host {
-					t.Errorf("expected host URL %q, got %q", tt.host, ollama.host)
+				if ollama.host != tt.config.Host {
+					t.Errorf("expected host URL %q, got %q", tt.config.Host, ollama.host)
 				}
 
-				if ollama.generateURL != tt.host+"/api/generate" {
-					t.Errorf("expected generate URL %q, got %q", tt.host+"/api/generate", ollama.generateURL)
+				if ollama.generateURL != tt.config.Host+"/api/generate" {
+					t.Errorf("expected generate URL %q, got %q", tt.config.Host+"/api/generate", ollama.generateURL)
 				}
 
-				if ollama.defaultModel != tt.defaultModel {
-					t.Errorf("expected default model %q, got %q", tt.defaultModel, ollama.defaultModel)
+				if ollama.defaultModel != tt.config.DefaultModel {
+					t.Errorf("expected default model %q, got %q", tt.config.DefaultModel, ollama.defaultModel)
 				}
 			}
 		})
@@ -77,20 +95,36 @@ func TestNewOllama(t *testing.T) {
 
 func TestGenerate(t *testing.T) {
 	tests := []struct {
-		name       string
-		httpStatus int
-		isError    bool
-		err        error
+		name         string
+		systemPrompt string
+		prompt       string
+		images       []string
+		httpStatus   int
+		isError      bool
+		err          error
 	}{
 		{
-			name:       "returns response from API",
-			httpStatus: http.StatusOK,
+			name:         "returns response from API",
+			systemPrompt: "test system prompt",
+			prompt:       "test user prompt",
+			images:       []string{},
+			httpStatus:   http.StatusOK,
 		},
 		{
-			name:       "returns API error",
-			httpStatus: http.StatusNotFound,
-			isError:    true,
-			err:        ErrOllama,
+			name:         "uses vision model for images",
+			systemPrompt: "test system prompt",
+			prompt:       "test user prompt",
+			images:       []string{"/image/path"},
+			httpStatus:   http.StatusOK,
+		},
+		{
+			name:         "returns API error",
+			systemPrompt: "test system prompt",
+			prompt:       "test user prompt",
+			images:       []string{},
+			httpStatus:   http.StatusNotFound,
+			isError:      true,
+			err:          ErrOllama,
 		},
 	}
 
@@ -101,6 +135,21 @@ func TestGenerate(t *testing.T) {
 			httpServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(tt.httpStatus)
 
+				body, err := io.ReadAll(r.Body)
+				if err != nil {
+					t.Fatalf("cannot read request body: %v", err)
+				}
+
+				if len(tt.images) > 0 {
+					if !strings.Contains(string(body), "vision:model") {
+						t.Errorf("expected model to be vision:model, got %s", body)
+					}
+				} else {
+					if !strings.Contains(string(body), "default:model") {
+						t.Errorf("expected model to be default:model, got %s", body)
+					}
+				}
+
 				response := `{"response": "Hello, chummer!"}`
 
 				_, _ = w.Write([]byte(response))
@@ -108,15 +157,18 @@ func TestGenerate(t *testing.T) {
 
 			defer httpServer.Close()
 
-			ollama, err := NewOllama(httpServer.URL, "test:model", logger)
+			config := Config{
+				Host:         httpServer.URL,
+				DefaultModel: "default:model",
+				VisionModel:  "vision:model",
+			}
+
+			ollama, err := NewOllama(config, logger)
 			if err != nil {
 				t.Fatalf("expect no error, got %v", err)
 			}
 
-			systemPrompt := "test system prompt"
-			userPrompt := "test user prompt"
-
-			response, err := ollama.Generate(context.Background(), systemPrompt, userPrompt)
+			response, err := ollama.Generate(context.Background(), tt.systemPrompt, tt.prompt, tt.images)
 
 			if !tt.isError && err != nil {
 				t.Fatalf("expected no error, got %v", err)
@@ -175,7 +227,13 @@ func TestVersion(t *testing.T) {
 
 			defer httpServer.Close()
 
-			ollama, err := NewOllama(httpServer.URL, "test:model", logger)
+			config := Config{
+				Host:         httpServer.URL,
+				DefaultModel: "test:model",
+				VisionModel:  "vision:model",
+			}
+
+			ollama, err := NewOllama(config, logger)
 			if !tt.isError && err != nil {
 				t.Fatalf("expect no error, got %v", err)
 			}
@@ -225,7 +283,13 @@ func TestShow(t *testing.T) {
 
 			defer httpServer.Close()
 
-			ollama, err := NewOllama(httpServer.URL, "test:model", logger)
+			config := Config{
+				Host:         httpServer.URL,
+				DefaultModel: "test:model",
+				VisionModel:  "vision:model",
+			}
+
+			ollama, err := NewOllama(config, logger)
 			if !tt.isError && err != nil {
 				t.Fatalf("expect no error, got %v", err)
 			}

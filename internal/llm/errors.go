@@ -13,6 +13,9 @@ var (
 	// ErrNoDefaultModel indicates the default model name was not provided or is empty.
 	ErrNoDefaultModel = exitcode.New(errors.New("no default model provided"), exitcode.ExConfig)
 
+	// ErrNoVisionModel indicates the vision model name was not provided or is empty.
+	ErrNoVisionModel = exitcode.New(errors.New("no vision model provided"), exitcode.ExConfig)
+
 	// ErrOllama indicates the Ollama API failed to return a valid response.
 	ErrOllama = exitcode.New(errors.New("failed to get API response"), exitcode.ExUnavailable)
 )
