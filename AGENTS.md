@@ -27,6 +27,7 @@ When you need to search docs, use `context7` tools.
 ## Configuration Pattern
 
 Configuration uses TOML files with the following structure:
+
 - Root level: basic chat settings (host, model, system)
 - [vision] section: image analysis settings
 - CLI flags override config file values
