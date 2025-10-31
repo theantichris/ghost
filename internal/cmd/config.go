@@ -6,8 +6,20 @@ import (
 	"path/filepath"
 
 	"github.com/charmbracelet/log"
+	"github.com/theantichris/ghost/internal/llm"
 	altsrc "github.com/urfave/cli-altsrc/v3"
 )
+
+// config holds configuration flags for the command.
+type config struct {
+	host               string
+	model              string
+	visionModel        string
+	systemPrompt       string
+	visionSystemPrompt string
+	visionPrompt       string
+	llmClient          llm.LLMClient
+}
 
 // loadConfigFile attempts to load config.toml from ~/.config/ghost and returns a StringSourcer.
 // If the config file does not exist, it returns an empty string without error allowing the application to use default flag values. Returns ErrConfigFile if the home directory cannot be determined.

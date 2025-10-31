@@ -90,6 +90,16 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 		},
 		Before: before,
 		Action: func(ctx context.Context, cmd *cli.Command) error {
+			config := config{
+				host:               cmd.String("host"),
+				model:              cmd.String("model"),
+				visionModel:        cmd.String("vision-model"),
+				systemPrompt:       cmd.String("system"),
+				visionSystemPrompt: cmd.String("vision-system"),
+				visionPrompt:       cmd.String("vision-prompt"),
+				llmClient:          cmd.Metadata["llmClient"].(llm.LLMClient),
+			}
+
 			prompt := strings.TrimSpace(cmd.StringArg("prompt"))
 			if prompt == "" {
 				return fmt.Errorf("%w", ErrNoPrompt)
@@ -114,7 +124,7 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 				}
 			}
 
-			response, err := generate(ctx, prompt, encodedImages, cmd)
+			response, err := generate(ctx, prompt, encodedImages, config)
 			if err != nil {
 				return err
 			}
@@ -159,12 +169,10 @@ var before = func(ctx context.Context, cmd *cli.Command) (context.Context, error
 // If there is piped input it appends it to the prompt.
 // If there are images it sends those to the LLM to be analyzed and appends the
 // results to the prompt.
-func generate(ctx context.Context, prompt string, images []string, cmd *cli.Command) (string, error) {
-	llmClient := cmd.Metadata["llmClient"].(llm.LLMClient)
-
+func generate(ctx context.Context, prompt string, images []string, config config) (string, error) {
 	// If images, send a request to analyze them and add the response to the prompt.
 	if len(images) > 0 {
-		response, err := llmClient.Generate(ctx, cmd.String("vision-system"), cmd.String("vision-prompt"), images)
+		response, err := config.llmClient.Generate(ctx, config.visionSystemPrompt, config.visionPrompt, images)
 		if err != nil {
 			return "", nil
 		}
@@ -173,7 +181,7 @@ func generate(ctx context.Context, prompt string, images []string, cmd *cli.Comm
 	}
 
 	// Send the main request.
-	response, err := llmClient.Generate(ctx, cmd.String("system"), prompt, []string{})
+	response, err := config.llmClient.Generate(ctx, config.systemPrompt, prompt, []string{})
 	if err != nil {
 		return "", err
 	}
