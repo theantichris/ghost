@@ -89,7 +89,9 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 			},
 		},
 		Before: before,
-		Action: ghost,
+		Action: func(ctx context.Context, cmd *cli.Command) error {
+			return generate(ctx, cmd)
+		},
 		Commands: []*cli.Command{
 			{
 				Name:   "health",
@@ -122,11 +124,11 @@ var before = func(ctx context.Context, cmd *cli.Command) (context.Context, error
 	return ctx, nil
 }
 
-// TODO: to make this testable, make action a wrapper function that calls this.
-// ghost is the action handler for the root command.
-// It checks for piped input, processes user prompt, sends the prompt to the LLM
-// client, and returns the response
-var ghost = func(ctx context.Context, cmd *cli.Command) error {
+// generate sends the prompt to the LLM client's generate function.
+// If there is piped input it appends it to the prompt.
+// If there are images it sends those to the LLM to be analyzed and appends the
+// results to the prompt.
+func generate(ctx context.Context, cmd *cli.Command) error {
 	prompt, err := getPrompt(cmd)
 	if err != nil {
 		return err
