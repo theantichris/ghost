@@ -12,6 +12,8 @@ OnlyOnce
 PR
 PascalCase
 Shadowrun
+StringPtrSourcer
+StringSourcer
 TODOs
 base64
 baseURL
@@ -20,7 +22,9 @@ commandList
 errorWrite
 funcs
 handleLLMRequest
+loadConfigFile
 ollamaRequest
 ollamaURL
 runHealth
+sourcer
 unexported
