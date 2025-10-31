@@ -87,7 +87,8 @@ curl -s https://api.github.com/users/torvalds | ghost "profile this netrunner"
 
 ### Image Analysis
 
-Ghost can analyze images using vision capable models, turning visual data into actionable intelligence:
+Ghost can analyze images using vision capable models, turning visual data into
+ actionable intelligence:
 
 ```bash
 # Analyze a single image
@@ -100,7 +101,8 @@ ghost --image "diagram1.jpg" --image "diagram2.png" "Compare these network archi
 cat network-config.txt | ghost --image "topology.png" "Analyze this network setup"
 ```
 
-**Note:** Image analysis requires a vision-capable model (default: `qwen2.5vl:7b`) and the images must be accessible from your local filesystem.
+**Note:** Image analysis requires a vision-capable model (default: `qwen2.5vl:7b`)
+ and the images must be accessible from your local filesystem.
 
 ### Health Check
 
@@ -185,7 +187,8 @@ Ghost can be configured via CLI flags or an optional TOML configuration file.
 - `--system`: System prompt override for basic chat model (optional)
 - `--vision-model`: LLM to use for analyzing images (default: `qwen2.5vl:7b`)
 - `--vision-system`: System prompt override for vision model (optional)
-- `--vision-prompt`: Prompt for image analysis (default: "Analyze the attached image(s)...")
+- `--vision-prompt`: Prompt for image analysis (default: "Analyze the attached
+ image(s)...")
 - `--image`: Path to an image file (can be used multiple times)
 
 ### Configuration File
@@ -200,7 +203,8 @@ system = "You are Ghost, a cyberpunk inspired terminal based assistant."
 [vision]
 model = "qwen2.5vl:7b"
 system_prompt = ""
-prompt = "Analyze the attached image(s) and produce a Markdown report containing a description of each image."
+prompt = "Analyze the attached image(s) and produce a Markdown report containing
+ a description of each image."
 ```
 
 Settings in the config file are used as defaults. CLI flags override config file
