@@ -85,6 +85,23 @@ curl -s https://api.github.com/users/torvalds | ghost "profile this netrunner"
 **Note:** Input stream limited to 10 MB. For larger data dumps, filter with `head`
  or `tail` before jacking in.
 
+### Image Analysis
+
+Ghost can analyze images using vision capable models, turning visual data into actionable intelligence:
+
+```bash
+# Analyze a single image
+ghost --image "screenshot.png" "What security vulnerabilities do you see?"
+
+# Analyze multiple images
+ghost --image "diagram1.jpg" --image "diagram2.png" "Compare these network architectures"
+
+# Combine with piped input
+cat network-config.txt | ghost --image "topology.png" "Analyze this network setup"
+```
+
+**Note:** Image analysis requires a vision-capable model (default: `qwen2.5vl:7b`) and the images must be accessible from your local filesystem.
+
 ### Health Check
 
 Run diagnostics to verify Ghost is properly configured and connected:
@@ -108,6 +125,7 @@ SYSTEM CONFIG
   ◆ host: http://localhost:11434
   ◆ model: llama3.1:8b
   ◆ config: /home/user/.config/ghost/config.toml
+  ◆ system prompt: You are Ghost, a cyberpunk inspired terminal based assistant.
 
 NEURAL LINK STATUS
   ◆ ollama api CONNECTED [v0.1.32]
@@ -163,8 +181,12 @@ Ghost can be configured via CLI flags or an optional TOML configuration file.
 ### CLI Flags
 
 - `--host`: Ollama API URL (default: `http://localhost:11434`)
-- `--model`: LLM model name (default: `llama3.1:8b`)
-- `--system`: System prompt override (optional)
+- `--model`: LLM to use for basic chat (default: `llama3.1:8b`)
+- `--system`: System prompt override for basic chat model (optional)
+- `--vision-model`: LLM to use for analyzing images (default: `qwen2.5vl:7b`)
+- `--vision-system`: System prompt override for vision model (optional)
+- `--vision-prompt`: Prompt for image analysis (default: "Analyze the attached image(s)...")
+- `--image`: Path to an image file (can be used multiple times)
 
 ### Configuration File
 
@@ -174,6 +196,11 @@ Create a config file at `~/.config/ghost/config.toml`:
 host = "http://localhost:11434"
 model = "llama3.1:8b"
 system = "You are Ghost, a cyberpunk inspired terminal based assistant."
+
+[vision]
+model = "qwen2.5vl:7b"
+system_prompt = ""
+prompt = "Analyze the attached image(s) and produce a Markdown report containing a description of each image."
 ```
 
 Settings in the config file are used as defaults. CLI flags override config file
