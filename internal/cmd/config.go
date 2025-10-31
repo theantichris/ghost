@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 
 	"github.com/charmbracelet/log"
-	"github.com/theantichris/ghost/internal/llm"
 	altsrc "github.com/urfave/cli-altsrc/v3"
 )
 
@@ -18,7 +17,6 @@ type config struct {
 	systemPrompt       string
 	visionSystemPrompt string
 	visionPrompt       string
-	llmClient          llm.LLMClient
 }
 
 // loadConfigFile attempts to load config.toml from ~/.config/ghost and returns a StringSourcer.

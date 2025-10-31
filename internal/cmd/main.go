@@ -97,7 +97,6 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 				systemPrompt:       cmd.String("system"),
 				visionSystemPrompt: cmd.String("vision-system"),
 				visionPrompt:       cmd.String("vision-prompt"),
-				llmClient:          cmd.Metadata["llmClient"].(llm.LLMClient),
 			}
 
 			prompt := strings.TrimSpace(cmd.StringArg("prompt"))
@@ -124,7 +123,8 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 				}
 			}
 
-			response, err := generate(ctx, prompt, encodedImages, config)
+			llmClient := cmd.Metadata["llmClient"].(llm.LLMClient)
+			response, err := generate(ctx, prompt, encodedImages, config, llmClient)
 			if err != nil {
 				return err
 			}
@@ -169,10 +169,10 @@ var before = func(ctx context.Context, cmd *cli.Command) (context.Context, error
 // If there is piped input it appends it to the prompt.
 // If there are images it sends those to the LLM to be analyzed and appends the
 // results to the prompt.
-func generate(ctx context.Context, prompt string, images []string, config config) (string, error) {
+func generate(ctx context.Context, prompt string, images []string, config config, llmClient llm.LLMClient) (string, error) {
 	// If images, send a request to analyze them and add the response to the prompt.
 	if len(images) > 0 {
-		response, err := config.llmClient.Generate(ctx, config.visionSystemPrompt, config.visionPrompt, images)
+		response, err := llmClient.Generate(ctx, config.visionSystemPrompt, config.visionPrompt, images)
 		if err != nil {
 			return "", nil
 		}
@@ -181,7 +181,7 @@ func generate(ctx context.Context, prompt string, images []string, config config
 	}
 
 	// Send the main request.
-	response, err := config.llmClient.Generate(ctx, config.systemPrompt, prompt, []string{})
+	response, err := llmClient.Generate(ctx, config.systemPrompt, prompt, []string{})
 	if err != nil {
 		return "", err
 	}
