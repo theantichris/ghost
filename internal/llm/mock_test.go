@@ -10,7 +10,7 @@ func TestMockClientGenerate(t *testing.T) {
 	t.Run("mocks the Generate function", func(t *testing.T) {
 		t.Parallel()
 
-		mockGenerate := func(ctx context.Context, systemPrompt, userPrompt string) (string, error) {
+		mockGenerate := func(ctx context.Context, systemPrompt, userPrompt string, images []string) (string, error) {
 			return "Hello, chummer!", nil
 		}
 

@@ -62,3 +62,43 @@ func TestBefore(t *testing.T) {
 	}
 
 }
+
+func TestGenerate(t *testing.T) {
+	tests := []struct {
+		name      string
+		prompt    string
+		images    []string
+		config    config
+		llmClient llm.LLMClient
+		expected  string
+	}{
+		{
+			name:   "sents prompt to LLM generate without images",
+			prompt: "test prompt",
+			images: []string{},
+			config: config{
+				systemPrompt: "system prompt",
+			},
+			llmClient: llm.MockLLMClient{
+				GenerateFunc: func(ctx context.Context, systemPrompt string, userPrompt string, images []string) (string, error) {
+					return "this prompt is good", nil
+				},
+			},
+			expected: "this prompt is good",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			actual, err := generate(context.Background(), tt.prompt, tt.images, tt.config, tt.llmClient)
+
+			if err != nil {
+				t.Fatalf("expect no error, got %v", err)
+			}
+
+			if actual != tt.expected {
+				t.Errorf("expected response %q, got %q", tt.expected, actual)
+			}
+		})
+	}
+}
