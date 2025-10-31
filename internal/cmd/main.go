@@ -122,6 +122,7 @@ var before = func(ctx context.Context, cmd *cli.Command) (context.Context, error
 	return ctx, nil
 }
 
+// TODO: to make this testable, make action a wrapper function that calls this.
 // ghost is the action handler for the root command.
 // It checks for piped input, processes user prompt, sends the prompt to the LLM
 // client, and returns the response
@@ -136,12 +137,14 @@ var ghost = func(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
+	// Add piped input to the prompt.
 	if pipedInput != "" {
 		prompt = fmt.Sprintf("%s\n\n%s", prompt, pipedInput)
 	}
 
 	llmClient := cmd.Metadata["llmClient"].(llm.LLMClient)
 
+	// If images, sent a request to analyze them and add to the prompt.
 	images := cmd.StringSlice("image")
 	if len(images) > 0 {
 		encodedImages, err := encodeImages(images)
@@ -157,7 +160,7 @@ var ghost = func(ctx context.Context, cmd *cli.Command) error {
 		prompt = fmt.Sprintf("%s\n\n%s", prompt, response)
 	}
 
-	// Main prompt, send empty images slice.
+	// Send the main request.
 	response, err := llmClient.Generate(ctx, cmd.String("system"), prompt, []string{})
 	if err != nil {
 		return err
