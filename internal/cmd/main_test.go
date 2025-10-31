@@ -102,6 +102,22 @@ func TestGenerate(t *testing.T) {
 			isError: true,
 			Error:   llm.ErrOllama,
 		},
+		{
+			name:   "sends prompt to LLM generate with images",
+			prompt: "test prompt",
+			images: []string{"test/image.png"},
+			config: config{
+				systemPrompt:       "system prompt",
+				visionSystemPrompt: "vision system prompt",
+				visionPrompt:       "vision prompt",
+			},
+			llmClient: llm.MockLLMClient{
+				GenerateFunc: func(ctx context.Context, systemPrompt string, userPrompt string, images []string) (string, error) {
+					return "this prompt is good", nil
+				},
+			},
+			expected: "this prompt is good",
+		},
 	}
 
 	for _, tt := range tests {
