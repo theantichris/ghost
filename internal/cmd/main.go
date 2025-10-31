@@ -174,7 +174,7 @@ func generate(ctx context.Context, prompt string, images []string, config config
 	if len(images) > 0 {
 		response, err := llmClient.Generate(ctx, config.visionSystemPrompt, config.visionPrompt, images)
 		if err != nil {
-			return "", nil
+			return "", err
 		}
 
 		prompt = fmt.Sprintf("%s\n\n%s", prompt, response)
