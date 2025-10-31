@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"io"
 	"testing"
 
@@ -71,9 +72,11 @@ func TestGenerate(t *testing.T) {
 		config    config
 		llmClient llm.LLMClient
 		expected  string
+		isError   bool
+		Error     error
 	}{
 		{
-			name:   "sents prompt to LLM generate without images",
+			name:   "sends prompt to LLM generate without images",
 			prompt: "test prompt",
 			images: []string{},
 			config: config{
@@ -86,18 +89,43 @@ func TestGenerate(t *testing.T) {
 			},
 			expected: "this prompt is good",
 		},
+		{
+			name:   "returns error for LLM generate without images",
+			prompt: "test prompt",
+			images: []string{},
+			config: config{
+				systemPrompt: "system prompt",
+			},
+			llmClient: llm.MockLLMClient{
+				Error: llm.ErrOllama,
+			},
+			isError: true,
+			Error:   llm.ErrOllama,
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			actual, err := generate(context.Background(), tt.prompt, tt.images, tt.config, tt.llmClient)
 
-			if err != nil {
-				t.Fatalf("expect no error, got %v", err)
+			if !tt.isError {
+				if err != nil {
+					t.Fatalf("expect no error, got %v", err)
+				}
+
+				if actual != tt.expected {
+					t.Errorf("expected response %q, got %q", tt.expected, actual)
+				}
 			}
 
-			if actual != tt.expected {
-				t.Errorf("expected response %q, got %q", tt.expected, actual)
+			if tt.isError {
+				if err == nil {
+					t.Fatalf("expected error, got nil")
+				}
+
+				if !errors.Is(err, tt.Error) {
+					t.Errorf("expected error %v, got %v", tt.Error, err)
+				}
 			}
 		})
 	}
