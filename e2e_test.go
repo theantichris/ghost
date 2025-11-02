@@ -74,9 +74,36 @@ func TestE2E(t *testing.T) {
 				if strings.TrimSpace(stdout) == "" {
 					t.Errorf("expected response, got empty string")
 				}
+			},
+		},
+		{
+			name: "health command",
+			args: []string{"health"},
+			validate: func(t *testing.T, stdout, stderr string, exitCode int) {
+				if exitCode != 0 {
+					t.Errorf("expected exit code 0, got %d\nStderr: %s", exitCode, stderr)
+				}
 
 				if strings.TrimSpace(stdout) == "" {
 					t.Errorf("expected response, got empty string")
+				}
+
+				lowerOut := strings.ToLower(stdout)
+
+				hasSystemConfig := strings.Contains(lowerOut, "system config") ||
+					strings.Contains(lowerOut, "host") ||
+					strings.Contains(lowerOut, "model")
+
+				if !hasSystemConfig {
+					t.Errorf("output missing system config: %s", stdout)
+				}
+
+				hasStatus := strings.Contains(lowerOut, "status") ||
+					strings.Contains(lowerOut, "connected") ||
+					strings.Contains(lowerOut, "online")
+
+				if !hasStatus {
+					t.Errorf("output missing status: %s", stdout)
 				}
 			},
 		},
