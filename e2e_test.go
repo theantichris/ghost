@@ -63,6 +63,23 @@ func TestE2E(t *testing.T) {
 				}
 			},
 		},
+		{
+			name: "images",
+			args: []string{"describe this image in one word."},
+			validate: func(t *testing.T, stdout, stderr string, exitCode int) {
+				if exitCode != 0 {
+					t.Errorf("expected exit code 0, got %d\nStderr: %s", exitCode, stderr)
+				}
+
+				if strings.TrimSpace(stdout) == "" {
+					t.Errorf("expected response, got empty string")
+				}
+
+				if strings.TrimSpace(stdout) == "" {
+					t.Errorf("expected response, got empty string")
+				}
+			},
+		},
 	}
 
 	for _, tt := range tests {
