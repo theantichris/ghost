@@ -167,7 +167,7 @@ func buildGhostBinary(t *testing.T) (string, func()) {
 	buildCmd.Stderr = &stderr
 
 	if err := buildCmd.Run(); err != nil {
-		t.Fatalf("failed to build ghost: %vnStderr: %s", err, stderr.String())
+		t.Fatalf("failed to build ghost: %v\nStderr: %s", err, stderr.String())
 	}
 
 	cleanup := func() {
