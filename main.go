@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/charmbracelet/log"
 	"github.com/theantichris/ghost/internal/cmd"
@@ -27,7 +28,10 @@ func main() {
 		os.Exit(int(exitcode.ExSoftware))
 	}
 
-	if err := cmd.Run(context.Background(), os.Args, version, os.Stdout, logger); err != nil {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
+
+	if err := cmd.Run(ctx, os.Args, version, os.Stdout, logger); err != nil {
 		exitCode := exitcode.GetExitCode(err)
 
 		fmt.Printf("failed to run ghost: %s\n", err)
