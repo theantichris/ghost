@@ -188,7 +188,7 @@ Ghost can be configured via CLI flags or an optional TOML configuration file.
 - `--vision-model`: LLM to use for analyzing images (default: `qwen2.5vl:7b`)
 - `--vision-system`: System prompt override for vision model (optional)
 - `--vision-prompt`: Prompt for image analysis (default: "Analyze the attached
- image(s)...")
+ image(s)")
 - `--image`: Path to an image file (can be used multiple times)
 
 ### Configuration File
@@ -202,9 +202,8 @@ system = "You are Ghost, a cyberpunk inspired terminal based assistant."
 
 [vision]
 model = "qwen2.5vl:7b"
-system_prompt = ""
-prompt = "Analyze the attached image(s) and produce a Markdown report containing
- a description of each image."
+system = ""
+prompt = "Analyze the attached image(s)"
 ```
 
 Settings in the config file are used as defaults. CLI flags override config file
