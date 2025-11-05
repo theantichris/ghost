@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"time"
 
 	"github.com/theantichris/ghost/internal/llm"
 	altsrc "github.com/urfave/cli-altsrc/v3"
@@ -14,9 +13,6 @@ import (
 // health is the action handler for the health subcommand that displays system diagnostics.
 // It prints the current configuration, checks Ollama API connectivity, verifies API version, and validates that the configured model is available.
 var health = func(ctx context.Context, cmd *cli.Command) error {
-	ctx, cancel := context.WithTimeout(ctx, 2*time.Minute)
-	defer cancel()
-
 	output := cmd.Root().Metadata["output"].(io.Writer)
 
 	host := cmd.String("host")
