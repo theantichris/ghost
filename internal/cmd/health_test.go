@@ -60,6 +60,12 @@ func TestHealth(t *testing.T) {
 			},
 		},
 		{
+			name: "prints output model not found check error",
+			llmClient: llm.MockLLMClient{
+				Error: llm.ErrModelNotFound,
+			},
+		},
+		{
 			name:         "prints output with system prompt configured",
 			llmClient:    llm.MockLLMClient{},
 			configFile:   "",

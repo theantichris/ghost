@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 
@@ -20,7 +21,7 @@ var health = func(ctx context.Context, cmd *cli.Command) error {
 	systemPrompt := cmd.String("system")
 	configFile := cmd.Root().Metadata["configFile"].(altsrc.StringSourcer)
 
-	errors := 0
+	errorCount := 0
 
 	fmt.Fprint(output, ">> initializing ghost diagnostics...\n\n")
 
@@ -37,21 +38,26 @@ var health = func(ctx context.Context, cmd *cli.Command) error {
 	if err == nil {
 		fmt.Fprintf(output, "  ◆ ollama api CONNECTED [v%s]\n", version)
 	} else {
-		errors++
+		errorCount++
 		fmt.Fprintf(output, "  ✗ ollama api CONNECTION FAILED: %s\n", err.Error())
 	}
 
 	if err = llmClient.Show(ctx, model); err == nil {
 		fmt.Fprintf(output, "  ◆ model %s active\n\n", model)
 	} else {
-		errors++
-		fmt.Fprintf(output, "  ✗ model %s not loaded\n\n", model)
+		errorCount++
+
+		if errors.Is(err, llm.ErrModelNotFound) {
+			fmt.Fprintf(output, "  ✗ model %s not loaded: pull model\n\n", model)
+		} else {
+			fmt.Fprintf(output, "  ✗ model %s not loaded: %s\n\n", model, err)
+		}
 	}
 
-	if errors == 0 {
+	if errorCount == 0 {
 		fmt.Fprintln(output, ">> ghost online :: all systems nominal")
 	} else {
-		fmt.Fprintf(output, ">> ghost offline :: %d critical errors detected\n", errors)
+		fmt.Fprintf(output, ">> ghost offline :: %d critical errors detected\n", errorCount)
 	}
 
 	return nil

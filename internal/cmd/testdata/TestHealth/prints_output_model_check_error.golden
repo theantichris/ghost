@@ -8,6 +8,6 @@ SYSTEM CONFIG
 
 NEURAL LINK STATUS
   ✗ ollama api CONNECTION FAILED: failed to get API response
-  ✗ model test:model not loaded
+  ✗ model test:model not loaded: failed to get API response
 
 >> ghost offline :: 2 critical errors detected
