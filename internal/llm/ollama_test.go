@@ -265,9 +265,15 @@ func TestShow(t *testing.T) {
 			httpStatus: http.StatusOK,
 		},
 		{
-			name:       "returns API error",
+			name:       "returns not found error",
 			model:      "default:model",
 			httpStatus: http.StatusNotFound,
+			isError:    true,
+		},
+		{
+			name:       "returns API error",
+			model:      "default:model",
+			httpStatus: http.StatusBadGateway,
 			isError:    true,
 		},
 	}

@@ -3,6 +3,7 @@ package llm
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/carlmjohnson/requests"
@@ -153,6 +154,10 @@ func (ollama Ollama) Show(ctx context.Context, model string) error {
 		Fetch(ctx)
 
 	if err != nil {
+		if requests.HasStatusErr(err, http.StatusNotFound) {
+			return fmt.Errorf("%w: %w", ErrModelNotFound, err)
+		}
+
 		return fmt.Errorf("%w: %w", ErrOllama, err)
 	}
 
