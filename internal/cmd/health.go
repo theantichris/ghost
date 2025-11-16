@@ -45,7 +45,7 @@ var health = func(ctx context.Context, cmd *cli.Command) error {
 		fmt.Fprintf(output, "  ◆ model %s active\n\n", model)
 	} else {
 		errors++
-		fmt.Fprintf(output, "  ✗ model %s not loaded: %s\n\n", model, err.Error())
+		fmt.Fprintf(output, "  ✗ model %s not loaded\n\n", model)
 	}
 
 	if errors == 0 {
