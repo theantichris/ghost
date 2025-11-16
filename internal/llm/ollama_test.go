@@ -122,9 +122,18 @@ func TestGenerate(t *testing.T) {
 			systemPrompt: "test system prompt",
 			prompt:       "test user prompt",
 			images:       []string{},
-			httpStatus:   http.StatusNotFound,
+			httpStatus:   http.StatusBadRequest,
 			isError:      true,
 			err:          ErrOllama,
+		},
+		{
+			name:         "returns 404 error",
+			systemPrompt: "test system prompt",
+			prompt:       "test user prompt",
+			images:       []string{},
+			httpStatus:   http.StatusNotFound,
+			isError:      true,
+			err:          ErrModelNotFound,
 		},
 	}
 

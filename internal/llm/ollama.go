@@ -111,6 +111,10 @@ func (ollama Ollama) Generate(ctx context.Context, systemPrompt, prompt string, 
 		Fetch(ctx)
 
 	if err != nil {
+		if requests.HasStatusErr(err, http.StatusNotFound) {
+			return "", fmt.Errorf("%w: %w", ErrModelNotFound, err)
+		}
+
 		return "", fmt.Errorf("%w: %w", ErrOllama, err)
 	}
 
