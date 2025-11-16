@@ -72,6 +72,12 @@ func TestHealth(t *testing.T) {
 			systemPrompt: "You are Ghost, a cyberpunk AI assistant",
 		},
 		{
+			name:         "prints output with empty system prompt",
+			llmClient:    llm.MockLLMClient{},
+			configFile:   "",
+			systemPrompt: "",
+		},
+		{
 			name: "prints output for version error with model success",
 			llmClient: llm.MockLLMClient{
 				VersionFunc: func(ctx context.Context) (string, error) {

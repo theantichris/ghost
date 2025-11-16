@@ -29,7 +29,12 @@ var health = func(ctx context.Context, cmd *cli.Command) error {
 	fmt.Fprintf(output, "  ◆ host: %s\n", host)
 	fmt.Fprintf(output, "  ◆ model: %s\n", model)
 	fmt.Fprintf(output, "  ◆ config: %s\n", configFile.SourceURI())
-	fmt.Fprintf(output, "  ◆ system prompt: %s\n\n", systemPrompt)
+
+	if systemPrompt == "" {
+		fmt.Fprint(output, "  ◆ system prompt: empty\n\n")
+	} else {
+		fmt.Fprintf(output, "  ◆ system prompt: %s\n\n", systemPrompt)
+	}
 
 	fmt.Fprintln(output, "NEURAL LINK STATUS")
 

@@ -4,7 +4,7 @@ SYSTEM CONFIG
   ◆ host: http://localhost:11434
   ◆ model: test:model
   ◆ config: /home/.config/ghost/config.toml
-  ◆ system prompt: 
+  ◆ system prompt: empty
 
 NEURAL LINK STATUS
   ◆ ollama api CONNECTED [v]
