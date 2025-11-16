@@ -16,10 +16,12 @@ StringPtrSourcer
 StringSourcer
 TODO
 TODOs
+api
 base64
 baseURL
 camelCase
 commandList
+e2e
 errorWrite
 funcs
 handleLLMRequest

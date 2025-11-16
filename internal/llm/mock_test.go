@@ -90,7 +90,7 @@ func TestMockClientShow(t *testing.T) {
 	t.Run("mocks the Show function", func(t *testing.T) {
 		t.Parallel()
 
-		mockShow := func(ctx context.Context) error {
+		mockShow := func(ctx context.Context, model string) error {
 			return nil
 		}
 
@@ -98,7 +98,7 @@ func TestMockClientShow(t *testing.T) {
 			ShowFunc: mockShow,
 		}
 
-		if err := llmClient.Show(context.Background()); err != nil {
+		if err := llmClient.Show(context.Background(), "default:model"); err != nil {
 			t.Errorf("expect no error, got %v", err)
 		}
 
@@ -113,7 +113,7 @@ func TestMockClientShow(t *testing.T) {
 			Error: llmError,
 		}
 
-		if err := llmClient.Show(context.Background()); err == nil {
+		if err := llmClient.Show(context.Background(), "default:model"); err == nil {
 			t.Errorf("expected error, got nil")
 		}
 	})

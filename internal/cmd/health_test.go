@@ -48,7 +48,7 @@ func TestHealth(t *testing.T) {
 		{
 			name: "prints output for model check",
 			llmClient: llm.MockLLMClient{
-				ShowFunc: func(ctx context.Context) error {
+				ShowFunc: func(ctx context.Context, model string) error {
 					return nil
 				},
 			},
@@ -71,7 +71,7 @@ func TestHealth(t *testing.T) {
 				VersionFunc: func(ctx context.Context) (string, error) {
 					return "", llm.ErrOllama
 				},
-				ShowFunc: func(ctx context.Context) error {
+				ShowFunc: func(ctx context.Context, model string) error {
 					return nil
 				},
 			},
@@ -82,7 +82,7 @@ func TestHealth(t *testing.T) {
 				VersionFunc: func(ctx context.Context) (string, error) {
 					return "0.12.6", nil
 				},
-				ShowFunc: func(ctx context.Context) error {
+				ShowFunc: func(ctx context.Context, model string) error {
 					return llm.ErrOllama
 				},
 			},

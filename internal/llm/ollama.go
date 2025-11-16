@@ -138,13 +138,13 @@ func (ollama Ollama) Version(ctx context.Context) (string, error) {
 	return response.Version, nil
 }
 
-// Show calls the /api/show endpoint to verify the configured model exists and is accessible.
+// Show calls the /api/show endpoint to verify the model exists and is accessible.
 // Returns an error if the model is not found or the API request fails.
-func (ollama Ollama) Show(ctx context.Context) error {
+func (ollama Ollama) Show(ctx context.Context, model string) error {
 	ollama.logger.Debug("sending show request to Ollama API", "url", ollama.showURL)
 
 	request := showRequest{
-		Model: ollama.defaultModel,
+		Model: model,
 	}
 
 	err := requests.

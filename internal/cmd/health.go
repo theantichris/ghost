@@ -41,7 +41,7 @@ var health = func(ctx context.Context, cmd *cli.Command) error {
 		fmt.Fprintf(output, "  ✗ ollama api CONNECTION FAILED: %s\n", err.Error())
 	}
 
-	if err = llmClient.Show(ctx); err == nil {
+	if err = llmClient.Show(ctx, model); err == nil {
 		fmt.Fprintf(output, "  ◆ model %s active\n\n", model)
 	} else {
 		errors++
