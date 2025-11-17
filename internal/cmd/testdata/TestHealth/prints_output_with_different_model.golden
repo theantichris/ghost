@@ -3,7 +3,7 @@
 SYSTEM CONFIG
   ◆ host: http://localhost:11434
   ◆ model: codellama:13b
-  ◆ config file not loaded: stat : no such file or directory
+  ◆ config file not loaded: using defaults
   ◆ system prompt: empty
 
 NEURAL LINK STATUS

@@ -33,7 +33,7 @@ var health = func(ctx context.Context, cmd *cli.Command) error {
 	if _, err := os.Stat(configFile.SourceURI()); err == nil {
 		fmt.Fprintf(output, "  ◆ config loaded: %s\n", configFile.SourceURI())
 	} else {
-		fmt.Fprintf(output, "  ◆ config file not loaded: %s\n", err)
+		fmt.Fprint(output, "  ◆ config file not loaded: using defaults\n")
 	}
 
 	if systemPrompt == "" {
