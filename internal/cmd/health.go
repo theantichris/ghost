@@ -2,8 +2,10 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
+	"os"
 
 	"github.com/theantichris/ghost/internal/llm"
 	altsrc "github.com/urfave/cli-altsrc/v3"
@@ -20,15 +22,25 @@ var health = func(ctx context.Context, cmd *cli.Command) error {
 	systemPrompt := cmd.String("system")
 	configFile := cmd.Root().Metadata["configFile"].(altsrc.StringSourcer)
 
-	errors := 0
+	errorCount := 0
 
 	fmt.Fprint(output, ">> initializing ghost diagnostics...\n\n")
 
 	fmt.Fprintln(output, "SYSTEM CONFIG")
 	fmt.Fprintf(output, "  ◆ host: %s\n", host)
 	fmt.Fprintf(output, "  ◆ model: %s\n", model)
-	fmt.Fprintf(output, "  ◆ config: %s\n", configFile.SourceURI())
-	fmt.Fprintf(output, "  ◆ system prompt: %s\n\n", systemPrompt)
+
+	if _, err := os.Stat(configFile.SourceURI()); err == nil {
+		fmt.Fprintf(output, "  ◆ config loaded: %s\n", configFile.SourceURI())
+	} else {
+		fmt.Fprint(output, "  ◆ config file not loaded: using defaults\n")
+	}
+
+	if systemPrompt == "" {
+		fmt.Fprint(output, "  ◆ system prompt: empty\n\n")
+	} else {
+		fmt.Fprintf(output, "  ◆ system prompt: %s\n\n", systemPrompt)
+	}
 
 	fmt.Fprintln(output, "NEURAL LINK STATUS")
 
@@ -37,21 +49,26 @@ var health = func(ctx context.Context, cmd *cli.Command) error {
 	if err == nil {
 		fmt.Fprintf(output, "  ◆ ollama api CONNECTED [v%s]\n", version)
 	} else {
-		errors++
+		errorCount++
 		fmt.Fprintf(output, "  ✗ ollama api CONNECTION FAILED: %s\n", err.Error())
 	}
 
-	if err = llmClient.Show(ctx); err == nil {
+	if err = llmClient.Show(ctx, model); err == nil {
 		fmt.Fprintf(output, "  ◆ model %s active\n\n", model)
 	} else {
-		errors++
-		fmt.Fprintf(output, "  ✗ model %s not loaded: %s\n\n", model, err.Error())
+		errorCount++
+
+		if errors.Is(err, llm.ErrModelNotFound) {
+			fmt.Fprintf(output, "  ✗ model %s not loaded: pull model\n\n", model)
+		} else {
+			fmt.Fprintf(output, "  ✗ model %s not loaded: %s\n\n", model, err)
+		}
 	}
 
-	if errors == 0 {
+	if errorCount == 0 {
 		fmt.Fprintln(output, ">> ghost online :: all systems nominal")
 	} else {
-		fmt.Fprintf(output, ">> ghost offline :: %d critical errors detected\n", errors)
+		fmt.Fprintf(output, ">> ghost offline :: %d critical errors detected\n", errorCount)
 	}
 
 	return nil

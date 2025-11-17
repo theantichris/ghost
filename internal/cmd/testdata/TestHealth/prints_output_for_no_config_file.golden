@@ -3,8 +3,8 @@
 SYSTEM CONFIG
   ◆ host: http://localhost:11434
   ◆ model: test:model
-  ◆ config: 
-  ◆ system prompt: 
+  ◆ config file not loaded: using defaults
+  ◆ system prompt: empty
 
 NEURAL LINK STATUS
   ◆ ollama api CONNECTED [v]

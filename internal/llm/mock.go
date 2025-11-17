@@ -9,7 +9,7 @@ type MockLLMClient struct {
 	Error        error
 	GenerateFunc func(ctx context.Context, systemPrompt, userPrompt string, images []string) (string, error)
 	VersionFunc  func(ctx context.Context) (string, error)
-	ShowFunc     func(ctx context.Context) error
+	ShowFunc     func(ctx context.Context, model string) error
 }
 
 // Generate mocks the Generate method by calling GenerateFunc if set, returning Error if set, or returning an empty string.
@@ -39,9 +39,9 @@ func (llm MockLLMClient) Version(ctx context.Context) (string, error) {
 }
 
 // Show mocks the Show method by calling ShowFunc if set, returning Error if set, or returning nil.
-func (llm MockLLMClient) Show(ctx context.Context) error {
+func (llm MockLLMClient) Show(ctx context.Context, model string) error {
 	if llm.ShowFunc != nil {
-		return llm.ShowFunc(ctx)
+		return llm.ShowFunc(ctx, model)
 	}
 
 	if llm.Error != nil {

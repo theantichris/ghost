@@ -7,7 +7,7 @@ SYSTEM CONFIG
   ◆ system prompt: empty
 
 NEURAL LINK STATUS
-  ◆ ollama api CONNECTED [v0.12.6]
-  ◆ model test:model active
+  ✗ ollama api CONNECTION FAILED: model not found
+  ✗ model test:model not loaded: pull model
 
->> ghost online :: all systems nominal
+>> ghost offline :: 2 critical errors detected

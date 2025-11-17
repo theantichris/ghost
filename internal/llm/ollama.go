@@ -3,6 +3,7 @@ package llm
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/carlmjohnson/requests"
@@ -110,6 +111,10 @@ func (ollama Ollama) Generate(ctx context.Context, systemPrompt, prompt string, 
 		Fetch(ctx)
 
 	if err != nil {
+		if requests.HasStatusErr(err, http.StatusNotFound) {
+			return "", fmt.Errorf("%w: %w", ErrModelNotFound, err)
+		}
+
 		return "", fmt.Errorf("%w: %w", ErrOllama, err)
 	}
 
@@ -138,13 +143,13 @@ func (ollama Ollama) Version(ctx context.Context) (string, error) {
 	return response.Version, nil
 }
 
-// Show calls the /api/show endpoint to verify the configured model exists and is accessible.
+// Show calls the /api/show endpoint to verify the model exists and is accessible.
 // Returns an error if the model is not found or the API request fails.
-func (ollama Ollama) Show(ctx context.Context) error {
+func (ollama Ollama) Show(ctx context.Context, model string) error {
 	ollama.logger.Debug("sending show request to Ollama API", "url", ollama.showURL)
 
 	request := showRequest{
-		Model: ollama.defaultModel,
+		Model: model,
 	}
 
 	err := requests.
@@ -153,6 +158,10 @@ func (ollama Ollama) Show(ctx context.Context) error {
 		Fetch(ctx)
 
 	if err != nil {
+		if requests.HasStatusErr(err, http.StatusNotFound) {
+			return fmt.Errorf("%w: %w", ErrModelNotFound, err)
+		}
+
 		return fmt.Errorf("%w: %w", ErrOllama, err)
 	}
 

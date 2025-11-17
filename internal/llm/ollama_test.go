@@ -122,9 +122,18 @@ func TestGenerate(t *testing.T) {
 			systemPrompt: "test system prompt",
 			prompt:       "test user prompt",
 			images:       []string{},
-			httpStatus:   http.StatusNotFound,
+			httpStatus:   http.StatusBadRequest,
 			isError:      true,
 			err:          ErrOllama,
+		},
+		{
+			name:         "returns 404 error",
+			systemPrompt: "test system prompt",
+			prompt:       "test user prompt",
+			images:       []string{},
+			httpStatus:   http.StatusNotFound,
+			isError:      true,
+			err:          ErrModelNotFound,
 		},
 	}
 
@@ -255,16 +264,25 @@ func TestVersion(t *testing.T) {
 func TestShow(t *testing.T) {
 	tests := []struct {
 		name       string
+		model      string
 		httpStatus int
 		isError    bool
 	}{
 		{
 			name:       "returns ok for model found",
+			model:      "default:model",
 			httpStatus: http.StatusOK,
 		},
 		{
-			name:       "returns API error",
+			name:       "returns not found error",
+			model:      "default:model",
 			httpStatus: http.StatusNotFound,
+			isError:    true,
+		},
+		{
+			name:       "returns API error",
+			model:      "default:model",
+			httpStatus: http.StatusBadGateway,
 			isError:    true,
 		},
 	}
@@ -294,7 +312,7 @@ func TestShow(t *testing.T) {
 				t.Fatalf("expect no error, got %v", err)
 			}
 
-			err = ollama.Show(context.Background())
+			err = ollama.Show(context.Background(), tt.model)
 
 			if tt.isError && err == nil {
 				t.Error("expected error, got nil")

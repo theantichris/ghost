@@ -12,7 +12,7 @@ type LLMClient interface {
 	// Returns an error if the API request fails.
 	Version(ctx context.Context) (string, error)
 
-	// Show validates that the configured model exists and is accessible on the OpenAI API server.
+	// Show validates that the model exists and is accessible on the OpenAI API server.
 	// Returns an error if the model is not found or the API request fails.
-	Show(ctx context.Context) error
+	Show(ctx context.Context, model string) error
 }

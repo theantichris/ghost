@@ -48,7 +48,7 @@ func TestHealth(t *testing.T) {
 		{
 			name: "prints output for model check",
 			llmClient: llm.MockLLMClient{
-				ShowFunc: func(ctx context.Context) error {
+				ShowFunc: func(ctx context.Context, model string) error {
 					return nil
 				},
 			},
@@ -60,10 +60,22 @@ func TestHealth(t *testing.T) {
 			},
 		},
 		{
+			name: "prints output model not found check error",
+			llmClient: llm.MockLLMClient{
+				Error: llm.ErrModelNotFound,
+			},
+		},
+		{
 			name:         "prints output with system prompt configured",
 			llmClient:    llm.MockLLMClient{},
 			configFile:   "",
 			systemPrompt: "You are Ghost, a cyberpunk AI assistant",
+		},
+		{
+			name:         "prints output with empty system prompt",
+			llmClient:    llm.MockLLMClient{},
+			configFile:   "",
+			systemPrompt: "",
 		},
 		{
 			name: "prints output for version error with model success",
@@ -71,7 +83,7 @@ func TestHealth(t *testing.T) {
 				VersionFunc: func(ctx context.Context) (string, error) {
 					return "", llm.ErrOllama
 				},
-				ShowFunc: func(ctx context.Context) error {
+				ShowFunc: func(ctx context.Context, model string) error {
 					return nil
 				},
 			},
@@ -82,7 +94,7 @@ func TestHealth(t *testing.T) {
 				VersionFunc: func(ctx context.Context) (string, error) {
 					return "0.12.6", nil
 				},
-				ShowFunc: func(ctx context.Context) error {
+				ShowFunc: func(ctx context.Context, model string) error {
 					return llm.ErrOllama
 				},
 			},
