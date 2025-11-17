@@ -3,7 +3,7 @@
 SYSTEM CONFIG
   ◆ host: http://remote:11434
   ◆ model: llama3.1:70b
-  ◆ config: /custom/path/config.toml
+  ◆ config file not loaded: stat /custom/path/config.toml: no such file or directory
   ◆ system prompt: Custom system prompt
 
 NEURAL LINK STATUS

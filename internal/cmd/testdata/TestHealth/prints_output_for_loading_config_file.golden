@@ -3,7 +3,7 @@
 SYSTEM CONFIG
   ◆ host: http://localhost:11434
   ◆ model: test:model
-  ◆ config: /home/.config/ghost/config.toml
+  ◆ config file not loaded: stat /home/.config/ghost/config.toml: no such file or directory
   ◆ system prompt: empty
 
 NEURAL LINK STATUS

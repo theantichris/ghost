@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 
 	"github.com/theantichris/ghost/internal/llm"
 	altsrc "github.com/urfave/cli-altsrc/v3"
@@ -28,7 +29,12 @@ var health = func(ctx context.Context, cmd *cli.Command) error {
 	fmt.Fprintln(output, "SYSTEM CONFIG")
 	fmt.Fprintf(output, "  ◆ host: %s\n", host)
 	fmt.Fprintf(output, "  ◆ model: %s\n", model)
-	fmt.Fprintf(output, "  ◆ config: %s\n", configFile.SourceURI())
+
+	if _, err := os.Stat(configFile.SourceURI()); err == nil {
+		fmt.Fprintf(output, "  ◆ config loaded: %s\n", configFile.SourceURI())
+	} else {
+		fmt.Fprintf(output, "  ◆ config file not loaded: %s\n", err)
+	}
 
 	if systemPrompt == "" {
 		fmt.Fprint(output, "  ◆ system prompt: empty\n\n")
