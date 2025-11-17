@@ -19,5 +19,6 @@ var (
 	// ErrOllama indicates the Ollama API failed to return a valid response.
 	ErrOllama = exitcode.New(errors.New("failed to get API response"), exitcode.ExUnavailable)
 
+	// ErrModelNotFound indicates the requested model is not available.
 	ErrModelNotFound = exitcode.New(errors.New("model not found"), exitcode.ExUnavailable)
 )

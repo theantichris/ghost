@@ -1,5 +1,6 @@
 ErrConfigFile
 ErrInput
+ErrModelNotFound
 ErrNoDefaultModel
 ErrNoHostURL
 ErrNoPrompt
