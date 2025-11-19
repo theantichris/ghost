@@ -1,13 +1,16 @@
 >> initializing ghost diagnostics...
 
 SYSTEM CONFIG
-  ◆ host: http://remote:11434
-  ◆ model: llama3.1:70b
   ◆ config file not loaded: using defaults
+  ◆ host: http://remote:11434
+  ◆ chat model: llama3.1:70b
+  ◆ vision model: 
   ◆ system prompt: Custom system prompt
+  ◆ vision system prompt: empty
 
 NEURAL LINK STATUS
   ◆ ollama api CONNECTED [v]
-  ◆ model llama3.1:70b active
+  ◆ chat model llama3.1:70b ACTIVE
+  ◆ vision model  ACTIVE
 
 >> ghost online :: all systems nominal
