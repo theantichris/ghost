@@ -11,6 +11,6 @@ SYSTEM CONFIG
 NEURAL LINK STATUS
   ✗ ollama api CONNECTION FAILED: model not found
   ✗ chat model test:model NOT LOADED: pull model
-  ✗ vision model test:model NOT LOADED: pull model
+  ✗ vision model  NOT LOADED: pull model
 
 >> ghost offline :: 3 critical errors detected
