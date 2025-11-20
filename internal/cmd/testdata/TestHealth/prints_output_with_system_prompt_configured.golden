@@ -1,13 +1,16 @@
 >> initializing ghost diagnostics...
 
 SYSTEM CONFIG
-  ◆ host: http://localhost:11434
-  ◆ model: test:model
   ◆ config file not loaded: using defaults
+  ◆ host: http://localhost:11434
+  ◆ chat model: test:model
+  ◆ vision model: 
   ◆ system prompt: You are Ghost, a cyberpunk AI assistant
+  ◆ vision system prompt: empty
 
 NEURAL LINK STATUS
   ◆ ollama api CONNECTED [v]
-  ◆ model test:model active
+  ◆ chat model test:model ACTIVE
+  ◆ vision model  ACTIVE
 
 >> ghost online :: all systems nominal

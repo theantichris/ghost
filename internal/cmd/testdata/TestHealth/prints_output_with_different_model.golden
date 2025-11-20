@@ -1,13 +1,16 @@
 >> initializing ghost diagnostics...
 
 SYSTEM CONFIG
-  ◆ host: http://localhost:11434
-  ◆ model: codellama:13b
   ◆ config file not loaded: using defaults
+  ◆ host: http://localhost:11434
+  ◆ chat model: codellama:13b
+  ◆ vision model: 
   ◆ system prompt: empty
+  ◆ vision system prompt: empty
 
 NEURAL LINK STATUS
   ◆ ollama api CONNECTED [v]
-  ◆ model codellama:13b active
+  ◆ chat model codellama:13b ACTIVE
+  ◆ vision model  ACTIVE
 
 >> ghost online :: all systems nominal

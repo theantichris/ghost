@@ -1,13 +1,16 @@
 >> initializing ghost diagnostics...
 
 SYSTEM CONFIG
-  ◆ host: http://localhost:11434
-  ◆ model: test:model
   ◆ config file not loaded: using defaults
+  ◆ host: http://localhost:11434
+  ◆ chat model: test:model
+  ◆ vision model: 
   ◆ system prompt: empty
+  ◆ vision system prompt: empty
 
 NEURAL LINK STATUS
   ✗ ollama api CONNECTION FAILED: failed to get API response
-  ◆ model test:model active
+  ◆ chat model test:model ACTIVE
+  ◆ vision model  ACTIVE
 
 >> ghost offline :: 1 critical errors detected

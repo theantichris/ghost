@@ -18,8 +18,10 @@ var health = func(ctx context.Context, cmd *cli.Command) error {
 	output := cmd.Root().Metadata["output"].(io.Writer)
 
 	host := cmd.String("host")
-	model := cmd.String("model")
+	chatModel := cmd.String("model")
+	visionModel := cmd.String("vision-model")
 	systemPrompt := cmd.String("system")
+	visionSystemPrompt := cmd.String("vision-system")
 	configFile := cmd.Root().Metadata["configFile"].(altsrc.StringSourcer)
 
 	errorCount := 0
@@ -27,8 +29,6 @@ var health = func(ctx context.Context, cmd *cli.Command) error {
 	fmt.Fprint(output, ">> initializing ghost diagnostics...\n\n")
 
 	fmt.Fprintln(output, "SYSTEM CONFIG")
-	fmt.Fprintf(output, "  ◆ host: %s\n", host)
-	fmt.Fprintf(output, "  ◆ model: %s\n", model)
 
 	if _, err := os.Stat(configFile.SourceURI()); err == nil {
 		fmt.Fprintf(output, "  ◆ config loaded: %s\n", configFile.SourceURI())
@@ -36,10 +36,20 @@ var health = func(ctx context.Context, cmd *cli.Command) error {
 		fmt.Fprint(output, "  ◆ config file not loaded: using defaults\n")
 	}
 
+	fmt.Fprintf(output, "  ◆ host: %s\n", host)
+	fmt.Fprintf(output, "  ◆ chat model: %s\n", chatModel)
+	fmt.Fprintf(output, "  ◆ vision model: %s\n", visionModel)
+
 	if systemPrompt == "" {
-		fmt.Fprint(output, "  ◆ system prompt: empty\n\n")
+		fmt.Fprint(output, "  ◆ system prompt: empty\n")
 	} else {
-		fmt.Fprintf(output, "  ◆ system prompt: %s\n\n", systemPrompt)
+		fmt.Fprintf(output, "  ◆ system prompt: %s\n", systemPrompt)
+	}
+
+	if visionSystemPrompt == "" {
+		fmt.Fprint(output, "  ◆ vision system prompt: empty\n\n")
+	} else {
+		fmt.Fprintf(output, "  ◆ vision system prompt: %s\n\n", visionSystemPrompt)
 	}
 
 	fmt.Fprintln(output, "NEURAL LINK STATUS")
@@ -53,15 +63,27 @@ var health = func(ctx context.Context, cmd *cli.Command) error {
 		fmt.Fprintf(output, "  ✗ ollama api CONNECTION FAILED: %s\n", err.Error())
 	}
 
-	if err = llmClient.Show(ctx, model); err == nil {
-		fmt.Fprintf(output, "  ◆ model %s active\n\n", model)
+	if err = llmClient.Show(ctx, chatModel); err == nil {
+		fmt.Fprintf(output, "  ◆ chat model %s ACTIVE\n", chatModel)
 	} else {
 		errorCount++
 
 		if errors.Is(err, llm.ErrModelNotFound) {
-			fmt.Fprintf(output, "  ✗ model %s not loaded: pull model\n\n", model)
+			fmt.Fprintf(output, "  ✗ chat model %s NOT LOADED: pull model\n", chatModel)
 		} else {
-			fmt.Fprintf(output, "  ✗ model %s not loaded: %s\n\n", model, err)
+			fmt.Fprintf(output, "  ✗ chat model %s NOT LOADED: %s\n", chatModel, err)
+		}
+	}
+
+	if err = llmClient.Show(ctx, visionModel); err == nil {
+		fmt.Fprintf(output, "  ◆ vision model %s ACTIVE\n\n", visionModel)
+	} else {
+		errorCount++
+
+		if errors.Is(err, llm.ErrModelNotFound) {
+			fmt.Fprintf(output, "  ✗ vision model %s NOT LOADED: pull model\n\n", visionModel)
+		} else {
+			fmt.Fprintf(output, "  ✗ vision model %s NOT LOADED: %s\n\n", visionModel, err)
 		}
 	}
 

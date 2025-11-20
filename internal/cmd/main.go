@@ -73,7 +73,7 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 				Name:     "vision-system",
 				Usage:    "the system prompt to override the vision model",
 				Value:    "",
-				Sources:  cli.NewValueSourceChain(toml.TOML("vision.system", configFile)),
+				Sources:  cli.NewValueSourceChain(toml.TOML("vision.system_prompt", configFile)),
 				OnlyOnce: true,
 			},
 			&cli.StringFlag{
