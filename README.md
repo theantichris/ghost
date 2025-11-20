@@ -114,44 +114,14 @@ ghost health
 
 The health command performs comprehensive system checks:
 
-- **System Configuration**: Displays active host, model, and config file location
+- **System Configuration**: Displays config file status, host, chat model,
+ vision model, and system prompts
 - **Neural Link Status**: Verifies Ollama API connectivity and version
-- **Model Validation**: Confirms the configured model is loaded and available
+- **Model Validation**: Confirms both chat and vision models are loaded and available
 
-#### Example Output (All Systems Nominal)
-
-```text
->> initializing ghost diagnostics...
-
-SYSTEM CONFIG
-  ◆ host: http://localhost:11434
-  ◆ model: llama3.1:8b
-  ◆ config: /home/user/.config/ghost/config.toml
-  ◆ system prompt: You are Ghost, a cyberpunk inspired terminal based assistant.
-
-NEURAL LINK STATUS
-  ◆ ollama api CONNECTED [v0.1.32]
-  ◆ model llama3.1:8b active
-
->> ghost online :: all systems nominal
-```
-
-#### Example Output (Critical Errors)
-
-```text
->> initializing ghost diagnostics...
-
-SYSTEM CONFIG
-  ◆ host: http://localhost:11434
-  ◆ model: llama3.1:8b
-  ◆ config:
-
-NEURAL LINK STATUS
-  ✗ ollama api CONNECTION FAILED: connection refused
-  ✗ model llama3.1:8b not loaded: connection refused
-
->> ghost offline :: 2 critical errors detected
-```
+The command reports the status of both chat and vision models, Ollama API
+connectivity, and displays the current configuration. If issues are detected,
+it provides actionable error messages.
 
 ### Using Custom Configuration
 
@@ -202,7 +172,7 @@ system = "You are Ghost, a cyberpunk inspired terminal based assistant."
 
 [vision]
 model = "qwen2.5vl:7b"
-system = ""
+system_prompt = ""
 prompt = "Analyze the attached image(s)"
 ```
 
