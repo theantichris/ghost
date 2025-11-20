@@ -81,7 +81,7 @@ var health = func(ctx context.Context, cmd *cli.Command) error {
 		errorCount++
 
 		if errors.Is(err, llm.ErrModelNotFound) {
-			fmt.Fprintf(output, "  ✗ vision model %s NOT LOADED: pull model\n\n", chatModel)
+			fmt.Fprintf(output, "  ✗ vision model %s NOT LOADED: pull model\n\n", visionModel)
 		} else {
 			fmt.Fprintf(output, "  ✗ vision model %s NOT LOADED: %s\n\n", visionModel, err)
 		}
