@@ -7,7 +7,7 @@ require (
 	github.com/charmbracelet/log v0.4.2
 	github.com/sebdah/goldie/v2 v2.8.0
 	github.com/urfave/cli-altsrc/v3 v3.1.0
-	github.com/urfave/cli/v3 v3.6.0
+	github.com/urfave/cli/v3 v3.6.1
 )
 
 require (
