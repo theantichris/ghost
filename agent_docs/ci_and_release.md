@@ -64,6 +64,7 @@ Hooks configured in `.pre-commit-config.yaml`:
 - `go-mod-tidy`: Clean up go.mod/go.sum
 - `go-unit-tests`: Run test suite
 - `golangci-lint`: Lint code
+- `go-e2e-tests`: Run E2E tests (requires ollama running)
 - `markdownlint`: Lint markdown files (with `--fix`)
 - `codespell`: Spell check (uses `.harper-dictionary.txt`)
 - `trailing-whitespace`: Remove trailing whitespace (excludes `.golden`)
