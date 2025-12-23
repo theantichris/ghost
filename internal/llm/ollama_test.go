@@ -335,6 +335,11 @@ func TestGetModel(t *testing.T) {
 			name:          "returns default model for no images",
 			expectedModel: "test:model",
 		},
+		{
+			name:          "returns vision model for images",
+			expectedModel: "vision:model",
+			images:        []string{"test-image.png"},
+		},
 	}
 
 	for _, tt := range tests {
