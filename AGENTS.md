@@ -70,6 +70,12 @@ go test ./...
 go test -v ./internal/cmd -run TestName
 ```
 
+**Run E2E tests**:
+
+```bash
+go test -tags=e2e -v .
+```
+
 **Update golden files**:
 
 ```bash

@@ -22,6 +22,9 @@ go test -v ./internal/cmd -run TestName
 # Run specific subtest
 go test -v ./internal/cmd -run TestName/subtest_name
 
+# Run E2E tests (requires ollama in PATH)
+go test -tags=e2e -v .
+
 # Update golden files
 go test -update
 ```
