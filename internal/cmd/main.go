@@ -88,7 +88,7 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 				Usage: "path to an image (can be used multiple times)",
 			},
 		},
-		Before: before,
+		Before: beforeHook,
 		Action: func(ctx context.Context, cmd *cli.Command) error {
 			config := config{
 				host:               cmd.String("host"),
@@ -146,7 +146,7 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 }
 
 // before initializes the LLM client and adds it to the root command's metadata.
-var before = func(ctx context.Context, cmd *cli.Command) (context.Context, error) {
+func beforeHook(ctx context.Context, cmd *cli.Command) (context.Context, error) {
 	logger := cmd.Metadata["logger"].(*log.Logger)
 
 	config := llm.Config{

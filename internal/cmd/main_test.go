@@ -45,7 +45,7 @@ func TestBefore(t *testing.T) {
 				},
 			}
 
-			_, err := before(context.Background(), &cmd)
+			_, err := beforeHook(context.Background(), &cmd)
 			if err != nil {
 				t.Fatalf("expected no error, got %v", err)
 			}
