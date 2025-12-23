@@ -168,7 +168,7 @@ func (ollama Ollama) Show(ctx context.Context, model string) error {
 func (ollama Ollama) getModel(imageCount int) string {
 	if imageCount > 0 {
 		return ollama.visionModel
-	} else {
-		return ollama.defaultModel
 	}
+
+	return ollama.defaultModel
 }
