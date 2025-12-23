@@ -324,3 +324,39 @@ func TestShow(t *testing.T) {
 		})
 	}
 }
+
+func TestGetModel(t *testing.T) {
+	tests := []struct {
+		name          string
+		images        []string
+		expectedModel string
+	}{
+		{
+			name:          "returns default model for no images",
+			expectedModel: "test:model",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			logger := log.New(io.Discard)
+
+			config := Config{
+				Host:         "https://test.dev",
+				DefaultModel: "test:model",
+				VisionModel:  "vision:model",
+			}
+
+			ollama, err := NewOllama(config, logger)
+			if err != nil {
+				t.Fatalf("expect no error, got %v", err)
+			}
+
+			actualModel := ollama.getModel(len(tt.images))
+
+			if actualModel != tt.expectedModel {
+				t.Errorf("expected model %s, got %s", tt.expectedModel, actualModel)
+			}
+		})
+	}
+}
