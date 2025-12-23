@@ -18,7 +18,7 @@ import (
 var version = "dev"
 
 // ErrLogger indicates a failure to create or initialize the application logger.
-var ErrLogger = errors.New("failed to create logger")
+var ErrLogger = exitcode.New(errors.New("failed to create logger"), exitcode.ExDefault)
 
 // main initializes and executes the root command (ghost).
 func main() {
