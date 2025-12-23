@@ -5,7 +5,7 @@ SYSTEM CONFIG
   ◆ host: http://remote:11434
   ◆ chat model: llama3.1:70b
   ◆ vision model: 
-  ◆ system prompt: Custom system prompt
+  ◆ system prompt: configured (20 characters)
   ◆ vision system prompt: empty
 
 NEURAL LINK STATUS

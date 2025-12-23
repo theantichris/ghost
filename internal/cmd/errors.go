@@ -16,6 +16,6 @@ var (
 	// ErrNoPrompt indicates a prompt wasn't given as a CLI argument.
 	ErrNoPrompt = exitcode.New(errors.New("no prompt provided"), exitcode.ExNoInput)
 
-	// ErrConfigFile indicates the application could not load the config file.
-	ErrConfigFile = exitcode.New(errors.New("failed to load config file"), exitcode.ExOsFile)
+	// ErrHomeDir indicates the application could not determine the user's home directory.
+	ErrHomeDir = exitcode.New(errors.New("failed to determine home directory"), exitcode.ExOsFile)
 )

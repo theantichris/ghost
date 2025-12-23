@@ -5,7 +5,7 @@ SYSTEM CONFIG
   ◆ host: http://localhost:11434
   ◆ chat model: test:model
   ◆ vision model: 
-  ◆ system prompt: You are Ghost, a cyberpunk AI assistant
+  ◆ system prompt: configured (39 characters)
   ◆ vision system prompt: empty
 
 NEURAL LINK STATUS

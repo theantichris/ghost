@@ -20,11 +20,11 @@ type config struct {
 }
 
 // loadConfigFile attempts to load config.toml from ~/.config/ghost and returns a StringSourcer.
-// If the config file does not exist, it returns an empty StringSourcer without error allowing the application to use default flag values. Returns ErrConfigFile if the home directory cannot be determined.
+// If the config file does not exist, it returns an empty StringSourcer without error allowing the application to use default flag values. Returns ErrHomeDir if the home directory cannot be determined.
 func loadConfigFile(logger *log.Logger) (altsrc.StringSourcer, error) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		return "", fmt.Errorf("%w", ErrConfigFile)
+		return "", fmt.Errorf("%w", ErrHomeDir)
 	}
 
 	configFile := filepath.Join(homeDir, ".config/ghost", "config.toml")

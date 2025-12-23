@@ -14,7 +14,7 @@ import (
 
 // health is the action handler for the health subcommand that displays system diagnostics.
 // It prints the current configuration, checks Ollama API connectivity, verifies API version, and validates that the configured model is available.
-var health = func(ctx context.Context, cmd *cli.Command) error {
+func health(ctx context.Context, cmd *cli.Command) error {
 	output := cmd.Root().Metadata["output"].(io.Writer)
 
 	host := cmd.String("host")
@@ -43,13 +43,13 @@ var health = func(ctx context.Context, cmd *cli.Command) error {
 	if systemPrompt == "" {
 		fmt.Fprint(output, "  ◆ system prompt: empty\n")
 	} else {
-		fmt.Fprintf(output, "  ◆ system prompt: %s\n", systemPrompt)
+		fmt.Fprintf(output, "  ◆ system prompt: configured (%d characters)\n", len(systemPrompt))
 	}
 
 	if visionSystemPrompt == "" {
 		fmt.Fprint(output, "  ◆ vision system prompt: empty\n\n")
 	} else {
-		fmt.Fprintf(output, "  ◆ vision system prompt: %s\n\n", visionSystemPrompt)
+		fmt.Fprintf(output, "  ◆ vision system prompt: configured (%d characters)\n\n", len(visionSystemPrompt))
 	}
 
 	fmt.Fprintln(output, "NEURAL LINK STATUS")

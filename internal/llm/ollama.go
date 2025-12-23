@@ -86,12 +86,7 @@ func NewOllama(config Config, logger *log.Logger) (Ollama, error) {
 // If images are included those are added to the request.
 // Returns ErrOllama wrapped with the underlying error if the API request fails.
 func (ollama Ollama) Generate(ctx context.Context, systemPrompt, prompt string, images []string) (string, error) {
-	var model string
-	if len(images) > 0 {
-		model = ollama.visionModel
-	} else {
-		model = ollama.defaultModel
-	}
+	model := ollama.getModel(len(images))
 
 	request := generateRequest{
 		Model:        model,
@@ -166,4 +161,14 @@ func (ollama Ollama) Show(ctx context.Context, model string) error {
 	}
 
 	return nil
+}
+
+// getModel returns the vision model if image count is greater than 0.
+// Returns default model if image count is 0.
+func (ollama Ollama) getModel(imageCount int) string {
+	if imageCount > 0 {
+		return ollama.visionModel
+	}
+
+	return ollama.defaultModel
 }
