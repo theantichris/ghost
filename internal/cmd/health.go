@@ -43,13 +43,13 @@ func health(ctx context.Context, cmd *cli.Command) error {
 	if systemPrompt == "" {
 		fmt.Fprint(output, "  ◆ system prompt: empty\n")
 	} else {
-		fmt.Fprintf(output, "  ◆ system prompt: %s\n", systemPrompt)
+		fmt.Fprintf(output, "  ◆ system prompt: configured (%d characters)\n", len(systemPrompt))
 	}
 
 	if visionSystemPrompt == "" {
 		fmt.Fprint(output, "  ◆ vision system prompt: empty\n\n")
 	} else {
-		fmt.Fprintf(output, "  ◆ vision system prompt: %s\n\n", visionSystemPrompt)
+		fmt.Fprintf(output, "  ◆ vision system prompt: configured (%d characters)\n\n", len(visionSystemPrompt))
 	}
 
 	fmt.Fprintln(output, "NEURAL LINK STATUS")
