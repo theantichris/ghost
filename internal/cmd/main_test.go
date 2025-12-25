@@ -381,7 +381,7 @@ func TestGenerateResponse(t *testing.T) {
 				return nil
 			}
 
-			result, err := generateResponse(context.Background(), tt.llmClient, tt.systemPrompt, tt.prompt, streamCallback)
+			err := generateResponse(context.Background(), tt.llmClient, tt.systemPrompt, tt.prompt, streamCallback)
 
 			if tt.wantErr {
 				if err == nil {
@@ -395,10 +395,6 @@ func TestGenerateResponse(t *testing.T) {
 
 			if err != nil {
 				t.Fatalf("expected no error, got %v", err)
-			}
-
-			if result != tt.expected {
-				t.Errorf("expected result %q, got %q", tt.expected, result)
 			}
 
 			if tt.wantCalls != nil {

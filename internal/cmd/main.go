@@ -180,38 +180,16 @@ func beforeHook(ctx context.Context, cmd *cli.Command) (context.Context, error) 
 // results to the prompt.
 // The callback is called for each chunk of streamed text.
 func generate(ctx context.Context, prompt string, images []string, config config, llmClient llm.LLMClient, callback func(string) error) error {
-	// If images send a request to analyze them and add the response to the prompt
-	// Don't stream to user
 	if len(images) > 0 {
-		var visionResponse strings.Builder
-
-		err := llmClient.Generate(ctx, config.visionSystemPrompt, config.visionPrompt, images, func(chunk string) error {
-			visionResponse.WriteString(chunk)
-
-			return nil
-		})
-
+		visionAnalysis, err := analyzeImages(ctx, llmClient, config, images)
 		if err != nil {
 			return err
 		}
 
-		prompt = fmt.Sprintf("%s\n\n%s", prompt, visionResponse.String())
+		prompt = fmt.Sprintf("%s\n\n%s", prompt, visionAnalysis)
 	}
 
-	// Send the main request and stream response to user
-	var fullResponse strings.Builder
-
-	err := llmClient.Generate(ctx, config.systemPrompt, prompt, nil, func(chunk string) error {
-		fullResponse.WriteString(chunk)
-
-		return callback(chunk)
-	})
-
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return generateResponse(ctx, llmClient, config.systemPrompt, prompt, callback)
 }
 
 // analyzeImages sends images to the vision model for analysis.
@@ -235,9 +213,8 @@ func analyzeImages(ctx context.Context, llmClient llm.LLMClient, config config, 
 
 // generateResponse returns the response from the LLM and streams it to the user
 // via a callback.
-// Accumulates the response for return value and forwards the chunks to the callback.
-// Returns the complete response text.
-func generateResponse(ctx context.Context, llmClient llm.LLMClient, systemPrompt, prompt string, callback func(string) error) (string, error) {
+// Accumulates the response and forwards the chunks to the callback.
+func generateResponse(ctx context.Context, llmClient llm.LLMClient, systemPrompt, prompt string, callback func(string) error) error {
 	var generateResponse strings.Builder
 
 	err := llmClient.Generate(ctx, systemPrompt, prompt, nil, func(chunk string) error {
@@ -247,10 +224,10 @@ func generateResponse(ctx context.Context, llmClient llm.LLMClient, systemPrompt
 	})
 
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	return generateResponse.String(), nil
+	return nil
 }
 
 // getPipedInput checks for and returns any input piped to the command.
