@@ -14,7 +14,7 @@ import (
 func TestHealth(t *testing.T) {
 	tests := []struct {
 		name         string
-		llmClient    llm.LLMClient
+		llmClient    llm.Client
 		configFile   string
 		host         string
 		model        string
@@ -23,17 +23,17 @@ func TestHealth(t *testing.T) {
 	}{
 		{
 			name:       "prints output for no config file",
-			llmClient:  llm.MockLLMClient{},
+			llmClient:  llm.MockClient{},
 			configFile: "",
 		},
 		{
 			name:       "prints output for loading config file",
-			llmClient:  llm.MockLLMClient{},
+			llmClient:  llm.MockClient{},
 			configFile: "/home/.config/ghost/config.toml",
 		},
 		{
 			name: "prints output for Ollama API version",
-			llmClient: llm.MockLLMClient{
+			llmClient: llm.MockClient{
 				VersionFunc: func(ctx context.Context) (string, error) {
 					return "0.12.6", nil
 				},
@@ -41,13 +41,13 @@ func TestHealth(t *testing.T) {
 		},
 		{
 			name: "prints output for Ollama API error",
-			llmClient: llm.MockLLMClient{
+			llmClient: llm.MockClient{
 				Error: llm.ErrOllama,
 			},
 		},
 		{
 			name: "prints output for model check",
-			llmClient: llm.MockLLMClient{
+			llmClient: llm.MockClient{
 				ShowFunc: func(ctx context.Context, model string) error {
 					return nil
 				},
@@ -55,31 +55,31 @@ func TestHealth(t *testing.T) {
 		},
 		{
 			name: "prints output model check error",
-			llmClient: llm.MockLLMClient{
+			llmClient: llm.MockClient{
 				Error: llm.ErrOllama,
 			},
 		},
 		{
 			name: "prints output model not found check error",
-			llmClient: llm.MockLLMClient{
+			llmClient: llm.MockClient{
 				Error: llm.ErrModelNotFound,
 			},
 		},
 		{
 			name:         "prints output with system prompt configured",
-			llmClient:    llm.MockLLMClient{},
+			llmClient:    llm.MockClient{},
 			configFile:   "",
 			systemPrompt: "You are Ghost, a cyberpunk AI assistant",
 		},
 		{
 			name:         "prints output with empty system prompt",
-			llmClient:    llm.MockLLMClient{},
+			llmClient:    llm.MockClient{},
 			configFile:   "",
 			systemPrompt: "",
 		},
 		{
 			name: "prints output for version error with model success",
-			llmClient: llm.MockLLMClient{
+			llmClient: llm.MockClient{
 				VersionFunc: func(ctx context.Context) (string, error) {
 					return "", llm.ErrOllama
 				},
@@ -90,7 +90,7 @@ func TestHealth(t *testing.T) {
 		},
 		{
 			name: "prints output for version success with model error",
-			llmClient: llm.MockLLMClient{
+			llmClient: llm.MockClient{
 				VersionFunc: func(ctx context.Context) (string, error) {
 					return "0.12.6", nil
 				},
@@ -101,19 +101,19 @@ func TestHealth(t *testing.T) {
 		},
 		{
 			name:       "prints output with remote host",
-			llmClient:  llm.MockLLMClient{},
+			llmClient:  llm.MockClient{},
 			host:       "http://192.168.1.100:11434",
 			configFile: "",
 		},
 		{
 			name:       "prints output with different model",
-			llmClient:  llm.MockLLMClient{},
+			llmClient:  llm.MockClient{},
 			model:      "codellama:13b",
 			configFile: "",
 		},
 		{
 			name:         "prints output with all custom values",
-			llmClient:    llm.MockLLMClient{},
+			llmClient:    llm.MockClient{},
 			configFile:   "/custom/path/config.toml",
 			host:         "http://remote:11434",
 			model:        "llama3.1:70b",

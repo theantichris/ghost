@@ -14,7 +14,7 @@ func TestMockClientGenerate(t *testing.T) {
 			return callback("Hello, chummer!")
 		}
 
-		llmClient := MockLLMClient{
+		llmClient := MockClient{
 			GenerateFunc: mockGenerate,
 		}
 
@@ -38,7 +38,7 @@ func TestMockClientGenerate(t *testing.T) {
 
 		llmError := errors.New("llm client error")
 
-		llmClient := MockLLMClient{
+		llmClient := MockClient{
 			Error: llmError,
 		}
 
@@ -64,7 +64,7 @@ func TestMockClientVersion(t *testing.T) {
 			return "0.12.6", nil
 		}
 
-		llmClient := MockLLMClient{
+		llmClient := MockClient{
 			VersionFunc: mockVersion,
 		}
 
@@ -80,7 +80,7 @@ func TestMockClientVersion(t *testing.T) {
 
 		llmError := errors.New("llm client error")
 
-		llmClient := MockLLMClient{
+		llmClient := MockClient{
 			Error: llmError,
 		}
 
@@ -104,7 +104,7 @@ func TestMockClientShow(t *testing.T) {
 			return nil
 		}
 
-		llmClient := MockLLMClient{
+		llmClient := MockClient{
 			ShowFunc: mockShow,
 		}
 
@@ -119,7 +119,7 @@ func TestMockClientShow(t *testing.T) {
 
 		llmError := errors.New("llm client error")
 
-		llmClient := MockLLMClient{
+		llmClient := MockClient{
 			Error: llmError,
 		}
 

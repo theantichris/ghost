@@ -124,7 +124,7 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 				}
 			}
 
-			llmClient := cmd.Metadata["llmClient"].(llm.LLMClient)
+			llmClient := cmd.Metadata["llmClient"].(llm.Client)
 
 			// Stream callback that writes chunks directly to output
 			streamCallback := func(chunk string) error {
@@ -179,7 +179,7 @@ func beforeHook(ctx context.Context, cmd *cli.Command) (context.Context, error) 
 // If there are images it sends those to the LLM to be analyzed and appends the
 // results to the prompt.
 // The callback is called for each chunk of streamed text.
-func generate(ctx context.Context, prompt string, images []string, config config, llmClient llm.LLMClient, callback func(string) error) error {
+func generate(ctx context.Context, prompt string, images []string, config config, llmClient llm.Client, callback func(string) error) error {
 	if len(images) > 0 {
 		visionAnalysis, err := analyzeImages(ctx, llmClient, config, images)
 		if err != nil {
@@ -195,7 +195,7 @@ func generate(ctx context.Context, prompt string, images []string, config config
 // analyzeImages sends images to the vision model for analysis.
 // The analysis is accumulated silently (not streamed to user).
 // Returns the complete vision analysis text.
-func analyzeImages(ctx context.Context, llmClient llm.LLMClient, config config, images []string) (string, error) {
+func analyzeImages(ctx context.Context, llmClient llm.Client, config config, images []string) (string, error) {
 	var visionResponse strings.Builder
 
 	err := llmClient.Generate(ctx, config.visionSystemPrompt, config.visionPrompt, images, func(chunk string) error {
@@ -214,7 +214,7 @@ func analyzeImages(ctx context.Context, llmClient llm.LLMClient, config config, 
 // generateResponse returns the response from the LLM and streams it to the user
 // via a callback.
 // Accumulates the response and forwards the chunks to the callback.
-func generateResponse(ctx context.Context, llmClient llm.LLMClient, systemPrompt, prompt string, callback func(string) error) error {
+func generateResponse(ctx context.Context, llmClient llm.Client, systemPrompt, prompt string, callback func(string) error) error {
 	var generateResponse strings.Builder
 
 	err := llmClient.Generate(ctx, systemPrompt, prompt, nil, func(chunk string) error {

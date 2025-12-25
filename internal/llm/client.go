@@ -2,8 +2,8 @@ package llm
 
 import "context"
 
-// LLMClient is an interface representing an Ollama API client for LLM operations.
-type LLMClient interface {
+// Client is an interface representing an Ollama API client for LLM operations.
+type Client interface {
 	// Generate sends a system and user prompt to the LLM and streams the response
 	// through the callback.
 	// The callback is called for each chunk of text as it arrives.

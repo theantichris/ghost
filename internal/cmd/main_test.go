@@ -53,11 +53,11 @@ func TestBefore(t *testing.T) {
 			actual := cmd.Metadata["llmClient"]
 
 			if actual == nil {
-				t.Fatalf("expected LLMClient, got nil")
+				t.Fatalf("expected Client, got nil")
 			}
 
-			if _, ok := actual.(llm.LLMClient); !ok {
-				t.Errorf("expected LLM Client to be of type LLMClient, got %v", actual)
+			if _, ok := actual.(llm.Client); !ok {
+				t.Errorf("expected LLM Client to be of type Client, got %v", actual)
 			}
 		})
 	}
@@ -72,7 +72,7 @@ func TestGenerate(t *testing.T) {
 		streamChunks []string
 		wantCalls    []string
 		config       config
-		llmClient    llm.LLMClient
+		llmClient    llm.Client
 		expected     string
 		wantErr      bool
 		Error        error
@@ -84,7 +84,7 @@ func TestGenerate(t *testing.T) {
 			config: config{
 				systemPrompt: "system prompt",
 			},
-			llmClient: llm.MockLLMClient{
+			llmClient: llm.MockClient{
 				GenerateFunc: func(ctx context.Context, systemPrompt string, userPrompt string, images []string, callback func(string) error) error {
 					return callback("this prompt is good")
 				},
@@ -98,7 +98,7 @@ func TestGenerate(t *testing.T) {
 			config: config{
 				systemPrompt: "system prompt",
 			},
-			llmClient: llm.MockLLMClient{
+			llmClient: llm.MockClient{
 				Error: llm.ErrOllama,
 			},
 			wantErr: true,
@@ -113,7 +113,7 @@ func TestGenerate(t *testing.T) {
 				visionSystemPrompt: "vision system prompt",
 				visionPrompt:       "vision prompt",
 			},
-			llmClient: llm.MockLLMClient{
+			llmClient: llm.MockClient{
 				GenerateFunc: func(ctx context.Context, systemPrompt string, userPrompt string, images []string, callback func(string) error) error {
 					return callback("this prompt is good")
 				},
@@ -129,7 +129,7 @@ func TestGenerate(t *testing.T) {
 				visionSystemPrompt: "vision system prompt",
 				visionPrompt:       "vision prompt",
 			},
-			llmClient: llm.MockLLMClient{
+			llmClient: llm.MockClient{
 				Error: llm.ErrOllama,
 			},
 			wantErr: true,
@@ -143,7 +143,7 @@ func TestGenerate(t *testing.T) {
 			config: config{
 				systemPrompt: "system prompt",
 			},
-			llmClient: llm.MockLLMClient{
+			llmClient: llm.MockClient{
 				GenerateFunc: func(ctx context.Context, systemPrompt string, userPrompt string, images []string, callback func(string) error) error {
 					for _, chunk := range []string{"Hello", " ", "World", "!"} {
 						if err := callback(chunk); err != nil {
@@ -165,7 +165,7 @@ func TestGenerate(t *testing.T) {
 				visionSystemPrompt: "vision system prompt",
 				visionPrompt:       "vision prompt",
 			},
-			llmClient: llm.MockLLMClient{
+			llmClient: llm.MockClient{
 				GenerateFunc: func() func(context.Context, string, string, []string, func(string) error) error {
 					callCount := 0
 					return func(ctx context.Context, systemPrompt string, userPrompt string, images []string, callback func(string) error) error {
@@ -237,7 +237,7 @@ func TestAnalyzeImages(t *testing.T) {
 		name        string
 		images      []string
 		config      config
-		llmClient   llm.LLMClient
+		llmClient   llm.Client
 		expected    string
 		wantErr     bool
 		expectedErr error
@@ -249,7 +249,7 @@ func TestAnalyzeImages(t *testing.T) {
 				visionSystemPrompt: "vision system prompt",
 				visionPrompt:       "analyze this",
 			},
-			llmClient: llm.MockLLMClient{
+			llmClient: llm.MockClient{
 				GenerateFunc: func(ctx context.Context, systemPrompt, userPrompt string, images []string, callback func(string) error) error {
 					return callback("This is a cat")
 				},
@@ -263,7 +263,7 @@ func TestAnalyzeImages(t *testing.T) {
 				visionSystemPrompt: "vision system prompt",
 				visionPrompt:       "vision prompt",
 			},
-			llmClient: llm.MockLLMClient{
+			llmClient: llm.MockClient{
 				GenerateFunc: func(ctx context.Context, systemPrompt, userPrompt string, images []string, callback func(string) error) error {
 					chunks := []string{"This ", "is ", "a ", "cat"}
 
@@ -285,7 +285,7 @@ func TestAnalyzeImages(t *testing.T) {
 				visionSystemPrompt: "vision system prompt",
 				visionPrompt:       "vision prompt",
 			},
-			llmClient: llm.MockLLMClient{
+			llmClient: llm.MockClient{
 				Error: llm.ErrOllama,
 			},
 			wantErr:     true,
@@ -325,7 +325,7 @@ func TestGenerateResponse(t *testing.T) {
 		name         string
 		systemPrompt string
 		prompt       string
-		llmClient    llm.LLMClient
+		llmClient    llm.Client
 		wantCalls    []string
 		expected     string
 		wantErr      bool
@@ -335,7 +335,7 @@ func TestGenerateResponse(t *testing.T) {
 			name:         "generates and streams response",
 			systemPrompt: "system prompt",
 			prompt:       "user prompt",
-			llmClient: llm.MockLLMClient{
+			llmClient: llm.MockClient{
 				GenerateFunc: func(ctx context.Context, systemPrompt, userPrompt string, images []string, callback func(string) error) error {
 					return callback("Hello world")
 				},
@@ -347,7 +347,7 @@ func TestGenerateResponse(t *testing.T) {
 			name:         "accumulates and streams multiple chunks",
 			systemPrompt: "system prompt",
 			prompt:       "user prompt",
-			llmClient: llm.MockLLMClient{
+			llmClient: llm.MockClient{
 				GenerateFunc: func(ctx context.Context, systemPrompt, userPrompt string, images []string, callback func(string) error) error {
 					chunks := []string{"Hello", " ", "world", "!"}
 					for _, chunk := range chunks {
@@ -365,7 +365,7 @@ func TestGenerateResponse(t *testing.T) {
 			name:         "returns error from LLM",
 			systemPrompt: "system prompt",
 			prompt:       "user prompt",
-			llmClient: llm.MockLLMClient{
+			llmClient: llm.MockClient{
 				Error: llm.ErrOllama,
 			},
 			wantErr:     true,
