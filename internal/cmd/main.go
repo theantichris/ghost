@@ -90,7 +90,7 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 		},
 		Before: beforeHook,
 		Action: func(ctx context.Context, cmd *cli.Command) error {
-			config := config{
+			generateConfig := config{
 				host:               cmd.String("host"),
 				model:              cmd.String("model"),
 				visionModel:        cmd.String("vision-model"),
@@ -118,6 +118,7 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 			images := cmd.StringSlice("image")
 			if len(images) > 0 {
 				encodedImages, err = encodeImages(images)
+
 				if err != nil {
 					return err
 				}
@@ -132,7 +133,7 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 				return err
 			}
 
-			err = generate(ctx, prompt, encodedImages, config, llmClient, streamCallback)
+			err = generate(ctx, prompt, encodedImages, generateConfig, llmClient, streamCallback)
 			if err != nil {
 				return err
 			}
