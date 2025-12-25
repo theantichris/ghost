@@ -196,10 +196,10 @@ func generate(ctx context.Context, prompt string, images []string, config config
 // The analysis is accumulated silently (not streamed to user).
 // Returns the complete vision analysis text.
 func analyzeImages(ctx context.Context, llmClient llm.Client, config config, images []string) (string, error) {
-	var visionResponse strings.Builder
+	var response strings.Builder
 
 	err := llmClient.Generate(ctx, config.visionSystemPrompt, config.visionPrompt, images, func(chunk string) error {
-		visionResponse.WriteString(chunk)
+		response.WriteString(chunk)
 
 		return nil
 	})
@@ -208,17 +208,17 @@ func analyzeImages(ctx context.Context, llmClient llm.Client, config config, ima
 		return "", err
 	}
 
-	return visionResponse.String(), nil
+	return response.String(), nil
 }
 
 // generateResponse returns the response from the LLM and streams it to the user
 // via a callback.
 // Accumulates the response and forwards the chunks to the callback.
 func generateResponse(ctx context.Context, llmClient llm.Client, systemPrompt, prompt string, callback func(string) error) error {
-	var generateResponse strings.Builder
+	var response strings.Builder
 
 	err := llmClient.Generate(ctx, systemPrompt, prompt, nil, func(chunk string) error {
-		generateResponse.WriteString(chunk)
+		response.WriteString(chunk)
 
 		return callback(chunk)
 	})
