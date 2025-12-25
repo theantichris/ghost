@@ -66,14 +66,16 @@ func TestBefore(t *testing.T) {
 
 func TestGenerate(t *testing.T) {
 	tests := []struct {
-		name      string
-		prompt    string
-		images    []string
-		config    config
-		llmClient llm.LLMClient
-		expected  string
-		isError   bool
-		Error     error
+		name         string
+		prompt       string
+		images       []string
+		streamChunks []string
+		wantCalls    []string
+		config       config
+		llmClient    llm.LLMClient
+		expected     string
+		wantErr      bool
+		Error        error
 	}{
 		{
 			name:   "sends prompt to LLM generate without images",
@@ -83,8 +85,8 @@ func TestGenerate(t *testing.T) {
 				systemPrompt: "system prompt",
 			},
 			llmClient: llm.MockLLMClient{
-				GenerateFunc: func(ctx context.Context, systemPrompt string, userPrompt string, images []string) (string, error) {
-					return "this prompt is good", nil
+				GenerateFunc: func(ctx context.Context, systemPrompt string, userPrompt string, images []string, callback func(string) error) error {
+					return callback("this prompt is good")
 				},
 			},
 			expected: "this prompt is good",
@@ -99,7 +101,7 @@ func TestGenerate(t *testing.T) {
 			llmClient: llm.MockLLMClient{
 				Error: llm.ErrOllama,
 			},
-			isError: true,
+			wantErr: true,
 			Error:   llm.ErrOllama,
 		},
 		{
@@ -112,8 +114,8 @@ func TestGenerate(t *testing.T) {
 				visionPrompt:       "vision prompt",
 			},
 			llmClient: llm.MockLLMClient{
-				GenerateFunc: func(ctx context.Context, systemPrompt string, userPrompt string, images []string) (string, error) {
-					return "this prompt is good", nil
+				GenerateFunc: func(ctx context.Context, systemPrompt string, userPrompt string, images []string, callback func(string) error) error {
+					return callback("this prompt is good")
 				},
 			},
 			expected: "this prompt is good",
@@ -130,26 +132,97 @@ func TestGenerate(t *testing.T) {
 			llmClient: llm.MockLLMClient{
 				Error: llm.ErrOllama,
 			},
-			isError: true,
+			wantErr: true,
 			Error:   llm.ErrOllama,
+		},
+		{
+			name:         "streams text chunks to callback",
+			prompt:       "test prompt",
+			images:       nil,
+			streamChunks: []string{"Hello", " ", "World", "!"},
+			config: config{
+				systemPrompt: "system prompt",
+			},
+			llmClient: llm.MockLLMClient{
+				GenerateFunc: func(ctx context.Context, systemPrompt string, userPrompt string, images []string, callback func(string) error) error {
+					for _, chunk := range []string{"Hello", " ", "World", "!"} {
+						if err := callback(chunk); err != nil {
+							return err
+						}
+					}
+					return nil
+				},
+			},
+			wantCalls: []string{"Hello", " ", "World", "!"},
+			expected:  "Hello World!",
+		},
+		{
+			name:   "handles vision model then chat model streaming",
+			prompt: "describe this",
+			images: []string{"image1"},
+			config: config{
+				systemPrompt:       "system prompt",
+				visionSystemPrompt: "vision system prompt",
+				visionPrompt:       "vision prompt",
+			},
+			llmClient: llm.MockLLMClient{
+				GenerateFunc: func() func(context.Context, string, string, []string, func(string) error) error {
+					callCount := 0
+					return func(ctx context.Context, systemPrompt string, userPrompt string, images []string, callback func(string) error) error {
+						if callCount == 0 {
+							// First call: vision model
+							callCount++
+							return callback("Image analysis")
+						}
+						// Second call: chat model
+						return callback("Final response")
+					}
+				}(),
+			},
+			wantCalls: []string{"Image analysis", "Final response"},
+			expected:  "Final response",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			actual, err := generate(context.Background(), tt.prompt, tt.images, tt.config, tt.llmClient)
+			var calls []string
 
-			if !tt.isError {
+			streamCallback := func(chunk string) error {
+				calls = append(calls, chunk)
+
+				return nil
+			}
+
+			actual, err := generate(context.Background(), tt.prompt, tt.images, tt.config, tt.llmClient, streamCallback)
+
+			if !tt.wantErr {
 				if err != nil {
-					t.Fatalf("expect no error, got %v", err)
+					t.Fatalf("expected no error, got %v", err)
 				}
 
 				if actual != tt.expected {
 					t.Errorf("expected response %q, got %q", tt.expected, actual)
 				}
+
+				if tt.wantCalls != nil {
+					if len(calls) != len(tt.wantCalls) {
+						t.Errorf("expected %d calls, got %d", len(tt.wantCalls), len(calls))
+					}
+
+					for i, want := range tt.wantCalls {
+						if i >= len(calls) {
+							break
+						}
+
+						if calls[i] != want {
+							t.Errorf("callbaack call %d: xpected %q, got %q", i, want, calls[i])
+						}
+					}
+				}
 			}
 
-			if tt.isError {
+			if tt.wantErr {
 				if err == nil {
 					t.Fatalf("expected error, got nil")
 				}

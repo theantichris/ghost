@@ -124,12 +124,20 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 			}
 
 			llmClient := cmd.Metadata["llmClient"].(llm.LLMClient)
-			response, err := generate(ctx, prompt, encodedImages, config, llmClient)
+
+			// Stream callback that writes chunks directly to output
+			streamCallback := func(chunk string) error {
+				_, err := fmt.Fprint(output, chunk)
+
+				return err
+			}
+
+			_, err = generate(ctx, prompt, encodedImages, config, llmClient, streamCallback)
 			if err != nil {
 				return err
 			}
 
-			fmt.Fprintln(output, response)
+			fmt.Fprintln(output)
 
 			return nil
 		},
@@ -169,24 +177,35 @@ func beforeHook(ctx context.Context, cmd *cli.Command) (context.Context, error) 
 // If there is piped input it appends it to the prompt.
 // If there are images it sends those to the LLM to be analyzed and appends the
 // results to the prompt.
-func generate(ctx context.Context, prompt string, images []string, config config, llmClient llm.LLMClient) (string, error) {
-	// If images, send a request to analyze them and add the response to the prompt.
+// The callback is called for each chunk of streamed text.
+func generate(ctx context.Context, prompt string, images []string, config config, llmClient llm.LLMClient, callback func(string) error) (string, error) {
+	var fullResponse strings.Builder
+
+	// Wrapper callback that accumulates response
+	wrappedCallback := func(chunk string) error {
+		fullResponse.WriteString(chunk)
+
+		return callback(chunk)
+	}
+
+	// If images send a request to analyze them and add the response to the prompt
 	if len(images) > 0 {
-		response, err := llmClient.Generate(ctx, config.visionSystemPrompt, config.visionPrompt, images)
+		err := llmClient.Generate(ctx, config.visionSystemPrompt, config.visionPrompt, images, wrappedCallback)
 		if err != nil {
 			return "", err
 		}
 
-		prompt = fmt.Sprintf("%s\n\n%s", prompt, response)
+		prompt = fmt.Sprintf("%s\n\n%s", prompt, fullResponse.String())
+		fullResponse.Reset()
 	}
 
 	// Send the main request.
-	response, err := llmClient.Generate(ctx, config.systemPrompt, prompt, nil)
+	err := llmClient.Generate(ctx, config.systemPrompt, prompt, nil, wrappedCallback)
 	if err != nil {
 		return "", err
 	}
 
-	return response, nil
+	return fullResponse.String(), nil
 }
 
 // getPipedInput checks for and returns any input piped to the command.

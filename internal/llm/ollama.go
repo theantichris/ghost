@@ -2,7 +2,9 @@ package llm
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 
@@ -81,16 +83,17 @@ func NewOllama(config Config, logger *log.Logger) (Ollama, error) {
 	return ollama, nil
 }
 
-// Generate sends a request to /api/generate with the system and prompt and returns
-// the response as a string.
+// Generate sends a request to the Ollama API generate endpoint and streams the
+// response through the callback.
+// The callback is called for each chunk of text as it arrives.
 // If images are included those are added to the request.
 // Returns ErrOllama wrapped with the underlying error if the API request fails.
-func (ollama Ollama) Generate(ctx context.Context, systemPrompt, prompt string, images []string) (string, error) {
+func (ollama Ollama) Generate(ctx context.Context, systemPrompt, prompt string, images []string, callback func(string) error) error {
 	model := ollama.getModel(len(images))
 
 	request := generateRequest{
 		Model:        model,
-		Stream:       false,
+		Stream:       true,
 		SystemPrompt: systemPrompt,
 		Prompt:       prompt,
 		Images:       images,
@@ -98,24 +101,49 @@ func (ollama Ollama) Generate(ctx context.Context, systemPrompt, prompt string, 
 
 	ollama.logger.Debug("sending generate request to Ollama API", "url", ollama.generateURL, "model", model, "request", request)
 
-	var response generateResponse
 	err := requests.
 		URL(ollama.generateURL).
 		BodyJSON(&request).
-		ToJSON(&response).
+		Handle(func(response *http.Response) error {
+			defer func() {
+				_ = response.Body.Close()
+			}()
+
+			decoder := json.NewDecoder(response.Body)
+
+			for {
+				var apiResponse generateResponse
+
+				if err := decoder.Decode(&apiResponse); err != nil {
+					if err == io.EOF {
+						break
+					}
+
+					return err
+				}
+
+				if apiResponse.Response != "" {
+					if err := callback(apiResponse.Response); err != nil {
+						return err
+					}
+				}
+			}
+
+			return nil
+		}).
 		Fetch(ctx)
 
 	if err != nil {
 		if requests.HasStatusErr(err, http.StatusNotFound) {
-			return "", fmt.Errorf("%w: %w", ErrModelNotFound, err)
+			return fmt.Errorf("%w: %w", ErrModelNotFound, err)
 		}
 
-		return "", fmt.Errorf("%w: %w", ErrOllama, err)
+		return fmt.Errorf("%w: %w", ErrOllama, err)
 	}
 
-	ollama.logger.Debug("response received from Ollama API", "response", response)
+	ollama.logger.Debug("streaming complete from Ollama API")
 
-	return response.Response, nil
+	return nil
 }
 
 // Version calls the /api/version endpoint to and returns the version string.

@@ -177,7 +177,11 @@ func TestGenerate(t *testing.T) {
 				t.Fatalf("expect no error, got %v", err)
 			}
 
-			response, err := ollama.Generate(context.Background(), tt.systemPrompt, tt.prompt, tt.images)
+			var response string
+			err = ollama.Generate(context.Background(), tt.systemPrompt, tt.prompt, tt.images, func(chunk string) error {
+				response += chunk
+				return nil
+			})
 
 			if !tt.isError && err != nil {
 				t.Fatalf("expected no error, got %v", err)
