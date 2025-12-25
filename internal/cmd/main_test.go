@@ -213,7 +213,7 @@ func TestGenerate(t *testing.T) {
 						}
 
 						if calls[i] != want {
-							t.Errorf("callbaack call %d: xpected %q, got %q", i, want, calls[i])
+							t.Errorf("callbaack call %d: expected %q, got %q", i, want, calls[i])
 						}
 					}
 				}
