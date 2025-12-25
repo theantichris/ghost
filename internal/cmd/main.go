@@ -132,7 +132,7 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 				return err
 			}
 
-			_, err = generate(ctx, prompt, encodedImages, config, llmClient, streamCallback)
+			err = generate(ctx, prompt, encodedImages, config, llmClient, streamCallback)
 			if err != nil {
 				return err
 			}
@@ -178,7 +178,7 @@ func beforeHook(ctx context.Context, cmd *cli.Command) (context.Context, error) 
 // If there are images it sends those to the LLM to be analyzed and appends the
 // results to the prompt.
 // The callback is called for each chunk of streamed text.
-func generate(ctx context.Context, prompt string, images []string, config config, llmClient llm.LLMClient, callback func(string) error) (string, error) {
+func generate(ctx context.Context, prompt string, images []string, config config, llmClient llm.LLMClient, callback func(string) error) error {
 	// If images send a request to analyze them and add the response to the prompt
 	// Don't stream to user
 	if len(images) > 0 {
@@ -191,7 +191,7 @@ func generate(ctx context.Context, prompt string, images []string, config config
 		})
 
 		if err != nil {
-			return "", err
+			return err
 		}
 
 		prompt = fmt.Sprintf("%s\n\n%s", prompt, visionResponse.String())
@@ -207,10 +207,10 @@ func generate(ctx context.Context, prompt string, images []string, config config
 	})
 
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	return fullResponse.String(), nil
+	return nil
 }
 
 // getPipedInput checks for and returns any input piped to the command.

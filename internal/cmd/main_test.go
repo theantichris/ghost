@@ -195,15 +195,11 @@ func TestGenerate(t *testing.T) {
 				return nil
 			}
 
-			actual, err := generate(context.Background(), tt.prompt, tt.images, tt.config, tt.llmClient, streamCallback)
+			err := generate(context.Background(), tt.prompt, tt.images, tt.config, tt.llmClient, streamCallback)
 
 			if !tt.wantErr {
 				if err != nil {
 					t.Fatalf("expected no error, got %v", err)
-				}
-
-				if actual != tt.expected {
-					t.Errorf("expected response %q, got %q", tt.expected, actual)
 				}
 
 				if tt.wantCalls != nil {
