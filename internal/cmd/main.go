@@ -179,28 +179,33 @@ func beforeHook(ctx context.Context, cmd *cli.Command) (context.Context, error) 
 // results to the prompt.
 // The callback is called for each chunk of streamed text.
 func generate(ctx context.Context, prompt string, images []string, config config, llmClient llm.LLMClient, callback func(string) error) (string, error) {
-	var fullResponse strings.Builder
-
-	// Wrapper callback that accumulates response
-	wrappedCallback := func(chunk string) error {
-		fullResponse.WriteString(chunk)
-
-		return callback(chunk)
-	}
-
 	// If images send a request to analyze them and add the response to the prompt
+	// Don't stream to user
 	if len(images) > 0 {
-		err := llmClient.Generate(ctx, config.visionSystemPrompt, config.visionPrompt, images, wrappedCallback)
+		var visionResponse strings.Builder
+
+		err := llmClient.Generate(ctx, config.visionSystemPrompt, config.visionPrompt, images, func(chunk string) error {
+			visionResponse.WriteString(chunk)
+
+			return nil
+		})
+
 		if err != nil {
 			return "", err
 		}
 
-		prompt = fmt.Sprintf("%s\n\n%s", prompt, fullResponse.String())
-		fullResponse.Reset()
+		prompt = fmt.Sprintf("%s\n\n%s", prompt, visionResponse.String())
 	}
 
-	// Send the main request.
-	err := llmClient.Generate(ctx, config.systemPrompt, prompt, nil, wrappedCallback)
+	// Sent the main request and stream response to user
+	var fullResponse strings.Builder
+
+	err := llmClient.Generate(ctx, config.systemPrompt, prompt, nil, func(chunk string) error {
+		fullResponse.WriteString(chunk)
+
+		return callback(chunk)
+	})
+
 	if err != nil {
 		return "", err
 	}

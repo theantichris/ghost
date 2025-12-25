@@ -174,12 +174,13 @@ func TestGenerate(t *testing.T) {
 							callCount++
 							return callback("Image analysis")
 						}
+
 						// Second call: chat model
 						return callback("Final response")
 					}
 				}(),
 			},
-			wantCalls: []string{"Image analysis", "Final response"},
+			wantCalls: []string{"Final response"},
 			expected:  "Final response",
 		},
 	}
