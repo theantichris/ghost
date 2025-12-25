@@ -198,7 +198,7 @@ func generate(ctx context.Context, prompt string, images []string, config config
 		prompt = fmt.Sprintf("%s\n\n%s", prompt, visionResponse.String())
 	}
 
-	// Sent the main request and stream response to user
+	// Send the main request and stream response to user
 	var fullResponse strings.Builder
 
 	err := llmClient.Generate(ctx, config.systemPrompt, prompt, nil, func(chunk string) error {
