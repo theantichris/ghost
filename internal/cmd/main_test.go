@@ -231,3 +231,91 @@ func TestGenerate(t *testing.T) {
 		})
 	}
 }
+
+func TestAnalyzeImages(t *testing.T) {
+	tests := []struct {
+		name        string
+		images      []string
+		config      config
+		llmClient   llm.LLMClient
+		expected    string
+		wantErr     bool
+		expectedErr error
+	}{
+		{
+			name:   "returns vision analysis",
+			images: []string{"image1.jpg"},
+			config: config{
+				visionSystemPrompt: "vision system prompt",
+				visionPrompt:       "analyze this",
+			},
+			llmClient: llm.MockLLMClient{
+				GenerateFunc: func(ctx context.Context, systemPrompt, userPrompt string, images []string, callback func(string) error) error {
+					return callback("This is a cat")
+				},
+			},
+			expected: "This is a cat",
+		},
+		{
+			name:   "accumulates multiple chunks",
+			images: []string{"image1.png"},
+			config: config{
+				visionSystemPrompt: "vision system prompt",
+				visionPrompt:       "vision prompt",
+			},
+			llmClient: llm.MockLLMClient{
+				GenerateFunc: func(ctx context.Context, systemPrompt, userPrompt string, images []string, callback func(string) error) error {
+					chunks := []string{"This ", "is ", "a ", "cat"}
+
+					for _, chunk := range chunks {
+						if err := callback(chunk); err != nil {
+							return err
+						}
+					}
+
+					return nil
+				},
+			},
+			expected: "This is a cat",
+		},
+		{
+			name:   "returns error from LLM",
+			images: []string{"image1.png"},
+			config: config{
+				visionSystemPrompt: "vision system prompt",
+				visionPrompt:       "vision prompt",
+			},
+			llmClient: llm.MockLLMClient{
+				Error: llm.ErrOllama,
+			},
+			wantErr:     true,
+			expectedErr: llm.ErrOllama,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := analyzeImages(context.Background(), tt.llmClient, tt.config, tt.images)
+
+			if tt.wantErr {
+				if err == nil {
+					t.Fatal("expected error, got nil")
+				}
+
+				if !errors.Is(err, tt.expectedErr) {
+					t.Errorf("expected error %v, got %v", tt.expectedErr, err)
+				}
+
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("expected no error, got %v", err)
+			}
+
+			if result != tt.expected {
+				t.Errorf("expected %q, got %q", tt.expected, result)
+			}
+		})
+	}
+}

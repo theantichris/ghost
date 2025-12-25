@@ -214,6 +214,25 @@ func generate(ctx context.Context, prompt string, images []string, config config
 	return nil
 }
 
+// analyzeImages sends images to the vision model for analysis.
+// The analysis is accumulated silently (not streamed to user).
+// Returns the complete vision analysis text.
+func analyzeImages(ctx context.Context, llmClient llm.LLMClient, config config, images []string) (string, error) {
+	var visionResponse strings.Builder
+
+	err := llmClient.Generate(ctx, config.visionSystemPrompt, config.visionPrompt, images, func(chunk string) error {
+		visionResponse.WriteString(chunk)
+
+		return nil
+	})
+
+	if err != nil {
+		return "", err
+	}
+
+	return visionResponse.String(), nil
+}
+
 // getPipedInput checks for and returns any input piped to the command.
 // Returns an empty string if piped input doesn't exist or is empty.
 // Returns ErrInput if piped input cannot be read.
