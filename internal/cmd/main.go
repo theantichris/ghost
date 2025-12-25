@@ -233,6 +233,26 @@ func analyzeImages(ctx context.Context, llmClient llm.LLMClient, config config, 
 	return visionResponse.String(), nil
 }
 
+// generateResponse returns the response from the LLM and streams it to the user
+// via a callback.
+// Accumulates the response for return value and forwards the chunks to the callback.
+// Returns the complete response text.
+func generateResponse(ctx context.Context, llmClient llm.LLMClient, systemPrompt, prompt string, callback func(string) error) (string, error) {
+	var generateResponse strings.Builder
+
+	err := llmClient.Generate(ctx, systemPrompt, prompt, nil, func(chunk string) error {
+		generateResponse.WriteString(chunk)
+
+		return callback(chunk)
+	})
+
+	if err != nil {
+		return "", err
+	}
+
+	return generateResponse.String(), nil
+}
+
 // getPipedInput checks for and returns any input piped to the command.
 // Returns an empty string if piped input doesn't exist or is empty.
 // Returns ErrInput if piped input cannot be read.

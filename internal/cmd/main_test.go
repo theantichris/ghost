@@ -319,3 +319,101 @@ func TestAnalyzeImages(t *testing.T) {
 		})
 	}
 }
+
+func TestGenerateResponse(t *testing.T) {
+	tests := []struct {
+		name         string
+		systemPrompt string
+		prompt       string
+		llmClient    llm.LLMClient
+		wantCalls    []string
+		expected     string
+		wantErr      bool
+		expectedErr  error
+	}{
+		{
+			name:         "generates and streams response",
+			systemPrompt: "system prompt",
+			prompt:       "user prompt",
+			llmClient: llm.MockLLMClient{
+				GenerateFunc: func(ctx context.Context, systemPrompt, userPrompt string, images []string, callback func(string) error) error {
+					return callback("Hello world")
+				},
+			},
+			wantCalls: []string{"Hello world"},
+			expected:  "Hello world",
+		},
+		{
+			name:         "accumulates and streams multiple chunks",
+			systemPrompt: "system prompt",
+			prompt:       "user prompt",
+			llmClient: llm.MockLLMClient{
+				GenerateFunc: func(ctx context.Context, systemPrompt, userPrompt string, images []string, callback func(string) error) error {
+					chunks := []string{"Hello", " ", "world", "!"}
+					for _, chunk := range chunks {
+						if err := callback(chunk); err != nil {
+							return err
+						}
+					}
+					return nil
+				},
+			},
+			wantCalls: []string{"Hello", " ", "world", "!"},
+			expected:  "Hello world!",
+		},
+		{
+			name:         "returns error from LLM",
+			systemPrompt: "system prompt",
+			prompt:       "user prompt",
+			llmClient: llm.MockLLMClient{
+				Error: llm.ErrOllama,
+			},
+			wantErr:     true,
+			expectedErr: llm.ErrOllama,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var calls []string
+			streamCallback := func(chunk string) error {
+				calls = append(calls, chunk)
+				return nil
+			}
+
+			result, err := generateResponse(context.Background(), tt.llmClient, tt.systemPrompt, tt.prompt, streamCallback)
+
+			if tt.wantErr {
+				if err == nil {
+					t.Fatal("expected error, got nil")
+				}
+				if !errors.Is(err, tt.expectedErr) {
+					t.Errorf("expected error %v, got %v", tt.expectedErr, err)
+				}
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("expected no error, got %v", err)
+			}
+
+			if result != tt.expected {
+				t.Errorf("expected result %q, got %q", tt.expected, result)
+			}
+
+			if tt.wantCalls != nil {
+				if len(calls) != len(tt.wantCalls) {
+					t.Errorf("expected %d callback calls, got %d", len(tt.wantCalls), len(calls))
+				}
+				for i, want := range tt.wantCalls {
+					if i >= len(calls) {
+						break
+					}
+					if calls[i] != want {
+						t.Errorf("callback call %d: expected %q, got %q", i, want, calls[i])
+					}
+				}
+			}
+		})
+	}
+}
