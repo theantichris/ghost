@@ -158,13 +158,13 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 func beforeHook(ctx context.Context, cmd *cli.Command) (context.Context, error) {
 	logger := cmd.Metadata["logger"].(*log.Logger)
 
-	config := llm.Config{
+	llmConfig := llm.Config{
 		Host:         cmd.String("host"),
 		DefaultModel: cmd.String("model"),
 		VisionModel:  cmd.String("vision-model"),
 	}
 
-	llmClient, err := llm.NewOllama(config, logger)
+	llmClient, err := llm.NewOllama(llmConfig, logger)
 	if err != nil {
 		return ctx, err
 	}
