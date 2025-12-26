@@ -137,7 +137,7 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 				return err
 			}
 
-			fmt.Fprintln(output)
+			fmt.Fprintln(output) // Print newline after streamed output.
 
 			return nil
 		},
