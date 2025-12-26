@@ -8,6 +8,8 @@
 # Test binary, built with `go test -c`
 *.test
 
+test_images/
+
 # Binaries
 ghost
 dist/
