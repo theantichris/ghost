@@ -2,11 +2,13 @@ package llm
 
 import "context"
 
-// LLMClient is an interface representing an Ollama API client for LLM operations.
-type LLMClient interface {
-	// Generate sends a system prompt and user prompt to the LLM and returns the generated response text.
-	// Returns an error if the API request fails or the response cannot be parsed.
-	Generate(ctx context.Context, systemPrompt, userPrompt string, images []string) (string, error)
+// Client is an interface representing an Ollama API client for LLM operations.
+type Client interface {
+	// Generate sends a system and user prompt to the LLM and streams the response
+	// through the callback.
+	// The callback is called for each chunk of text as it arrives.
+	// Returns an error if the API request fails or the callback returns an error.
+	Generate(ctx context.Context, systemPrompt, userPrompt string, images []string, callback func(string) error) error
 
 	// Version retrieves the version string of the Ollama API server.
 	// Returns an error if the API request fails.

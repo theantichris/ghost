@@ -54,7 +54,7 @@ func health(ctx context.Context, cmd *cli.Command) error {
 
 	fmt.Fprintln(output, "NEURAL LINK STATUS")
 
-	llmClient := cmd.Root().Metadata["llmClient"].(llm.LLMClient)
+	llmClient := cmd.Root().Metadata["llmClient"].(llm.Client)
 	version, err := llmClient.Version(ctx)
 	if err == nil {
 		fmt.Fprintf(output, "  ◆ ollama api CONNECTED [v%s]\n", version)

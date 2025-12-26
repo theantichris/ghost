@@ -10,15 +10,23 @@ func TestMockClientGenerate(t *testing.T) {
 	t.Run("mocks the Generate function", func(t *testing.T) {
 		t.Parallel()
 
-		mockGenerate := func(ctx context.Context, systemPrompt, userPrompt string, images []string) (string, error) {
-			return "Hello, chummer!", nil
+		mockGenerate := func(ctx context.Context, systemPrompt, userPrompt string, images []string, callback func(string) error) error {
+			return callback("Hello, chummer!")
 		}
 
-		llmClient := MockLLMClient{
+		llmClient := MockClient{
 			GenerateFunc: mockGenerate,
 		}
 
-		response, _ := llmClient.Generate(context.Background(), "system prompt", "user prompt", []string{})
+		var response string
+		err := llmClient.Generate(context.Background(), "system prompt", "user prompt", []string{}, func(chunk string) error {
+			response += chunk
+			return nil
+		})
+
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
 
 		if response != "Hello, chummer!" {
 			t.Errorf("expected response %q, got %q", "Hello, chummer!", response)
@@ -30,11 +38,13 @@ func TestMockClientGenerate(t *testing.T) {
 
 		llmError := errors.New("llm client error")
 
-		llmClient := MockLLMClient{
+		llmClient := MockClient{
 			Error: llmError,
 		}
 
-		_, err := llmClient.Generate(context.Background(), "system prompt", "user prompt", []string{})
+		err := llmClient.Generate(context.Background(), "system prompt", "user prompt", []string{}, func(chunk string) error {
+			return nil
+		})
 
 		if err == nil {
 			t.Fatal("expected error, got nil")
@@ -54,7 +64,7 @@ func TestMockClientVersion(t *testing.T) {
 			return "0.12.6", nil
 		}
 
-		llmClient := MockLLMClient{
+		llmClient := MockClient{
 			VersionFunc: mockVersion,
 		}
 
@@ -70,7 +80,7 @@ func TestMockClientVersion(t *testing.T) {
 
 		llmError := errors.New("llm client error")
 
-		llmClient := MockLLMClient{
+		llmClient := MockClient{
 			Error: llmError,
 		}
 
@@ -94,7 +104,7 @@ func TestMockClientShow(t *testing.T) {
 			return nil
 		}
 
-		llmClient := MockLLMClient{
+		llmClient := MockClient{
 			ShowFunc: mockShow,
 		}
 
@@ -109,7 +119,7 @@ func TestMockClientShow(t *testing.T) {
 
 		llmError := errors.New("llm client error")
 
-		llmClient := MockLLMClient{
+		llmClient := MockClient{
 			Error: llmError,
 		}
 

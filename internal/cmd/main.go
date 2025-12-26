@@ -90,7 +90,7 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 		},
 		Before: beforeHook,
 		Action: func(ctx context.Context, cmd *cli.Command) error {
-			config := config{
+			generateConfig := config{
 				host:               cmd.String("host"),
 				model:              cmd.String("model"),
 				visionModel:        cmd.String("vision-model"),
@@ -118,18 +118,27 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 			images := cmd.StringSlice("image")
 			if len(images) > 0 {
 				encodedImages, err = encodeImages(images)
+
 				if err != nil {
 					return err
 				}
 			}
 
-			llmClient := cmd.Metadata["llmClient"].(llm.LLMClient)
-			response, err := generate(ctx, prompt, encodedImages, config, llmClient)
+			llmClient := cmd.Metadata["llmClient"].(llm.Client)
+
+			// Stream callback that writes chunks directly to output
+			streamCallback := func(chunk string) error {
+				_, err := fmt.Fprint(output, chunk)
+
+				return err
+			}
+
+			err = generate(ctx, prompt, encodedImages, generateConfig, llmClient, streamCallback)
 			if err != nil {
 				return err
 			}
 
-			fmt.Fprintln(output, response)
+			fmt.Fprintln(output)
 
 			return nil
 		},
@@ -169,24 +178,56 @@ func beforeHook(ctx context.Context, cmd *cli.Command) (context.Context, error) 
 // If there is piped input it appends it to the prompt.
 // If there are images it sends those to the LLM to be analyzed and appends the
 // results to the prompt.
-func generate(ctx context.Context, prompt string, images []string, config config, llmClient llm.LLMClient) (string, error) {
-	// If images, send a request to analyze them and add the response to the prompt.
+// The callback is called for each chunk of streamed text.
+func generate(ctx context.Context, prompt string, images []string, config config, llmClient llm.Client, callback func(string) error) error {
 	if len(images) > 0 {
-		response, err := llmClient.Generate(ctx, config.visionSystemPrompt, config.visionPrompt, images)
+		visionAnalysis, err := analyzeImages(ctx, llmClient, config, images)
 		if err != nil {
-			return "", err
+			return err
 		}
 
-		prompt = fmt.Sprintf("%s\n\n%s", prompt, response)
+		prompt = fmt.Sprintf("%s\n\n%s", prompt, visionAnalysis)
 	}
 
-	// Send the main request.
-	response, err := llmClient.Generate(ctx, config.systemPrompt, prompt, nil)
+	return generateResponse(ctx, llmClient, config.systemPrompt, prompt, callback)
+}
+
+// analyzeImages sends images to the vision model for analysis.
+// The analysis is accumulated silently (not streamed to user).
+// Returns the complete vision analysis text.
+func analyzeImages(ctx context.Context, llmClient llm.Client, config config, images []string) (string, error) {
+	var response strings.Builder
+
+	err := llmClient.Generate(ctx, config.visionSystemPrompt, config.visionPrompt, images, func(chunk string) error {
+		response.WriteString(chunk)
+
+		return nil
+	})
+
 	if err != nil {
 		return "", err
 	}
 
-	return response, nil
+	return response.String(), nil
+}
+
+// generateResponse returns the response from the LLM and streams it to the user
+// via a callback.
+// Accumulates the response and forwards the chunks to the callback.
+func generateResponse(ctx context.Context, llmClient llm.Client, systemPrompt, prompt string, callback func(string) error) error {
+	var response strings.Builder
+
+	err := llmClient.Generate(ctx, systemPrompt, prompt, nil, func(chunk string) error {
+		response.WriteString(chunk)
+
+		return callback(chunk)
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // getPipedInput checks for and returns any input piped to the command.
