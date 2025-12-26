@@ -36,12 +36,6 @@ type showRequest struct {
 	Model string `json:"model"`
 }
 
-// TODO: probably can remove this.
-// Config holds the configuration values for the Ollama client.
-type Config struct {
-	Host string
-}
-
 // Ollama is the client for the Ollama API.
 type Ollama struct {
 	host        string
@@ -52,16 +46,16 @@ type Ollama struct {
 }
 
 // NewOllama creates and returns a new Ollama client.
-func NewOllama(config Config, logger *log.Logger) (Ollama, error) {
-	if strings.TrimSpace(config.Host) == "" {
+func NewOllama(host string, logger *log.Logger) (Ollama, error) {
+	if strings.TrimSpace(host) == "" {
 		return Ollama{}, fmt.Errorf("%w", ErrNoHostURL)
 	}
 
 	ollama := Ollama{
-		host:        config.Host,
-		generateURL: config.Host + "/api/generate",
-		versionURL:  config.Host + "/api/version",
-		showURL:     config.Host + "/api/show",
+		host:        host,
+		generateURL: host + "/api/generate",
+		versionURL:  host + "/api/version",
+		showURL:     host + "/api/show",
 		logger:      logger,
 	}
 

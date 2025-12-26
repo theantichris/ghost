@@ -157,11 +157,7 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 func beforeHook(ctx context.Context, cmd *cli.Command) (context.Context, error) {
 	logger := cmd.Metadata["logger"].(*log.Logger)
 
-	llmConfig := llm.Config{
-		Host: cmd.String("host"),
-	}
-
-	llmClient, err := llm.NewOllama(llmConfig, logger)
+	llmClient, err := llm.NewOllama(cmd.String("host"), logger)
 	if err != nil {
 		return ctx, err
 	}

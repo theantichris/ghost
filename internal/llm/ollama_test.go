@@ -15,19 +15,16 @@ import (
 func TestNewOllama(t *testing.T) {
 	tests := []struct {
 		name    string
-		config  Config
+		host    string
 		isError bool
 		err     error
 	}{
 		{
 			name: "creates a new Ollama client",
-			config: Config{
-				Host: "http://test.dev",
-			},
+			host: "http://test.dev",
 		},
 		{
 			name:    "returns error for no host URL",
-			config:  Config{},
 			isError: true,
 			err:     ErrNoHostURL,
 		},
@@ -37,7 +34,7 @@ func TestNewOllama(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			logger := log.New(io.Discard)
 
-			ollama, err := NewOllama(tt.config, logger)
+			ollama, err := NewOllama(tt.host, logger)
 
 			if !tt.isError && err != nil {
 				t.Fatalf("expect no error, got %v", err)
@@ -54,12 +51,12 @@ func TestNewOllama(t *testing.T) {
 			}
 
 			if !tt.isError {
-				if ollama.host != tt.config.Host {
-					t.Errorf("expected host URL %q, got %q", tt.config.Host, ollama.host)
+				if ollama.host != tt.host {
+					t.Errorf("expected host URL %q, got %q", tt.host, ollama.host)
 				}
 
-				if ollama.generateURL != tt.config.Host+"/api/generate" {
-					t.Errorf("expected generate URL %q, got %q", tt.config.Host+"/api/generate", ollama.generateURL)
+				if ollama.generateURL != tt.host+"/api/generate" {
+					t.Errorf("expected generate URL %q, got %q", tt.host+"/api/generate", ollama.generateURL)
 				}
 			}
 		})
@@ -132,11 +129,7 @@ func TestGenerate(t *testing.T) {
 
 			defer httpServer.Close()
 
-			config := Config{
-				Host: httpServer.URL,
-			}
-
-			ollama, err := NewOllama(config, logger)
+			ollama, err := NewOllama(httpServer.URL, logger)
 			if err != nil {
 				t.Fatalf("expect no error, got %v", err)
 			}
@@ -204,11 +197,7 @@ func TestVersion(t *testing.T) {
 
 			defer httpServer.Close()
 
-			config := Config{
-				Host: httpServer.URL,
-			}
-
-			ollama, err := NewOllama(config, logger)
+			ollama, err := NewOllama(httpServer.URL, logger)
 			if !tt.isError && err != nil {
 				t.Fatalf("expect no error, got %v", err)
 			}
@@ -267,11 +256,7 @@ func TestShow(t *testing.T) {
 
 			defer httpServer.Close()
 
-			config := Config{
-				Host: httpServer.URL,
-			}
-
-			ollama, err := NewOllama(config, logger)
+			ollama, err := NewOllama(httpServer.URL, logger)
 			if !tt.isError && err != nil {
 				t.Fatalf("expect no error, got %v", err)
 			}
