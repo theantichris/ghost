@@ -10,7 +10,7 @@ func TestMockClientGenerate(t *testing.T) {
 	t.Run("mocks the Generate function", func(t *testing.T) {
 		t.Parallel()
 
-		mockGenerate := func(ctx context.Context, systemPrompt, userPrompt string, images []string, callback func(string) error) error {
+		mockGenerate := func(ctx context.Context, model, systemPrompt, userPrompt string, images []string, callback func(string) error) error {
 			return callback("Hello, chummer!")
 		}
 
@@ -19,7 +19,7 @@ func TestMockClientGenerate(t *testing.T) {
 		}
 
 		var response string
-		err := llmClient.Generate(context.Background(), "system prompt", "user prompt", []string{}, func(chunk string) error {
+		err := llmClient.Generate(context.Background(), "test model", "system prompt", "user prompt", []string{}, func(chunk string) error {
 			response += chunk
 			return nil
 		})
@@ -42,7 +42,7 @@ func TestMockClientGenerate(t *testing.T) {
 			Error: llmError,
 		}
 
-		err := llmClient.Generate(context.Background(), "system prompt", "user prompt", []string{}, func(chunk string) error {
+		err := llmClient.Generate(context.Background(), "test model", "system prompt", "user prompt", []string{}, func(chunk string) error {
 			return nil
 		})
 

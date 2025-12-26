@@ -17,9 +17,10 @@ import (
 // maxPipedInputSize sets the maximum size for piped input to 10 megabytes.
 const maxPipedInputSize = 10 << 20
 
-// Run executes the root ghost command with the given context, arguments, version, output writer, and logger.
-// It loads the configuration file, initializes the CLI command structure with flags and subcommands,
-// and returns any errors that occur during execution.
+// Run executes the root command with the given context, arguments, version,
+// output writer, and logger.
+// It loads the configuration file, initializes the CLI command structure with
+// flags and subcommands, and returns any errors that occur during execution.
 func Run(ctx context.Context, args []string, version string, output io.Writer, logger *log.Logger) error {
 	configFile, err := loadConfigFile(logger)
 	if err != nil {
@@ -64,23 +65,29 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 			},
 			&cli.StringFlag{
 				Name:     "system",
-				Usage:    "the system prompt to override the basic chat model",
+				Usage:    "system prompt to override for chat",
 				Value:    "",
 				Sources:  cli.NewValueSourceChain(toml.TOML("system", configFile)),
 				OnlyOnce: true,
 			},
 			&cli.StringFlag{
 				Name:     "vision-system",
-				Usage:    "the system prompt to override the vision model",
+				Usage:    "system prompt to override for analyzing images",
 				Value:    "",
 				Sources:  cli.NewValueSourceChain(toml.TOML("vision.system_prompt", configFile)),
 				OnlyOnce: true,
 			},
 			&cli.StringFlag{
 				Name:     "vision-prompt",
-				Usage:    "the prompt to send for image analysis",
+				Usage:    "prompt to use for image analysis",
 				Value:    "Analyze the attached image(s)",
 				Sources:  cli.NewValueSourceChain(toml.TOML("vision.prompt", configFile)),
+				OnlyOnce: true,
+			},
+			&cli.StringFlag{
+				Name:     "format",
+				Usage:    "format for output, JSON/Markdown, defaults raw text",
+				Value:    "",
 				OnlyOnce: true,
 			},
 			&cli.StringSliceFlag{
@@ -109,7 +116,6 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 				return err
 			}
 
-			// Add piped input to the prompt.
 			if pipedInput != "" {
 				prompt = fmt.Sprintf("%s\n\n%s", prompt, pipedInput)
 			}
@@ -126,7 +132,6 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 
 			llmClient := cmd.Metadata["llmClient"].(llm.Client)
 
-			// Stream callback that writes chunks directly to output
 			streamCallback := func(chunk string) error {
 				_, err := fmt.Fprint(output, chunk)
 
@@ -138,7 +143,7 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 				return err
 			}
 
-			fmt.Fprintln(output)
+			fmt.Fprintln(output) // Print newline after streamed output.
 
 			return nil
 		},
@@ -158,13 +163,7 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 func beforeHook(ctx context.Context, cmd *cli.Command) (context.Context, error) {
 	logger := cmd.Metadata["logger"].(*log.Logger)
 
-	config := llm.Config{
-		Host:         cmd.String("host"),
-		DefaultModel: cmd.String("model"),
-		VisionModel:  cmd.String("vision-model"),
-	}
-
-	llmClient, err := llm.NewOllama(config, logger)
+	llmClient, err := llm.NewOllama(cmd.String("host"), logger)
 	if err != nil {
 		return ctx, err
 	}
@@ -175,7 +174,6 @@ func beforeHook(ctx context.Context, cmd *cli.Command) (context.Context, error) 
 }
 
 // generate sends the prompt to the LLM client's generate function.
-// If there is piped input it appends it to the prompt.
 // If there are images it sends those to the LLM to be analyzed and appends the
 // results to the prompt.
 // The callback is called for each chunk of streamed text.
@@ -189,7 +187,7 @@ func generate(ctx context.Context, prompt string, images []string, config config
 		prompt = fmt.Sprintf("%s\n\n%s", prompt, visionAnalysis)
 	}
 
-	return generateResponse(ctx, llmClient, config.systemPrompt, prompt, callback)
+	return generateResponse(ctx, llmClient, config, prompt, callback)
 }
 
 // analyzeImages sends images to the vision model for analysis.
@@ -198,7 +196,7 @@ func generate(ctx context.Context, prompt string, images []string, config config
 func analyzeImages(ctx context.Context, llmClient llm.Client, config config, images []string) (string, error) {
 	var response strings.Builder
 
-	err := llmClient.Generate(ctx, config.visionSystemPrompt, config.visionPrompt, images, func(chunk string) error {
+	err := llmClient.Generate(ctx, config.visionModel, config.visionSystemPrompt, config.visionPrompt, images, func(chunk string) error {
 		response.WriteString(chunk)
 
 		return nil
@@ -214,10 +212,10 @@ func analyzeImages(ctx context.Context, llmClient llm.Client, config config, ima
 // generateResponse returns the response from the LLM and streams it to the user
 // via a callback.
 // Accumulates the response and forwards the chunks to the callback.
-func generateResponse(ctx context.Context, llmClient llm.Client, systemPrompt, prompt string, callback func(string) error) error {
+func generateResponse(ctx context.Context, llmClient llm.Client, config config, prompt string, callback func(string) error) error {
 	var response strings.Builder
 
-	err := llmClient.Generate(ctx, systemPrompt, prompt, nil, func(chunk string) error {
+	err := llmClient.Generate(ctx, config.model, config.systemPrompt, prompt, nil, func(chunk string) error {
 		response.WriteString(chunk)
 
 		return callback(chunk)
