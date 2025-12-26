@@ -110,7 +110,6 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 				return err
 			}
 
-			// Add piped input to the prompt.
 			if pipedInput != "" {
 				prompt = fmt.Sprintf("%s\n\n%s", prompt, pipedInput)
 			}
@@ -127,7 +126,6 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 
 			llmClient := cmd.Metadata["llmClient"].(llm.Client)
 
-			// Stream callback that writes chunks directly to output
 			streamCallback := func(chunk string) error {
 				_, err := fmt.Fprint(output, chunk)
 
