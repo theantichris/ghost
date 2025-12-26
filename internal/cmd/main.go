@@ -17,9 +17,10 @@ import (
 // maxPipedInputSize sets the maximum size for piped input to 10 megabytes.
 const maxPipedInputSize = 10 << 20
 
-// Run executes the root ghost command with the given context, arguments, version, output writer, and logger.
-// It loads the configuration file, initializes the CLI command structure with flags and subcommands,
-// and returns any errors that occur during execution.
+// Run executes the root command with the given context, arguments, version,
+// output writer, and logger.
+// It loads the configuration file, initializes the CLI command structure with
+// flags and subcommands, and returns any errors that occur during execution.
 func Run(ctx context.Context, args []string, version string, output io.Writer, logger *log.Logger) error {
 	configFile, err := loadConfigFile(logger)
 	if err != nil {
