@@ -65,23 +65,29 @@ func Run(ctx context.Context, args []string, version string, output io.Writer, l
 			},
 			&cli.StringFlag{
 				Name:     "system",
-				Usage:    "the system prompt to override the basic chat model",
+				Usage:    "system prompt to override the basic chat model",
 				Value:    "",
 				Sources:  cli.NewValueSourceChain(toml.TOML("system", configFile)),
 				OnlyOnce: true,
 			},
 			&cli.StringFlag{
 				Name:     "vision-system",
-				Usage:    "the system prompt to override the vision model",
+				Usage:    "system prompt to override the vision model",
 				Value:    "",
 				Sources:  cli.NewValueSourceChain(toml.TOML("vision.system_prompt", configFile)),
 				OnlyOnce: true,
 			},
 			&cli.StringFlag{
 				Name:     "vision-prompt",
-				Usage:    "the prompt to send for image analysis",
+				Usage:    "prompt to send for image analysis",
 				Value:    "Analyze the attached image(s)",
 				Sources:  cli.NewValueSourceChain(toml.TOML("vision.prompt", configFile)),
+				OnlyOnce: true,
+			},
+			&cli.StringFlag{
+				Name:     "format",
+				Usage:    "format for the LLM output, JSON/Markdown, default raw",
+				Value:    "",
 				OnlyOnce: true,
 			},
 			&cli.StringSliceFlag{
