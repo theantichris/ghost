@@ -12,7 +12,7 @@ import (
 	"github.com/charmbracelet/log"
 )
 
-// generateRequest represents the JSON payload sent to the Ollama /api/generate endpoint.
+// generateRequest represents the JSON payload sent to the Ollama generate endpoint.
 type generateRequest struct {
 	Model        string   `json:"model"`            // The model name
 	Stream       bool     `json:"stream"`           // If false the response is returned as a single object
@@ -21,37 +21,34 @@ type generateRequest struct {
 	Images       []string `json:"images,omitempty"` // A list of base64 encoded images
 }
 
-// generateResponse represents the JSON response received from the Ollama /api/generate endpoint.
+// generateResponse represents the JSON response received from the Ollama generate endpoint.
 type generateResponse struct {
 	Response string `json:"response"`
 }
 
-// versionResponse represents the JSON response received from the Ollama /api/version endpoint.
+// versionResponse represents the JSON response received from the Ollama version endpoint.
 type versionResponse struct {
 	Version string `json:"version"`
 }
 
-// showRequest represents the JSON payload sent to the Ollama /api/show endpoint.
+// showRequest represents the JSON payload sent to the Ollama show endpoint.
 type showRequest struct {
 	Model string `json:"model"`
 }
 
+// TODO: probably can remove this.
 // Config holds the configuration values for the Ollama client.
 type Config struct {
-	Host         string
-	DefaultModel string
-	VisionModel  string
+	Host string
 }
 
 // Ollama is the client for the Ollama API.
 type Ollama struct {
-	host         string
-	generateURL  string
-	versionURL   string
-	showURL      string
-	defaultModel string
-	visionModel  string
-	logger       *log.Logger
+	host        string
+	generateURL string
+	versionURL  string
+	showURL     string
+	logger      *log.Logger
 }
 
 // NewOllama creates and returns a new Ollama client.
@@ -60,25 +57,15 @@ func NewOllama(config Config, logger *log.Logger) (Ollama, error) {
 		return Ollama{}, fmt.Errorf("%w", ErrNoHostURL)
 	}
 
-	if strings.TrimSpace(config.DefaultModel) == "" {
-		return Ollama{}, fmt.Errorf("%w", ErrNoDefaultModel)
-	}
-
-	if strings.TrimSpace(config.VisionModel) == "" {
-		return Ollama{}, fmt.Errorf("%w", ErrNoVisionModel)
-	}
-
 	ollama := Ollama{
-		host:         config.Host,
-		generateURL:  config.Host + "/api/generate",
-		versionURL:   config.Host + "/api/version",
-		showURL:      config.Host + "/api/show",
-		logger:       logger,
-		defaultModel: config.DefaultModel,
-		visionModel:  config.VisionModel,
+		host:        config.Host,
+		generateURL: config.Host + "/api/generate",
+		versionURL:  config.Host + "/api/version",
+		showURL:     config.Host + "/api/show",
+		logger:      logger,
 	}
 
-	logger.Debug("initialized Ollama client", "url", ollama.host, "model", ollama.defaultModel, "vision model", ollama.visionModel)
+	logger.Debug("initialized Ollama client", "url", ollama.host)
 
 	return ollama, nil
 }
@@ -88,9 +75,7 @@ func NewOllama(config Config, logger *log.Logger) (Ollama, error) {
 // The callback is called for each chunk of text as it arrives.
 // If images are included those are added to the request.
 // Returns ErrOllama wrapped with the underlying error if the API request fails.
-func (ollama Ollama) Generate(ctx context.Context, systemPrompt, prompt string, images []string, callback func(string) error) error {
-	model := ollama.getModel(len(images))
-
+func (ollama Ollama) Generate(ctx context.Context, model, systemPrompt, prompt string, images []string, callback func(string) error) error {
 	request := generateRequest{
 		Model:        model,
 		Stream:       true,
@@ -146,7 +131,7 @@ func (ollama Ollama) Generate(ctx context.Context, systemPrompt, prompt string, 
 	return nil
 }
 
-// Version calls the /api/version endpoint to and returns the version string.
+// Version calls the version endpoint to and returns the version string.
 // Returns an error if the API request fails.
 func (ollama Ollama) Version(ctx context.Context) (string, error) {
 	ollama.logger.Debug("sending version request to Ollama API", "url", ollama.versionURL)
@@ -166,7 +151,7 @@ func (ollama Ollama) Version(ctx context.Context) (string, error) {
 	return response.Version, nil
 }
 
-// Show calls the /api/show endpoint to verify the model exists and is accessible.
+// Show calls the show endpoint to verify the model exists and is accessible.
 // Returns an error if the model is not found or the API request fails.
 func (ollama Ollama) Show(ctx context.Context, model string) error {
 	ollama.logger.Debug("sending show request to Ollama API", "url", ollama.showURL)
@@ -189,14 +174,4 @@ func (ollama Ollama) Show(ctx context.Context, model string) error {
 	}
 
 	return nil
-}
-
-// getModel returns the vision model if image count is greater than 0.
-// Returns default model if image count is 0.
-func (ollama Ollama) getModel(imageCount int) string {
-	if imageCount > 0 {
-		return ollama.visionModel
-	}
-
-	return ollama.defaultModel
 }

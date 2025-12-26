@@ -8,7 +8,7 @@ type Client interface {
 	// through the callback.
 	// The callback is called for each chunk of text as it arrives.
 	// Returns an error if the API request fails or the callback returns an error.
-	Generate(ctx context.Context, systemPrompt, userPrompt string, images []string, callback func(string) error) error
+	Generate(ctx context.Context, model, systemPrompt, userPrompt string, images []string, callback func(string) error) error
 
 	// Version retrieves the version string of the Ollama API server.
 	// Returns an error if the API request fails.

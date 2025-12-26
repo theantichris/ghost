@@ -22,37 +22,14 @@ func TestNewOllama(t *testing.T) {
 		{
 			name: "creates a new Ollama client",
 			config: Config{
-				Host:         "http://test.dev",
-				DefaultModel: "default:model",
-				VisionModel:  "vision:model",
+				Host: "http://test.dev",
 			},
 		},
 		{
-			name: "returns error for no host URL",
-			config: Config{
-				DefaultModel: "default:model",
-				VisionModel:  "vision:model",
-			},
+			name:    "returns error for no host URL",
+			config:  Config{},
 			isError: true,
 			err:     ErrNoHostURL,
-		},
-		{
-			name: "returns error for no default model",
-			config: Config{
-				Host:        "http://test.dev",
-				VisionModel: "vision:model",
-			},
-			isError: true,
-			err:     ErrNoDefaultModel,
-		},
-		{
-			name: "returns error for no vision model",
-			config: Config{
-				Host:         "http://test.dev",
-				DefaultModel: "default:model",
-			},
-			isError: true,
-			err:     ErrNoVisionModel,
 		},
 	}
 
@@ -84,10 +61,6 @@ func TestNewOllama(t *testing.T) {
 				if ollama.generateURL != tt.config.Host+"/api/generate" {
 					t.Errorf("expected generate URL %q, got %q", tt.config.Host+"/api/generate", ollama.generateURL)
 				}
-
-				if ollama.defaultModel != tt.config.DefaultModel {
-					t.Errorf("expected default model %q, got %q", tt.config.DefaultModel, ollama.defaultModel)
-				}
 			}
 		})
 	}
@@ -108,13 +81,6 @@ func TestGenerate(t *testing.T) {
 			systemPrompt: "test system prompt",
 			prompt:       "test user prompt",
 			images:       []string{},
-			httpStatus:   http.StatusOK,
-		},
-		{
-			name:         "uses vision model for images",
-			systemPrompt: "test system prompt",
-			prompt:       "test user prompt",
-			images:       []string{"/image/path"},
 			httpStatus:   http.StatusOK,
 		},
 		{
@@ -167,9 +133,7 @@ func TestGenerate(t *testing.T) {
 			defer httpServer.Close()
 
 			config := Config{
-				Host:         httpServer.URL,
-				DefaultModel: "default:model",
-				VisionModel:  "vision:model",
+				Host: httpServer.URL,
 			}
 
 			ollama, err := NewOllama(config, logger)
@@ -178,7 +142,7 @@ func TestGenerate(t *testing.T) {
 			}
 
 			var response string
-			err = ollama.Generate(context.Background(), tt.systemPrompt, tt.prompt, tt.images, func(chunk string) error {
+			err = ollama.Generate(context.Background(), "default:model", tt.systemPrompt, tt.prompt, tt.images, func(chunk string) error {
 				response += chunk
 				return nil
 			})
@@ -241,9 +205,7 @@ func TestVersion(t *testing.T) {
 			defer httpServer.Close()
 
 			config := Config{
-				Host:         httpServer.URL,
-				DefaultModel: "test:model",
-				VisionModel:  "vision:model",
+				Host: httpServer.URL,
 			}
 
 			ollama, err := NewOllama(config, logger)
@@ -306,9 +268,7 @@ func TestShow(t *testing.T) {
 			defer httpServer.Close()
 
 			config := Config{
-				Host:         httpServer.URL,
-				DefaultModel: "test:model",
-				VisionModel:  "vision:model",
+				Host: httpServer.URL,
 			}
 
 			ollama, err := NewOllama(config, logger)
@@ -324,47 +284,6 @@ func TestShow(t *testing.T) {
 
 			if !tt.isError && err != nil {
 				t.Errorf("expected no error, got %v", err)
-			}
-		})
-	}
-}
-
-func TestGetModel(t *testing.T) {
-	tests := []struct {
-		name          string
-		images        []string
-		expectedModel string
-	}{
-		{
-			name:          "returns default model for no images",
-			expectedModel: "test:model",
-		},
-		{
-			name:          "returns vision model for images",
-			expectedModel: "vision:model",
-			images:        []string{"test-image.png"},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			logger := log.New(io.Discard)
-
-			config := Config{
-				Host:         "https://test.dev",
-				DefaultModel: "test:model",
-				VisionModel:  "vision:model",
-			}
-
-			ollama, err := NewOllama(config, logger)
-			if err != nil {
-				t.Fatalf("expect no error, got %v", err)
-			}
-
-			actualModel := ollama.getModel(len(tt.images))
-
-			if actualModel != tt.expectedModel {
-				t.Errorf("expected model %s, got %s", tt.expectedModel, actualModel)
 			}
 		})
 	}

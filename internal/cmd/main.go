@@ -158,9 +158,7 @@ func beforeHook(ctx context.Context, cmd *cli.Command) (context.Context, error) 
 	logger := cmd.Metadata["logger"].(*log.Logger)
 
 	llmConfig := llm.Config{
-		Host:         cmd.String("host"),
-		DefaultModel: cmd.String("model"),
-		VisionModel:  cmd.String("vision-model"),
+		Host: cmd.String("host"),
 	}
 
 	llmClient, err := llm.NewOllama(llmConfig, logger)
@@ -187,7 +185,7 @@ func generate(ctx context.Context, prompt string, images []string, config config
 		prompt = fmt.Sprintf("%s\n\n%s", prompt, visionAnalysis)
 	}
 
-	return generateResponse(ctx, llmClient, config.systemPrompt, prompt, callback)
+	return generateResponse(ctx, llmClient, config, prompt, callback)
 }
 
 // analyzeImages sends images to the vision model for analysis.
@@ -196,7 +194,7 @@ func generate(ctx context.Context, prompt string, images []string, config config
 func analyzeImages(ctx context.Context, llmClient llm.Client, config config, images []string) (string, error) {
 	var response strings.Builder
 
-	err := llmClient.Generate(ctx, config.visionSystemPrompt, config.visionPrompt, images, func(chunk string) error {
+	err := llmClient.Generate(ctx, config.visionModel, config.visionSystemPrompt, config.visionPrompt, images, func(chunk string) error {
 		response.WriteString(chunk)
 
 		return nil
@@ -212,10 +210,10 @@ func analyzeImages(ctx context.Context, llmClient llm.Client, config config, ima
 // generateResponse returns the response from the LLM and streams it to the user
 // via a callback.
 // Accumulates the response and forwards the chunks to the callback.
-func generateResponse(ctx context.Context, llmClient llm.Client, systemPrompt, prompt string, callback func(string) error) error {
+func generateResponse(ctx context.Context, llmClient llm.Client, config config, prompt string, callback func(string) error) error {
 	var response strings.Builder
 
-	err := llmClient.Generate(ctx, systemPrompt, prompt, nil, func(chunk string) error {
+	err := llmClient.Generate(ctx, config.model, config.systemPrompt, prompt, nil, func(chunk string) error {
 		response.WriteString(chunk)
 
 		return callback(chunk)

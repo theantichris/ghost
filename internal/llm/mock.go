@@ -7,15 +7,15 @@ import "context"
 // Set Error to have all methods return that error by default.
 type MockClient struct {
 	Error        error
-	GenerateFunc func(ctx context.Context, systemPrompt, userPrompt string, images []string, callback func(string) error) error
+	GenerateFunc func(ctx context.Context, model, systemPrompt, userPrompt string, images []string, callback func(string) error) error
 	VersionFunc  func(ctx context.Context) (string, error)
 	ShowFunc     func(ctx context.Context, model string) error
 }
 
-// Generate mocks the Generate method by calling GenerateFunc if set, returning Error if set, or calling callback with empty string.
-func (llm MockClient) Generate(ctx context.Context, systemPrompt, userPrompt string, images []string, callback func(string) error) error {
+// Generate mocks the client Generate method by calling GenerateFunc if set, returning Error if set, or calling callback with empty string.
+func (llm MockClient) Generate(ctx context.Context, model, systemPrompt, userPrompt string, images []string, callback func(string) error) error {
 	if llm.GenerateFunc != nil {
-		return llm.GenerateFunc(ctx, systemPrompt, userPrompt, images, callback)
+		return llm.GenerateFunc(ctx, model, systemPrompt, userPrompt, images, callback)
 	}
 
 	if llm.Error != nil {

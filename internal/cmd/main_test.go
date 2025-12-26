@@ -85,7 +85,7 @@ func TestGenerate(t *testing.T) {
 				systemPrompt: "system prompt",
 			},
 			llmClient: llm.MockClient{
-				GenerateFunc: func(ctx context.Context, systemPrompt string, userPrompt string, images []string, callback func(string) error) error {
+				GenerateFunc: func(ctx context.Context, model, systemPrompt, userPrompt string, images []string, callback func(string) error) error {
 					return callback("this prompt is good")
 				},
 			},
@@ -114,7 +114,7 @@ func TestGenerate(t *testing.T) {
 				visionPrompt:       "vision prompt",
 			},
 			llmClient: llm.MockClient{
-				GenerateFunc: func(ctx context.Context, systemPrompt string, userPrompt string, images []string, callback func(string) error) error {
+				GenerateFunc: func(ctx context.Context, model, systemPrompt, userPrompt string, images []string, callback func(string) error) error {
 					return callback("this prompt is good")
 				},
 			},
@@ -144,7 +144,7 @@ func TestGenerate(t *testing.T) {
 				systemPrompt: "system prompt",
 			},
 			llmClient: llm.MockClient{
-				GenerateFunc: func(ctx context.Context, systemPrompt string, userPrompt string, images []string, callback func(string) error) error {
+				GenerateFunc: func(ctx context.Context, model, systemPrompt, userPrompt string, images []string, callback func(string) error) error {
 					for _, chunk := range []string{"Hello", " ", "World", "!"} {
 						if err := callback(chunk); err != nil {
 							return err
@@ -166,9 +166,9 @@ func TestGenerate(t *testing.T) {
 				visionPrompt:       "vision prompt",
 			},
 			llmClient: llm.MockClient{
-				GenerateFunc: func() func(context.Context, string, string, []string, func(string) error) error {
+				GenerateFunc: func() func(context.Context, string, string, string, []string, func(string) error) error {
 					callCount := 0
-					return func(ctx context.Context, systemPrompt string, userPrompt string, images []string, callback func(string) error) error {
+					return func(ctx context.Context, model, systemPrompt, userPrompt string, images []string, callback func(string) error) error {
 						if callCount == 0 {
 							// First call: vision model
 							callCount++
@@ -250,7 +250,7 @@ func TestAnalyzeImages(t *testing.T) {
 				visionPrompt:       "analyze this",
 			},
 			llmClient: llm.MockClient{
-				GenerateFunc: func(ctx context.Context, systemPrompt, userPrompt string, images []string, callback func(string) error) error {
+				GenerateFunc: func(ctx context.Context, model, systemPrompt, userPrompt string, images []string, callback func(string) error) error {
 					return callback("This is a cat")
 				},
 			},
@@ -264,7 +264,7 @@ func TestAnalyzeImages(t *testing.T) {
 				visionPrompt:       "vision prompt",
 			},
 			llmClient: llm.MockClient{
-				GenerateFunc: func(ctx context.Context, systemPrompt, userPrompt string, images []string, callback func(string) error) error {
+				GenerateFunc: func(ctx context.Context, model, systemPrompt, userPrompt string, images []string, callback func(string) error) error {
 					chunks := []string{"This ", "is ", "a ", "cat"}
 
 					for _, chunk := range chunks {
@@ -323,6 +323,7 @@ func TestAnalyzeImages(t *testing.T) {
 func TestGenerateResponse(t *testing.T) {
 	tests := []struct {
 		name         string
+		config       config
 		systemPrompt string
 		prompt       string
 		llmClient    llm.Client
@@ -332,11 +333,14 @@ func TestGenerateResponse(t *testing.T) {
 		expectedErr  error
 	}{
 		{
-			name:         "generates and streams response",
-			systemPrompt: "system prompt",
-			prompt:       "user prompt",
+			name: "generates and streams response",
+			config: config{
+				model:        "test model",
+				systemPrompt: "system prompt",
+			},
+			prompt: "user prompt",
 			llmClient: llm.MockClient{
-				GenerateFunc: func(ctx context.Context, systemPrompt, userPrompt string, images []string, callback func(string) error) error {
+				GenerateFunc: func(ctx context.Context, model, systemPrompt, userPrompt string, images []string, callback func(string) error) error {
 					return callback("Hello world")
 				},
 			},
@@ -344,11 +348,14 @@ func TestGenerateResponse(t *testing.T) {
 			expected:  "Hello world",
 		},
 		{
-			name:         "accumulates and streams multiple chunks",
-			systemPrompt: "system prompt",
-			prompt:       "user prompt",
+			name: "accumulates and streams multiple chunks",
+			config: config{
+				model:        "test model",
+				systemPrompt: "system prompt",
+			},
+			prompt: "user prompt",
 			llmClient: llm.MockClient{
-				GenerateFunc: func(ctx context.Context, systemPrompt, userPrompt string, images []string, callback func(string) error) error {
+				GenerateFunc: func(ctx context.Context, model, systemPrompt, userPrompt string, images []string, callback func(string) error) error {
 					chunks := []string{"Hello", " ", "world", "!"}
 					for _, chunk := range chunks {
 						if err := callback(chunk); err != nil {
@@ -362,9 +369,12 @@ func TestGenerateResponse(t *testing.T) {
 			expected:  "Hello world!",
 		},
 		{
-			name:         "returns error from LLM",
-			systemPrompt: "system prompt",
-			prompt:       "user prompt",
+			name: "returns error from LLM",
+			config: config{
+				model:        "test model",
+				systemPrompt: "system prompt",
+			},
+			prompt: "user prompt",
 			llmClient: llm.MockClient{
 				Error: llm.ErrOllama,
 			},
@@ -381,7 +391,7 @@ func TestGenerateResponse(t *testing.T) {
 				return nil
 			}
 
-			err := generateResponse(context.Background(), tt.llmClient, tt.systemPrompt, tt.prompt, streamCallback)
+			err := generateResponse(context.Background(), tt.llmClient, tt.config, tt.prompt, streamCallback)
 
 			if tt.wantErr {
 				if err == nil {
