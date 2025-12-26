@@ -174,7 +174,6 @@ func beforeHook(ctx context.Context, cmd *cli.Command) (context.Context, error) 
 }
 
 // generate sends the prompt to the LLM client's generate function.
-// If there is piped input it appends it to the prompt.
 // If there are images it sends those to the LLM to be analyzed and appends the
 // results to the prompt.
 // The callback is called for each chunk of streamed text.
