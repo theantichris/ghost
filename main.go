@@ -11,13 +11,15 @@ const (
 )
 
 func main() {
+	// Get Ollama host URL
 	fmt.Printf("host: %s\n", host)
+
+	// Get model
 	fmt.Printf("model: %s\n", model)
+
+	// Get system prompt
 	fmt.Printf("system: %s\n", system)
 
-	// Get Ollama host URL
-	// Get model
-	// Get system prompt
 	// Get user prompt
 	// Create request body
 	// Send to chat endpoint
