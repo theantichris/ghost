@@ -34,7 +34,7 @@ func main() {
 
 	chatResponse, err := llm.Chat(ctx, host, model, messages)
 	if err != nil {
-		fmt.Fprintln(os.Stdout)
+		fmt.Fprintln(os.Stderr)
 		os.Exit(1)
 	}
 
