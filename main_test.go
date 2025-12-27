@@ -80,7 +80,7 @@ func TestCreateMessages(t *testing.T) {
 	}
 
 	if messages[1] != expected {
-		t.Errorf("expected messages %v, got %v", expected, messages[0])
+		t.Errorf("expected messages %v, got %v", expected, messages[1])
 	}
 }
 
