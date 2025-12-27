@@ -1,1 +1,5 @@
+GoReleaser
 Shadowrun
+golangci
+md
+unexported
