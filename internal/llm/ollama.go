@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"strings"
 
 	"github.com/carlmjohnson/requests"
@@ -34,9 +33,9 @@ type ChatMessage struct {
 	Content string `json:"content"`
 }
 
-// Chat sends a request to the chat endpoint, streams the response, and returns
-// the full chat message.
-func Chat(ctx context.Context, host, model string, messages []ChatMessage) (ChatMessage, error) {
+// Chat sends a request to the chat endpoint and returns the response message.
+// onChunk is called for each streamed chunk of content.
+func Chat(ctx context.Context, host, model string, messages []ChatMessage, onChunk func(string)) (ChatMessage, error) {
 	request := ChatRequest{
 		Model:    model,
 		Stream:   true,
@@ -68,12 +67,10 @@ func Chat(ctx context.Context, host, model string, messages []ChatMessage) (Chat
 					return fmt.Errorf("decode chunk: %w", err)
 				}
 
-				fmt.Fprint(os.Stdout, chunk.Message.Content)
+				onChunk(chunk.Message.Content)
 
 				chatContent.WriteString(chunk.Message.Content)
 			}
-
-			fmt.Fprintln(os.Stdout)
 
 			return nil
 		}).
