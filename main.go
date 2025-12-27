@@ -19,6 +19,7 @@ func main() {
 		fang.WithVersion(cmd.Version),
 		fang.WithColorSchemeFunc(theme),
 		fang.WithErrorHandler(errorHandler),
+		fang.WithNotifySignal(os.Interrupt),
 	); err != nil {
 		os.Exit(1)
 	}

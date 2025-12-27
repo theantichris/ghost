@@ -1,13 +1,11 @@
 package cmd
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"io"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -54,10 +52,7 @@ Send prompts directly or pipe data through for analysis.`,
 
 		messages := initMessages(system, prompt)
 
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
-		defer cancel()
-
-		_, err = llm.Chat(ctx, host, model, messages, onChunk)
+		_, err = llm.Chat(cmd.Context(), host, model, messages, onChunk)
 		if err != nil {
 			fmt.Fprintln(cmd.ErrOrStderr(), err)
 		}
