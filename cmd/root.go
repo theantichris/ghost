@@ -70,12 +70,9 @@ func Execute() {
 	}
 }
 
+// init defines flags and configuration settings.
 func init() {
 	cobra.OnInitialize(initConfig)
-
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/ghost/config.toml)")
 }
