@@ -27,18 +27,18 @@ func main() {
 		os.Exit(1)
 	}
 
-	messages := createMessages(system, prompt)
+	messages := initMessages(system, prompt)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
-	chatResponse, err := llm.Chat(ctx, host, model, messages)
+	_, err = llm.Chat(ctx, host, model, messages, onChunk)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Fprintln(os.Stderr)
 		os.Exit(1)
 	}
 
-	fmt.Println(chatResponse)
+	fmt.Fprintln(os.Stdout)
 }
 
 func getPrompt(args []string) (string, error) {
@@ -49,11 +49,15 @@ func getPrompt(args []string) (string, error) {
 	return args[1], nil
 }
 
-func createMessages(system, prompt string) []llm.ChatMessage {
+func initMessages(system, prompt string) []llm.ChatMessage {
 	messages := []llm.ChatMessage{
 		{Role: "system", Content: system},
 		{Role: "user", Content: prompt},
 	}
 
 	return messages
+}
+
+func onChunk(chunk string) {
+	fmt.Fprint(os.Stdout, chunk)
 }

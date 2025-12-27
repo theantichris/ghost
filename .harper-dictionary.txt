@@ -1,6 +1,8 @@
+ChatMessage
 ChatResponse
 GoReleaser
 Shadowrun
 golangci
 md
+onChunk
 unexported
