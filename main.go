@@ -32,9 +32,7 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
-	_, err = llm.Chat(ctx, host, model, messages, func(chunk string) {
-		fmt.Fprint(os.Stdout, chunk)
-	})
+	_, err = llm.Chat(ctx, host, model, messages, onChunk)
 	if err != nil {
 		fmt.Fprintln(os.Stderr)
 		os.Exit(1)
@@ -58,4 +56,8 @@ func initMessages(system, prompt string) []llm.ChatMessage {
 	}
 
 	return messages
+}
+
+func onChunk(chunk string) {
+	fmt.Fprint(os.Stdout, chunk)
 }
