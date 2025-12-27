@@ -96,8 +96,7 @@ func getChatResponse(ctx context.Context, model string, messages []chatMessage) 
 		Fetch(ctx)
 
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error: %v\n", err)
-		os.Exit(1)
+		return "", fmt.Errorf("%w", err)
 	}
 
 	return chatResponse.Message.Content, nil
