@@ -23,7 +23,7 @@ var (
 func main() {
 	prompt, err := getPrompt(os.Args)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Fprintln(os.Stdout, err)
 		os.Exit(1)
 	}
 
