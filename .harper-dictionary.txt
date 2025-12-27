@@ -3,8 +3,10 @@ ChatResponse
 ENV
 GoReleaser
 Shadowrun
+getPipedInput
 golangci
 initConfig
+initMessages
 md
 onChunk
 rootCmd

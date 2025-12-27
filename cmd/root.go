@@ -98,6 +98,7 @@ func initConfig() {
 	}
 }
 
+// getPipedInput detects, reads, and returns any input piped to the command.
 func getPipedInput() (string, error) {
 	fileInfo, err := os.Stdin.Stat()
 	if err != nil {
@@ -118,6 +119,7 @@ func getPipedInput() (string, error) {
 	return input, nil
 }
 
+// initMessages creates and returns the initial message history.
 func initMessages(system, prompt string) []llm.ChatMessage {
 	messages := []llm.ChatMessage{
 		{Role: "system", Content: system},
@@ -127,6 +129,7 @@ func initMessages(system, prompt string) []llm.ChatMessage {
 	return messages
 }
 
+// onChunk is the callback to print streaming content.
 func onChunk(chunk string) {
 	fmt.Fprint(os.Stdout, chunk)
 }
