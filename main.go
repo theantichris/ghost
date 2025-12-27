@@ -1,13 +1,17 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
+	"time"
+
+	"github.com/carlmjohnson/requests"
 )
 
 const (
-	host   = "https://localhost:11434"
+	host   = "http://localhost:11434/api"
 	model  = "dolphin-mixtral:8x7b"
 	system = "You are ghost, a cyberpunk AI assistant."
 )
@@ -16,11 +20,14 @@ var (
 	errPromptNotDetected = errors.New("prompt not detected")
 )
 
+// chatRequest holds the information for the chat endpoint.
 type chatRequest struct {
 	Model    string        `json:"model"`
+	Stream   bool          `json:"stream"`
 	Messages []chatMessage `json:"messages"`
 }
 
+// chatMessage holds a single message in the chat history.
 type chatMessage struct {
 	// Role holds the author of the message.
 	// Values are system, user, assistant, tool.
@@ -30,10 +37,12 @@ type chatMessage struct {
 	Content string `json:"content"`
 }
 
-func main() {
-	// Get Ollama host URL
-	fmt.Printf("host: %s\n", host)
+// chatResponse holds the response from the chat endpoint.
+type chatResponse struct {
+	Message chatMessage `json:"message"`
+}
 
+func main() {
 	prompt, err := getPrompt(os.Args)
 	if err != nil {
 		fmt.Println(err)
@@ -49,14 +58,29 @@ func main() {
 	// Create request body
 	chatRequest := chatRequest{
 		Model:    model,
+		Stream:   false,
 		Messages: messages,
 	}
 
-	fmt.Printf("request: %v\n", chatRequest)
-
 	// Send to chat endpoint
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
+
+	var chatResponse chatResponse
+
+	err = requests.
+		URL(host + "/chat").
+		BodyJSON(&chatRequest).
+		ToJSON(&chatResponse).
+		Fetch(ctx)
+
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		os.Exit(1)
+	}
 
 	// Print response
+	fmt.Println(chatResponse.Message.Content)
 }
 
 func getPrompt(args []string) (string, error) {
