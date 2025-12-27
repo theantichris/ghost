@@ -32,13 +32,15 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
-	_, err = llm.Chat(ctx, host, model, messages, onChunk)
+	chatResponse, err := llm.Chat(ctx, host, model, messages, onChunk)
 	if err != nil {
-		fmt.Fprintln(os.Stderr)
+		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 
 	fmt.Fprintln(os.Stdout)
+
+	fmt.Fprintf(os.Stdout, "%v\n", chatResponse)
 }
 
 func getPrompt(args []string) (string, error) {
