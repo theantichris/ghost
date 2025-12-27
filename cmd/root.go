@@ -71,8 +71,8 @@ var RootCmd = &cobra.Command{
 
 // init defines flags and configuration settings.
 func init() {
-	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/ghost/config.toml)")
-	RootCmd.PersistentFlags().String("url", "http://localhost:11434/api", "url to the Ollama API")
+	RootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file (default is $HOME/ghost/config.toml)")
+	RootCmd.PersistentFlags().StringP("url", "u", "http://localhost:11434/api", "url to the Ollama API")
 }
 
 // initConfig reads in config file and ENV variables if set.
