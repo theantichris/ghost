@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -68,8 +69,7 @@ func initConfig() {
 		home, err := os.UserHomeDir()
 		cobra.CheckErr(err)
 
-		viper.AddConfigPath(home)
-		viper.AddConfigPath("ghost")
+		viper.AddConfigPath(filepath.Join(home, "ghost"))
 		viper.SetConfigType("toml")
 		viper.SetConfigName("config")
 	}
