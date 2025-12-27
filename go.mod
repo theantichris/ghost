@@ -3,6 +3,7 @@ module github.com/theantichris/ghost
 go 1.25.5
 
 require (
+	charm.land/lipgloss/v2 v2.0.0-beta.3.0.20251106193318-19329a3e8410
 	github.com/carlmjohnson/requests v0.25.1
 	github.com/charmbracelet/fang v0.4.4
 	github.com/spf13/cobra v1.10.2
@@ -10,7 +11,6 @@ require (
 )
 
 require (
-	charm.land/lipgloss/v2 v2.0.0-beta.3.0.20251106193318-19329a3e8410 // indirect
 	github.com/charmbracelet/colorprofile v0.3.3 // indirect
 	github.com/charmbracelet/ultraviolet v0.0.0-20251106190538-99ea45596692 // indirect
 	github.com/charmbracelet/x/ansi v0.11.0 // indirect
