@@ -1,8 +1,13 @@
 ChatMessage
 ChatResponse
+ENV
 GoReleaser
+RootCmd
 Shadowrun
+getPipedInput
 golangci
+initConfig
+initMessages
 md
 onChunk
 unexported

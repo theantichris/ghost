@@ -2,93 +2,46 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
+	"image/color"
 	"io"
 	"os"
-	"strings"
-	"time"
 
-	"github.com/theantichris/ghost/internal/llm"
-)
-
-const (
-	host   = "http://localhost:11434/api"
-	model  = "dolphin-mixtral:8x7b"
-	system = "You are ghost, a cyberpunk AI assistant."
-)
-
-var (
-	errPromptNotDetected = errors.New("prompt not detected")
+	"charm.land/lipgloss/v2"
+	"github.com/charmbracelet/fang"
+	"github.com/theantichris/ghost/cmd"
 )
 
 func main() {
-	prompt, err := getPrompt(os.Args)
-	if err != nil {
-		fmt.Fprintln(os.Stdout, err)
+	if err := fang.Execute(
+		context.Background(),
+		cmd.RootCmd,
+		fang.WithVersion(cmd.Version),
+		fang.WithColorSchemeFunc(theme),
+		fang.WithErrorHandler(errorHandler),
+		fang.WithNotifySignal(os.Interrupt),
+	); err != nil {
 		os.Exit(1)
 	}
-
-	pipedInput, err := getPipedInput()
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-	}
-
-	if pipedInput != "" {
-		prompt = fmt.Sprintf("%s\n\n%s", prompt, pipedInput)
-	}
-
-	messages := initMessages(system, prompt)
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
-	defer cancel()
-
-	_, err = llm.Chat(ctx, host, model, messages, onChunk)
-	if err != nil {
-		fmt.Fprintln(os.Stderr)
-		os.Exit(1)
-	}
-
-	fmt.Fprintln(os.Stdout)
 }
 
-func getPrompt(args []string) (string, error) {
-	if len(args) < 2 {
-		return "", fmt.Errorf("%w", errPromptNotDetected)
+func theme(ld lipgloss.LightDarkFunc) fang.ColorScheme {
+	theme := fang.ColorScheme{
+		Title:        lipgloss.Color("#FF00FF"),
+		Description:  lipgloss.Color("#00FFFF"),
+		Flag:         lipgloss.Color("#00FF00"),
+		Command:      lipgloss.Color("#FF0080"),
+		Argument:     lipgloss.Color("#80FF00"),
+		ErrorHeader:  [2]color.Color{lipgloss.Color("#FF0000"), lipgloss.Color("#000000")},
+		ErrorDetails: lipgloss.Color("#FF6B6B"),
 	}
 
-	return args[1], nil
+	return theme
 }
 
-func initMessages(system, prompt string) []llm.ChatMessage {
-	messages := []llm.ChatMessage{
-		{Role: "system", Content: system},
-		{Role: "user", Content: prompt},
-	}
+func errorHandler(w io.Writer, styles fang.Styles, err error) {
+	errorHeader := styles.ErrorHeader.Render("󱙜")
+	errorDetails := styles.ErrorText.Render(err.Error())
 
-	return messages
-}
-
-func onChunk(chunk string) {
-	fmt.Fprint(os.Stdout, chunk)
-}
-
-func getPipedInput() (string, error) {
-	fileInfo, err := os.Stdin.Stat()
-	if err != nil {
-		return "", nil
-	}
-
-	if fileInfo.Mode()&os.ModeCharDevice != 0 {
-		return "", nil
-	}
-
-	pipedInput, err := io.ReadAll(io.LimitReader(os.Stdin, 10<<20))
-	if err != nil {
-		return "", fmt.Errorf("failed to read piped input: %w", err)
-	}
-
-	input := strings.TrimSpace(string(pipedInput))
-
-	return input, nil
+	fmt.Fprintf(w, "%s\n%s\n", errorHeader, errorDetails)
 }
