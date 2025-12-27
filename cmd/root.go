@@ -26,10 +26,13 @@ var cfgFile string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "ghost",
+	Use:   "ghost <prompt>",
 	Short: "A cyberpunk AI assistant powered by Ollama",
 	Long: `Ghost is a local cyberpunk AI assistant.
 Send prompts directly or pipe data through for analysis.`,
+	Example: `  ghost "explain this code" < main.go
+	cat error.log | ghost "what's wrong here"
+	ghost "tell me a joke"`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) < 1 {
 			fmt.Fprintln(cmd.ErrOrStderr(), errPromptNotDetected)
