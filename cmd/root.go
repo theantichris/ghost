@@ -18,7 +18,10 @@ const (
 	system  = "You are ghost, a cyberpunk AI assistant."
 )
 
-var cfgFile string
+var (
+	cfgFile    string
+	ErrNoModel = errors.New("model is required (set via --model flag, config file, or environment)")
+)
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
@@ -107,7 +110,7 @@ func initConfig(cmd *cobra.Command) error {
 
 	model := viper.GetString("model")
 	if model == "" {
-		return errors.New("model is required (set via --model flag, config file, or environment)")
+		return ErrNoModel
 	}
 
 	return nil
