@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -19,8 +18,6 @@ const (
 	system  = "You are ghost, a cyberpunk AI assistant."
 )
 
-var errPromptNotDetected = errors.New("prompt not detected")
-
 var cfgFile string
 
 // RootCmd represents the base command when called without any subcommands
@@ -34,11 +31,6 @@ Send prompts directly or pipe data through for analysis.`,
 	ghost "tell me a joke"`,
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) < 1 {
-			fmt.Fprintln(cmd.ErrOrStderr(), errPromptNotDetected)
-			os.Exit(1)
-		}
-
 		prompt := args[0]
 
 		pipedInput, err := getPipedInput()
