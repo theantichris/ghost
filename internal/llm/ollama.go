@@ -7,6 +7,8 @@ import (
 	"github.com/carlmjohnson/requests"
 )
 
+const host = "http://localhost:11434/api"
+
 // ChatRequest holds the information for the chat endpoint.
 type ChatRequest struct {
 	Model    string        `json:"model"`
@@ -31,7 +33,7 @@ type ChatMessage struct {
 
 // Chat sends a request to the chat endpoint and returns the response message
 // content.
-func Chat(ctx context.Context, host, model string, messages []ChatMessage) (string, error) {
+func Chat(ctx context.Context, model string, messages []ChatMessage) (string, error) {
 	request := ChatRequest{
 		Model:    model,
 		Stream:   false,
