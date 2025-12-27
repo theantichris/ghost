@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 )
 
 const (
@@ -21,6 +22,17 @@ func main() {
 	fmt.Printf("system: %s\n", system)
 
 	// Get user prompt
+	args := os.Args
+
+	if len(args) < 2 {
+		fmt.Println("you must send a prompt to ghost")
+		os.Exit(1)
+	}
+
+	prompt := args[1]
+
+	fmt.Printf("Prompt: %s\n", prompt)
+
 	// Create request body
 	// Send to chat endpoint
 	// Print response
