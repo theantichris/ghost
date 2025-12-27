@@ -33,7 +33,7 @@ type chatMessage struct {
 	// Values are system, user, assistant, tool.
 	Role string `json:"role"`
 
-	// Content holds the message history.
+	// Content holds the message content.
 	Content string `json:"content"`
 }
 
