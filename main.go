@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/theantichris/ghost/internal/llm"
@@ -25,6 +27,15 @@ func main() {
 	if err != nil {
 		fmt.Fprintln(os.Stdout, err)
 		os.Exit(1)
+	}
+
+	pipedInput, err := getPipedInput()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+	}
+
+	if pipedInput != "" {
+		prompt = fmt.Sprintf("%s\n\n%s", prompt, pipedInput)
 	}
 
 	messages := initMessages(system, prompt)
@@ -60,4 +71,24 @@ func initMessages(system, prompt string) []llm.ChatMessage {
 
 func onChunk(chunk string) {
 	fmt.Fprint(os.Stdout, chunk)
+}
+
+func getPipedInput() (string, error) {
+	fileInfo, err := os.Stdin.Stat()
+	if err != nil {
+		return "", nil
+	}
+
+	if fileInfo.Mode()&os.ModeCharDevice != 0 {
+		return "", nil
+	}
+
+	pipedInput, err := io.ReadAll(io.LimitReader(os.Stdin, 10<<20))
+	if err != nil {
+		return "", fmt.Errorf("failed to read piped input: %w", err)
+	}
+
+	input := strings.TrimSpace(string(pipedInput))
+
+	return input, nil
 }
