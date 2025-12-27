@@ -15,9 +15,10 @@ import (
 )
 
 const (
-	host   = "http://localhost:11434/api"
-	model  = "dolphin-mixtral:8x7b"
-	system = "You are ghost, a cyberpunk AI assistant."
+	Version = "dev"
+	host    = "http://localhost:11434/api"
+	model   = "dolphin-mixtral:8x7b"
+	system  = "You are ghost, a cyberpunk AI assistant."
 )
 
 var errPromptNotDetected = errors.New("prompt not detected")
