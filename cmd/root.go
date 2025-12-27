@@ -31,12 +31,12 @@ Send prompts directly or pipe data through for analysis.`,
 	cat error.log | ghost "what's wrong here"
 	ghost "tell me a joke"`,
 	Args: cobra.MinimumNArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		prompt := args[0]
 
 		pipedInput, err := getPipedInput()
 		if err != nil {
-			fmt.Fprintln(cmd.ErrOrStderr(), err)
+			return err
 		}
 
 		if pipedInput != "" {
@@ -47,10 +47,12 @@ Send prompts directly or pipe data through for analysis.`,
 
 		_, err = llm.Chat(cmd.Context(), host, model, messages, onChunk)
 		if err != nil {
-			fmt.Fprintln(cmd.ErrOrStderr(), err)
+			return err
 		}
 
 		fmt.Fprintln(cmd.OutOrStdout())
+
+		return nil
 	},
 }
 
