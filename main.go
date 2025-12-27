@@ -51,29 +51,16 @@ func main() {
 
 	messages := createMessages(system, prompt)
 
-	chatRequest := chatRequest{
-		Model:    model,
-		Stream:   false,
-		Messages: messages,
-	}
-
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
-	var chatResponse chatResponse
-
-	err = requests.
-		URL(host + "/chat").
-		BodyJSON(&chatRequest).
-		ToJSON(&chatResponse).
-		Fetch(ctx)
-
+	chatResponse, err := getChatResponse(ctx, model, messages)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		fmt.Println(err)
 		os.Exit(1)
 	}
 
-	fmt.Println(chatResponse.Message.Content)
+	fmt.Println(chatResponse)
 }
 
 func getPrompt(args []string) (string, error) {
@@ -91,4 +78,27 @@ func createMessages(system, prompt string) []chatMessage {
 	}
 
 	return messages
+}
+
+func getChatResponse(ctx context.Context, model string, messages []chatMessage) (string, error) {
+	request := chatRequest{
+		Model:    model,
+		Stream:   false,
+		Messages: messages,
+	}
+
+	var chatResponse chatResponse
+
+	err := requests.
+		URL(host + "/chat").
+		BodyJSON(&request).
+		ToJSON(&chatResponse).
+		Fetch(ctx)
+
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		os.Exit(1)
+	}
+
+	return chatResponse.Message.Content, nil
 }
