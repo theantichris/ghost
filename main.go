@@ -31,7 +31,7 @@ func main() {
 
 	pipedInput, err := getPipedInput()
 	if err != nil {
-		fmt.Fprintln(os.Stdout, err)
+		fmt.Fprintln(os.Stderr, err)
 	}
 
 	if pipedInput != "" {
