@@ -38,7 +38,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Println(chatResponse)
+	fmt.Println(chatResponse.Content)
 }
 
 func getPrompt(args []string) (string, error) {

@@ -29,9 +29,8 @@ type ChatMessage struct {
 	Content string `json:"content"`
 }
 
-// Chat sends a request to the chat endpoint and returns the response message
-// content.
-func Chat(ctx context.Context, host, model string, messages []ChatMessage) (string, error) {
+// Chat sends a request to the chat endpoint and returns the response message.
+func Chat(ctx context.Context, host, model string, messages []ChatMessage) (ChatMessage, error) {
 	request := ChatRequest{
 		Model:    model,
 		Stream:   false,
@@ -47,8 +46,8 @@ func Chat(ctx context.Context, host, model string, messages []ChatMessage) (stri
 		Fetch(ctx)
 
 	if err != nil {
-		return "", fmt.Errorf("%w", err)
+		return ChatMessage{}, fmt.Errorf("%w", err)
 	}
 
-	return chatResponse.Message.Content, nil
+	return chatResponse.Message, nil
 }
