@@ -15,7 +15,6 @@ import (
 
 const (
 	Version = "dev"
-	model   = "dolphin-mixtral:8x7b"
 	system  = "You are ghost, a cyberpunk AI assistant."
 )
 
@@ -57,6 +56,7 @@ var RootCmd = &cobra.Command{
 		messages := initMessages(system, prompt)
 
 		url := viper.GetString("url")
+		model := viper.GetString("model")
 
 		_, err = llm.Chat(cmd.Context(), url, model, messages, onChunk)
 		if err != nil {
@@ -72,6 +72,7 @@ var RootCmd = &cobra.Command{
 // init defines flags and configuration settings.
 func init() {
 	RootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file (default is $HOME/ghost/config.toml)")
+	RootCmd.PersistentFlags().StringP("model", "m", "", "chat model to use")
 	RootCmd.PersistentFlags().StringP("url", "u", "http://localhost:11434/api", "url to the Ollama API")
 }
 
