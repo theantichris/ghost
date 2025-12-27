@@ -34,11 +34,11 @@ func main() {
 
 	chatResponse, err := llm.Chat(ctx, host, model, messages)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Fprintln(os.Stdout)
 		os.Exit(1)
 	}
 
-	fmt.Println(chatResponse.Content)
+	fmt.Fprintln(os.Stdout, chatResponse.Content)
 }
 
 func getPrompt(args []string) (string, error) {
