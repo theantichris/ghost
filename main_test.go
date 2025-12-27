@@ -55,11 +55,11 @@ func TestGetPrompt(t *testing.T) {
 	}
 }
 
-func TestCreateMessages(t *testing.T) {
+func TestInitMessages(t *testing.T) {
 	system := "system prompt"
 	prompt := "user prompt"
 
-	messages := createMessages(system, prompt)
+	messages := initMessages(system, prompt)
 
 	expected := llm.ChatMessage{
 		Role:    "system",

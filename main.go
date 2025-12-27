@@ -27,7 +27,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	messages := createMessages(system, prompt)
+	messages := initMessages(system, prompt)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
@@ -49,7 +49,7 @@ func getPrompt(args []string) (string, error) {
 	return args[1], nil
 }
 
-func createMessages(system, prompt string) []llm.ChatMessage {
+func initMessages(system, prompt string) []llm.ChatMessage {
 	messages := []llm.ChatMessage{
 		{Role: "system", Content: system},
 		{Role: "user", Content: prompt},
