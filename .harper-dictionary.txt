@@ -2,6 +2,7 @@ ChatMessage
 ChatResponse
 ENV
 GoReleaser
+PersistentPreRunE
 RootCmd
 Shadowrun
 getPipedInput

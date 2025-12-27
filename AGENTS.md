@@ -30,3 +30,11 @@ Inspired by cyberpunk media (Shadowrun, Cyberpunk 2077, The Matrix).
 - **Keep it simple**: Single-file structure unless strong reason to split
 - **Cyberpunk aesthetic**: Match tone in user-facing messages
 - **CLI-first**: Prioritize terminal experience
+
+## Agent Behavior
+
+- **Teach, don't implement**: Unless explicitly asked to edit files, teach the
+ user step-by-step how to implement changes themselves
+- **Show code examples**: Provide complete, accurate code snippets in explanations
+- **Explain the why**: Help the user understand patterns and best practices, not
+ just what to type

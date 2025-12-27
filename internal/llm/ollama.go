@@ -3,12 +3,19 @@ package llm
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"strings"
 
 	"github.com/carlmjohnson/requests"
+)
+
+var (
+	ErrModelNotFound    = errors.New("model not found")
+	ErrUnexpectedStatus = errors.New("unexpected status")
+	ErrDecodeChunk      = errors.New("error decoding chunk")
 )
 
 // ChatRequest holds the information for the chat endpoint.
@@ -47,13 +54,18 @@ func Chat(ctx context.Context, host, model string, messages []ChatMessage, onChu
 	err := requests.
 		URL(host + "/chat").
 		BodyJSON(&request).
+		AddValidator(nil).
 		Handle(func(response *http.Response) error {
 			defer func() {
 				_ = response.Body.Close()
 			}()
 
+			if response.StatusCode == http.StatusNotFound {
+				return fmt.Errorf("%w: %s", ErrModelNotFound, request.Model)
+			}
+
 			if response.StatusCode != http.StatusOK {
-				return fmt.Errorf("unexpected status: %s", response.Status)
+				return fmt.Errorf("%w: %s", ErrUnexpectedStatus, response.Status)
 			}
 
 			decoder := json.NewDecoder(response.Body)
@@ -64,7 +76,7 @@ func Chat(ctx context.Context, host, model string, messages []ChatMessage, onChu
 				if err := decoder.Decode(&chunk); err == io.EOF {
 					break
 				} else if err != nil {
-					return fmt.Errorf("decode chunk: %w", err)
+					return fmt.Errorf("%w: %w", ErrDecodeChunk, err)
 				}
 
 				onChunk(chunk.Message.Content)
