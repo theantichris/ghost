@@ -56,9 +56,9 @@ var RootCmd = &cobra.Command{
 
 		messages := initMessages(system, prompt)
 
-		host := viper.GetString("host")
+		url := viper.GetString("url")
 
-		_, err = llm.Chat(cmd.Context(), host, model, messages, onChunk)
+		_, err = llm.Chat(cmd.Context(), url, model, messages, onChunk)
 		if err != nil {
 			return err
 		}
@@ -72,8 +72,7 @@ var RootCmd = &cobra.Command{
 // init defines flags and configuration settings.
 func init() {
 	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/ghost/config.toml)")
-
-	RootCmd.PersistentFlags().String("host", "http://localhost:11434/api", "url for the Ollama API")
+	RootCmd.PersistentFlags().String("url", "http://localhost:11434/api", "url to the Ollama API")
 }
 
 // initConfig reads in config file and ENV variables if set.
