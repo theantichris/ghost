@@ -51,14 +51,12 @@ func main() {
 
 	messages := createMessages(system, prompt)
 
-	// Create request body
 	chatRequest := chatRequest{
 		Model:    model,
 		Stream:   false,
 		Messages: messages,
 	}
 
-	// Send to chat endpoint
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
@@ -75,7 +73,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Print response
 	fmt.Println(chatResponse.Message.Content)
 }
 
