@@ -85,7 +85,7 @@ func getPipedInput() (string, error) {
 
 	pipedInput, err := io.ReadAll(io.LimitReader(os.Stdin, 10<<20))
 	if err != nil {
-		return "", fmt.Errorf("%w", err)
+		return "", fmt.Errorf("failed to read piped input: %w", err)
 	}
 
 	input := strings.TrimSpace(string(pipedInput))
