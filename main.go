@@ -11,6 +11,7 @@ import (
 )
 
 const (
+	host   = "http://localhost:11434/api"
 	model  = "dolphin-mixtral:8x7b"
 	system = "You are ghost, a cyberpunk AI assistant."
 )
@@ -31,7 +32,7 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
-	chatResponse, err := llm.Chat(ctx, model, messages)
+	chatResponse, err := llm.Chat(ctx, host, model, messages)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
