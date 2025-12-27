@@ -24,8 +24,8 @@ var errPromptNotDetected = errors.New("prompt not detected")
 
 var cfgFile string
 
-// rootCmd represents the base command when called without any subcommands
-var rootCmd = &cobra.Command{
+// RootCmd represents the base command when called without any subcommands
+var RootCmd = &cobra.Command{
 	Use:   "ghost <prompt>",
 	Short: "A cyberpunk AI assistant powered by Ollama",
 	Long: `Ghost is a local cyberpunk AI assistant.
@@ -33,6 +33,7 @@ Send prompts directly or pipe data through for analysis.`,
 	Example: `  ghost "explain this code" < main.go
 	cat error.log | ghost "what's wrong here"
 	ghost "tell me a joke"`,
+	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) < 1 {
 			fmt.Fprintln(cmd.ErrOrStderr(), errPromptNotDetected)
@@ -64,20 +65,11 @@ Send prompts directly or pipe data through for analysis.`,
 	},
 }
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute() {
-	err := rootCmd.Execute()
-	if err != nil {
-		os.Exit(1)
-	}
-}
-
 // init defines flags and configuration settings.
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/ghost/config.toml)")
+	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/ghost/config.toml)")
 }
 
 // initConfig reads in config file and ENV variables if set.
