@@ -1,3 +1,4 @@
+ChatMessage
 ChatResponse
 GoReleaser
 Shadowrun

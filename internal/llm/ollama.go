@@ -2,7 +2,12 @@ package llm
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
+	"os"
+	"strings"
 
 	"github.com/carlmjohnson/requests"
 )
@@ -29,25 +34,59 @@ type ChatMessage struct {
 	Content string `json:"content"`
 }
 
-// Chat sends a request to the chat endpoint and returns the response message.
+// Chat sends a request to the chat endpoint, streams the response, and returns
+// the full chat message.
 func Chat(ctx context.Context, host, model string, messages []ChatMessage) (ChatMessage, error) {
 	request := ChatRequest{
 		Model:    model,
-		Stream:   false,
+		Stream:   true,
 		Messages: messages,
 	}
 
-	var chatResponse ChatResponse
+	var chatContent strings.Builder
 
 	err := requests.
 		URL(host + "/chat").
 		BodyJSON(&request).
-		ToJSON(&chatResponse).
+		Handle(func(response *http.Response) error {
+			defer func() {
+				_ = response.Body.Close()
+			}()
+
+			if response.StatusCode != http.StatusOK {
+				return fmt.Errorf("unexpected status: %s", response.Status)
+			}
+
+			decoder := json.NewDecoder(response.Body)
+
+			for {
+				var chunk ChatResponse
+
+				if err := decoder.Decode(&chunk); err == io.EOF {
+					break
+				} else if err != nil {
+					return fmt.Errorf("decode chunk: %w", err)
+				}
+
+				fmt.Fprint(os.Stdout, chunk.Message.Content)
+
+				chatContent.WriteString(chunk.Message.Content)
+			}
+
+			fmt.Fprintln(os.Stdout)
+
+			return nil
+		}).
 		Fetch(ctx)
 
 	if err != nil {
 		return ChatMessage{}, fmt.Errorf("%w", err)
 	}
 
-	return chatResponse.Message, nil
+	chatMessage := ChatMessage{
+		Role:    "assistant",
+		Content: chatContent.String(),
+	}
+
+	return chatMessage, nil
 }

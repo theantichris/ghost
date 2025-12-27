@@ -32,13 +32,11 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
-	chatResponse, err := llm.Chat(ctx, host, model, messages)
+	_, err = llm.Chat(ctx, host, model, messages)
 	if err != nil {
 		fmt.Fprintln(os.Stderr)
 		os.Exit(1)
 	}
-
-	fmt.Fprintln(os.Stdout, chatResponse.Content)
 }
 
 func getPrompt(args []string) (string, error) {
