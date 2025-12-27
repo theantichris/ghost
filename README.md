@@ -1,4 +1,4 @@
-# ghost
+# Ghost
 
 ```text
    ▄████  ██░ ██  ▒█████   ██████  ████████
@@ -46,29 +46,64 @@ Download the latest release for your platform from the
 
 ### Quick Start
 
-Invoke Ghost with a prompt to get instant AI assistance in your terminal:
+Ghost requires a model to be specified. Run with the `--model` flag:
 
 ```bash
-ghost "your prompt here"
+ghost --model llama3 "your prompt here"
 ```
 
 ### Basic Examples
 
 ```bash
 # Get intel on tech
-ghost "Explain how neural interfaces work"
+ghost -m llama3 "Explain how neural interfaces work"
 
 # Quick data lookup
-ghost "What's the difference between a netrunner and a decker?"
+ghost -m llama3 "What's the difference between a netrunner and a decker?"
 
 # Code assistance for your next run
-ghost "Write a Go function to encrypt data with AES-256"
+ghost -m llama3 "Write a Go function to encrypt data with AES-256"
+
+# Pipe data for analysis
+cat error.log | ghost -m llama3 "what's wrong here"
+echo "def foo():\n  return bar" | ghost -m llama3 "explain this code"
 ```
 
 ### Help
 
 ```bash
 ghost --help
+```
+
+## Configuration
+
+Ghost can be configured in three ways (in order of precedence):
+
+1. **Command-line flags**
+2. **Environment variables**
+3. **Configuration file**
+
+### Flags
+
+- `--model`, `-m`: The Ollama model to use (required)
+- `--url`, `-u`: Ollama API URL (default: `http://localhost:11434/api`)
+- `--config`, `-c`: Path to config file (default: `~/.config/ghost/config.toml`)
+
+### Environment Variables
+
+```bash
+export GHOST_MODEL=llama3
+export GHOST_URL=http://localhost:11434/api
+ghost "your prompt here"
+```
+
+### Configuration File
+
+Create `~/.config/ghost/config.toml`:
+
+```toml
+model = "llama3"
+url = "http://localhost:11434/api"
 ```
 
 ## License
