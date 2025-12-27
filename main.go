@@ -11,15 +11,23 @@ const (
 	system = "You are ghost, a cyberpunk AI assistant."
 )
 
+type chatRequest struct {
+	Model    string        `json:"model"`
+	Messages []chatMessage `json:"messages"`
+}
+
+type chatMessage struct {
+	// Role holds the author of the message.
+	// Values are system, user, assistant, tool.
+	Role string `json:"role"`
+
+	// Content holds the message history.
+	Content string `json:"content"`
+}
+
 func main() {
 	// Get Ollama host URL
 	fmt.Printf("host: %s\n", host)
-
-	// Get model
-	fmt.Printf("model: %s\n", model)
-
-	// Get system prompt
-	fmt.Printf("system: %s\n", system)
 
 	// Get user prompt
 	args := os.Args
@@ -31,9 +39,27 @@ func main() {
 
 	prompt := args[1]
 
-	fmt.Printf("Prompt: %s\n", prompt)
+	// Create message history
+	messages := []chatMessage{
+		{
+			Role:    "system",
+			Content: system,
+		},
+		{
+			Role:    "user",
+			Content: prompt,
+		},
+	}
 
 	// Create request body
+	chatRequest := chatRequest{
+		Model:    model,
+		Messages: messages,
+	}
+
+	fmt.Printf("request: %v\n", chatRequest)
+
 	// Send to chat endpoint
+
 	// Print response
 }
