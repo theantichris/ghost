@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/carlmjohnson/requests"
+	"github.com/theantichris/ghost/internal/llm"
 )
 
 const (
@@ -19,28 +19,6 @@ const (
 var (
 	errPromptNotDetected = errors.New("prompt not detected")
 )
-
-// chatRequest holds the information for the chat endpoint.
-type chatRequest struct {
-	Model    string        `json:"model"`
-	Stream   bool          `json:"stream"`
-	Messages []chatMessage `json:"messages"`
-}
-
-// chatMessage holds a single message in the chat history.
-type chatMessage struct {
-	// Role holds the author of the message.
-	// Values are system, user, assistant, tool.
-	Role string `json:"role"`
-
-	// Content holds the message content.
-	Content string `json:"content"`
-}
-
-// chatResponse holds the response from the chat endpoint.
-type chatResponse struct {
-	Message chatMessage `json:"message"`
-}
 
 func main() {
 	prompt, err := getPrompt(os.Args)
@@ -54,7 +32,7 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
-	chatResponse, err := getChatResponse(ctx, model, messages)
+	chatResponse, err := llm.Chat(ctx, host, model, messages)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -71,33 +49,11 @@ func getPrompt(args []string) (string, error) {
 	return args[1], nil
 }
 
-func createMessages(system, prompt string) []chatMessage {
-	messages := []chatMessage{
+func createMessages(system, prompt string) []llm.ChatMessage {
+	messages := []llm.ChatMessage{
 		{Role: "system", Content: system},
 		{Role: "user", Content: prompt},
 	}
 
 	return messages
-}
-
-func getChatResponse(ctx context.Context, model string, messages []chatMessage) (string, error) {
-	request := chatRequest{
-		Model:    model,
-		Stream:   false,
-		Messages: messages,
-	}
-
-	var chatResponse chatResponse
-
-	err := requests.
-		URL(host + "/chat").
-		BodyJSON(&request).
-		ToJSON(&chatResponse).
-		Fetch(ctx)
-
-	if err != nil {
-		return "", fmt.Errorf("%w", err)
-	}
-
-	return chatResponse.Message.Content, nil
 }

@@ -1,3 +1,4 @@
+ChatResponse
 GoReleaser
 Shadowrun
 golangci
