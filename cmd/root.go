@@ -105,6 +105,11 @@ func initConfig(cmd *cobra.Command) error {
 		return err
 	}
 
+	model := viper.GetString("model")
+	if model == "" {
+		return errors.New("model is required (set via --model flag, config file, or environment)")
+	}
+
 	return nil
 }
 
