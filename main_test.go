@@ -52,3 +52,28 @@ func TestGetPrompt(t *testing.T) {
 		})
 	}
 }
+
+func TestCreateMessages(t *testing.T) {
+	system := "system prompt"
+	prompt := "user prompt"
+
+	messages := createMessages(system, prompt)
+
+	expected := chatMessage{
+		Role:    "system",
+		Content: "system prompt",
+	}
+
+	if messages[0] != expected {
+		t.Errorf("expected messages %v, got %v", expected, messages[0])
+	}
+
+	expected = chatMessage{
+		Role:    "user",
+		Content: "user prompt",
+	}
+
+	if messages[1] != expected {
+		t.Errorf("expected messages %v, got %v", expected, messages[0])
+	}
+}

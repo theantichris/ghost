@@ -49,11 +49,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Create message history
-	messages := []chatMessage{
-		{Role: "system", Content: system},
-		{Role: "user", Content: prompt},
-	}
+	messages := createMessages(system, prompt)
 
 	// Create request body
 	chatRequest := chatRequest{
@@ -89,4 +85,13 @@ func getPrompt(args []string) (string, error) {
 	}
 
 	return args[1], nil
+}
+
+func createMessages(system, prompt string) []chatMessage {
+	messages := []chatMessage{
+		{Role: "system", Content: system},
+		{Role: "user", Content: prompt},
+	}
+
+	return messages
 }
