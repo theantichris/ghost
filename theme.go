@@ -58,23 +58,23 @@ var (
 )
 
 var colorScheme = fang.ColorScheme{
-	Base:           Text,             // Main text color
-	Title:          Accent0,          // Hot pink for titles
-	Description:    Accent1,          // Cyan for descriptions
-	Codeblock:      Bg1,              // Green for code examples
-	Program:        Accent2,          // Magenta for program name
-	DimmedArgument: TextMuted,        // Muted for optional args
-	Comment:        SyntaxComment,    // Muted for comments
-	Flag:           TermGreen,        // Green for flags
-	FlagDefault:    TermBrightYellow, // Bright yellow for defaults
-	Command:        Accent2,          // Magenta for commands
-	QuotedString:   SyntaxString,     // Green for strings
-	Argument:       Accent1,          // Cyan for arguments
-	Help:           Text,             // Main text for help
-	Dash:           TextMuted,        // Muted for separators
+	Base:           Text,
+	Title:          Accent0,
+	Description:    Accent1,
+	Codeblock:      Bg1,
+	Program:        Accent2,
+	DimmedArgument: TextMuted,
+	Comment:        SyntaxComment,
+	Flag:           TermGreen,
+	FlagDefault:    TermBrightYellow,
+	Command:        Accent3,
+	QuotedString:   SyntaxString,
+	Argument:       Accent1,
+	Help:           Text,
+	Dash:           TextMuted,
 	ErrorHeader: [2]color.Color{
-		ErrorColor, // Red foreground
-		Bg0,        // Dark background
+		ErrorColor,
+		Bg1,
 	},
 	ErrorDetails: TermBrightRed, // Bright red for error text
 }
