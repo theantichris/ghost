@@ -2,8 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
-	"io"
 	"os"
 
 	"github.com/charmbracelet/fang"
@@ -21,11 +19,4 @@ func main() {
 	); err != nil {
 		os.Exit(1)
 	}
-}
-
-func errorHandler(w io.Writer, styles fang.Styles, err error) {
-	errorHeader := styles.ErrorHeader.Render("󱙜")
-	errorDetails := styles.ErrorText.Render(err.Error())
-
-	fmt.Fprintf(w, "%s\n%s\n", errorHeader, errorDetails)
 }

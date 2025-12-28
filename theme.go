@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"image/color"
+	"io"
 
 	"charm.land/lipgloss/v2"
 	"github.com/charmbracelet/fang"
@@ -76,10 +78,24 @@ var colorScheme = fang.ColorScheme{
 		ErrorColor,
 		Bg1,
 	},
-	ErrorDetails: TermBrightRed, // Bright red for error text
+	ErrorDetails: TermBrightRed,
 }
 
 // getColorScheme is called by Fang to get the color scheme.
 func getColorScheme(ld lipgloss.LightDarkFunc) fang.ColorScheme {
 	return colorScheme
+}
+
+// errorHandler renders error messages with styles.
+func errorHandler(w io.Writer, styles fang.Styles, err error) {
+	headerStyle := lipgloss.NewStyle().
+		Foreground(ErrorColor)
+
+	messageStyle := lipgloss.NewStyle().
+		Foreground(ErrorColor)
+
+	header := headerStyle.Render("󱙜 ERROR")
+	message := messageStyle.Render(err.Error())
+
+	fmt.Fprintf(w, "%s\n%s\n", header, message)
 }
