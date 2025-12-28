@@ -17,7 +17,7 @@ func main() {
 		context.Background(),
 		cmd.RootCmd,
 		fang.WithVersion(cmd.Version),
-		fang.WithColorSchemeFunc(theme),
+		fang.WithColorSchemeFunc(colorSchemeFunc),
 		fang.WithErrorHandler(errorHandler),
 		fang.WithNotifySignal(os.Interrupt),
 	); err != nil {
@@ -25,18 +25,18 @@ func main() {
 	}
 }
 
-func theme(ld lipgloss.LightDarkFunc) fang.ColorScheme {
-	theme := fang.ColorScheme{
-		Title:        lipgloss.Color("#FF00FF"),
-		Description:  lipgloss.Color("#00FFFF"),
-		Flag:         lipgloss.Color("#00FF00"),
-		Command:      lipgloss.Color("#FF0080"),
-		Argument:     lipgloss.Color("#80FF00"),
-		ErrorHeader:  [2]color.Color{lipgloss.Color("#FF0000"), lipgloss.Color("#000000")},
-		ErrorDetails: lipgloss.Color("#FF6B6B"),
-	}
+var colorScheme = fang.ColorScheme{
+	Title:        lipgloss.Color("#FF00FF"),
+	Description:  lipgloss.Color("#00FFFF"),
+	Flag:         lipgloss.Color("#00FF00"),
+	Command:      lipgloss.Color("#FF0080"),
+	Argument:     lipgloss.Color("#80FF00"),
+	ErrorHeader:  [2]color.Color{lipgloss.Color("#FF0000"), lipgloss.Color("#000000")},
+	ErrorDetails: lipgloss.Color("#FF6B6B"),
+}
 
-	return theme
+func colorSchemeFunc(ld lipgloss.LightDarkFunc) fang.ColorScheme {
+	return colorScheme
 }
 
 func errorHandler(w io.Writer, styles fang.Styles, err error) {
