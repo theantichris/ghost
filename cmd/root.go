@@ -74,7 +74,7 @@ Send prompts directly or pipe data through for analysis.`,
 
 // init defines flags and configuration settings.
 func init() {
-	RootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file (default is $HOME/ghost/config.toml)")
+	RootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file path")
 	RootCmd.PersistentFlags().StringP("model", "m", "", "chat model to use")
 	RootCmd.PersistentFlags().StringP("url", "u", "http://localhost:11434/api", "url to the Ollama API")
 }
