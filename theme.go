@@ -61,7 +61,7 @@ var colorScheme = fang.ColorScheme{
 	Base:           Text,             // Main text color
 	Title:          Accent0,          // Hot pink for titles
 	Description:    Accent1,          // Cyan for descriptions
-	Codeblock:      SyntaxString,     // Green for code examples
+	Codeblock:      Bg1,              // Green for code examples
 	Program:        Accent2,          // Magenta for program name
 	DimmedArgument: TextMuted,        // Muted for optional args
 	Comment:        SyntaxComment,    // Muted for comments
