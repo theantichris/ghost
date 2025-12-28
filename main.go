@@ -3,11 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
-	"image/color"
 	"io"
 	"os"
 
-	"charm.land/lipgloss/v2"
 	"github.com/charmbracelet/fang"
 	"github.com/theantichris/ghost/cmd"
 )
@@ -17,26 +15,12 @@ func main() {
 		context.Background(),
 		cmd.RootCmd,
 		fang.WithVersion(cmd.Version),
-		fang.WithColorSchemeFunc(colorSchemeFunc),
+		fang.WithColorSchemeFunc(getColorScheme),
 		fang.WithErrorHandler(errorHandler),
 		fang.WithNotifySignal(os.Interrupt),
 	); err != nil {
 		os.Exit(1)
 	}
-}
-
-var colorScheme = fang.ColorScheme{
-	Title:        lipgloss.Color("#FF00FF"),
-	Description:  lipgloss.Color("#00FFFF"),
-	Flag:         lipgloss.Color("#00FF00"),
-	Command:      lipgloss.Color("#FF0080"),
-	Argument:     lipgloss.Color("#80FF00"),
-	ErrorHeader:  [2]color.Color{lipgloss.Color("#FF0000"), lipgloss.Color("#000000")},
-	ErrorDetails: lipgloss.Color("#FF6B6B"),
-}
-
-func colorSchemeFunc(ld lipgloss.LightDarkFunc) fang.ColorScheme {
-	return colorScheme
 }
 
 func errorHandler(w io.Writer, styles fang.Styles, err error) {
