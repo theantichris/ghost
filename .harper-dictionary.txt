@@ -5,6 +5,7 @@ GoReleaser
 PersistentPreRunE
 RootCmd
 Shadowrun
+getColorScheme
 getPipedInput
 golangci
 initConfig

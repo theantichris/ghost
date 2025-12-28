@@ -27,10 +27,10 @@ var (
 var RootCmd = &cobra.Command{
 	Use: "ghost <prompt>",
 
-	Short: "A cyberpunk AI assistant powered by Ollama",
+	Short: "Ghost is a local cyberpunk AI assistant.",
 
 	Long: `Ghost is a local cyberpunk AI assistant.
-	Send prompts directly or pipe data through for analysis.`,
+Send prompts directly or pipe data through for analysis.`,
 
 	Example: `  ghost "explain this code" < main.go
 	cat error.log | ghost "what's wrong here"
@@ -74,7 +74,7 @@ var RootCmd = &cobra.Command{
 
 // init defines flags and configuration settings.
 func init() {
-	RootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file (default is $HOME/ghost/config.toml)")
+	RootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file path")
 	RootCmd.PersistentFlags().StringP("model", "m", "", "chat model to use")
 	RootCmd.PersistentFlags().StringP("url", "u", "http://localhost:11434/api", "url to the Ollama API")
 }
