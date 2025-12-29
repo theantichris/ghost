@@ -3,10 +3,9 @@ package ui
 import (
 	"charm.land/bubbles/v2/spinner"
 	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"github.com/theantichris/ghost/theme"
 )
-
-// TODO: setup viewport, content is being cut off on the right.
 
 // StreamChunkMsg represents a chunk of text received from the LLM.
 type StreamChunkMsg string
@@ -21,6 +20,7 @@ type StreamErrorMsg struct {
 
 // StreamModel handles the UI for streaming LLM responses.
 type StreamModel struct {
+	width   int           // Terminal width
 	Content string        // Accumulated response content.
 	done    bool          // Whether streaming has finished.
 	Err     error         // Error if streaming failed.
@@ -34,6 +34,7 @@ func NewStreamModel() StreamModel {
 	s.Style = theme.FgAccent0
 
 	return StreamModel{
+		width:   80,
 		Content: "",
 		done:    false,
 		Err:     nil,
@@ -49,6 +50,11 @@ func (model StreamModel) Init() tea.Cmd {
 // Update handles messages and returns the updated model and optional command.
 func (model StreamModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		model.width = msg.Width
+
+		return model, nil
+
 	case tea.KeyMsg:
 		// TODO: look into removing magic string
 		if msg.String() == "ctrl+c" {
@@ -84,7 +90,8 @@ func (model StreamModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 // View renders the current model state.
 func (model StreamModel) View() tea.View {
 	if model.Content != "" {
-		return tea.NewView(model.Content)
+		wrappedContent := lipgloss.NewStyle().Width(model.width).Render(model.Content)
+		return tea.NewView(wrappedContent)
 	}
 
 	processingMessage := theme.FgAccent0.Render("󱙝 processing") + model.spinner.View()
