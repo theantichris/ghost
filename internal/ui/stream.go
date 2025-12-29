@@ -25,7 +25,7 @@ type StreamErrorMsg struct {
 // StreamModel handles the UI for streaming LLM responses.
 type StreamModel struct {
 	width   int           // Terminal width
-	Content string        // Accumulated response content.
+	content string        // Accumulated response content.
 	done    bool          // Whether streaming has finished.
 	Err     error         // Error if streaming failed.
 	spinner spinner.Model // Animated spinner.
@@ -39,7 +39,7 @@ func NewStreamModel() StreamModel {
 
 	return StreamModel{
 		width:   80,
-		Content: "",
+		content: "",
 		done:    false,
 		Err:     nil,
 		spinner: s,
@@ -65,7 +65,7 @@ func (model StreamModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 	case StreamChunkMsg:
-		model.Content += string(msg)
+		model.content += string(msg)
 
 		return model, nil
 
@@ -92,8 +92,8 @@ func (model StreamModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 // View renders the current model state.
 func (model StreamModel) View() tea.View {
-	if model.Content != "" {
-		wrappedContent := theme.WordWrap(model.width, model.Content)
+	if model.content != "" {
+		wrappedContent := theme.WordWrap(model.width, model.content)
 
 		return tea.NewView(wrappedContent)
 	}
@@ -101,4 +101,9 @@ func (model StreamModel) View() tea.View {
 	processingMessage := theme.FgAccent0.Render("󱙝 processing") + model.spinner.View()
 
 	return tea.NewView(processingMessage)
+}
+
+// Content returns the full model content with styling
+func (model StreamModel) Content() string {
+	return theme.WordWrap(model.width, model.content)
 }

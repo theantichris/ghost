@@ -78,18 +78,18 @@ Send prompts directly or pipe data through for analysis.`,
 			}
 		}()
 
-		finalModel, err := streamProgram.Run()
+		returnedModel, err := streamProgram.Run()
 		if err != nil {
 			return err
 		}
 
-		result := finalModel.(ui.StreamModel)
+		streamModel = returnedModel.(ui.StreamModel)
 
-		if result.Err != nil {
-			return result.Err
+		if streamModel.Err != nil {
+			return streamModel.Err
 		}
 
-		fmt.Fprintln(cmd.OutOrStdout(), result.Content)
+		fmt.Fprintln(cmd.OutOrStdout(), streamModel.Content())
 
 		return nil
 	},
