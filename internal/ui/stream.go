@@ -64,12 +64,12 @@ func (model StreamModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 // View renders the current model state.
 func (model StreamModel) View() tea.View {
-	if model.done {
-		if model.err != nil {
-			return tea.NewView("󱙝 error: " + model.err.Error())
-		}
-
+	if model.content != "" {
 		return tea.NewView(model.content)
+	}
+
+	if model.err != nil {
+		return tea.NewView("󱙝 error: " + model.err.Error())
 	}
 
 	return tea.NewView("󱙝 processing...")
