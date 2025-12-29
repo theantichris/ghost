@@ -68,9 +68,5 @@ func (model StreamModel) View() tea.View {
 		return tea.NewView(model.Content)
 	}
 
-	if model.Err != nil {
-		return tea.NewView("󱙝 error: " + model.Err.Error())
-	}
-
 	return tea.NewView("󱙝 processing...")
 }
