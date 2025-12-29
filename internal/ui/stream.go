@@ -2,10 +2,22 @@ package ui
 
 import tea "charm.land/bubbletea/v2"
 
+// StreamChunkMsg represents a chunk of text received from the LLM.
+type StreamChunkMsg string
+
+// StreamDoneMsg signals that streaming has completed.
+type StreamDoneMsg struct{}
+
+// StreamErrorMsg signals an error occurred during streaming.
+type StreamErrorMsg struct {
+	Err error
+}
+
 // StreamModel handles the UI for streaming LLM responses.
 type StreamModel struct {
 	content string // Accumulated response content.
 	done    bool   // Whether streaming has finished.
+	err     error  // Error if streaming failed.
 }
 
 // NewStreamModel creates and returns StreamModel.
@@ -13,6 +25,7 @@ func NewStreamModel() StreamModel {
 	return StreamModel{
 		content: "",
 		done:    false,
+		err:     nil,
 	}
 }
 
