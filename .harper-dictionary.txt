@@ -9,6 +9,7 @@ Shadowrun
 StreamDoneMsg
 StreamErrorMsg
 StreamModel
+WordWrap
 getColorScheme
 getPipedInput
 golangci

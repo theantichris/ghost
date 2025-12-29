@@ -1,9 +1,14 @@
 package ui
 
 import (
+	"charm.land/bubbles/v2/key"
 	"charm.land/bubbles/v2/spinner"
 	tea "charm.land/bubbletea/v2"
 	"github.com/theantichris/ghost/theme"
+)
+
+var quitKeys = key.NewBinding(
+	key.WithKeys("ctrl+c"),
 )
 
 // StreamChunkMsg represents a chunk of text received from the LLM.
@@ -55,8 +60,7 @@ func (model StreamModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return model, nil
 
 	case tea.KeyMsg:
-		// TODO: look into removing magic string
-		if msg.String() == "ctrl+c" {
+		if key.Matches(msg, quitKeys) {
 			return model, tea.Quit
 		}
 
