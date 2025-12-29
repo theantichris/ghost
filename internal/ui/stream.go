@@ -15,17 +15,17 @@ type StreamErrorMsg struct {
 
 // StreamModel handles the UI for streaming LLM responses.
 type StreamModel struct {
-	content string // Accumulated response content.
+	Content string // Accumulated response content.
 	done    bool   // Whether streaming has finished.
-	err     error  // Error if streaming failed.
+	Err     error  // Error if streaming failed.
 }
 
 // NewStreamModel creates and returns StreamModel.
 func NewStreamModel() StreamModel {
 	return StreamModel{
-		content: "",
+		Content: "",
 		done:    false,
-		err:     nil,
+		Err:     nil,
 	}
 }
 
@@ -43,7 +43,7 @@ func (model StreamModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 	case StreamChunkMsg:
-		model.content += string(msg)
+		model.Content += string(msg)
 
 		return model, nil
 
@@ -53,7 +53,7 @@ func (model StreamModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return model, tea.Quit
 
 	case StreamErrorMsg:
-		model.err = msg.Err
+		model.Err = msg.Err
 		model.done = true
 
 		return model, tea.Quit
@@ -64,12 +64,12 @@ func (model StreamModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 // View renders the current model state.
 func (model StreamModel) View() tea.View {
-	if model.content != "" {
-		return tea.NewView(model.content)
+	if model.Content != "" {
+		return tea.NewView(model.Content)
 	}
 
-	if model.err != nil {
-		return tea.NewView("󱙝 error: " + model.err.Error())
+	if model.Err != nil {
+		return tea.NewView("󱙝 error: " + model.Err.Error())
 	}
 
 	return tea.NewView("󱙝 processing...")

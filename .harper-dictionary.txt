@@ -6,6 +6,8 @@ NewStreamModel
 PersistentPreRunE
 RootCmd
 Shadowrun
+StreamDoneMsg
+StreamErrorMsg
 StreamModel
 getColorScheme
 getPipedInput
