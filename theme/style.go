@@ -5,9 +5,14 @@ import (
 	"github.com/muesli/reflow/wordwrap"
 )
 
-var FgAccent0 = lipgloss.NewStyle().Foreground(Accent0)
+var (
+	FgAccent0 = lipgloss.NewStyle().Foreground(Accent0)
+	FgText    = lipgloss.NewStyle().Foreground(Text)
+)
 
-// WordWrap wraps content to width.
+// WordWrap styles and wraps content to width.
 func WordWrap(width int, content string) string {
-	return wordwrap.String(content, width)
+	styled := FgText.Render(content)
+
+	return wordwrap.String(styled, width)
 }
