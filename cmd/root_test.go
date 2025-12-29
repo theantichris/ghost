@@ -10,7 +10,10 @@ func TestInitMessages(t *testing.T) {
 	system := "system prompt"
 	prompt := "user prompt"
 
-	actual := initMessages(system, prompt)
+	actual, err := initMessages(system, prompt, "")
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
 
 	expected := llm.ChatMessage{
 		Role:    "system",

@@ -58,7 +58,12 @@ Send prompts directly or pipe data through for analysis.`,
 			prompt = fmt.Sprintf("%s\n\n%s", prompt, pipedInput)
 		}
 
-		messages := initMessages(system, prompt)
+		format := viper.GetString("format")
+
+		messages, err := initMessages(system, prompt, format)
+		if err != nil {
+			return err
+		}
 
 		url := viper.GetString("url")
 		model := viper.GetString("model")
@@ -98,6 +103,7 @@ Send prompts directly or pipe data through for analysis.`,
 // init defines flags and configuration settings.
 func init() {
 	RootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file path")
+	RootCmd.PersistentFlags().StringP("format", "f", "", "output format (JSON), unspecified for text")
 	RootCmd.PersistentFlags().StringP("model", "m", "", "chat model to use")
 	RootCmd.PersistentFlags().StringP("url", "u", "http://localhost:11434/api", "url to the Ollama API")
 }
@@ -161,11 +167,24 @@ func getPipedInput() (string, error) {
 }
 
 // initMessages creates and returns the initial message history.
-func initMessages(system, prompt string) []llm.ChatMessage {
+// Returns an error for an invalid output format.
+func initMessages(system, prompt, format string) ([]llm.ChatMessage, error) {
 	messages := []llm.ChatMessage{
 		{Role: "system", Content: system},
-		{Role: "user", Content: prompt},
 	}
 
-	return messages
+	if format != "" {
+		switch format {
+		case strings.ToLower("json"):
+			messages = append(messages, llm.ChatMessage{Role: "system", Content: "Format the response as json without enclosing backticks."})
+
+		default:
+			return []llm.ChatMessage{}, fmt.Errorf("invalid format option, valid options are json")
+		}
+
+	}
+
+	messages = append(messages, llm.ChatMessage{Role: "user", Content: prompt})
+
+	return messages, nil
 }
