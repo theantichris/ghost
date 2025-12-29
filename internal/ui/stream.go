@@ -41,6 +41,22 @@ func (model StreamModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if msg.String() == "ctrl+c" {
 			return model, tea.Quit
 		}
+
+	case StreamChunkMsg:
+		model.content += string(msg)
+
+		return model, nil
+
+	case StreamDoneMsg:
+		model.done = true
+
+		return model, tea.Quit
+
+	case StreamErrorMsg:
+		model.err = msg.Err
+		model.done = true
+
+		return model, tea.Quit
 	}
 
 	return model, nil
