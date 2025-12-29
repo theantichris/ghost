@@ -2,9 +2,14 @@ ChatMessage
 ChatResponse
 ENV
 GoReleaser
+NewStreamModel
 PersistentPreRunE
 RootCmd
 Shadowrun
+StreamDoneMsg
+StreamErrorMsg
+StreamModel
+WordWrap
 getColorScheme
 getPipedInput
 golangci

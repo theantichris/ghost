@@ -8,9 +8,11 @@ import (
 	"path/filepath"
 	"strings"
 
+	tea "charm.land/bubbletea/v2"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/theantichris/ghost/internal/llm"
+	"github.com/theantichris/ghost/internal/ui"
 )
 
 const (
@@ -61,12 +63,33 @@ Send prompts directly or pipe data through for analysis.`,
 		url := viper.GetString("url")
 		model := viper.GetString("model")
 
-		_, err = llm.Chat(cmd.Context(), url, model, messages, onChunk)
+		streamModel := ui.NewStreamModel()
+		streamProgram := tea.NewProgram(streamModel)
+
+		go func() {
+			_, err := llm.Chat(cmd.Context(), url, model, messages, func(chunk string) {
+				streamProgram.Send(ui.StreamChunkMsg(chunk))
+			})
+
+			if err != nil {
+				streamProgram.Send(ui.StreamErrorMsg{Err: err})
+			} else {
+				streamProgram.Send(ui.StreamDoneMsg{})
+			}
+		}()
+
+		returnedModel, err := streamProgram.Run()
 		if err != nil {
 			return err
 		}
 
-		fmt.Fprintln(cmd.OutOrStdout())
+		streamModel = returnedModel.(ui.StreamModel)
+
+		if streamModel.Err != nil {
+			return streamModel.Err
+		}
+
+		fmt.Fprintln(cmd.OutOrStdout(), streamModel.Content())
 
 		return nil
 	},
@@ -145,9 +168,4 @@ func initMessages(system, prompt string) []llm.ChatMessage {
 	}
 
 	return messages
-}
-
-// onChunk is the callback to print streaming content.
-func onChunk(chunk string) {
-	fmt.Fprint(os.Stdout, chunk)
 }

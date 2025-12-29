@@ -44,8 +44,8 @@ func FangErrorHandler(w io.Writer, styles fang.Styles, err error) {
 	messageStyle := lipgloss.NewStyle().
 		Foreground(Error)
 
-	header := headerStyle.Render("󱙜 ERROR")
+	header := headerStyle.Render("󱙜 error: ")
 	message := messageStyle.Render(err.Error())
 
-	fmt.Fprintf(w, "%s\n%s\n", header, message)
+	fmt.Fprintf(w, "%s%s\n", header, message)
 }
