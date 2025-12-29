@@ -3,7 +3,6 @@ package ui
 import (
 	"charm.land/bubbles/v2/spinner"
 	tea "charm.land/bubbletea/v2"
-	"charm.land/lipgloss/v2"
 	"github.com/theantichris/ghost/theme"
 )
 
@@ -32,7 +31,7 @@ type StreamModel struct {
 func NewStreamModel() StreamModel {
 	s := spinner.New()
 	s.Spinner = spinner.Ellipsis
-	s.Style = lipgloss.NewStyle().Foreground(theme.Accent0)
+	s.Style = theme.FgAccent0
 
 	return StreamModel{
 		Content: "",
@@ -88,8 +87,7 @@ func (model StreamModel) View() tea.View {
 		return tea.NewView(model.Content)
 	}
 
-	processingStyle := lipgloss.NewStyle().Foreground(theme.Accent0)
-	processingMessage := processingStyle.Render("󱙝 processing") + model.spinner.View()
+	processingMessage := theme.FgAccent0.Render("󱙝 processing") + model.spinner.View()
 
 	return tea.NewView(processingMessage)
 }
