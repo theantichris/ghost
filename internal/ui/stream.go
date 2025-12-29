@@ -31,7 +31,7 @@ type StreamModel struct {
 // NewStreamModel creates and returns StreamModel.
 func NewStreamModel() StreamModel {
 	s := spinner.New()
-	s.Spinner = spinner.Dot
+	s.Spinner = spinner.Ellipsis
 	s.Style = lipgloss.NewStyle().Foreground(theme.Accent0)
 
 	return StreamModel{
@@ -88,7 +88,8 @@ func (model StreamModel) View() tea.View {
 		return tea.NewView(model.Content)
 	}
 
-	// return tea.NewView("󱙝 processing...")
+	processingStyle := lipgloss.NewStyle().Foreground(theme.Accent0)
+	processingMessage := processingStyle.Render("󱙝 processing") + model.spinner.View()
 
-	return tea.NewView(model.spinner.View())
+	return tea.NewView(processingMessage)
 }
