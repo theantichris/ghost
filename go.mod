@@ -3,6 +3,7 @@ module github.com/theantichris/ghost
 go 1.25.5
 
 require (
+	charm.land/bubbles/v2 v2.0.0-rc.1
 	charm.land/bubbletea/v2 v2.0.0-rc.2
 	charm.land/lipgloss/v2 v2.0.0-beta.3.0.20251106193318-19329a3e8410
 	github.com/carlmjohnson/requests v0.25.1
