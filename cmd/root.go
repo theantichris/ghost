@@ -64,7 +64,11 @@ Send prompts directly or pipe data through for analysis.`,
 
 		format := strings.ToLower(viper.GetString("format"))
 
-		messages, err := initMessages(systemPrompt, userPrompt, format)
+		if format != "" && format != "json" {
+			return ErrInvalidFormat
+		}
+
+		messages := initMessages(systemPrompt, userPrompt, format)
 		if err != nil {
 			return err
 		}
@@ -178,7 +182,7 @@ func getPipedInput() (string, error) {
 
 // initMessages creates and returns the initial message history.
 // Returns an error for an invalid output format.
-func initMessages(system, prompt, format string) ([]llm.ChatMessage, error) {
+func initMessages(system, prompt, format string) []llm.ChatMessage {
 	messages := []llm.ChatMessage{
 		{Role: llm.RoleSystem, Content: system},
 	}
@@ -187,14 +191,10 @@ func initMessages(system, prompt, format string) ([]llm.ChatMessage, error) {
 		switch format {
 		case "json":
 			messages = append(messages, llm.ChatMessage{Role: llm.RoleSystem, Content: jsonPrompt})
-
-		default:
-			return []llm.ChatMessage{}, ErrInvalidFormat
 		}
-
 	}
 
 	messages = append(messages, llm.ChatMessage{Role: llm.RoleUser, Content: prompt})
 
-	return messages, nil
+	return messages
 }

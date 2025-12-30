@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"errors"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -15,8 +14,6 @@ func TestInitMessages(t *testing.T) {
 		prompt   string
 		format   string
 		expected []llm.ChatMessage
-		wantErr  bool
-		err      error
 	}{
 		{
 			name:   "returns message history with no format",
@@ -38,39 +35,13 @@ func TestInitMessages(t *testing.T) {
 				{Role: llm.RoleUser, Content: "user prompt"},
 			},
 		},
-		{
-			name:     "returns error with invalid format",
-			system:   "system prompt",
-			prompt:   "user prompt",
-			format:   "butts",
-			expected: []llm.ChatMessage{},
-			wantErr:  true,
-			err:      ErrInvalidFormat,
-		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			actual, err := initMessages(tt.system, tt.prompt, tt.format)
-
-			if !tt.wantErr {
-				if err != nil {
-					t.Fatalf("expected no error, got %v", err)
-				}
-
-				if diff := cmp.Diff(tt.expected, actual); diff != "" {
-					t.Errorf("expected messages (-want +got):\n%s", diff)
-				}
-			}
-
-			if tt.wantErr {
-				if err == nil {
-					t.Fatal("expected error, got nil")
-				}
-
-				if !errors.Is(err, tt.err) {
-					t.Errorf("expected error %v, got %v", tt.err, err)
-				}
+			actual := initMessages(tt.system, tt.prompt, tt.format)
+			if diff := cmp.Diff(tt.expected, actual); diff != "" {
+				t.Errorf("expected messages (-want +got):\n%s", diff)
 			}
 		})
 	}
