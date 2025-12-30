@@ -63,6 +63,9 @@ ghost -f json "system info" | jq .
 # Get formatted markdown output with cyberpunk theme
 ghost -f markdown "Write a guide to memory management"
 
+# Markdown output can be piped to other tools (no color codes)
+ghost -f markdown "Write a guide to memory management" >> memory.md
+
 # Pipe data for analysis
 cat error.log | ghost "what's wrong here"
 echo "def foo():\n  return bar" | ghost "explain this code"

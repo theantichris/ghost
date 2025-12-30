@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	tea "charm.land/bubbletea/v2"
+	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/x/term"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -25,9 +26,10 @@ const (
 )
 
 var (
-	cfgFile          string
-	ErrNoModel       = errors.New("model is required (set via --model flag, config file, or environment)")
-	ErrInvalidFormat = errors.New("invalid format option, valid options are json")
+	cfgFile           string
+	ErrNoModel        = errors.New("model is required (set via --model flag, config file, or environment)")
+	ErrInvalidFormat  = errors.New("invalid format option, valid options are json or markdown")
+	ErrMarkdownRender = errors.New("markdown render error")
 )
 
 // RootCmd represents the base command when called without any subcommands
@@ -100,13 +102,25 @@ Send prompts directly or pipe data through for analysis.`,
 			return streamModel.Err
 		}
 
-		content, err := streamModel.Content()
-		if err != nil {
-			return err
-		}
+		content := streamModel.Content()
 
 		if format == "json" && term.IsTerminal(os.Stdout.Fd()) {
 			content = theme.JSON(content)
+		}
+
+		if format == "markdown" && term.IsTerminal(os.Stdout.Fd()) {
+			renderer, err := glamour.NewTermRenderer(
+				glamour.WithStyles(theme.CyberpunkTheme()),
+			)
+
+			if err != nil {
+				return fmt.Errorf("%w: %w", ErrMarkdownRender, err)
+			}
+
+			content, err = renderer.Render(content)
+			if err != nil {
+				return fmt.Errorf("%w: %w", ErrMarkdownRender, err)
+			}
 		}
 
 		fmt.Fprintln(cmd.OutOrStdout(), content)
