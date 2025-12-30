@@ -44,41 +44,31 @@ Download the latest release for your platform from the
 
 ## Usage
 
-### Quick Start
-
-Ghost requires a model to be specified. Run with the `--model` flag:
-
-```bash
-ghost --model llama3 "your prompt here"
-```
-
-### Basic Examples
-
 ```bash
 # Get intel on tech
-ghost -m llama3 "Explain how neural interfaces work"
+ghost "Explain how neural interfaces work"
 
 # Quick data lookup
-ghost -m llama3 "What's the difference between a netrunner and a decker?"
+ghost "What's the difference between a netrunner and a decker?"
 
 # Code assistance for your next run
-ghost -m llama3 "Write a Go function to encrypt data with AES-256"
+ghost "Write a Go function to encrypt data with AES-256"
 
 # Get structured JSON output with syntax highlighting
-ghost -m llama3 -f json "List the top 3 programming languages"
-
-# Pipe data for analysis
-cat error.log | ghost -m llama3 "what's wrong here"
-echo "def foo():\n  return bar" | ghost -m llama3 "explain this code"
+ghost -f json "List the top 3 programming languages"
 
 # JSON output can be piped to other tools (no color codes)
-ghost -m llama3 -f json "system info" | jq .
-```
+ghost -f json "system info" | jq .
 
-### Help
+# Get formatted markdown output with cyberpunk theme
+ghost -f markdown "Write a guide to memory management"
 
-```bash
-ghost --help
+# Markdown output can be piped to other tools (no color codes)
+ghost -f markdown "Write a guide to memory management" >> memory.md
+
+# Pipe data for analysis
+cat error.log | ghost "what's wrong here"
+echo "def foo():\n  return bar" | ghost "explain this code"
 ```
 
 ## Configuration
@@ -91,9 +81,9 @@ Ghost can be configured in three ways (in order of precedence):
 
 ### Flags
 
-- `--model`, `-m`: The Ollama model to use (required)
+- `--model`, `-m`: The Ollama model to use
 - `--url`, `-u`: Ollama API URL (default: `http://localhost:11434/api`)
-- `--format`, `-f`: Output format (default: text, options: JSON)
+- `--format`, `-f`: Output format (default: text, options: json, markdown)
 - `--config`, `-c`: Path to config file (default: `~/.config/ghost/config.toml`)
 
 ### Environment Variables
@@ -101,7 +91,6 @@ Ghost can be configured in three ways (in order of precedence):
 ```bash
 export GHOST_MODEL=llama3
 export GHOST_URL=http://localhost:11434/api
-export GHOST_FORMAT=json
 
 ghost "your prompt here"
 ```
@@ -113,7 +102,6 @@ Create `~/.config/ghost/config.toml`:
 ```toml
 model = "llama3"
 url = "http://localhost:11434/api"
-format = "json"
 ```
 
 ## License

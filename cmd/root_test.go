@@ -31,7 +31,18 @@ func TestInitMessages(t *testing.T) {
 			format: "json",
 			expected: []llm.ChatMessage{
 				{Role: llm.RoleSystem, Content: "system prompt"},
-				{Role: llm.RoleSystem, Content: "Format the response as json without enclosing backticks."},
+				{Role: llm.RoleSystem, Content: jsonPrompt},
+				{Role: llm.RoleUser, Content: "user prompt"},
+			},
+		},
+		{
+			name:   "returns message history with markdown format",
+			system: "system prompt",
+			prompt: "user prompt",
+			format: "markdown",
+			expected: []llm.ChatMessage{
+				{Role: llm.RoleSystem, Content: "system prompt"},
+				{Role: llm.RoleSystem, Content: markdownPrompt},
 				{Role: llm.RoleUser, Content: "user prompt"},
 			},
 		},

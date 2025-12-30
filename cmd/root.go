@@ -18,15 +18,19 @@ import (
 )
 
 const (
-	Version      = "dev"
-	systemPrompt = "You are ghost, a cyberpunk AI assistant."
-	jsonPrompt   = "Format the response as json without enclosing backticks."
+	Version        = "dev"
+	systemPrompt   = "You are ghost, a cyberpunk AI assistant."
+	jsonPrompt     = "Format the response as json without enclosing backticks."
+	markdownPrompt = "Format the response as markdown without enclosing backticks."
 )
 
 var (
-	cfgFile          string
+	cfgFile string
+
+	isTTY = term.IsTerminal(os.Stdout.Fd())
+
 	ErrNoModel       = errors.New("model is required (set via --model flag, config file, or environment)")
-	ErrInvalidFormat = errors.New("invalid format option, valid options are json")
+	ErrInvalidFormat = errors.New("invalid format option, valid options are json or markdown")
 )
 
 // RootCmd represents the base command when called without any subcommands
@@ -64,8 +68,9 @@ Send prompts directly or pipe data through for analysis.`,
 
 		format := strings.ToLower(viper.GetString("format"))
 
-		if format != "" && format != "json" {
-			return ErrInvalidFormat
+		err = validateFormat(format)
+		if err != nil {
+			return err
 		}
 
 		messages := initMessages(systemPrompt, userPrompt, format)
@@ -101,11 +106,12 @@ Send prompts directly or pipe data through for analysis.`,
 
 		content := streamModel.Content()
 
-		if format == "json" && term.IsTerminal(os.Stdout.Fd()) {
-			content = theme.JSON(content)
+		render, err := theme.RenderContent(content, format, isTTY)
+		if err != nil {
+			return err
 		}
 
-		fmt.Fprintln(cmd.OutOrStdout(), content)
+		fmt.Fprintln(cmd.OutOrStdout(), render)
 
 		return nil
 	},
@@ -114,7 +120,7 @@ Send prompts directly or pipe data through for analysis.`,
 // init defines flags and configuration settings.
 func init() {
 	RootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file path")
-	RootCmd.PersistentFlags().StringP("format", "f", "", "output format (JSON), unspecified for text")
+	RootCmd.PersistentFlags().StringP("format", "f", "", "output format (JSON, markdown), unspecified for text")
 	RootCmd.PersistentFlags().StringP("model", "m", "", "chat model to use")
 	RootCmd.PersistentFlags().StringP("url", "u", "http://localhost:11434/api", "url to the Ollama API")
 }
@@ -187,10 +193,21 @@ func initMessages(system, prompt, format string) []llm.ChatMessage {
 		switch format {
 		case "json":
 			messages = append(messages, llm.ChatMessage{Role: llm.RoleSystem, Content: jsonPrompt})
+		case "markdown":
+			messages = append(messages, llm.ChatMessage{Role: llm.RoleSystem, Content: markdownPrompt})
 		}
 	}
 
 	messages = append(messages, llm.ChatMessage{Role: llm.RoleUser, Content: prompt})
 
 	return messages
+}
+
+// validateFormat returns an error if the format flag isn't a valid value.
+func validateFormat(format string) error {
+	if format != "" && (format != "json" && format != "markdown") {
+		return ErrInvalidFormat
+	}
+
+	return nil
 }

@@ -94,10 +94,21 @@ func (model StreamModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 // View renders the current model state.
 func (model StreamModel) View() tea.View {
-	if model.content != "" && model.format != "json" {
-		wrappedContent := theme.WordWrap(model.width, model.content)
+	if model.done {
+		return tea.NewView("") // Clear the view.
+	}
 
-		return tea.NewView(wrappedContent)
+	if model.content != "" {
+		content, err := theme.RenderContent(model.content, model.format, true)
+		if err != nil {
+			return tea.NewView("")
+		}
+
+		if model.format == "" {
+			content = theme.WordWrap(model.width, content)
+		}
+
+		return tea.NewView(content)
 	}
 
 	processingMessage := theme.FgAccent0.Render("󱙝 processing") + model.spinner.View()
@@ -105,9 +116,10 @@ func (model StreamModel) View() tea.View {
 	return tea.NewView(processingMessage)
 }
 
-// Content returns the full model content with styling
+// Content returns the full model content with styling for normal text.
+// JSON and Markdown output are returned raw.
 func (model StreamModel) Content() string {
-	if model.format == "json" {
+	if model.format == "json" || model.format == "markdown" {
 		return model.content
 	}
 
