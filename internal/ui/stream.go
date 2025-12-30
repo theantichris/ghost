@@ -109,5 +109,9 @@ func (model StreamModel) View() tea.View {
 
 // Content returns the full model content with styling
 func (model StreamModel) Content() string {
+	if strings.ToLower(model.format) == "json" {
+		return model.content
+	}
+
 	return theme.WordWrap(model.width, model.content)
 }

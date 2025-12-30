@@ -9,10 +9,12 @@ import (
 	"strings"
 
 	tea "charm.land/bubbletea/v2"
+	"github.com/charmbracelet/x/term"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/theantichris/ghost/internal/llm"
 	"github.com/theantichris/ghost/internal/ui"
+	"github.com/theantichris/ghost/theme"
 )
 
 const (
@@ -97,7 +99,13 @@ Send prompts directly or pipe data through for analysis.`,
 			return streamModel.Err
 		}
 
-		fmt.Fprintln(cmd.OutOrStdout(), streamModel.Content())
+		content := streamModel.Content()
+
+		if strings.ToLower(format) == "json" && term.IsTerminal(os.Stdout.Fd()) {
+			content = theme.JSON(content)
+		}
+
+		fmt.Fprintln(cmd.OutOrStdout(), content)
 
 		return nil
 	},
