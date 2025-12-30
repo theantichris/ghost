@@ -26,7 +26,10 @@ const (
 )
 
 var (
-	cfgFile           string
+	cfgFile string
+
+	isTTY = term.IsTerminal(os.Stdout.Fd())
+
 	ErrNoModel        = errors.New("model is required (set via --model flag, config file, or environment)")
 	ErrInvalidFormat  = errors.New("invalid format option, valid options are json or markdown")
 	ErrMarkdownRender = errors.New("markdown render error")
@@ -104,11 +107,11 @@ Send prompts directly or pipe data through for analysis.`,
 
 		content := streamModel.Content()
 
-		if format == "json" && term.IsTerminal(os.Stdout.Fd()) {
+		if format == "json" && isTTY {
 			content = theme.JSON(content)
 		}
 
-		if format == "markdown" && term.IsTerminal(os.Stdout.Fd()) {
+		if format == "markdown" && isTTY {
 			renderer, err := glamour.NewTermRenderer(
 				glamour.WithStyles(theme.CyberpunkTheme()),
 			)
