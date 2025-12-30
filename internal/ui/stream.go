@@ -131,8 +131,11 @@ func (model StreamModel) Content() (string, error) {
 		}
 
 		content, err := renderer.Render(model.content)
+		if err != nil {
+			return "", fmt.Errorf("%w: %w", ErrMarkdownRender, err)
+		}
 
-		return content, fmt.Errorf("%w: %w", ErrMarkdownRender, err)
+		return content, nil
 
 	default:
 		return theme.WordWrap(model.width, model.content), nil
