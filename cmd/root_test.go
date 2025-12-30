@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -15,7 +16,7 @@ func TestInitMessages(t *testing.T) {
 		format   string
 		expected []llm.ChatMessage
 		wantErr  bool
-		err      bool
+		err      error
 	}{
 		{
 			name:   "returns message history with no format",
@@ -37,6 +38,15 @@ func TestInitMessages(t *testing.T) {
 				{Role: "user", Content: "user prompt"},
 			},
 		},
+		{
+			name:     "returns error with invalid format",
+			system:   "system prompt",
+			prompt:   "user prompt",
+			format:   "butts",
+			expected: []llm.ChatMessage{},
+			wantErr:  true,
+			err:      ErrInvalidFormat,
+		},
 	}
 
 	for _, tt := range tests {
@@ -50,6 +60,16 @@ func TestInitMessages(t *testing.T) {
 
 				if diff := cmp.Diff(tt.expected, actual); diff != "" {
 					t.Errorf("expected messages (-want +got):\n%s", diff)
+				}
+			}
+
+			if tt.wantErr {
+				if err == nil {
+					t.Fatal("expected error, got nil")
+				}
+
+				if !errors.Is(err, tt.err) {
+					t.Errorf("expected error %v, got %v", tt.err, err)
 				}
 			}
 		})

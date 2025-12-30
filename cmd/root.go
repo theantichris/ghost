@@ -21,8 +21,9 @@ const (
 )
 
 var (
-	cfgFile    string
-	ErrNoModel = errors.New("model is required (set via --model flag, config file, or environment)")
+	cfgFile          string
+	ErrNoModel       = errors.New("model is required (set via --model flag, config file, or environment)")
+	ErrInvalidFormat = errors.New("invalid format option, valid options are json")
 )
 
 // RootCmd represents the base command when called without any subcommands
@@ -179,7 +180,7 @@ func initMessages(system, prompt, format string) ([]llm.ChatMessage, error) {
 			messages = append(messages, llm.ChatMessage{Role: "system", Content: "Format the response as json without enclosing backticks."})
 
 		default:
-			return []llm.ChatMessage{}, fmt.Errorf("invalid format option, valid options are json")
+			return []llm.ChatMessage{}, ErrInvalidFormat
 		}
 
 	}
