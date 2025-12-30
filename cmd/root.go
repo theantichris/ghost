@@ -16,9 +16,9 @@ import (
 )
 
 const (
-	Version    = "dev"
-	system     = "You are ghost, a cyberpunk AI assistant."
-	jsonPrompt = "Format the response as json without enclosing backticks."
+	Version      = "dev"
+	systemPrompt = "You are ghost, a cyberpunk AI assistant."
+	jsonPrompt   = "Format the response as json without enclosing backticks."
 )
 
 var (
@@ -49,7 +49,7 @@ Send prompts directly or pipe data through for analysis.`,
 	},
 
 	RunE: func(cmd *cobra.Command, args []string) error {
-		prompt := args[0]
+		userPrompt := args[0]
 
 		pipedInput, err := getPipedInput()
 		if err != nil {
@@ -57,12 +57,12 @@ Send prompts directly or pipe data through for analysis.`,
 		}
 
 		if pipedInput != "" {
-			prompt = fmt.Sprintf("%s\n\n%s", prompt, pipedInput)
+			userPrompt = fmt.Sprintf("%s\n\n%s", userPrompt, pipedInput)
 		}
 
 		format := viper.GetString("format")
 
-		messages, err := initMessages(system, prompt, format)
+		messages, err := initMessages(systemPrompt, userPrompt, format)
 		if err != nil {
 			return err
 		}
