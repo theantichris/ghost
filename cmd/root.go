@@ -18,9 +18,10 @@ import (
 )
 
 const (
-	Version      = "dev"
-	systemPrompt = "You are ghost, a cyberpunk AI assistant."
-	jsonPrompt   = "Format the response as json without enclosing backticks."
+	Version        = "dev"
+	systemPrompt   = "You are ghost, a cyberpunk AI assistant."
+	jsonPrompt     = "Format the response as json without enclosing backticks."
+	markdownPrompt = "Format the response as markdown without enclosing backticks."
 )
 
 var (
@@ -64,7 +65,7 @@ Send prompts directly or pipe data through for analysis.`,
 
 		format := strings.ToLower(viper.GetString("format"))
 
-		if format != "" && format != "json" {
+		if format != "" && (format != "json" && format != "markdown") {
 			return ErrInvalidFormat
 		}
 
@@ -187,6 +188,8 @@ func initMessages(system, prompt, format string) []llm.ChatMessage {
 		switch format {
 		case "json":
 			messages = append(messages, llm.ChatMessage{Role: llm.RoleSystem, Content: jsonPrompt})
+		case "markdown":
+			messages = append(messages, llm.ChatMessage{Role: llm.RoleSystem, Content: markdownPrompt})
 		}
 	}
 

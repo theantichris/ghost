@@ -94,7 +94,7 @@ func (model StreamModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 // View renders the current model state.
 func (model StreamModel) View() tea.View {
-	if model.content != "" && model.format != "json" {
+	if model.content != "" && model.format != "json" && model.format != "markdown" {
 		wrappedContent := theme.WordWrap(model.width, model.content)
 
 		return tea.NewView(wrappedContent)
@@ -107,7 +107,7 @@ func (model StreamModel) View() tea.View {
 
 // Content returns the full model content with styling
 func (model StreamModel) Content() string {
-	if model.format == "json" {
+	if model.format == "json" || model.format == "markdown" {
 		return model.content
 	}
 
