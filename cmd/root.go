@@ -16,8 +16,9 @@ import (
 )
 
 const (
-	Version = "dev"
-	system  = "You are ghost, a cyberpunk AI assistant."
+	Version    = "dev"
+	system     = "You are ghost, a cyberpunk AI assistant."
+	jsonPrompt = "Format the response as json without enclosing backticks."
 )
 
 var (
@@ -177,7 +178,7 @@ func initMessages(system, prompt, format string) ([]llm.ChatMessage, error) {
 	if format != "" {
 		switch format {
 		case strings.ToLower("json"):
-			messages = append(messages, llm.ChatMessage{Role: llm.RoleSystem, Content: "Format the response as json without enclosing backticks."})
+			messages = append(messages, llm.ChatMessage{Role: llm.RoleSystem, Content: jsonPrompt})
 
 		default:
 			return []llm.ChatMessage{}, ErrInvalidFormat
