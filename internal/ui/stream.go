@@ -100,14 +100,14 @@ func (model StreamModel) View() tea.View {
 	if model.content != "" {
 		switch model.format {
 		case "json":
-			content = theme.JSON(content)
+			content = theme.JSON(model.content)
 
 		case "markdown":
 			renderer, _ := glamour.NewTermRenderer(
 				glamour.WithStyles(theme.CyberpunkTheme()),
 			)
 
-			content, _ = renderer.Render(content)
+			content, _ = renderer.Render(model.content)
 
 		default:
 			content = theme.WordWrap(model.width, model.content)
