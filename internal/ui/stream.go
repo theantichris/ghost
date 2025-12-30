@@ -1,11 +1,18 @@
 package ui
 
 import (
+	"errors"
+	"fmt"
+
 	"charm.land/bubbles/v2/key"
 	"charm.land/bubbles/v2/spinner"
 	tea "charm.land/bubbletea/v2"
 	"github.com/charmbracelet/glamour"
 	"github.com/theantichris/ghost/theme"
+)
+
+var (
+	ErrMarkdownRender = errors.New("markdown render error")
 )
 
 var quitKeys = key.NewBinding(
@@ -108,22 +115,26 @@ func (model StreamModel) View() tea.View {
 }
 
 // Content returns the full model content with styling
-func (model StreamModel) Content() string {
+func (model StreamModel) Content() (string, error) {
 	switch model.format {
 	case "json":
-		return model.content
+		return model.content, nil
 
 	case "markdown":
-		renderer, _ := glamour.NewTermRenderer(
+		renderer, err := glamour.NewTermRenderer(
 			glamour.WithStyles(theme.CyberpunkTheme()),
 			glamour.WithWordWrap(model.width),
 		)
 
-		out, _ := renderer.Render(model.content)
+		if err != nil {
+			return "", fmt.Errorf("%w: %w", ErrMarkdownRender, err)
+		}
 
-		return out
+		content, err := renderer.Render(model.content)
+
+		return content, fmt.Errorf("%w: %w", ErrMarkdownRender, err)
 
 	default:
-		return theme.WordWrap(model.width, model.content)
+		return theme.WordWrap(model.width, model.content), nil
 	}
 }

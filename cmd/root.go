@@ -100,7 +100,10 @@ Send prompts directly or pipe data through for analysis.`,
 			return streamModel.Err
 		}
 
-		content := streamModel.Content()
+		content, err := streamModel.Content()
+		if err != nil {
+			return err
+		}
 
 		if format == "json" && term.IsTerminal(os.Stdout.Fd()) {
 			content = theme.JSON(content)
