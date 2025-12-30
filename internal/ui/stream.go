@@ -4,7 +4,6 @@ import (
 	"charm.land/bubbles/v2/key"
 	"charm.land/bubbles/v2/spinner"
 	tea "charm.land/bubbletea/v2"
-	"github.com/charmbracelet/glamour"
 	"github.com/theantichris/ghost/theme"
 )
 
@@ -99,22 +98,14 @@ func (model StreamModel) View() tea.View {
 		return tea.NewView("") // Clear the view.
 	}
 
-	var content string
-
 	if model.content != "" {
-		switch model.format {
-		case "json":
-			content = theme.JSON(model.content)
+		content, err := theme.RenderContent(model.content, model.format, true)
+		if err != nil {
+			return tea.NewView("")
+		}
 
-		case "markdown":
-			renderer, _ := glamour.NewTermRenderer(
-				glamour.WithStyles(theme.CyberpunkTheme()),
-			)
-
-			content, _ = renderer.Render(model.content)
-
-		default:
-			content = theme.WordWrap(model.width, model.content)
+		if model.format == "" {
+			content = theme.WordWrap(model.width, content)
 		}
 
 		return tea.NewView(content)
