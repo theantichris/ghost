@@ -109,11 +109,11 @@ func (model StreamModel) View() tea.View {
 
 // Content returns the full model content with styling
 func (model StreamModel) Content() string {
-	if model.format == "json" {
+	switch model.format {
+	case "json":
 		return model.content
-	}
 
-	if model.format == "markdown" {
+	case "markdown":
 		renderer, _ := glamour.NewTermRenderer(
 			glamour.WithStyles(theme.CyberpunkTheme()),
 			glamour.WithWordWrap(model.width),
@@ -122,7 +122,8 @@ func (model StreamModel) Content() string {
 		out, _ := renderer.Render(model.content)
 
 		return out
-	}
 
-	return theme.WordWrap(model.width, model.content)
+	default:
+		return theme.WordWrap(model.width, model.content)
+	}
 }
