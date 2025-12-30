@@ -70,8 +70,9 @@ Send prompts directly or pipe data through for analysis.`,
 
 		format := strings.ToLower(viper.GetString("format"))
 
-		if format != "" && (format != "json" && format != "markdown") {
-			return ErrInvalidFormat
+		err = validateFormat(format)
+		if err != nil {
+			return err
 		}
 
 		messages := initMessages(systemPrompt, userPrompt, format)
@@ -216,4 +217,13 @@ func initMessages(system, prompt, format string) []llm.ChatMessage {
 	messages = append(messages, llm.ChatMessage{Role: llm.RoleUser, Content: prompt})
 
 	return messages
+}
+
+// validateFormat returns an error if the format flag isn't a valid value.
+func validateFormat(format string) error {
+	if format != "" && (format != "json" && format != "markdown") {
+		return ErrInvalidFormat
+	}
+
+	return nil
 }
