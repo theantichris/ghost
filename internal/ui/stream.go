@@ -114,7 +114,12 @@ func (model StreamModel) Content() string {
 	}
 
 	if model.format == "markdown" {
-		out, _ := glamour.Render(model.content, "dark")
+		renderer, _ := glamour.NewTermRenderer(
+			glamour.WithStyles(theme.CyberpunkTheme()),
+			glamour.WithWordWrap(model.width),
+		)
+
+		out, _ := renderer.Render(model.content)
 
 		return out
 	}

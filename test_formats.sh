@@ -22,8 +22,8 @@ echo ""
 
 echo "3. Testing markdown output:"
 echo "------------------------"
-echo "$ go run . -f markdown \"write a short list of 2 items\""
-go run . -f markdown "write a short list of 2 items"
+echo "$ go run . -f markdown \"write markdown showing all these elements: heading 1, heading 2, bold, italic, code block with go code, inline code, link, list, blockquote, horizontal rule\""
+go run . -f markdown "write markdown showing all these elements: heading 1, heading 2, bold, italic, code block with go code, inline code, link, list, blockquote, horizontal rule"
 echo ""
 
 echo "================================================"
