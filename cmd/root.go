@@ -102,7 +102,7 @@ Send prompts directly or pipe data through for analysis.`,
 
 		content := streamModel.Content()
 
-		if (format == "json" || format == "markdown") && term.IsTerminal(os.Stdout.Fd()) {
+		if format == "json" && term.IsTerminal(os.Stdout.Fd()) {
 			content = theme.JSON(content)
 		}
 

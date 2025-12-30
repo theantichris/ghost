@@ -4,6 +4,7 @@ import (
 	"charm.land/bubbles/v2/key"
 	"charm.land/bubbles/v2/spinner"
 	tea "charm.land/bubbletea/v2"
+	"github.com/charmbracelet/glamour"
 	"github.com/theantichris/ghost/theme"
 )
 
@@ -94,6 +95,7 @@ func (model StreamModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 // View renders the current model state.
 func (model StreamModel) View() tea.View {
+	// Only stream normal text output.
 	if model.content != "" && model.format != "json" && model.format != "markdown" {
 		wrappedContent := theme.WordWrap(model.width, model.content)
 
@@ -107,8 +109,14 @@ func (model StreamModel) View() tea.View {
 
 // Content returns the full model content with styling
 func (model StreamModel) Content() string {
-	if model.format == "json" || model.format == "markdown" {
+	if model.format == "json" {
 		return model.content
+	}
+
+	if model.format == "markdown" {
+		out, _ := glamour.Render(model.content, "dark")
+
+		return out
 	}
 
 	return theme.WordWrap(model.width, model.content)
