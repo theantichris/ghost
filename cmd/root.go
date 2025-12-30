@@ -60,6 +60,7 @@ Send prompts directly or pipe data through for analysis.`,
 			userPrompt = fmt.Sprintf("%s\n\n%s", userPrompt, pipedInput)
 		}
 
+		// TODO: should validate format before passing to init Messages
 		format := viper.GetString("format")
 
 		messages, err := initMessages(systemPrompt, userPrompt, format)
