@@ -64,9 +64,15 @@ ghost -m llama3 "What's the difference between a netrunner and a decker?"
 # Code assistance for your next run
 ghost -m llama3 "Write a Go function to encrypt data with AES-256"
 
+# Get structured JSON output with syntax highlighting
+ghost -m llama3 -f json "List the top 3 programming languages"
+
 # Pipe data for analysis
 cat error.log | ghost -m llama3 "what's wrong here"
 echo "def foo():\n  return bar" | ghost -m llama3 "explain this code"
+
+# JSON output can be piped to other tools (no color codes)
+ghost -m llama3 -f json "system info" | jq .
 ```
 
 ### Help
@@ -87,6 +93,7 @@ Ghost can be configured in three ways (in order of precedence):
 
 - `--model`, `-m`: The Ollama model to use (required)
 - `--url`, `-u`: Ollama API URL (default: `http://localhost:11434/api`)
+- `--format`, `-f`: Output format (default: text, options: JSON)
 - `--config`, `-c`: Path to config file (default: `~/.config/ghost/config.toml`)
 
 ### Environment Variables
@@ -94,6 +101,8 @@ Ghost can be configured in three ways (in order of precedence):
 ```bash
 export GHOST_MODEL=llama3
 export GHOST_URL=http://localhost:11434/api
+export GHOST_FORMAT=json
+
 ghost "your prompt here"
 ```
 
@@ -104,6 +113,7 @@ Create `~/.config/ghost/config.toml`:
 ```toml
 model = "llama3"
 url = "http://localhost:11434/api"
+format = "json"
 ```
 
 ## License
