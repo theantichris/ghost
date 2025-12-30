@@ -95,6 +95,10 @@ func (model StreamModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 // View renders the current model state.
 func (model StreamModel) View() tea.View {
+	if model.done {
+		return tea.NewView("") // Clear the view.
+	}
+
 	var content string
 
 	if model.content != "" {
