@@ -171,13 +171,13 @@ func getPipedInput() (string, error) {
 // Returns an error for an invalid output format.
 func initMessages(system, prompt, format string) ([]llm.ChatMessage, error) {
 	messages := []llm.ChatMessage{
-		{Role: "system", Content: system},
+		{Role: llm.RoleSystem, Content: system},
 	}
 
 	if format != "" {
 		switch format {
 		case strings.ToLower("json"):
-			messages = append(messages, llm.ChatMessage{Role: "system", Content: "Format the response as json without enclosing backticks."})
+			messages = append(messages, llm.ChatMessage{Role: llm.RoleSystem, Content: "Format the response as json without enclosing backticks."})
 
 		default:
 			return []llm.ChatMessage{}, ErrInvalidFormat
@@ -185,7 +185,7 @@ func initMessages(system, prompt, format string) ([]llm.ChatMessage, error) {
 
 	}
 
-	messages = append(messages, llm.ChatMessage{Role: "user", Content: prompt})
+	messages = append(messages, llm.ChatMessage{Role: llm.RoleUser, Content: prompt})
 
 	return messages, nil
 }

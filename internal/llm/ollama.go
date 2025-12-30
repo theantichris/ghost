@@ -18,6 +18,16 @@ var (
 	ErrDecodeChunk      = errors.New("error decoding chunk")
 )
 
+// Role represents the author of a message in the chat history.
+type Role string
+
+const (
+	RoleSystem    Role = "system"
+	RoleUser      Role = "user"
+	RoleAssistant Role = "assistant"
+	RoleTool      Role = "tool"
+)
+
 // ChatRequest holds the information for the chat endpoint.
 type ChatRequest struct {
 	Model    string        `json:"model"`
@@ -33,8 +43,7 @@ type ChatResponse struct {
 // ChatMessage holds a single message in the chat history.
 type ChatMessage struct {
 	// Role holds the author of the message.
-	// Values are system, user, assistant, tool.
-	Role string `json:"role"`
+	Role Role `json:"role"`
 
 	// Content holds the message content.
 	Content string `json:"content"`
@@ -93,7 +102,7 @@ func Chat(ctx context.Context, host, model string, messages []ChatMessage, onChu
 	}
 
 	chatMessage := ChatMessage{
-		Role:    "assistant",
+		Role:    RoleAssistant,
 		Content: chatContent.String(),
 	}
 

@@ -23,8 +23,8 @@ func TestInitMessages(t *testing.T) {
 			system: "system prompt",
 			prompt: "user prompt",
 			expected: []llm.ChatMessage{
-				{Role: "system", Content: "system prompt"},
-				{Role: "user", Content: "user prompt"},
+				{Role: llm.RoleSystem, Content: "system prompt"},
+				{Role: llm.RoleUser, Content: "user prompt"},
 			},
 		},
 		{
@@ -33,9 +33,9 @@ func TestInitMessages(t *testing.T) {
 			prompt: "user prompt",
 			format: "json",
 			expected: []llm.ChatMessage{
-				{Role: "system", Content: "system prompt"},
-				{Role: "system", Content: "Format the response as json without enclosing backticks."},
-				{Role: "user", Content: "user prompt"},
+				{Role: llm.RoleSystem, Content: "system prompt"},
+				{Role: llm.RoleSystem, Content: "Format the response as json without enclosing backticks."},
+				{Role: llm.RoleUser, Content: "user prompt"},
 			},
 		},
 		{
