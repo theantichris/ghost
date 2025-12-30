@@ -69,9 +69,6 @@ Send prompts directly or pipe data through for analysis.`,
 		}
 
 		messages := initMessages(systemPrompt, userPrompt, format)
-		if err != nil {
-			return err
-		}
 
 		url := viper.GetString("url")
 		model := viper.GetString("model")
