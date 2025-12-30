@@ -4,6 +4,7 @@ ENV
 GoReleaser
 NewStreamModel
 PersistentPreRunE
+RenderContent
 RootCmd
 Shadowrun
 StreamDoneMsg
