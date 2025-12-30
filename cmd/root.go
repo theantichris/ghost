@@ -9,20 +9,24 @@ import (
 	"strings"
 
 	tea "charm.land/bubbletea/v2"
+	"github.com/charmbracelet/x/term"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/theantichris/ghost/internal/llm"
 	"github.com/theantichris/ghost/internal/ui"
+	"github.com/theantichris/ghost/theme"
 )
 
 const (
-	Version = "dev"
-	system  = "You are ghost, a cyberpunk AI assistant."
+	Version      = "dev"
+	systemPrompt = "You are ghost, a cyberpunk AI assistant."
+	jsonPrompt   = "Format the response as json without enclosing backticks."
 )
 
 var (
-	cfgFile    string
-	ErrNoModel = errors.New("model is required (set via --model flag, config file, or environment)")
+	cfgFile          string
+	ErrNoModel       = errors.New("model is required (set via --model flag, config file, or environment)")
+	ErrInvalidFormat = errors.New("invalid format option, valid options are json")
 )
 
 // RootCmd represents the base command when called without any subcommands
@@ -47,7 +51,7 @@ Send prompts directly or pipe data through for analysis.`,
 	},
 
 	RunE: func(cmd *cobra.Command, args []string) error {
-		prompt := args[0]
+		userPrompt := args[0]
 
 		pipedInput, err := getPipedInput()
 		if err != nil {
@@ -55,15 +59,21 @@ Send prompts directly or pipe data through for analysis.`,
 		}
 
 		if pipedInput != "" {
-			prompt = fmt.Sprintf("%s\n\n%s", prompt, pipedInput)
+			userPrompt = fmt.Sprintf("%s\n\n%s", userPrompt, pipedInput)
 		}
 
-		messages := initMessages(system, prompt)
+		format := strings.ToLower(viper.GetString("format"))
+
+		if format != "" && format != "json" {
+			return ErrInvalidFormat
+		}
+
+		messages := initMessages(systemPrompt, userPrompt, format)
 
 		url := viper.GetString("url")
 		model := viper.GetString("model")
 
-		streamModel := ui.NewStreamModel()
+		streamModel := ui.NewStreamModel(format)
 		streamProgram := tea.NewProgram(streamModel)
 
 		go func() {
@@ -89,7 +99,13 @@ Send prompts directly or pipe data through for analysis.`,
 			return streamModel.Err
 		}
 
-		fmt.Fprintln(cmd.OutOrStdout(), streamModel.Content())
+		content := streamModel.Content()
+
+		if format == "json" && term.IsTerminal(os.Stdout.Fd()) {
+			content = theme.JSON(content)
+		}
+
+		fmt.Fprintln(cmd.OutOrStdout(), content)
 
 		return nil
 	},
@@ -98,6 +114,7 @@ Send prompts directly or pipe data through for analysis.`,
 // init defines flags and configuration settings.
 func init() {
 	RootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file path")
+	RootCmd.PersistentFlags().StringP("format", "f", "", "output format (JSON), unspecified for text")
 	RootCmd.PersistentFlags().StringP("model", "m", "", "chat model to use")
 	RootCmd.PersistentFlags().StringP("url", "u", "http://localhost:11434/api", "url to the Ollama API")
 }
@@ -161,11 +178,19 @@ func getPipedInput() (string, error) {
 }
 
 // initMessages creates and returns the initial message history.
-func initMessages(system, prompt string) []llm.ChatMessage {
+func initMessages(system, prompt, format string) []llm.ChatMessage {
 	messages := []llm.ChatMessage{
-		{Role: "system", Content: system},
-		{Role: "user", Content: prompt},
+		{Role: llm.RoleSystem, Content: system},
 	}
+
+	if format != "" {
+		switch format {
+		case "json":
+			messages = append(messages, llm.ChatMessage{Role: llm.RoleSystem, Content: jsonPrompt})
+		}
+	}
+
+	messages = append(messages, llm.ChatMessage{Role: llm.RoleUser, Content: prompt})
 
 	return messages
 }
