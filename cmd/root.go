@@ -114,7 +114,7 @@ Send prompts directly or pipe data through for analysis.`,
 // init defines flags and configuration settings.
 func init() {
 	RootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file path")
-	RootCmd.PersistentFlags().StringP("format", "f", "", "output format (JSON), unspecified for text")
+	RootCmd.PersistentFlags().StringP("format", "f", "", "output format (JSON, markdown), unspecified for text")
 	RootCmd.PersistentFlags().StringP("model", "m", "", "chat model to use")
 	RootCmd.PersistentFlags().StringP("url", "u", "http://localhost:11434/api", "url to the Ollama API")
 }
