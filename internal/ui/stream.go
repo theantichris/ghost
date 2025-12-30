@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"strings"
+
 	"charm.land/bubbles/v2/key"
 	"charm.land/bubbles/v2/spinner"
 	tea "charm.land/bubbletea/v2"
@@ -29,10 +31,11 @@ type StreamModel struct {
 	done    bool          // Whether streaming has finished.
 	Err     error         // Error if streaming failed.
 	spinner spinner.Model // Animated spinner.
+	format  string        // Format for output.
 }
 
 // NewStreamModel creates and returns StreamModel.
-func NewStreamModel() StreamModel {
+func NewStreamModel(format string) StreamModel {
 	s := spinner.New()
 	s.Spinner = spinner.Ellipsis
 	s.Style = theme.FgAccent0
@@ -43,6 +46,7 @@ func NewStreamModel() StreamModel {
 		done:    false,
 		Err:     nil,
 		spinner: s,
+		format:  format,
 	}
 }
 
@@ -92,7 +96,7 @@ func (model StreamModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 // View renders the current model state.
 func (model StreamModel) View() tea.View {
-	if model.content != "" {
+	if model.content != "" && strings.ToLower(model.format) != "json" {
 		wrappedContent := theme.WordWrap(model.width, model.content)
 
 		return tea.NewView(wrappedContent)

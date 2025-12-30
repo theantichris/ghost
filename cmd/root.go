@@ -71,7 +71,7 @@ Send prompts directly or pipe data through for analysis.`,
 		url := viper.GetString("url")
 		model := viper.GetString("model")
 
-		streamModel := ui.NewStreamModel()
+		streamModel := ui.NewStreamModel(format)
 		streamProgram := tea.NewProgram(streamModel)
 
 		go func() {
