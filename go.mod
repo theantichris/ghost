@@ -8,6 +8,7 @@ require (
 	charm.land/lipgloss/v2 v2.0.0-beta.3.0.20251106193318-19329a3e8410
 	github.com/carlmjohnson/requests v0.25.1
 	github.com/charmbracelet/fang v0.4.4
+	github.com/google/go-cmp v0.7.0
 	github.com/muesli/reflow v0.3.0
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/viper v1.21.0
