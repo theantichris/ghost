@@ -4,6 +4,7 @@ import (
 	"charm.land/bubbles/v2/key"
 	"charm.land/bubbles/v2/spinner"
 	tea "charm.land/bubbletea/v2"
+	"github.com/charmbracelet/glamour"
 	"github.com/theantichris/ghost/theme"
 )
 
@@ -94,11 +95,25 @@ func (model StreamModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 // View renders the current model state.
 func (model StreamModel) View() tea.View {
-	// Only stream normal text output.
-	if model.content != "" && model.format != "json" && model.format != "markdown" {
-		wrappedContent := theme.WordWrap(model.width, model.content)
+	var content string
 
-		return tea.NewView(wrappedContent)
+	if model.content != "" {
+		switch model.format {
+		case "json":
+			content = theme.JSON(content)
+
+		case "markdown":
+			renderer, _ := glamour.NewTermRenderer(
+				glamour.WithStyles(theme.CyberpunkTheme()),
+			)
+
+			content, _ = renderer.Render(content)
+
+		default:
+			content = theme.WordWrap(model.width, model.content)
+		}
+
+		return tea.NewView(content)
 	}
 
 	processingMessage := theme.FgAccent0.Render("󱙝 processing") + model.spinner.View()
