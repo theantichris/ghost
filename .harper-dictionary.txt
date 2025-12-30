@@ -15,6 +15,7 @@ getPipedInput
 golangci
 initConfig
 initMessages
+lipgloss
 md
 onChunk
 unexported
