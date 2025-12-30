@@ -178,7 +178,6 @@ func getPipedInput() (string, error) {
 }
 
 // initMessages creates and returns the initial message history.
-// Returns an error for an invalid output format.
 func initMessages(system, prompt, format string) []llm.ChatMessage {
 	messages := []llm.ChatMessage{
 		{Role: llm.RoleSystem, Content: system},
