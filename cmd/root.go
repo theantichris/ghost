@@ -62,8 +62,7 @@ Send prompts directly or pipe data through for analysis.`,
 			userPrompt = fmt.Sprintf("%s\n\n%s", userPrompt, pipedInput)
 		}
 
-		// TODO: should validate format before passing to init Messages
-		format := viper.GetString("format")
+		format := strings.ToLower(viper.GetString("format"))
 
 		messages, err := initMessages(systemPrompt, userPrompt, format)
 		if err != nil {
@@ -101,7 +100,7 @@ Send prompts directly or pipe data through for analysis.`,
 
 		content := streamModel.Content()
 
-		if strings.ToLower(format) == "json" && term.IsTerminal(os.Stdout.Fd()) {
+		if format == "json" && term.IsTerminal(os.Stdout.Fd()) {
 			content = theme.JSON(content)
 		}
 
@@ -186,7 +185,7 @@ func initMessages(system, prompt, format string) ([]llm.ChatMessage, error) {
 
 	if format != "" {
 		switch format {
-		case strings.ToLower("json"):
+		case "json":
 			messages = append(messages, llm.ChatMessage{Role: llm.RoleSystem, Content: jsonPrompt})
 
 		default:
