@@ -10,10 +10,12 @@ import (
 )
 
 func main() {
+	rootCmd := cmd.NewRootCmd()
+
 	if err := fang.Execute(
 		context.Background(),
-		cmd.RootCmd,
-		fang.WithVersion(cmd.Version),
+		rootCmd,
+		fang.WithVersion(rootCmd.Version),
 		fang.WithColorSchemeFunc(theme.GetFangColorScheme),
 		fang.WithErrorHandler(theme.FangErrorHandler),
 		fang.WithNotifySignal(os.Interrupt),
