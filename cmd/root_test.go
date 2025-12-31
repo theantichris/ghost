@@ -10,17 +10,17 @@ import (
 
 func TestInitMessages(t *testing.T) {
 	tests := []struct {
-		name     string
-		system   string
-		prompt   string
-		format   string
-		expected []llm.ChatMessage
+		name   string
+		system string
+		prompt string
+		format string
+		want   []llm.ChatMessage
 	}{
 		{
 			name:   "returns message history with no format",
 			system: "system prompt",
 			prompt: "user prompt",
-			expected: []llm.ChatMessage{
+			want: []llm.ChatMessage{
 				{Role: llm.RoleSystem, Content: "system prompt"},
 				{Role: llm.RoleUser, Content: "user prompt"},
 			},
@@ -30,7 +30,7 @@ func TestInitMessages(t *testing.T) {
 			system: "system prompt",
 			prompt: "user prompt",
 			format: "json",
-			expected: []llm.ChatMessage{
+			want: []llm.ChatMessage{
 				{Role: llm.RoleSystem, Content: "system prompt"},
 				{Role: llm.RoleSystem, Content: jsonPrompt},
 				{Role: llm.RoleUser, Content: "user prompt"},
@@ -41,7 +41,7 @@ func TestInitMessages(t *testing.T) {
 			system: "system prompt",
 			prompt: "user prompt",
 			format: "markdown",
-			expected: []llm.ChatMessage{
+			want: []llm.ChatMessage{
 				{Role: llm.RoleSystem, Content: "system prompt"},
 				{Role: llm.RoleSystem, Content: markdownPrompt},
 				{Role: llm.RoleUser, Content: "user prompt"},
@@ -51,9 +51,10 @@ func TestInitMessages(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			actual := initMessages(tt.system, tt.prompt, tt.format)
-			if diff := cmp.Diff(tt.expected, actual); diff != "" {
-				t.Errorf("expected messages (-want +got):\n%s", diff)
+			got := initMessages(tt.system, tt.prompt, tt.format)
+
+			if diff := cmp.Diff(tt.want, got); diff != "" {
+				t.Errorf("initMessages() mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}
@@ -75,6 +76,10 @@ func TestValidateFormat(t *testing.T) {
 			format: "markdown",
 		},
 		{
+			name:   "does not return error for empty format",
+			format: "",
+		},
+		{
 			name:    "returns error for invalid format",
 			format:  "butts",
 			wantErr: true,
@@ -86,20 +91,19 @@ func TestValidateFormat(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			err := validateFormat(tt.format)
 
-			if !tt.wantErr {
-				if err != nil {
-					t.Fatalf("expected no error, got %v", err)
-				}
-			}
-
 			if tt.wantErr {
 				if err == nil {
-					t.Fatalf("expected error, got nil")
+					t.Fatalf("validateFormat() err = nil, want error")
 				}
 
-				if !errors.Is(err, ErrInvalidFormat) {
-					t.Errorf("expected error %v, got %v", ErrInvalidFormat, err)
+				if !errors.Is(err, tt.err) {
+					t.Errorf("validateFormat() err = %v, want %v", err, tt.err)
 				}
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("validateFormat() error = %v, want no error", err)
 			}
 		})
 	}
