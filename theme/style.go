@@ -17,8 +17,8 @@ var (
 )
 
 // WordWrap styles and wraps content to width.
-func WordWrap(width int, content string) string {
-	styled := FgText.Render(content)
+func WordWrap(width int, content string, style lipgloss.Style) string {
+	styled := style.Render(content)
 
 	return wordwrap.String(styled, width)
 }

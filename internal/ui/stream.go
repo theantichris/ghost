@@ -105,7 +105,7 @@ func (model StreamModel) View() tea.View {
 		}
 
 		if model.format == "" {
-			content = theme.WordWrap(model.width, content)
+			content = theme.WordWrap(model.width, content, theme.FgText)
 		}
 
 		return tea.NewView(content)
@@ -123,5 +123,5 @@ func (model StreamModel) Content() string {
 		return model.content
 	}
 
-	return theme.WordWrap(model.width, model.content)
+	return theme.WordWrap(model.width, model.content, theme.FgText)
 }
