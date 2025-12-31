@@ -1,10 +1,10 @@
 #!/bin/bash
-# Test script for Ghost output formats
-# Usage: ./test_formats.sh
+# Test script for Ghost features
+# Usage: ./test_features.sh
 
 set -e
 
-echo "Testing Ghost output formats"
+echo "Testing Ghost features"
 echo "================================================"
 echo ""
 
@@ -14,17 +14,29 @@ echo "$ go run . \"say hello\""
 go run . "say hello"
 echo ""
 
-echo "2. Testing JSON output:"
+echo "2. Testing piping content in:"
+echo "------------------------"
+echo "$ echo \"package main\" | go run . \"explain this code\""
+echo "package main" | go run . "explain this code"
+echo ""
+
+echo "3. Testing piping content out:"
+echo "------------------------"
+echo "$ go run . \"say hello\" | cat"
+go run . "say hello" | cat
+echo ""
+
+echo "4. Testing JSON output:"
 echo "------------------------"
 echo "$ go run . -f json \"list 3 colors\""
 go run . -f json "list 3 colors"
 echo ""
 
-echo "3. Testing markdown output:"
+echo "5. Testing markdown output:"
 echo "------------------------"
 echo "$ go run . -f markdown \"write markdown showing all these elements: heading 1, heading 2, bold, italic, code block with go code, inline code, link, list, blockquote, horizontal rule\""
 go run . -f markdown "write markdown showing all these elements: heading 1, heading 2, bold, italic, code block with go code, inline code, link, list, blockquote, horizontal rule"
 echo ""
 
 echo "================================================"
-echo "All format tests completed!"
+echo "All feature tests completed!"

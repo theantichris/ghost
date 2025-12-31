@@ -1,5 +1,6 @@
 ChatMessage
 ChatResponse
+CyberpunkTheme
 ENV
 GoReleaser
 NewStreamModel
