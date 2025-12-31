@@ -49,75 +49,12 @@ func NewRootCmd() *cobra.Command {
 		Short:   shortText,
 		Long:    longText,
 		Example: exampleText,
-
-		Args: cobra.MinimumNArgs(1),
-
-		// PersistentPreRunE is called after flags are parsed but before the command's
-		// RunE function is called.
+		Args:    cobra.MinimumNArgs(1),
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			return initConfig(cmd, cfgFile)
 		},
-
 		RunE: func(cmd *cobra.Command, args []string) error {
-			userPrompt := args[0]
-
-			pipedInput, err := getPipedInput()
-			if err != nil {
-				return err
-			}
-
-			if pipedInput != "" {
-				userPrompt = fmt.Sprintf("%s\n\n%s", userPrompt, pipedInput)
-			}
-
-			format := strings.ToLower(viper.GetString("format"))
-
-			err = validateFormat(format)
-			if err != nil {
-				return err
-			}
-
-			messages := initMessages(systemPrompt, userPrompt, format)
-
-			url := viper.GetString("url")
-			model := viper.GetString("model")
-
-			streamModel := ui.NewStreamModel(format)
-			streamProgram := tea.NewProgram(streamModel)
-
-			go func() {
-				_, err := llm.Chat(cmd.Context(), url, model, messages, func(chunk string) {
-					streamProgram.Send(ui.StreamChunkMsg(chunk))
-				})
-
-				if err != nil {
-					streamProgram.Send(ui.StreamErrorMsg{Err: err})
-				} else {
-					streamProgram.Send(ui.StreamDoneMsg{})
-				}
-			}()
-
-			returnedModel, err := streamProgram.Run()
-			if err != nil {
-				return err
-			}
-
-			streamModel = returnedModel.(ui.StreamModel)
-
-			if streamModel.Err != nil {
-				return streamModel.Err
-			}
-
-			content := streamModel.Content()
-
-			render, err := theme.RenderContent(content, format, isTTY)
-			if err != nil {
-				return err
-			}
-
-			fmt.Fprintln(cmd.OutOrStdout(), render)
-
-			return nil
+			return run(cmd, args)
 		},
 	}
 
@@ -162,6 +99,72 @@ func initConfig(cmd *cobra.Command, cfgFile string) error {
 	if model == "" {
 		return ErrNoModel
 	}
+
+	return nil
+}
+
+// run is called when the root command is executed.
+// It collects the user prompt, any piped input, and flags.
+// It initializes the message history, sends the request to the LLM, and prints
+// the response.
+func run(cmd *cobra.Command, args []string) error {
+	userPrompt := args[0]
+
+	pipedInput, err := getPipedInput()
+	if err != nil {
+		return err
+	}
+
+	if pipedInput != "" {
+		userPrompt = fmt.Sprintf("%s\n\n%s", userPrompt, pipedInput)
+	}
+
+	format := strings.ToLower(viper.GetString("format"))
+
+	err = validateFormat(format)
+	if err != nil {
+		return err
+	}
+
+	messages := initMessages(systemPrompt, userPrompt, format)
+
+	url := viper.GetString("url")
+	model := viper.GetString("model")
+
+	streamModel := ui.NewStreamModel(format)
+	streamProgram := tea.NewProgram(streamModel)
+
+	go func() {
+		_, err := llm.Chat(cmd.Context(), url, model, messages, func(chunk string) {
+			streamProgram.Send(ui.StreamChunkMsg(chunk))
+		})
+
+		if err != nil {
+			streamProgram.Send(ui.StreamErrorMsg{Err: err})
+		} else {
+			streamProgram.Send(ui.StreamDoneMsg{})
+		}
+	}()
+
+	returnedModel, err := streamProgram.Run()
+	if err != nil {
+		return err
+	}
+
+	streamModel = returnedModel.(ui.StreamModel)
+
+	if streamModel.Err != nil {
+		return streamModel.Err
+	}
+
+	content := streamModel.Content()
+
+	render, err := theme.RenderContent(content, format, isTTY)
+	if err != nil {
+		return err
+	}
+
+	fmt.Fprintln(cmd.OutOrStdout(), render)
 
 	return nil
 }
