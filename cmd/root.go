@@ -18,7 +18,16 @@ import (
 )
 
 const (
-	Version        = "dev"
+	Version = "dev"
+
+	useText   = "ghost <prompt>"
+	shortText = "ghost is a local cyberpunk AI assistant."
+	longText  = `Ghost is a local cyberpunk AI assistant.
+Send prompts directly or pipe data through for analysis.`
+	exampleText = `  ghost "explain this code" < main.go
+	cat error.log | ghost "what's wrong here"
+	ghost "tell me a joke"`
+
 	systemPrompt   = "You are ghost, a cyberpunk AI assistant."
 	jsonPrompt     = "Format the response as json without enclosing backticks."
 	markdownPrompt = "Format the response as markdown without enclosing backticks."
@@ -36,16 +45,10 @@ func NewRootCmd() *cobra.Command {
 	var cfgFile string
 
 	cmd := &cobra.Command{
-		Use: "ghost <prompt>",
-
-		Short: "Ghost is a local cyberpunk AI assistant.",
-
-		Long: `Ghost is a local cyberpunk AI assistant.
-Send prompts directly or pipe data through for analysis.`,
-
-		Example: `  ghost "explain this code" < main.go
-	cat error.log | ghost "what's wrong here"
-	ghost "tell me a joke"`,
+		Use:     useText,
+		Short:   shortText,
+		Long:    longText,
+		Example: exampleText,
 
 		Args: cobra.MinimumNArgs(1),
 
