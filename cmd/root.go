@@ -110,7 +110,7 @@ func initConfig(cmd *cobra.Command, cfgFile string) error {
 func run(cmd *cobra.Command, args []string) error {
 	userPrompt := args[0]
 
-	pipedInput, err := getPipedInput()
+	pipedInput, err := getPipedInput(os.Stdin)
 	if err != nil {
 		return err
 	}
@@ -170,8 +170,8 @@ func run(cmd *cobra.Command, args []string) error {
 }
 
 // getPipedInput detects, reads, and returns any input piped to the command.
-func getPipedInput() (string, error) {
-	fileInfo, err := os.Stdin.Stat()
+func getPipedInput(file *os.File) (string, error) {
+	fileInfo, err := file.Stat()
 	if err != nil {
 		return "", nil
 	}
@@ -180,7 +180,7 @@ func getPipedInput() (string, error) {
 		return "", nil
 	}
 
-	pipedInput, err := io.ReadAll(io.LimitReader(os.Stdin, 10<<20))
+	pipedInput, err := io.ReadAll(io.LimitReader(file, 10<<20))
 	if err != nil {
 		return "", fmt.Errorf("failed to read piped input: %w", err)
 	}
