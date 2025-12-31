@@ -184,19 +184,22 @@ func CyberpunkTheme() ansi.StyleConfig {
 // Helper functions to create pointers.
 func colorPtr(c color.Color) *string {
 	// lipgloss.Color returns a color.Color that can be a hex string
-	// We need to extract the underlying string value
-	// Since lipgloss stores colors as hex strings internally, we can format it
+	// Extract the underlying string value
+	// Since lipgloss stores colors as hex strings internally, format it
 	if adaptiveColor, ok := c.(interface{ ANSI256() string }); ok {
 		s := adaptiveColor.ANSI256()
 		return &s
 	}
+
 	// Fallback: convert to hex string
 	r, g, b, _ := c.RGBA()
+
 	// Convert from 16-bit to 8-bit
 	r8 := uint8(r >> 8)
 	g8 := uint8(g >> 8)
 	b8 := uint8(b >> 8)
 	s := fmt.Sprintf("#%02X%02X%02X", r8, g8, b8)
+
 	return &s
 }
 
