@@ -66,7 +66,7 @@ func NewRootCmd() (*cobra.Command, error) {
 		Example: exampleText,
 		Args:    cobra.MinimumNArgs(1),
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			cmd.SetContext(context.WithValue(context.Background(), loggerKey{}, logger))
+			cmd.SetContext(context.WithValue(cmd.Context(), loggerKey{}, logger))
 
 			return initConfig(cmd, cfgFile)
 		},
