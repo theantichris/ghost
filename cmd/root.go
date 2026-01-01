@@ -126,9 +126,11 @@ func initConfig(cmd *cobra.Command, cfgFile string) error {
 // It initializes the message history, sends the request to the LLM, and prints
 // the response.
 func run(cmd *cobra.Command, args []string) error {
+	logger := cmd.Context().Value(loggerKey{}).(*log.Logger)
+
 	userPrompt := args[0]
 
-	pipedInput, err := getPipedInput(os.Stdin)
+	pipedInput, err := getPipedInput(os.Stdin, logger)
 	if err != nil {
 		return err
 	}
@@ -152,7 +154,6 @@ func run(cmd *cobra.Command, args []string) error {
 	streamModel := ui.NewStreamModel(format)
 	streamProgram := tea.NewProgram(streamModel)
 
-	logger := cmd.Context().Value(loggerKey{}).(*log.Logger)
 	logger.Info("starting chat request", "model", model, "url", url, "format", format, "has_piped_input", pipedInput != "")
 
 	go func() {
@@ -192,7 +193,7 @@ func run(cmd *cobra.Command, args []string) error {
 }
 
 // getPipedInput detects, reads, and returns any input piped to the command.
-func getPipedInput(file *os.File) (string, error) {
+func getPipedInput(file *os.File, logger *log.Logger) (string, error) {
 	fileInfo, err := file.Stat()
 	if err != nil {
 		return "", nil
@@ -208,6 +209,10 @@ func getPipedInput(file *os.File) (string, error) {
 	}
 
 	input := strings.TrimSpace(string(pipedInput))
+
+	if len(input) > 0 {
+		logger.Debug("received piped input", "size_bytes", len(input))
+	}
 
 	return input, nil
 }

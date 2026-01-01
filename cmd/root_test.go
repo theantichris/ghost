@@ -2,9 +2,11 @@ package cmd
 
 import (
 	"errors"
+	"io"
 	"os"
 	"testing"
 
+	"github.com/charmbracelet/log"
 	"github.com/google/go-cmp/cmp"
 	"github.com/theantichris/ghost/internal/llm"
 )
@@ -141,6 +143,8 @@ func TestGetPipedInput(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			logger := log.New(io.Discard)
+
 			tmpFile, err := os.CreateTemp("", "ghost-test-*")
 			if err != nil {
 				t.Fatalf("Failed to create temp file: %v", err)
@@ -164,7 +168,7 @@ func TestGetPipedInput(t *testing.T) {
 				t.Fatalf("Failed to seek temp file: %v", err)
 			}
 
-			got, err := getPipedInput(tmpFile)
+			got, err := getPipedInput(tmpFile, logger)
 
 			if (err != nil) != tt.wantErr {
 				t.Fatalf("getPipedInput() error = %v, wantErr %v", err, tt.wantErr)
