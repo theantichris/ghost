@@ -65,14 +65,14 @@ func NewRootCmd() (*cobra.Command, error) {
 		Example: exampleText,
 		Args:    cobra.MinimumNArgs(1),
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			cmd.SetContext(context.WithValue(context.Background(), loggerKey{}, logger))
+
 			return initConfig(cmd, cfgFile)
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return run(cmd, args)
 		},
 	}
-
-	cmd.SetContext(context.WithValue(context.Background(), loggerKey{}, logger))
 
 	cmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file path")
 	cmd.PersistentFlags().StringP("format", "f", "", "output format (JSON, markdown), unspecified for text")
