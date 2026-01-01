@@ -10,7 +10,11 @@ import (
 )
 
 func main() {
-	rootCmd := cmd.NewRootCmd()
+	rootCmd, err := cmd.NewRootCmd()
+	if err != nil {
+		theme.FangErrorHandler(os.Stderr, fang.Styles{}, err)
+		os.Exit(1)
+	}
 
 	if err := fang.Execute(
 		context.Background(),

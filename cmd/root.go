@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -9,6 +10,7 @@ import (
 	"strings"
 
 	tea "charm.land/bubbletea/v2"
+	"github.com/charmbracelet/log"
 	"github.com/charmbracelet/x/term"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -16,6 +18,8 @@ import (
 	"github.com/theantichris/ghost/internal/ui"
 	"github.com/theantichris/ghost/theme"
 )
+
+type loggerKey struct{}
 
 const (
 	Version = "dev"
@@ -38,10 +42,20 @@ var (
 
 	ErrNoModel       = errors.New("model is required (set via --model flag, config file, or environment)")
 	ErrInvalidFormat = errors.New("invalid format option, valid options are json or markdown")
+	ErrLogger        = errors.New("failed to create logger")
 )
 
 // NewRootCmd creates and returns the root command.
-func NewRootCmd() *cobra.Command {
+func NewRootCmd() (*cobra.Command, error) {
+	logger, cleanup, err := initLogger()
+
+	defer func() {
+		_ = cleanup()
+	}()
+
+	if err != nil {
+		return nil, err
+	}
 	var cfgFile string
 
 	cmd := &cobra.Command{
@@ -58,12 +72,14 @@ func NewRootCmd() *cobra.Command {
 		},
 	}
 
+	cmd.SetContext(context.WithValue(context.Background(), loggerKey{}, logger))
+
 	cmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file path")
 	cmd.PersistentFlags().StringP("format", "f", "", "output format (JSON, markdown), unspecified for text")
 	cmd.PersistentFlags().StringP("model", "m", "", "chat model to use")
 	cmd.PersistentFlags().StringP("url", "u", "http://localhost:11434/api", "url to the Ollama API")
 
-	return cmd
+	return cmd, err
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -99,6 +115,9 @@ func initConfig(cmd *cobra.Command, cfgFile string) error {
 	if model == "" {
 		return ErrNoModel
 	}
+
+	logger := cmd.Context().Value(loggerKey{}).(*log.Logger)
+	logger.Debug("chat model", "value", model)
 
 	return nil
 }
@@ -217,4 +236,44 @@ func validateFormat(format string) error {
 	}
 
 	return nil
+}
+
+// initLogger creates and configures the application logger with JSON formatting
+// and file output.
+// The log is written to ~/.config/ghost/ghost.log and includes caller information
+// and timestamps.
+// Returns ErrLogger wrapped with the underlying error if initialization fails.
+func initLogger() (*log.Logger, func() error, error) {
+	logger := log.NewWithOptions(os.Stderr, log.Options{
+		Formatter:       log.JSONFormatter,
+		ReportCaller:    true,
+		ReportTimestamp: true,
+		Level:           log.DebugLevel,
+	})
+
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return nil, nil, fmt.Errorf("%w: %w", ErrLogger, err)
+	}
+
+	logFilePath := filepath.Join(home, ".config", "ghost", "ghost.log")
+
+	logDir := filepath.Dir(logFilePath)
+
+	if err := os.MkdirAll(logDir, 0755); err != nil {
+		return nil, nil, fmt.Errorf("%w: %w", ErrLogger, err)
+	}
+
+	logFile, err := os.OpenFile(logFilePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	if err != nil {
+		return nil, nil, fmt.Errorf("%w: %w", ErrLogger, err)
+	}
+
+	logger.SetOutput(logFile)
+
+	cleanup := func() error {
+		return logFile.Close()
+	}
+
+	return logger, cleanup, nil
 }
