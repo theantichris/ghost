@@ -46,16 +46,11 @@ var (
 )
 
 // NewRootCmd creates and returns the root command.
-func NewRootCmd() (*cobra.Command, error) {
-	logger, cleanup, err := initLogger()
-
+func NewRootCmd() (*cobra.Command, func() error, error) {
+	logger, loggerCleanup, err := initLogger()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-
-	defer func() {
-		_ = cleanup()
-	}()
 
 	var cfgFile string
 
@@ -80,7 +75,7 @@ func NewRootCmd() (*cobra.Command, error) {
 	cmd.PersistentFlags().StringP("model", "m", "", "chat model to use")
 	cmd.PersistentFlags().StringP("url", "u", "http://localhost:11434/api", "url to the Ollama API")
 
-	return cmd, err
+	return cmd, loggerCleanup, err
 }
 
 // initConfig reads in config file and ENV variables if set.
