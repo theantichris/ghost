@@ -49,13 +49,14 @@ var (
 func NewRootCmd() (*cobra.Command, error) {
 	logger, cleanup, err := initLogger()
 
+	if err != nil {
+		return nil, err
+	}
+
 	defer func() {
 		_ = cleanup()
 	}()
 
-	if err != nil {
-		return nil, err
-	}
 	var cfgFile string
 
 	cmd := &cobra.Command{
