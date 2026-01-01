@@ -95,11 +95,17 @@ func initConfig(cmd *cobra.Command, cfgFile string) error {
 		viper.SetConfigType("toml")
 	}
 
+	logger := cmd.Context().Value(loggerKey{}).(*log.Logger)
+
 	if err := viper.ReadInConfig(); err != nil {
 		var configFileNotFoundError viper.ConfigFileNotFoundError
 		if !errors.As(err, &configFileNotFoundError) {
 			return err
 		}
+
+		logger.Debug("no config file found, using flags/env only")
+	} else {
+		logger.Debug("loaded config", "file", viper.ConfigFileUsed())
 	}
 
 	err := viper.BindPFlags(cmd.Flags())
@@ -111,9 +117,6 @@ func initConfig(cmd *cobra.Command, cfgFile string) error {
 	if model == "" {
 		return ErrNoModel
 	}
-
-	logger := cmd.Context().Value(loggerKey{}).(*log.Logger)
-	logger.Debug("chat model", "value", model)
 
 	return nil
 }
@@ -149,12 +152,16 @@ func run(cmd *cobra.Command, args []string) error {
 	streamModel := ui.NewStreamModel(format)
 	streamProgram := tea.NewProgram(streamModel)
 
+	logger := cmd.Context().Value(loggerKey{}).(*log.Logger)
+	logger.Info("starting chat request", "model", model, "url", url, "format", format, "has_piped_input", pipedInput != "")
+
 	go func() {
 		_, err := llm.Chat(cmd.Context(), url, model, messages, func(chunk string) {
 			streamProgram.Send(ui.StreamChunkMsg(chunk))
 		})
 
 		if err != nil {
+			logger.Error("llm request failed", "error", err, "model", model, "url", url)
 			streamProgram.Send(ui.StreamErrorMsg{Err: err})
 		} else {
 			streamProgram.Send(ui.StreamDoneMsg{})
