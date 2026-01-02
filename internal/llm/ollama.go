@@ -42,14 +42,54 @@ type ChatResponse struct {
 
 // ChatMessage holds a single message in the chat history.
 type ChatMessage struct {
-	// Role holds the author of the message.
-	Role Role `json:"role"`
-
-	// Content holds the message content.
-	Content string `json:"content"`
+	Role    Role     `json:"role"`
+	Content string   `json:"content"`
+	Images  []string `json:"images,omitempty"`
 }
 
-// StreamChat sends a request to the chat endpoint and returns the response message.
+// AnalyzeImages sends a request to the chat endpoint with images to analyze and
+// returns the response message.
+func AnalyzeImages(ctx context.Context, host, model string, messages []ChatMessage) (ChatMessage, error) {
+	request := ChatRequest{
+		Model:    model,
+		Stream:   false,
+		Messages: messages,
+	}
+
+	var chatResponse ChatResponse
+
+	err := requests.
+		URL(host + "/chat").
+		BodyJSON(&request).
+		AddValidator(nil).
+		Handle(func(response *http.Response) error {
+			if response.StatusCode == http.StatusNotFound {
+				return fmt.Errorf("%w: %s", ErrModelNotFound, request.Model)
+			}
+
+			if response.StatusCode != http.StatusOK {
+				return fmt.Errorf("%w: %s", ErrUnexpectedStatus, response.Status)
+			}
+
+			return nil
+		}).
+		ToJSON(&chatResponse).
+		Fetch(ctx)
+
+	if err != nil {
+		return ChatMessage{}, fmt.Errorf("%w", err)
+	}
+
+	chatMessage := ChatMessage{
+		Role:    RoleAssistant,
+		Content: chatResponse.Message.Content,
+	}
+
+	return chatMessage, nil
+}
+
+// StreamChat sends a streaming request to the chat endpoint and returns the
+// response message.
 // onChunk is called for each streamed chunk of content.
 func StreamChat(ctx context.Context, host, model string, messages []ChatMessage, onChunk func(string)) (ChatMessage, error) {
 	request := ChatRequest{

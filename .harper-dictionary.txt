@@ -9,6 +9,7 @@ PersistentPreRunE
 RenderContent
 RootCmd
 Shadowrun
+StreamChat
 StreamDoneMsg
 StreamErrorMsg
 StreamModel

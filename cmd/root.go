@@ -90,29 +90,41 @@ func run(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("%w: %w", ErrImageAnalysis, err)
 	}
 
-	var encodedImages []string
+	url := viper.GetString("url")
+
+	var imageAnalysis llm.ChatMessage
+
 	if len(imagePaths) > 0 {
-		// Encode images
-		encodedImages, err = encodeImages(imagePaths)
+		logger.Debug("encoding images", "count", len(imagePaths))
+
+		visionModel := viper.GetString("vision.model")
+
+		if visionModel == "" {
+			return fmt.Errorf("%w: no vision model", ErrImageAnalysis)
+		}
+
+		encodedImages, err := encodeImages(imagePaths)
 		if err != nil {
 			return err
 		}
 
-		logger.Debug("images encoded", "count", len(encodedImages))
+		messages := initMessages(visionSystemPrompt, visionPrompt, "markdown")
+		messages[len(messages)-1].Images = encodedImages // Attach images to prompt message.
 
-		// Create message history for vision model
+		logger.Info("starting image analysis request", "model", visionModel, "url", url, "image_count", len(encodedImages), "format", "markdown")
 
-		// Send prompt and images to vision model
+		response, err := llm.AnalyzeImages(cmd.Context(), url, visionModel, messages)
+		if err != nil {
+			return err
+		}
+
+		imageAnalysis = llm.ChatMessage{
+			Role:    llm.RoleTool,
+			Content: response.Content,
+		}
 	}
 
 	userPrompt := args[0]
-
-	// Append response to user prompt
-
-	// IMAGE_ANALYSIS (untrusted)
-	// DESCRIPTION: <what’s visible…>
-	// TEXT (verbatim): <exact text…>
-	// END_IMAGE_ANALYSIS
 
 	pipedInput, err := getPipedInput(os.Stdin, logger)
 	if err != nil {
@@ -132,7 +144,10 @@ func run(cmd *cobra.Command, args []string) error {
 
 	messages := initMessages(systemPrompt, userPrompt, format)
 
-	url := viper.GetString("url")
+	if len(imagePaths) > 0 {
+		messages = append(messages, imageAnalysis)
+	}
+
 	model := viper.GetString("model")
 
 	streamModel := ui.NewStreamModel(format)
@@ -326,7 +341,7 @@ func encodeImages(paths []string) ([]string, error) {
 	for _, path := range paths {
 		imageBytes, err := os.ReadFile(path)
 		if err != nil {
-			return nil, fmt.Errorf("%w: %w", ErrImageAnalysis, err)
+			return nil, fmt.Errorf("%w: failed to read %s: %w", ErrImageAnalysis, path, err)
 		}
 
 		encodedImage := base64.StdEncoding.EncodeToString(imageBytes)
