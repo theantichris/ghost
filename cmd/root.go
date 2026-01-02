@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"io"
@@ -44,6 +45,7 @@ var (
 	ErrNoModel       = errors.New("model is required (set via --model flag, config file, or environment)")
 	ErrInvalidFormat = errors.New("invalid format option, valid options are json or markdown")
 	ErrLogger        = errors.New("failed to create logger")
+	ErrImageAnalysis = errors.New("failed to analyze images")
 )
 
 // NewRootCmd creates and returns the root command.
@@ -133,17 +135,34 @@ func initConfig(cmd *cobra.Command, cfgFile string) error {
 func run(cmd *cobra.Command, args []string) error {
 	logger := cmd.Context().Value(loggerKey{}).(*log.Logger)
 
-	// If images
-	// Encode images
-	// Create message history for vision model
-	// Send prompt and images to vision model
+	imagePaths, err := cmd.Flags().GetStringArray("image")
+	if err != nil {
+		return fmt.Errorf("%w: %w", ErrImageAnalysis, err)
+	}
+
+	var encodedImages []string
+	if len(imagePaths) > 0 {
+		// Encode images
+		encodedImages, err = encodeImages(imagePaths)
+		if err != nil {
+			return err
+		}
+
+		logger.Debug("images encoded", "count", len(encodedImages))
+
+		// Create message history for vision model
+
+		// Send prompt and images to vision model
+	}
+
+	userPrompt := args[0]
+
 	// Append response to user prompt
+
 	// IMAGE_ANALYSIS (untrusted)
 	// DESCRIPTION: <what’s visible…>
 	// TEXT (verbatim): <exact text…>
 	// END_IMAGE_ANALYSIS
-
-	userPrompt := args[0]
 
 	pipedInput, err := getPipedInput(os.Stdin, logger)
 	if err != nil {
@@ -299,4 +318,25 @@ func initLogger() (*log.Logger, func() error, error) {
 	}
 
 	return logger, cleanup, nil
+}
+
+// encodedImages takes a slice of paths and returns a slice of base64 encoded strings.
+func encodeImages(paths []string) ([]string, error) {
+	if len(paths) < 1 {
+		return []string{}, nil
+	}
+
+	encodedImages := make([]string, 0, len(paths))
+
+	for _, path := range paths {
+		imageBytes, err := os.ReadFile(path)
+		if err != nil {
+			return nil, fmt.Errorf("%w: %w", ErrImageAnalysis, err)
+		}
+
+		encodedImage := base64.StdEncoding.EncodeToString(imageBytes)
+		encodedImages = append(encodedImages, encodedImage)
+	}
+
+	return encodedImages, nil
 }
