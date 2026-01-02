@@ -141,7 +141,7 @@ func run(cmd *cobra.Command, args []string) error {
 	logger.Info("starting chat request", "model", model, "url", url, "format", format, "has_piped_input", pipedInput != "")
 
 	go func() {
-		_, err := llm.Chat(cmd.Context(), url, model, messages, func(chunk string) {
+		_, err := llm.StreamChat(cmd.Context(), url, model, messages, func(chunk string) {
 			streamProgram.Send(ui.StreamChunkMsg(chunk))
 		})
 

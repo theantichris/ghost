@@ -9,7 +9,7 @@ import (
 	"testing"
 )
 
-func TestChat(t *testing.T) {
+func TestStreamChat(t *testing.T) {
 	tests := []struct {
 		name           string
 		model          string
@@ -85,7 +85,7 @@ func TestChat(t *testing.T) {
 				chunks = append(chunks, content)
 			}
 
-			got, err := Chat(context.Background(), server.URL, tt.model, tt.messages, onChunk)
+			got, err := StreamChat(context.Background(), server.URL, tt.model, tt.messages, onChunk)
 
 			if tt.wantErr {
 				if err == nil {

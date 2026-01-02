@@ -49,9 +49,9 @@ type ChatMessage struct {
 	Content string `json:"content"`
 }
 
-// Chat sends a request to the chat endpoint and returns the response message.
+// StreamChat sends a request to the chat endpoint and returns the response message.
 // onChunk is called for each streamed chunk of content.
-func Chat(ctx context.Context, host, model string, messages []ChatMessage, onChunk func(string)) (ChatMessage, error) {
+func StreamChat(ctx context.Context, host, model string, messages []ChatMessage, onChunk func(string)) (ChatMessage, error) {
 	request := ChatRequest{
 		Model:    model,
 		Stream:   true,
