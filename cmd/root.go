@@ -74,6 +74,7 @@ func NewRootCmd() (*cobra.Command, func() error, error) {
 	cmd.PersistentFlags().StringP("format", "f", "", "output format (JSON, markdown), unspecified for text")
 	cmd.PersistentFlags().StringP("model", "m", "", "chat model to use")
 	cmd.PersistentFlags().StringP("url", "u", "http://localhost:11434/api", "url to the Ollama API")
+	cmd.PersistentFlags().StringP("vision-model", "V", "", "vision model to use")
 
 	return cmd, loggerCleanup, err
 }
@@ -117,6 +118,8 @@ func initConfig(cmd *cobra.Command, cfgFile string) error {
 	if model == "" {
 		return ErrNoModel
 	}
+
+	_ = viper.BindPFlag("vision.model", cmd.Flags().Lookup("vision-model"))
 
 	return nil
 }
