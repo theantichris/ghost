@@ -83,51 +83,6 @@ func NewRootCmd() (*cobra.Command, func() error, error) {
 	return cmd, loggerCleanup, err
 }
 
-// initConfig reads in config file and ENV variables if set.
-func initConfig(cmd *cobra.Command, cfgFile string) error {
-	viper.SetEnvPrefix("GHOST")
-	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "*", "-", "*"))
-	viper.AutomaticEnv()
-
-	if cfgFile != "" {
-		viper.SetConfigFile(cfgFile)
-	} else {
-		home, err := os.UserHomeDir()
-		cobra.CheckErr(err)
-
-		viper.AddConfigPath(filepath.Join(home, ".config", "ghost"))
-		viper.SetConfigName("config.toml")
-		viper.SetConfigType("toml")
-	}
-
-	logger := cmd.Context().Value(loggerKey{}).(*log.Logger)
-
-	if err := viper.ReadInConfig(); err != nil {
-		var configFileNotFoundError viper.ConfigFileNotFoundError
-		if !errors.As(err, &configFileNotFoundError) {
-			return err
-		}
-
-		logger.Debug("no config file found, using flags/env only")
-	} else {
-		logger.Debug("loaded config", "file", viper.ConfigFileUsed())
-	}
-
-	err := viper.BindPFlags(cmd.Flags())
-	if err != nil {
-		return err
-	}
-
-	model := viper.GetString("model")
-	if model == "" {
-		return ErrNoModel
-	}
-
-	_ = viper.BindPFlag("vision.model", cmd.Flags().Lookup("vision-model"))
-
-	return nil
-}
-
 // run is called when the root command is executed.
 // It collects the user prompt, any piped input, and flags.
 // It initializes the message history, sends the request to the LLM, and prints
@@ -222,6 +177,51 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 
 	fmt.Fprintln(cmd.OutOrStdout(), render)
+
+	return nil
+}
+
+// initConfig reads in config file and ENV variables if set.
+func initConfig(cmd *cobra.Command, cfgFile string) error {
+	viper.SetEnvPrefix("GHOST")
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "*", "-", "*"))
+	viper.AutomaticEnv()
+
+	if cfgFile != "" {
+		viper.SetConfigFile(cfgFile)
+	} else {
+		home, err := os.UserHomeDir()
+		cobra.CheckErr(err)
+
+		viper.AddConfigPath(filepath.Join(home, ".config", "ghost"))
+		viper.SetConfigName("config.toml")
+		viper.SetConfigType("toml")
+	}
+
+	logger := cmd.Context().Value(loggerKey{}).(*log.Logger)
+
+	if err := viper.ReadInConfig(); err != nil {
+		var configFileNotFoundError viper.ConfigFileNotFoundError
+		if !errors.As(err, &configFileNotFoundError) {
+			return err
+		}
+
+		logger.Debug("no config file found, using flags/env only")
+	} else {
+		logger.Debug("loaded config", "file", viper.ConfigFileUsed())
+	}
+
+	err := viper.BindPFlags(cmd.Flags())
+	if err != nil {
+		return err
+	}
+
+	model := viper.GetString("model")
+	if model == "" {
+		return ErrNoModel
+	}
+
+	_ = viper.BindPFlag("vision.model", cmd.Flags().Lookup("vision-model"))
 
 	return nil
 }
