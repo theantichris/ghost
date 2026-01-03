@@ -91,12 +91,6 @@ func run(cmd *cobra.Command, args []string) error {
 	format := strings.ToLower(viper.GetString("format"))
 	userPrompt := args[0]
 
-	// TODO: should validate in initConfig()
-	err := validateFormat(format)
-	if err != nil {
-		return err
-	}
-
 	// Create message history
 	messages := initMessages(systemPrompt, userPrompt, format)
 
@@ -245,6 +239,11 @@ func initConfig(cmd *cobra.Command, cfgFile string) error {
 	model := viper.GetString("model")
 	if model == "" {
 		return ErrNoModel
+	}
+
+	err = validateFormat(viper.GetString("format"))
+	if err != nil {
+		return err
 	}
 
 	_ = viper.BindPFlag("vision.model", cmd.Flags().Lookup("vision-model"))
