@@ -109,6 +109,10 @@ func run(cmd *cobra.Command, args []string) error {
 				return err
 			}
 
+			// TODO: Image analysis needs to show processing message.
+			// TODO: Map image name with analysis.
+			// TODO: Spike showing image inline.
+
 			messages = append(messages, imageAnalysis)
 		}
 	} else {
@@ -179,7 +183,7 @@ func analyzeImages(cmd *cobra.Command, url string, imagePaths []string) (llm.Cha
 	}
 
 	imageAnalysis := llm.ChatMessage{
-		Role:    llm.RoleTool,
+		Role:    llm.RoleUser,
 		Content: response.Content,
 	}
 
