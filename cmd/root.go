@@ -38,6 +38,7 @@ var (
 	isTTY = term.IsTerminal(os.Stdout.Fd())
 
 	ErrNoModel       = errors.New("model is required (set via --model flag, config file, or environment)")
+	ErrNoVisionModel = errors.New("vision model is required with images (set via --vision-model flag, config file, or environment)")
 	ErrInvalidFormat = errors.New("invalid format option, valid options are json or markdown")
 	ErrLogger        = errors.New("failed to create logger")
 	ErrImageAnalysis = errors.New("failed to analyze images")
@@ -174,10 +175,6 @@ func analyzeImages(cmd *cobra.Command, url string, imagePaths []string) (llm.Cha
 
 	visionModel := viper.GetString("vision.model")
 
-	if visionModel == "" {
-		return llm.ChatMessage{}, fmt.Errorf("%w: no vision model", ErrImageAnalysis)
-	}
-
 	encodedImages, err := encodeImages(imagePaths)
 	if err != nil {
 		return llm.ChatMessage{}, err
@@ -247,6 +244,15 @@ func initConfig(cmd *cobra.Command, cfgFile string) error {
 	}
 
 	_ = viper.BindPFlag("vision.model", cmd.Flags().Lookup("vision-model"))
+
+	imagePaths, err := cmd.Flags().GetStringArray("image")
+	if err != nil {
+		return fmt.Errorf("failed to read image flag: %w", err)
+	}
+
+	if len(imagePaths) > 0 && viper.GetString("vision.model") == "" {
+		return ErrNoVisionModel
+	}
 
 	return nil
 }
