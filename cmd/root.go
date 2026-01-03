@@ -85,12 +85,49 @@ func NewRootCmd() (*cobra.Command, func() error, error) {
 func run(cmd *cobra.Command, args []string) error {
 	logger := cmd.Context().Value(loggerKey{}).(*log.Logger)
 
+	// Get config
+	url := viper.GetString("url")
+	model := viper.GetString("model")
+	format := strings.ToLower(viper.GetString("format"))
+	userPrompt := args[0]
+
+	// TODO: should validate in initConfig()
+	err := validateFormat(format)
+	if err != nil {
+		return err
+	}
+
+	// Create message history
+	messages := initMessages(systemPrompt, userPrompt, format)
+
+	// Add piped input
+
+	pipedInput, err := getPipedInput(os.Stdin, logger)
+	if err != nil {
+		return err
+	}
+
+	if pipedInput != "" {
+		// userPrompt = fmt.Sprintf("%s\n\n%s", userPrompt, pipedInput)
+
+		pipedMessage := llm.ChatMessage{
+			Role:    llm.RoleUser,
+			Content: pipedInput,
+		}
+
+		messages = append(messages, pipedMessage)
+	}
+
+	// Add image analysis
+
+	// Send request
+
+	// Handle response
+
 	imagePaths, err := cmd.Flags().GetStringArray("image")
 	if err != nil {
 		return fmt.Errorf("%w: %w", ErrImageAnalysis, err)
 	}
-
-	url := viper.GetString("url")
 
 	var imageAnalysis llm.ChatMessage
 	if len(imagePaths) > 0 {
@@ -100,31 +137,9 @@ func run(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	userPrompt := args[0]
-
-	pipedInput, err := getPipedInput(os.Stdin, logger)
-	if err != nil {
-		return err
-	}
-
-	if pipedInput != "" {
-		userPrompt = fmt.Sprintf("%s\n\n%s", userPrompt, pipedInput)
-	}
-
-	format := strings.ToLower(viper.GetString("format"))
-
-	err = validateFormat(format)
-	if err != nil {
-		return err
-	}
-
-	messages := initMessages(systemPrompt, userPrompt, format)
-
 	if len(imagePaths) > 0 {
 		messages = append(messages, imageAnalysis)
 	}
-
-	model := viper.GetString("model")
 
 	streamModel := ui.NewStreamModel(format)
 	streamProgram := tea.NewProgram(streamModel)
