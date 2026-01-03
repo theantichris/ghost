@@ -96,18 +96,17 @@ func run(cmd *cobra.Command, args []string) error {
 	messages := initMessages(systemPrompt, userPrompt, format)
 
 	// Add piped input
-	pipedInput, err := getPipedInput(os.Stdin, logger)
-	if err != nil {
-		return err
-	}
+	if pipedInput, err := getPipedInput(os.Stdin, logger); err == nil {
+		if pipedInput != "" {
+			pipedMessage := llm.ChatMessage{
+				Role:    llm.RoleUser,
+				Content: pipedInput,
+			}
 
-	if pipedInput != "" {
-		pipedMessage := llm.ChatMessage{
-			Role:    llm.RoleUser,
-			Content: pipedInput,
+			messages = append(messages, pipedMessage)
 		}
-
-		messages = append(messages, pipedMessage)
+	} else {
+		return err
 	}
 
 	// Add image analysis
@@ -128,7 +127,7 @@ func run(cmd *cobra.Command, args []string) error {
 	streamModel := ui.NewStreamModel(format)
 	streamProgram := tea.NewProgram(streamModel)
 
-	logger.Info("sending chat request", "model", model, "url", url, "format", format, "has_piped_input", pipedInput != "")
+	logger.Info("sending chat request", "model", model, "url", url, "format", format)
 
 	go func() {
 		_, err := llm.StreamChat(cmd.Context(), url, model, messages, func(chunk string) {
