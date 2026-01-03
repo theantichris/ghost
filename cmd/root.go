@@ -37,17 +37,11 @@ Send prompts directly or pipe data through for analysis.`
 var (
 	isTTY = term.IsTerminal(os.Stdout.Fd())
 
-	ErrNoModel          = errors.New("model is required (set via --model flag, config file, or environment)")
-	ErrNoVisionModel    = errors.New("vision model is required with images (set via --vision-model flag, config file, or environment)")
-	ErrInvalidFormat    = errors.New("invalid format option, valid options are json or markdown")
-	ErrLogger           = errors.New("failed to create logger")
-	ErrImageAnalysis    = errors.New("failed to analyze images")
-	ErrInvalidImageFlag = errors.New("failed to read image flag")
-	ErrConfig           = errors.New("failed to read config file")
-	ErrBindFlags        = errors.New("failed to bind flags")
-	ErrPipedInput       = errors.New("failed to read piped input")
-	ErrStreamDisplay    = errors.New("failed to display stream")
-	ErrRender           = errors.New("failed to render content")
+	ErrLogger        = errors.New("failed to create logger")
+	ErrImageAnalysis = errors.New("failed to analyze images")
+	ErrPipedInput    = errors.New("failed to read piped input")
+	ErrStreamDisplay = errors.New("failed to display stream")
+	ErrRender        = errors.New("failed to render content")
 )
 
 // NewRootCmd creates and returns the root command.
@@ -202,65 +196,6 @@ func analyzeImages(cmd *cobra.Command, url string, imagePaths []string) (llm.Cha
 	return imageAnalysis, nil
 }
 
-// initConfig reads in config file and ENV variables if set.
-func initConfig(cmd *cobra.Command, cfgFile string) error {
-	viper.SetEnvPrefix("GHOST")
-	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "*", "-", "*"))
-	viper.AutomaticEnv()
-
-	if cfgFile != "" {
-		viper.SetConfigFile(cfgFile)
-	} else {
-		home, err := os.UserHomeDir()
-		cobra.CheckErr(err)
-
-		viper.AddConfigPath(filepath.Join(home, ".config", "ghost"))
-		viper.SetConfigName("config.toml")
-		viper.SetConfigType("toml")
-	}
-
-	logger := cmd.Context().Value(loggerKey{}).(*log.Logger)
-
-	if err := viper.ReadInConfig(); err != nil {
-		var configFileNotFoundError viper.ConfigFileNotFoundError
-		if !errors.As(err, &configFileNotFoundError) {
-			return fmt.Errorf("%w: %w", ErrConfig, err)
-		}
-
-		logger.Debug("no config file found, using flags/env only")
-	} else {
-		logger.Debug("loaded config", "file", viper.ConfigFileUsed())
-	}
-
-	err := viper.BindPFlags(cmd.Flags())
-	if err != nil {
-		return fmt.Errorf("%w: %w", ErrBindFlags, err)
-	}
-
-	model := viper.GetString("model")
-	if model == "" {
-		return ErrNoModel
-	}
-
-	err = validateFormat(viper.GetString("format"))
-	if err != nil {
-		return err
-	}
-
-	_ = viper.BindPFlag("vision.model", cmd.Flags().Lookup("vision-model"))
-
-	imagePaths, err := cmd.Flags().GetStringArray("image")
-	if err != nil {
-		return fmt.Errorf("%w: %w", ErrInvalidImageFlag, err)
-	}
-
-	if len(imagePaths) > 0 && viper.GetString("vision.model") == "" {
-		return ErrNoVisionModel
-	}
-
-	return nil
-}
-
 // getPipedInput detects, reads, and returns any input piped to the command.
 func getPipedInput(file *os.File, logger *log.Logger) (string, error) {
 	fileInfo, err := file.Stat()
@@ -304,15 +239,6 @@ func initMessages(system, prompt, format string) []llm.ChatMessage {
 	messages = append(messages, llm.ChatMessage{Role: llm.RoleUser, Content: prompt})
 
 	return messages
-}
-
-// validateFormat returns an error if the format flag isn't a valid value.
-func validateFormat(format string) error {
-	if format != "" && (format != "json" && format != "markdown") {
-		return ErrInvalidFormat
-	}
-
-	return nil
 }
 
 // initLogger creates and configures the application logger with JSON formatting
