@@ -134,7 +134,7 @@ func run(cmd *cobra.Command, args []string) error {
 	streamModel := ui.NewStreamModel(format)
 	streamProgram := tea.NewProgram(streamModel)
 
-	logger.Info("starting chat request", "model", model, "url", url, "format", format, "has_piped_input", pipedInput != "")
+	logger.Info("sending chat request", "model", model, "url", url, "format", format, "has_piped_input", pipedInput != "")
 
 	go func() {
 		_, err := llm.StreamChat(cmd.Context(), url, model, messages, func(chunk string) {
@@ -149,20 +149,18 @@ func run(cmd *cobra.Command, args []string) error {
 		}
 	}()
 
+	// Handle response
 	returnedModel, err := streamProgram.Run()
 	if err != nil {
 		return err
 	}
 
-	// Handle response
-	streamModel = returnedModel.(ui.StreamModel)
-
-	if streamModel.Err != nil {
-		return streamModel.Err
+	finalModel := returnedModel.(ui.StreamModel)
+	if finalModel.Err != nil {
+		return finalModel.Err
 	}
 
-	content := streamModel.Content()
-
+	content := finalModel.Content()
 	render, err := theme.RenderContent(content, format, isTTY)
 	if err != nil {
 		return err
