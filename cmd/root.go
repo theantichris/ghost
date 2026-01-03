@@ -93,34 +93,10 @@ func run(cmd *cobra.Command, args []string) error {
 	url := viper.GetString("url")
 
 	var imageAnalysis llm.ChatMessage
-
 	if len(imagePaths) > 0 {
-		logger.Debug("encoding images", "count", len(imagePaths))
-
-		visionModel := viper.GetString("vision.model")
-
-		if visionModel == "" {
-			return fmt.Errorf("%w: no vision model", ErrImageAnalysis)
-		}
-
-		encodedImages, err := encodeImages(imagePaths)
+		imageAnalysis, err = analyzeImages(cmd, url, imagePaths)
 		if err != nil {
 			return err
-		}
-
-		messages := initMessages(visionSystemPrompt, visionPrompt, "markdown")
-		messages[len(messages)-1].Images = encodedImages // Attach images to prompt message.
-
-		logger.Info("starting image analysis request", "model", visionModel, "url", url, "image_count", len(encodedImages), "format", "markdown")
-
-		response, err := llm.AnalyzeImages(cmd.Context(), url, visionModel, messages)
-		if err != nil {
-			return err
-		}
-
-		imageAnalysis = llm.ChatMessage{
-			Role:    llm.RoleTool,
-			Content: response.Content,
 		}
 	}
 
@@ -189,6 +165,42 @@ func run(cmd *cobra.Command, args []string) error {
 	fmt.Fprintln(cmd.OutOrStdout(), render)
 
 	return nil
+}
+
+// analyzeImages sends a request to the model to analyze images and returns a
+// chat message with the report.
+func analyzeImages(cmd *cobra.Command, url string, imagePaths []string) (llm.ChatMessage, error) {
+	logger := cmd.Context().Value(loggerKey{}).(*log.Logger)
+
+	logger.Debug("encoding images", "count", len(imagePaths))
+
+	visionModel := viper.GetString("vision.model")
+
+	if visionModel == "" {
+		return llm.ChatMessage{}, fmt.Errorf("%w: no vision model", ErrImageAnalysis)
+	}
+
+	encodedImages, err := encodeImages(imagePaths)
+	if err != nil {
+		return llm.ChatMessage{}, err
+	}
+
+	messages := initMessages(visionSystemPrompt, visionPrompt, "markdown")
+	messages[len(messages)-1].Images = encodedImages // Attach images to prompt message.
+
+	logger.Info("starting image analysis request", "model", visionModel, "url", url, "image_count", len(encodedImages), "format", "markdown")
+
+	response, err := llm.AnalyzeImages(cmd.Context(), url, visionModel, messages)
+	if err != nil {
+		return llm.ChatMessage{}, err
+	}
+
+	imageAnalysis := llm.ChatMessage{
+		Role:    llm.RoleTool,
+		Content: response.Content,
+	}
+
+	return imageAnalysis, nil
 }
 
 // initConfig reads in config file and ENV variables if set.
