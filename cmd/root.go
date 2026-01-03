@@ -111,18 +111,17 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 
 	// Add image analysis
-	imagePaths, err := cmd.Flags().GetStringArray("image")
-	if err != nil {
-		return fmt.Errorf("%w: %w", ErrImageAnalysis, err)
-	}
+	if imagePaths, err := cmd.Flags().GetStringArray("image"); err == nil {
+		if len(imagePaths) > 0 {
+			imageAnalysis, err := analyzeImages(cmd, url, imagePaths)
+			if err != nil {
+				return err
+			}
 
-	if len(imagePaths) > 0 {
-		imageAnalysis, err := analyzeImages(cmd, url, imagePaths)
-		if err != nil {
-			return err
+			messages = append(messages, imageAnalysis)
 		}
-
-		messages = append(messages, imageAnalysis)
+	} else {
+		return fmt.Errorf("%w: %w", ErrImageAnalysis, err)
 	}
 
 	// Send request
