@@ -82,16 +82,13 @@ func NewRootCmd() (*cobra.Command, func() error, error) {
 func run(cmd *cobra.Command, args []string) error {
 	logger := cmd.Context().Value(loggerKey{}).(*log.Logger)
 
-	// Get config
 	url := viper.GetString("url")
 	model := viper.GetString("model")
 	format := strings.ToLower(viper.GetString("format"))
 	userPrompt := args[0]
 
-	// Create message history
 	messages := initMessages(systemPrompt, userPrompt, format)
 
-	// Add piped input
 	if pipedInput, err := getPipedInput(os.Stdin, logger); err == nil {
 		if pipedInput != "" {
 			pipedMessage := llm.ChatMessage{
@@ -105,7 +102,6 @@ func run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// Add image analysis
 	if imagePaths, err := cmd.Flags().GetStringArray("image"); err == nil {
 		if len(imagePaths) > 0 {
 			imageAnalysis, err := analyzeImages(cmd, url, imagePaths)
@@ -119,7 +115,6 @@ func run(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("%w: %w", ErrImageAnalysis, err)
 	}
 
-	// Send request
 	streamModel := ui.NewStreamModel(format)
 	streamProgram := tea.NewProgram(streamModel)
 
@@ -138,7 +133,6 @@ func run(cmd *cobra.Command, args []string) error {
 		}
 	}()
 
-	// Handle response
 	returnedModel, err := streamProgram.Run()
 	if err != nil {
 		return fmt.Errorf("%w: %w", ErrStreamDisplay, err)
