@@ -37,11 +37,17 @@ Send prompts directly or pipe data through for analysis.`
 var (
 	isTTY = term.IsTerminal(os.Stdout.Fd())
 
-	ErrNoModel       = errors.New("model is required (set via --model flag, config file, or environment)")
-	ErrNoVisionModel = errors.New("vision model is required with images (set via --vision-model flag, config file, or environment)")
-	ErrInvalidFormat = errors.New("invalid format option, valid options are json or markdown")
-	ErrLogger        = errors.New("failed to create logger")
-	ErrImageAnalysis = errors.New("failed to analyze images")
+	ErrNoModel          = errors.New("model is required (set via --model flag, config file, or environment)")
+	ErrNoVisionModel    = errors.New("vision model is required with images (set via --vision-model flag, config file, or environment)")
+	ErrInvalidFormat    = errors.New("invalid format option, valid options are json or markdown")
+	ErrLogger           = errors.New("failed to create logger")
+	ErrImageAnalysis    = errors.New("failed to analyze images")
+	ErrInvalidImageFlag = errors.New("failed to read image flag")
+	ErrConfig           = errors.New("failed to read config file")
+	ErrBindFlags        = errors.New("failed to bind flags")
+	ErrPipedInput       = errors.New("failed to read piped input")
+	ErrStreamDisplay    = errors.New("failed to display stream")
+	ErrRender           = errors.New("failed to render content")
 )
 
 // NewRootCmd creates and returns the root command.
@@ -145,7 +151,7 @@ func run(cmd *cobra.Command, args []string) error {
 	// Handle response
 	returnedModel, err := streamProgram.Run()
 	if err != nil {
-		return err
+		return fmt.Errorf("%w: %w", ErrStreamDisplay, err)
 	}
 
 	finalModel := returnedModel.(ui.StreamModel)
@@ -156,7 +162,7 @@ func run(cmd *cobra.Command, args []string) error {
 	content := finalModel.Content()
 	render, err := theme.RenderContent(content, format, isTTY)
 	if err != nil {
-		return err
+		return fmt.Errorf("%w: %w", ErrRender, err)
 	}
 
 	fmt.Fprintln(cmd.OutOrStdout(), render)
@@ -218,7 +224,7 @@ func initConfig(cmd *cobra.Command, cfgFile string) error {
 	if err := viper.ReadInConfig(); err != nil {
 		var configFileNotFoundError viper.ConfigFileNotFoundError
 		if !errors.As(err, &configFileNotFoundError) {
-			return err
+			return fmt.Errorf("%w: %w", ErrConfig, err)
 		}
 
 		logger.Debug("no config file found, using flags/env only")
@@ -228,7 +234,7 @@ func initConfig(cmd *cobra.Command, cfgFile string) error {
 
 	err := viper.BindPFlags(cmd.Flags())
 	if err != nil {
-		return err
+		return fmt.Errorf("%w: %w", ErrBindFlags, err)
 	}
 
 	model := viper.GetString("model")
@@ -245,7 +251,7 @@ func initConfig(cmd *cobra.Command, cfgFile string) error {
 
 	imagePaths, err := cmd.Flags().GetStringArray("image")
 	if err != nil {
-		return fmt.Errorf("failed to read image flag: %w", err)
+		return fmt.Errorf("%w: %w", ErrInvalidImageFlag, err)
 	}
 
 	if len(imagePaths) > 0 && viper.GetString("vision.model") == "" {
@@ -268,7 +274,7 @@ func getPipedInput(file *os.File, logger *log.Logger) (string, error) {
 
 	pipedInput, err := io.ReadAll(io.LimitReader(file, 10<<20))
 	if err != nil {
-		return "", fmt.Errorf("failed to read piped input: %w", err)
+		return "", fmt.Errorf("%w: %w", ErrPipedInput, err)
 	}
 
 	input := strings.TrimSpace(string(pipedInput))
