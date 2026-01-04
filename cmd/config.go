@@ -66,7 +66,10 @@ func initConfig(cmd *cobra.Command, cfgFile string) error {
 		return err
 	}
 
-	_ = viper.BindPFlag("vision.model", cmd.Flags().Lookup("vision-model"))
+	err = viper.BindPFlag("vision.model", cmd.Flags().Lookup("vision-model"))
+	if err != nil {
+		return fmt.Errorf("%w: %w", ErrBindFlags, err)
+	}
 
 	imagePaths, err := cmd.Flags().GetStringArray("image")
 	if err != nil {
