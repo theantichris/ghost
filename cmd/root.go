@@ -89,7 +89,9 @@ func run(cmd *cobra.Command, args []string) error {
 
 	messages := initMessages(systemPrompt, userPrompt, format)
 
-	if pipedInput, err := getPipedInput(os.Stdin, logger); err == nil {
+	if pipedInput, err := getPipedInput(os.Stdin, logger); err != nil {
+		return fmt.Errorf("%w: %w", ErrPipedInput, err)
+	} else {
 		if pipedInput != "" {
 			pipedMessage := llm.ChatMessage{
 				Role:    llm.RoleUser,
@@ -98,25 +100,19 @@ func run(cmd *cobra.Command, args []string) error {
 
 			messages = append(messages, pipedMessage)
 		}
-	} else {
-		return fmt.Errorf("%w: %w", ErrPipedInput, err)
 	}
 
-	if imagePaths, err := cmd.Flags().GetStringArray("image"); err == nil {
+	if imagePaths, err := cmd.Flags().GetStringArray("image"); err != nil {
+		return fmt.Errorf("%w: %w", ErrImageAnalysis, err)
+	} else {
 		if len(imagePaths) > 0 {
 			imageAnalysis, err := analyzeImages(cmd, url, imagePaths)
 			if err != nil {
 				return err
 			}
 
-			// TODO: Image analysis needs to show processing message.
-			// TODO: Map image name with analysis.
-			// TODO: Spike showing image inline.
-
 			messages = append(messages, imageAnalysis)
 		}
-	} else {
-		return fmt.Errorf("%w: %w", ErrImageAnalysis, err)
 	}
 
 	streamModel := ui.NewStreamModel(format)
