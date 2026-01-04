@@ -28,6 +28,7 @@ companion into a terminal-first experience.
 
 - [Ollama](https://ollama.ai) installed and running
 - A model of your choice pulled
+- (Optional) A vision model for image analysis (e.g., `llama3.2-vision`, `llava`)
 
 ## Installation
 
@@ -69,6 +70,15 @@ ghost -f markdown "Write a guide to memory management" >> memory.md
 # Pipe data for analysis
 cat error.log | ghost "what's wrong here"
 echo "def foo():\n  return bar" | ghost "explain this code"
+
+# Analyze images (requires vision model)
+ghost -i screenshot.png "what's in this image?"
+
+# Analyze multiple images
+ghost -i img1.png -i img2.png "compare these images"
+
+# Use specific vision model
+ghost -V llama3.2-vision -i diagram.png "explain this diagram"
 ```
 
 ## Configuration
@@ -82,6 +92,9 @@ Ghost can be configured in three ways (in order of precedence):
 ### Flags
 
 - `--model`, `-m`: The Ollama model to use
+- `--vision-model`, `-V`: Vision model for image analysis (defaults to main model)
+- `--image`, `-i`: Path to image file(s) for analysis (can be specified multiple
+times)
 - `--url`, `-u`: Ollama API URL (default: `http://localhost:11434/api`)
 - `--format`, `-f`: Output format (default: text, options: json, markdown)
 - `--config`, `-c`: Path to config file (default: `~/.config/ghost/config.toml`)
@@ -90,6 +103,7 @@ Ghost can be configured in three ways (in order of precedence):
 
 ```bash
 export GHOST_MODEL=llama3
+export GHOST_VISION_MODEL=llama3.2-vision
 export GHOST_URL=http://localhost:11434/api
 
 ghost "your prompt here"
@@ -102,6 +116,9 @@ Create `~/.config/ghost/config.toml`:
 ```toml
 model = "llama3"
 url = "http://localhost:11434/api"
+
+[vision]
+model = "llama3.2-vision"
 ```
 
 ## License

@@ -10,7 +10,16 @@ import (
 )
 
 func main() {
-	rootCmd := cmd.NewRootCmd()
+	rootCmd, loggerCleanup, err := cmd.NewRootCmd()
+
+	if err != nil {
+		theme.FangErrorHandler(os.Stderr, fang.Styles{}, err)
+		os.Exit(1)
+	}
+
+	defer func() {
+		_ = loggerCleanup()
+	}()
 
 	if err := fang.Execute(
 		context.Background(),
