@@ -99,7 +99,7 @@ func run(cmd *cobra.Command, args []string) error {
 			messages = append(messages, pipedMessage)
 		}
 	} else {
-		return err
+		return fmt.Errorf("%w: %w", ErrPipedInput, err)
 	}
 
 	if imagePaths, err := cmd.Flags().GetStringArray("image"); err == nil {
