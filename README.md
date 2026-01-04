@@ -115,8 +115,10 @@ Create `~/.config/ghost/config.toml`:
 
 ```toml
 model = "llama3"
-vision_model = "llama3.2-vision"
 url = "http://localhost:11434/api"
+
+[vision]
+model = "llama3.2-vision"
 ```
 
 ## License
