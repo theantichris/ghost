@@ -237,7 +237,7 @@ func initMessages(system, prompt, format string) []llm.ChatMessage {
 
 // encodedImages takes a slice of paths and returns a slice of base64 encoded strings.
 func encodeImages(paths []string) ([]string, error) {
-	if len(paths) < 1 {
+	if len(paths) == 0 {
 		return []string{}, nil
 	}
 
