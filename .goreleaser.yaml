@@ -32,14 +32,44 @@ archives:
 
 changelog:
   sort: asc
+  abbrev: -1
   filters:
     exclude:
       - "^docs:"
       - "^test:"
+      - "^ci:"
+
+  groups:
+    - title: "BREAKING // ICE BREACH"
+      regexp: '^.*?(feat|feature|fix|refactor|perf|deps)(\([[:word:]-]+\))?!:.+$'
+      order: 0
+
+    - title: "FEATURES // new mods"
+      regexp: '^.*?(feat|feature)(\([[:word:]-]+\))?!?:.+$'
+      order: 10
+
+    - title: "FIXES // patch run"
+      regexp: '^.*?fix(\([[:word:]-]+\))?!?:.+$'
+      order: 20
+
+    - title: "REFACTOR // rewired circuits"
+      regexp: '^.*?refactor(\([[:word:]-]+\))?!?:.+$'
+      order: 30
+
+    - title: "DEPS // supply chain"
+      regexp: '^.*?(deps(\([[:word:]-]+\))?!?:.+|Bump .+)$'
+      order: 40
+
+    - title: "OTHER // static"
+      order: 999
 
 release:
-  footer: >-
-
+  mode: replace
+  header: |
+    ## GHOST {{ .Tag }} // UPLINK ONLINE
+    _Delta: {{ .PreviousTag }} → {{ .Tag }}_
+  footer: |
     ---
+    **Full Changelog**: https://github.com/theantichris/ghost/compare/{{ .PreviousTag }}...{{ .Tag }}
 
     Released by [GoReleaser](https://github.com/goreleaser/goreleaser).
