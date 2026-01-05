@@ -46,9 +46,9 @@ func initConfig(cmd *cobra.Command, cfgFile string) error {
 			return fmt.Errorf("%w: %w", ErrConfig, err)
 		}
 
-		logger.Debug("no config file found, using flags/env only")
+		logger.Debug("config file not detected, running on local parameters")
 	} else {
-		logger.Debug("loaded config", "file", viper.ConfigFileUsed())
+		logger.Debug("system config loaded", "file", viper.ConfigFileUsed())
 	}
 
 	err := viper.BindPFlags(cmd.Flags())

@@ -118,7 +118,7 @@ func run(cmd *cobra.Command, args []string) error {
 	streamModel := ui.NewStreamModel(format)
 	streamProgram := tea.NewProgram(streamModel)
 
-	logger.Info("sending chat request", "model", model, "url", url, "format", format)
+	logger.Info("establishing neural link", "model", model, "url", url, "format", format)
 
 	go func() {
 		_, err := llm.StreamChat(cmd.Context(), url, model, messages, func(chunk string) {
@@ -126,7 +126,7 @@ func run(cmd *cobra.Command, args []string) error {
 		})
 
 		if err != nil {
-			logger.Error("llm request failed", "error", err, "model", model, "url", url)
+			logger.Error("neural link severed", "error", err, "model", model, "url", url)
 			streamProgram.Send(ui.StreamErrorMsg{Err: err})
 		} else {
 			streamProgram.Send(ui.StreamDoneMsg{})
@@ -159,7 +159,7 @@ func run(cmd *cobra.Command, args []string) error {
 func analyzeImages(cmd *cobra.Command, url string, imagePaths []string) (llm.ChatMessage, error) {
 	logger := cmd.Context().Value(loggerKey{}).(*log.Logger)
 
-	logger.Debug("encoding images", "count", len(imagePaths))
+	logger.Debug("digitizing visual data", "count", len(imagePaths))
 
 	visionModel := viper.GetString("vision.model")
 
@@ -171,7 +171,7 @@ func analyzeImages(cmd *cobra.Command, url string, imagePaths []string) (llm.Cha
 	messages := initMessages(visionSystemPrompt, visionPrompt, "markdown")
 	messages[len(messages)-1].Images = encodedImages // Attach images to prompt message.
 
-	logger.Info("starting image analysis request", "model", visionModel, "url", url, "image_count", len(encodedImages), "format", "markdown")
+	logger.Info("initiating visual recon", "model", visionModel, "url", url, "image_count", len(encodedImages), "format", "markdown")
 
 	response, err := llm.AnalyzeImages(cmd.Context(), url, visionModel, messages)
 	if err != nil {
@@ -205,7 +205,7 @@ func getPipedInput(file *os.File, logger *log.Logger) (string, error) {
 	input := strings.TrimSpace(string(pipedInput))
 
 	if len(input) > 0 {
-		logger.Debug("received piped input", "size_bytes", len(input))
+		logger.Debug("intercepted data stream", "size_bytes", len(input))
 	}
 
 	return input, nil
