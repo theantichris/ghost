@@ -13,9 +13,9 @@ import (
 )
 
 var (
-	ErrModelNotFound    = errors.New("model not found")
-	ErrUnexpectedStatus = errors.New("unexpected status")
-	ErrDecodeChunk      = errors.New("error decoding chunk")
+	ErrModelNotFound    = errors.New("AI construct not found in the system")
+	ErrUnexpectedStatus = errors.New("unexpected response from neural network")
+	ErrDecodeChunk      = errors.New("data packet decode error")
 )
 
 // Role represents the author of a message in the chat history.

@@ -34,10 +34,10 @@ Send prompts directly or pipe data through for analysis.`
 var (
 	isTTY = term.IsTerminal(os.Stdout.Fd())
 
-	ErrImageAnalysis = errors.New("failed to analyze images")
-	ErrPipedInput    = errors.New("failed to read piped input")
-	ErrStreamDisplay = errors.New("failed to display stream")
-	ErrRender        = errors.New("failed to render content")
+	ErrImageAnalysis = errors.New("visual recon failed")
+	ErrPipedInput    = errors.New("data stream interrupted")
+	ErrStreamDisplay = errors.New("output buffer overrun")
+	ErrRender        = errors.New("rendering matrix collapsed")
 )
 
 // NewRootCmd creates and returns the root command.

@@ -13,12 +13,12 @@ import (
 )
 
 var (
-	ErrNoModel          = errors.New("model is required (set via --model flag, config file, or environment)")
-	ErrNoVisionModel    = errors.New("vision model is required with images (set via --vision-model flag, config file, or environment)")
-	ErrInvalidFormat    = errors.New("invalid format option, valid options are json or markdown")
-	ErrInvalidImageFlag = errors.New("failed to read image flag")
-	ErrConfig           = errors.New("failed to read config file")
-	ErrBindFlags        = errors.New("failed to bind flags")
+	ErrNoModel          = errors.New("neural link required: no AI model configured (jack in via --model flag, config file, or environment)")
+	ErrNoVisionModel    = errors.New("optics module required: no vision model configured for image analysis (set via --vision-model flag, config file, or environment)")
+	ErrInvalidFormat    = errors.New("corrupted data format: valid options are json or markdown")
+	ErrInvalidImageFlag = errors.New("image data stream corrupted")
+	ErrConfig           = errors.New("config file compromised")
+	ErrBindFlags        = errors.New("flag interface malfunction")
 )
 
 // initConfig reads in config file and ENV variables if set.

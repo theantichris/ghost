@@ -11,7 +11,7 @@ import (
 
 type loggerKey struct{}
 
-var ErrLogger = errors.New("failed to create logger")
+var ErrLogger = errors.New("logging subsystem failure")
 
 // initLogger creates and configures the application logger with JSON formatting
 // and file output.

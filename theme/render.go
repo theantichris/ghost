@@ -7,7 +7,7 @@ import (
 	"github.com/charmbracelet/glamour"
 )
 
-var ErrMarkdownRender = errors.New("markdown render error")
+var ErrMarkdownRender = errors.New("markdown decoder malfunction")
 
 // RenderContent returns content rendered for the proper format and output.
 func RenderContent(content, format string, isTTY bool) (string, error) {
