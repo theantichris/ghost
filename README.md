@@ -14,90 +14,77 @@
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/theantichris/ghost.svg)](https://pkg.go.dev/github.com/theantichris/ghost)
 [![Build Status](https://github.com/theantichris/ghost/actions/workflows/go.yml/badge.svg)](https://github.com/theantichris/ghost/actions)
-[![Build Status](https://github.com/theantichris/ghost/actions/workflows/markdown.yml/badge.svg)](https://github.com/theantichris/ghost/actions)
 [![Go ReportCard](https://goreportcard.com/badge/theantichris/ghost)](https://goreportcard.com/report/theantichris/ghost)
 ![license](https://img.shields.io/badge/license-MIT-informational?style=flat)
 
-Ghost is a local, AI assistant tool built with Go and powered by Ollama.
+> *Your personal AI companion in the terminal. Always on. Always local. No corp surveillance.*
 
-The vision for Ghost is inspired by cyberpunk media such as _Shadowrun_,
-_Cyberpunk 2077_, and _The Matrix_, bringing a versatile, always-on AI
-companion into a terminal-first experience.
+Ghost is a command-line AI assistant powered by [Ollama](https://ollama.ai),
+bringing the spirit of cyberpunk AI companions from *Shadowrun*, *Cyberpunk 2077*,
+and *The Matrix* into your daily workflow.
 
-## Prerequisites
+## Jack In
+
+**Prerequisites:**
 
 - [Ollama](https://ollama.ai) installed and running
-- A model of your choice pulled
-- (Optional) A vision model for image analysis (e.g., `llama3.2-vision`, `llava`)
+- At least one model pulled (e.g., `ollama pull llama3`)
 
-## Installation
-
-### Via Go Install
+**Install:**
 
 ```bash
 go install github.com/theantichris/ghost@latest
 ```
 
-### Prebuilt Binaries
+Or grab prebuilt binaries from the [releases page](https://github.com/theantichris/ghost/releases).
 
-Download the latest release for your platform from the
-[releases page](https://github.com/theantichris/ghost/releases).
-
-## Usage
+**Run your first query:**
 
 ```bash
-# Get intel on tech
-ghost "Explain how neural interfaces work"
-
-# Quick data lookup
-ghost "What's the difference between a netrunner and a decker?"
-
-# Code assistance for your next run
-ghost "Write a Go function to encrypt data with AES-256"
-
-# Get structured JSON output with syntax highlighting
-ghost -f json "List the top 3 programming languages"
-
-# JSON output can be piped to other tools (no color codes)
-ghost -f json "system info" | jq .
-
-# Get formatted markdown output with cyberpunk theme
-ghost -f markdown "Write a guide to memory management"
-
-# Markdown output can be piped to other tools (no color codes)
-ghost -f markdown "Write a guide to memory management" >> memory.md
-
-# Pipe data for analysis
-cat error.log | ghost "what's wrong here"
-echo "def foo():\n  return bar" | ghost "explain this code"
-
-# Analyze images (requires vision model)
-ghost -i screenshot.png "what's in this image?"
-
-# Analyze multiple images
-ghost -i img1.png -i img2.png "compare these images"
-
-# Use specific vision model
-ghost -V llama3.2-vision -i diagram.png "explain this diagram"
+ghost "Explain recursion in simple terms"
 ```
 
-## Configuration
+## Core Capabilities
 
-Ghost can be configured in three ways (in order of precedence):
+- **Intelligence on demand:** Ask questions, get explanations, analyze data
+- **Data stream analysis:** Pipe logs, files, or any text directly into Ghost
+- **Visual recon:** Feed images to vision models for analysis and description
+- **Format flexibility:** Output as plain text, JSON, or styled Markdown
 
-1. **Command-line flags**
-2. **Environment variables**
-3. **Configuration file**
+## Usage Examples
 
-### Flags
+```bash
+# Query the net for intel
+ghost "how do I crack open a encrypted data stream?"
 
-- `--model`, `-m`: The Ollama model to use
-- `--vision-model`, `-V`: Vision model for image analysis (defaults to main model)
-- `--image`, `-i`: Path to image file(s) for analysis (can be specified multiple
-times)
-- `--url`, `-u`: Ollama API URL (default: `http://localhost:11434/api`)
-- `--format`, `-f`: Output format (default: text, options: json, markdown)
-- `--config`, `-c`: Path to config file (default: `~/.config/ghost/config.toml`)
+# Scan your logs for anomalies
+cat system.log | ghost "what's lurking in here?"
+
+# Extract structured data
+ghost "give me a list of common netrunner tools" -f json | jq .
+
+# Generate formatted dossiers
+ghost "write a guide to bypassing corp firewalls" -f markdown > intel.md
+
+# Visual recon (requires vision model)
+ghost "analyze this security feed" -i camera-feed.png
+
+# Compare surveillance data
+ghost "what changed in the facility?" -i before-raid.png -i after-raid.png
+```
+
+## System Configuration
+
+Configure Ghost via command-line flags, environment variables, or config file.
+
+### Command Flags
+
+- `-m, --model`: Model to use (e.g., `llama3`)
+- `-V, --vision-model`: Vision model for images (defaults to main model)
+- `-i, --image`: Image file path (can be used multiple times)
+- `-f, --format`: Output format: `text`, `json`, or `markdown`
+- `-u, --url`: Ollama API URL (default: `http://localhost:11434/api`)
+- `-c, --config`: Config file path (default: `~/.config/ghost/config.toml`)
 
 ### Environment Variables
 
@@ -105,11 +92,9 @@ times)
 export GHOST_MODEL=llama3
 export GHOST_VISION_MODEL=llama3.2-vision
 export GHOST_URL=http://localhost:11434/api
-
-ghost "your prompt here"
 ```
 
-### Configuration File
+### Config File
 
 Create `~/.config/ghost/config.toml`:
 
