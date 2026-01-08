@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 
 	tea "charm.land/bubbletea/v2"
@@ -112,8 +113,8 @@ func run(cmd *cobra.Command, args []string) error {
 			streamProgram.Send(ui.StreamErrorMsg{Err: fmt.Errorf("%w: %w", ErrImageAnalysis, err)})
 			return
 		} else {
-			if len(imagePaths) > 0 {
-				imageAnalysis, err := analyzeImages(cmd, url, imagePaths)
+			for _, image := range imagePaths {
+				imageAnalysis, err := analyzeImage(cmd, url, image)
 				if err != nil {
 					streamProgram.Send(ui.StreamErrorMsg{Err: err})
 					return
@@ -156,29 +157,33 @@ func run(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// analyzeImages sends a request to the model to analyze images and returns a
+// analyzeImage sends a request to the model to analyze an image and returns a
 // chat message with the report.
-func analyzeImages(cmd *cobra.Command, url string, imagePaths []string) (llm.ChatMessage, error) {
+func analyzeImage(cmd *cobra.Command, url string, image string) (llm.ChatMessage, error) {
 	logger := cmd.Context().Value(loggerKey{}).(*log.Logger)
 
-	logger.Debug("digitizing visual data", "count", len(imagePaths))
+	filename := filepath.Base(image)
+	logger.Debug("digitizing visual data", "filename", filename)
 
 	visionModel := viper.GetString("vision.model")
 
-	encodedImages, err := encodeImages(imagePaths)
+	encodedImage, err := encodeImage(image)
 	if err != nil {
 		return llm.ChatMessage{}, err
 	}
 
-	messages := initMessages(visionSystemPrompt, visionPrompt, "markdown")
-	messages[len(messages)-1].Images = encodedImages // Attach images to prompt message.
+	prompt := fmt.Sprintf("Filename: %s\n\n%s", filename, visionPrompt)
+	messages := initMessages(visionSystemPrompt, prompt, "markdown")
+	messages[len(messages)-1].Images = []string{encodedImage} // Attach images to prompt message.
 
-	logger.Info("initiating visual recon", "model", visionModel, "url", url, "image_count", len(encodedImages), "format", "markdown")
+	logger.Info("initiating visual recon", "model", visionModel, "url", url, "filename", filename, "format", "markdown")
 
 	response, err := llm.AnalyzeImages(cmd.Context(), url, visionModel, messages)
 	if err != nil {
 		return llm.ChatMessage{}, err
 	}
+
+	logger.Debug("visual recon complete", "filename", filename, "analysis", response.Content)
 
 	imageAnalysis := llm.ChatMessage{
 		Role:    llm.RoleUser,
@@ -233,23 +238,14 @@ func initMessages(system, prompt, format string) []llm.ChatMessage {
 	return messages
 }
 
-// encodedImages takes a slice of paths and returns a slice of base64 encoded strings.
-func encodeImages(paths []string) ([]string, error) {
-	if len(paths) == 0 {
-		return []string{}, nil
+// encodedImage takes an image path and returns a base64 encoded string.
+func encodeImage(image string) (string, error) {
+	imageBytes, err := os.ReadFile(image)
+	if err != nil {
+		return "", fmt.Errorf("%w: failed to read %s: %w", ErrImageAnalysis, image, err)
 	}
 
-	encodedImages := make([]string, 0, len(paths))
+	encodedImage := base64.StdEncoding.EncodeToString(imageBytes)
 
-	for _, path := range paths {
-		imageBytes, err := os.ReadFile(path)
-		if err != nil {
-			return nil, fmt.Errorf("%w: failed to read %s: %w", ErrImageAnalysis, path, err)
-		}
-
-		encodedImage := base64.StdEncoding.EncodeToString(imageBytes)
-		encodedImages = append(encodedImages, encodedImage)
-	}
-
-	return encodedImages, nil
+	return encodedImage, nil
 }
