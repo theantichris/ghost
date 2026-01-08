@@ -90,17 +90,18 @@ func run(cmd *cobra.Command, args []string) error {
 
 	messages := initMessages(systemPrompt, userPrompt, format)
 
-	if pipedInput, err := getPipedInput(os.Stdin, logger); err != nil {
+	pipedInput, err := getPipedInput(os.Stdin, logger)
+	if err != nil {
 		return fmt.Errorf("%w: %w", ErrPipedInput, err)
-	} else {
-		if pipedInput != "" {
-			pipedMessage := llm.ChatMessage{
-				Role:    llm.RoleUser,
-				Content: pipedInput,
-			}
+	}
 
-			messages = append(messages, pipedMessage)
+	if pipedInput != "" {
+		pipedMessage := llm.ChatMessage{
+			Role:    llm.RoleUser,
+			Content: pipedInput,
 		}
+
+		messages = append(messages, pipedMessage)
 	}
 
 	streamModel := ui.NewStreamModel(format)
