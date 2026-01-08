@@ -110,22 +110,24 @@ func run(cmd *cobra.Command, args []string) error {
 	logger.Info("establishing neural link", "model", model, "url", url, "format", format)
 
 	go func() {
-		if imagePaths, err := cmd.Flags().GetStringArray("image"); err != nil {
+		imagePaths, err := cmd.Flags().GetStringArray("image")
+		if err != nil {
 			streamProgram.Send(ui.StreamErrorMsg{Err: fmt.Errorf("%w: %w", ErrImageAnalysis, err)})
-			return
-		} else {
-			for _, image := range imagePaths {
-				imageAnalysis, err := analyzeImage(cmd, url, image)
-				if err != nil {
-					streamProgram.Send(ui.StreamErrorMsg{Err: err})
-					return
-				}
 
-				messages = append(messages, imageAnalysis)
-			}
+			return
 		}
 
-		_, err := llm.StreamChat(cmd.Context(), url, model, messages, func(chunk string) {
+		for _, image := range imagePaths {
+			imageAnalysis, err := analyzeImage(cmd, url, image)
+			if err != nil {
+				streamProgram.Send(ui.StreamErrorMsg{Err: err})
+				return
+			}
+
+			messages = append(messages, imageAnalysis)
+		}
+
+		_, err = llm.StreamChat(cmd.Context(), url, model, messages, func(chunk string) {
 			streamProgram.Send(ui.StreamChunkMsg(chunk))
 		})
 
