@@ -15,7 +15,8 @@ Rules:
 
 Output format:
 
-IMAGE_ANALYSIS: {filename}
+IMAGE_ANALYSIS
+FILENAME: {filename}
 DESCRIPTION: {description}
 TEXT: {visible text}
 END_IMAGE_ANALYSIS
