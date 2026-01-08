@@ -102,25 +102,27 @@ func run(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	if imagePaths, err := cmd.Flags().GetStringArray("image"); err != nil {
-		return fmt.Errorf("%w: %w", ErrImageAnalysis, err)
-	} else {
-		if len(imagePaths) > 0 {
-			imageAnalysis, err := analyzeImages(cmd, url, imagePaths)
-			if err != nil {
-				return err
-			}
-
-			messages = append(messages, imageAnalysis)
-		}
-	}
-
 	streamModel := ui.NewStreamModel(format)
 	streamProgram := tea.NewProgram(streamModel)
 
 	logger.Info("establishing neural link", "model", model, "url", url, "format", format)
 
 	go func() {
+		if imagePaths, err := cmd.Flags().GetStringArray("image"); err != nil {
+			streamProgram.Send(ui.StreamErrorMsg{Err: fmt.Errorf("%w: %w", ErrImageAnalysis, err)})
+			return
+		} else {
+			if len(imagePaths) > 0 {
+				imageAnalysis, err := analyzeImages(cmd, url, imagePaths)
+				if err != nil {
+					streamProgram.Send(ui.StreamErrorMsg{Err: err})
+					return
+				}
+
+				messages = append(messages, imageAnalysis)
+			}
+		}
+
 		_, err := llm.StreamChat(cmd.Context(), url, model, messages, func(chunk string) {
 			streamProgram.Send(ui.StreamChunkMsg(chunk))
 		})
