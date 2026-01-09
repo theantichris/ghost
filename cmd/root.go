@@ -118,11 +118,9 @@ func run(cmd *cobra.Command, args []string) error {
 
 		logger.Info("establishing neural link", "model", model, "url", url, "format", format)
 
-		_, err = llm.StreamChat(cmd.Context(), url, model, messages, func(chunk string) {
+		if _, err = llm.StreamChat(cmd.Context(), url, model, messages, func(chunk string) {
 			streamProgram.Send(ui.StreamChunkMsg(chunk))
-		})
-
-		if err != nil {
+		}); err != nil {
 			logger.Error("neural link severed", "error", err, "model", model, "url", url)
 			streamProgram.Send(ui.StreamErrorMsg{Err: err})
 		} else {
