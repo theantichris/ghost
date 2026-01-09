@@ -90,45 +90,37 @@ func run(cmd *cobra.Command, args []string) error {
 
 	messages := initMessages(systemPrompt, userPrompt, format)
 
-	if pipedInput, err := getPipedInput(os.Stdin, logger); err != nil {
+	pipedInput, err := getPipedInput(os.Stdin, logger)
+	if err != nil {
 		return fmt.Errorf("%w: %w", ErrPipedInput, err)
-	} else {
-		if pipedInput != "" {
-			pipedMessage := llm.ChatMessage{
-				Role:    llm.RoleUser,
-				Content: pipedInput,
-			}
+	}
 
-			messages = append(messages, pipedMessage)
+	if pipedInput != "" {
+		pipedMessage := llm.ChatMessage{
+			Role:    llm.RoleUser,
+			Content: pipedInput,
 		}
+
+		messages = append(messages, pipedMessage)
 	}
 
 	streamModel := ui.NewStreamModel(format)
 	streamProgram := tea.NewProgram(streamModel)
 
-	logger.Info("establishing neural link", "model", model, "url", url, "format", format)
-
 	go func() {
-		if imagePaths, err := cmd.Flags().GetStringArray("image"); err != nil {
-			streamProgram.Send(ui.StreamErrorMsg{Err: fmt.Errorf("%w: %w", ErrImageAnalysis, err)})
+		imageAnalysis, err := analyzeImages(cmd, url)
+		if err != nil {
+			streamProgram.Send(ui.StreamErrorMsg{Err: err})
 			return
-		} else {
-			for _, image := range imagePaths {
-				imageAnalysis, err := analyzeImage(cmd, url, image)
-				if err != nil {
-					streamProgram.Send(ui.StreamErrorMsg{Err: err})
-					return
-				}
-
-				messages = append(messages, imageAnalysis)
-			}
 		}
 
-		_, err := llm.StreamChat(cmd.Context(), url, model, messages, func(chunk string) {
-			streamProgram.Send(ui.StreamChunkMsg(chunk))
-		})
+		messages = append(messages, imageAnalysis...)
 
-		if err != nil {
+		logger.Info("establishing neural link", "model", model, "url", url, "format", format)
+
+		if _, err = llm.StreamChat(cmd.Context(), url, model, messages, func(chunk string) {
+			streamProgram.Send(ui.StreamChunkMsg(chunk))
+		}); err != nil {
 			logger.Error("neural link severed", "error", err, "model", model, "url", url)
 			streamProgram.Send(ui.StreamErrorMsg{Err: err})
 		} else {
@@ -146,8 +138,7 @@ func run(cmd *cobra.Command, args []string) error {
 		return finalModel.Err
 	}
 
-	content := finalModel.Content()
-	render, err := theme.RenderContent(content, format, isTTY)
+	render, err := theme.RenderContent(finalModel.Content(), format, isTTY)
 	if err != nil {
 		return fmt.Errorf("%w: %w", ErrRender, err)
 	}
@@ -157,37 +148,42 @@ func run(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// analyzeImage sends a request to the model to analyze an image and returns a
-// chat message with the report.
-func analyzeImage(cmd *cobra.Command, url string, image string) (llm.ChatMessage, error) {
+// analyzeImages sends a request to the model to analyze images and returns a
+// slice of chat messages with the reports.
+func analyzeImages(cmd *cobra.Command, url string) ([]llm.ChatMessage, error) {
 	logger := cmd.Context().Value(loggerKey{}).(*log.Logger)
 
-	filename := filepath.Base(image)
-	logger.Debug("digitizing visual data", "filename", filename)
-
 	visionModel := viper.GetString("vision.model")
+	var imageAnalysis []llm.ChatMessage
 
-	encodedImage, err := encodeImage(image)
+	imagePaths, err := cmd.Flags().GetStringArray("image")
 	if err != nil {
-		return llm.ChatMessage{}, err
+		return []llm.ChatMessage{}, err
 	}
 
-	prompt := fmt.Sprintf("Filename: %s\n\n%s", filename, visionPrompt)
-	messages := initMessages(visionSystemPrompt, prompt, "markdown")
-	messages[len(messages)-1].Images = []string{encodedImage} // Attach images to prompt message.
+	for _, image := range imagePaths {
+		filename := filepath.Base(image)
+		logger.Debug("digitizing visual data", "filename", filename)
 
-	logger.Info("initiating visual recon", "model", visionModel, "url", url, "filename", filename, "format", "markdown")
+		encodedImage, err := encodeImage(image)
+		if err != nil {
+			return []llm.ChatMessage{}, err
+		}
 
-	response, err := llm.AnalyzeImages(cmd.Context(), url, visionModel, messages)
-	if err != nil {
-		return llm.ChatMessage{}, err
-	}
+		prompt := fmt.Sprintf("Filename: %s\n\n%s", filename, visionPrompt)
+		messages := initMessages(visionSystemPrompt, prompt, "markdown")
+		messages[len(messages)-1].Images = []string{encodedImage} // Attach images to prompt message.
 
-	logger.Debug("visual recon complete", "filename", filename, "analysis", response.Content)
+		logger.Info("initiating visual recon", "model", visionModel, "url", url, "filename", filename, "format", "markdown")
 
-	imageAnalysis := llm.ChatMessage{
-		Role:    llm.RoleUser,
-		Content: response.Content,
+		response, err := llm.AnalyzeImages(cmd.Context(), url, visionModel, messages)
+		if err != nil {
+			return []llm.ChatMessage{}, err
+		}
+
+		logger.Debug("visual recon complete", "filename", filename, "analysis", response.Content)
+
+		imageAnalysis = append(imageAnalysis, llm.ChatMessage{Role: llm.RoleUser, Content: response.Content})
 	}
 
 	return imageAnalysis, nil
