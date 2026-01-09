@@ -138,8 +138,7 @@ func run(cmd *cobra.Command, args []string) error {
 		return finalModel.Err
 	}
 
-	content := finalModel.Content()
-	render, err := theme.RenderContent(content, format, isTTY)
+	render, err := theme.RenderContent(finalModel.Content(), format, isTTY)
 	if err != nil {
 		return fmt.Errorf("%w: %w", ErrRender, err)
 	}
