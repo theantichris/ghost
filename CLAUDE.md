@@ -33,25 +33,13 @@ Implemented in `cmd/config.go` using Viper. Vision model configuration uses nest
 
 ### Message Flow for Images
 
-When images are provided:
-1. Each image is base64-encoded
-2. Each image is analyzed separately using the vision model
-3. Vision analysis results are formatted with structured output (IMAGE_ANALYSIS blocks)
-4. Analysis results are appended to message history as user messages
-5. Main model receives all context including image analyses
+Images are base64 encoded and analyzed separately with the vision model. Analysis results are formatted with IMAGE_ANALYSIS blocks and appended to message history before the main model processes everything.
 
 Vision system prompt is designed to prevent prompt injection from image text by treating all visible text as data, not instructions.
 
 ### Streaming Architecture
 
-Uses goroutine + Bubbletea message passing:
-1. `run()` starts Bubbletea program with `StreamModel`
-2. Goroutine calls `analyzeImages()` then `llm.StreamChat()`
-3. For each chunk, `onChunk` callback sends `StreamChunkMsg` to Bubbletea
-4. StreamModel accumulates content and renders incrementally
-5. On completion or error, sends `StreamDoneMsg` or `StreamErrorMsg`
-6. Program quits and final content is rendered with proper formatting
-
+User goroutine and Bubbletea message passing where callbacks send chunk/done/error messages to the SteamModel for incremental rendering.
 ### Error Handling Pattern
 
 All packages define custom error types (e.g., `ErrImageAnalysis`, `ErrModelNotFound`) with cyberpunk-themed messages. Errors are wrapped using `fmt.Errorf("%w", err)` for proper unwrapping. Theme package provides custom Fang error handler.
