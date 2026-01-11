@@ -1,5 +1,11 @@
 package llm
 
+// Tool defines a tool available to the LLM.
+type Function struct {
+	Type     string       `json:"type"`
+	Function ToolFunction `json:"function"`
+}
+
 // ToolFunction describes a callable function for the LLM.
 type ToolFunction struct {
 	Name        string         `json:"name"`
