@@ -25,3 +25,11 @@ type ToolProperty struct {
 	Type        string `json:"type"`
 	Description string `json:"description"`
 }
+
+// ToolCall represents the LLM's request to invoke a tool.
+type ToolCall struct {
+	Function struct {
+		Name      string `json:"name"`
+		Arguments string `json:"arguments"`
+	} `json:"function"`
+}
