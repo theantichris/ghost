@@ -43,9 +43,10 @@ type ChatResponse struct {
 
 // ChatMessage holds a single message in the chat history.
 type ChatMessage struct {
-	Role    Role     `json:"role"`
-	Content string   `json:"content"`
-	Images  []string `json:"images,omitempty"`
+	Role      Role       `json:"role"`
+	Content   string     `json:"content"`
+	Images    []string   `json:"images,omitempty"`
+	ToolCalls []ToolCall `json:"tool_calls,omitempty"`
 }
 
 // AnalyzeImages sends a request to the chat endpoint with images to analyze and
