@@ -33,6 +33,7 @@ type ChatRequest struct {
 	Model    string        `json:"model"`
 	Stream   bool          `json:"stream"`
 	Messages []ChatMessage `json:"messages"`
+	Tools    []Tool        `json:"tools,omitempty"`
 }
 
 // ChatResponse holds the response from the chat endpoint.
