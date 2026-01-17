@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(go help:*)",
+      "WebFetch(domain:github.com)",
+      "WebSearch",
+      "WebFetch(domain:docs.ollama.com)",
+      "WebFetch(domain:dev.to)",
+      "Bash(go build:*)",
+      "Bash(go test:*)"
+    ]
+  },
+  "outputStyle": "Learning",
+  "spinnerTipsEnabled": false
+}
