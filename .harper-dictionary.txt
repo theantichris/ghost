@@ -4,6 +4,7 @@ ChatResponse
 CyberpunkTheme
 ENV
 GoReleaser
+NewRegistry
 NewRootCmd
 NewStreamModel
 PersistentPreRunE
