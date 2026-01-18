@@ -11,7 +11,7 @@ import (
 	"github.com/theantichris/ghost/internal/llm"
 )
 
-const tavilyURL = "http://api.tavily.com/search"
+const tavilyURL = "https://api.tavily.com/search"
 
 var (
 	ErrNoAPIKey     = errors.New("tavily API key not found")
