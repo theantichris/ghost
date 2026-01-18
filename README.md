@@ -96,7 +96,7 @@ Configure Ghost via command-line flags, environment variables, or config file.
 export GHOST_MODEL=llama3
 export GHOST_VISION_MODEL=llama3.2-vision
 export GHOST_URL=http://localhost:11434/api
-export GHOST_SEARCH*API*KEY=tvly-xxxxx   # Tavily API key for web search
+export GHOST_SEARCH_API_KEY=tvly-xxxxx   # Tavily API key for web search
 ```
 
 ### Config File
