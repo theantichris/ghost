@@ -3,7 +3,6 @@ package cmd
 import (
 	"context"
 	"encoding/base64"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -154,7 +153,7 @@ func run(cmd *cobra.Command, args []string) error {
 			for _, toolCall := range resp.ToolCalls {
 				logger.Debug("executing tool", "name", toolCall.Function.Name)
 
-				result, err := registry.Execute(cmd.Context(), toolCall.Function.Name, json.RawMessage(toolCall.Function.Arguments))
+				result, err := registry.Execute(cmd.Context(), toolCall.Function.Name, toolCall.Function.Arguments)
 				if err != nil {
 					logger.Error("tool execution failed", "name", toolCall.Function.Name, "error", err)
 					result = fmt.Sprintf("error: %s", err.Error())

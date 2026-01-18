@@ -1,5 +1,7 @@
 package llm
 
+import "encoding/json"
+
 // Tool defines a tool available to the LLM.
 type Tool struct {
 	Type     string       `json:"type"`
@@ -29,7 +31,7 @@ type ToolProperty struct {
 // ToolCall represents the LLM's request to invoke a tool.
 type ToolCall struct {
 	Function struct {
-		Name      string `json:"name"`
-		Arguments string `json:"arguments"`
+		Name      string          `json:"name"`
+		Arguments json.RawMessage `json:"arguments"`
 	} `json:"function"`
 }
