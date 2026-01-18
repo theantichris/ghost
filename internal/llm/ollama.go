@@ -69,13 +69,7 @@ func AnalyzeImages(ctx context.Context, host, model string, messages []ChatMessa
 		Fetch(ctx)
 
 	if err != nil {
-		errStr := err.Error()
-
-		if strings.Contains(errStr, "404") {
-			return ChatMessage{}, fmt.Errorf("%w: %s", ErrModelNotFound, request.Model)
-		}
-
-		return ChatMessage{}, fmt.Errorf("%w: %w", ErrUnexpectedStatus, err)
+		return handleHTTPErrors(err, model)
 	}
 
 	chatMessage := ChatMessage{
@@ -105,17 +99,10 @@ func Chat(ctx context.Context, host, model string, messages []ChatMessage, tools
 		Fetch(ctx)
 
 	if err != nil {
-		errStr := err.Error()
-
-		if strings.Contains(errStr, "404") {
-			return ChatMessage{}, fmt.Errorf("%w: %s", ErrModelNotFound, request.Model)
-		}
-
-		return ChatMessage{}, fmt.Errorf("%w: %w", ErrUnexpectedStatus, err)
+		return handleHTTPErrors(err, model)
 	}
 
 	if chatResponse.Error != "" {
-
 		if strings.Contains(chatResponse.Error, "does not support tools") {
 			return ChatMessage{}, fmt.Errorf("%w: %s", ErrToolSupport, model)
 		}
@@ -174,17 +161,7 @@ func StreamChat(ctx context.Context, host, model string, messages []ChatMessage,
 		Fetch(ctx)
 
 	if err != nil {
-		errStr := err.Error()
-
-		if strings.Contains(errStr, "404") {
-			return ChatMessage{}, fmt.Errorf("%w: %s", ErrModelNotFound, request.Model)
-		}
-
-		if strings.Contains(errStr, ErrDecodeChunk.Error()) {
-			return ChatMessage{}, err
-		}
-
-		return ChatMessage{}, fmt.Errorf("%w: %w", ErrUnexpectedStatus, err)
+		return handleHTTPErrors(err, model)
 	}
 
 	chatMessage := ChatMessage{
@@ -193,4 +170,18 @@ func StreamChat(ctx context.Context, host, model string, messages []ChatMessage,
 	}
 
 	return chatMessage, nil
+}
+
+func handleHTTPErrors(err error, model string) (ChatMessage, error) {
+	errStr := err.Error()
+
+	if strings.Contains(errStr, "404") {
+		return ChatMessage{}, fmt.Errorf("%w: %s", ErrModelNotFound, model)
+	}
+
+	if strings.Contains(errStr, ErrDecodeChunk.Error()) {
+		return ChatMessage{}, err
+	}
+
+	return ChatMessage{}, fmt.Errorf("%w: %w", ErrUnexpectedStatus, err)
 }
