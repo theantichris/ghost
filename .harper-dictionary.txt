@@ -1,9 +1,12 @@
+Bubbletea
 ChatMessage
 ChatResponse
 CyberpunkTheme
 ENV
 GoReleaser
+NewRegistry
 NewRootCmd
+NewSearch
 NewStreamModel
 PersistentPreRunE
 RenderContent
@@ -13,7 +16,13 @@ StreamChat
 StreamDoneMsg
 StreamErrorMsg
 StreamModel
+Tavily
+ToolCall
+ToolFunction
+ToolParameters
 WordWrap
+analyzeImages
+claude
 getColorScheme
 getPipedInput
 golangci

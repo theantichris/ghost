@@ -16,6 +16,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/theantichris/ghost/internal/llm"
+	"github.com/theantichris/ghost/internal/tool"
 	"github.com/theantichris/ghost/internal/ui"
 	"github.com/theantichris/ghost/theme"
 )
@@ -90,6 +91,18 @@ func run(cmd *cobra.Command, args []string) error {
 
 	messages := initMessages(systemPrompt, userPrompt, format)
 
+	registry := tool.NewRegistry()
+
+	if tavilyAPIKey := viper.GetString("search.api-key"); tavilyAPIKey != "" {
+		maxResults := viper.GetInt("search.max-results")
+		if maxResults == 0 {
+			maxResults = 5
+		}
+
+		registry.Register(tool.NewSearch(tavilyAPIKey, maxResults))
+		logger.Debug("tool registered", "name", "web_search")
+	}
+
 	pipedInput, err := getPipedInput(os.Stdin, logger)
 	if err != nil {
 		return fmt.Errorf("%w: %w", ErrPipedInput, err)
@@ -118,7 +131,39 @@ func run(cmd *cobra.Command, args []string) error {
 
 		logger.Info("establishing neural link", "model", model, "url", url, "format", format)
 
-		if _, err = llm.StreamChat(cmd.Context(), url, model, messages, func(chunk string) {
+		tools := registry.Definitions()
+
+		for {
+			if len(tools) == 0 {
+				break
+			}
+
+			resp, err := llm.Chat(cmd.Context(), url, model, messages, tools)
+			if err != nil {
+				streamProgram.Send(ui.StreamErrorMsg{Err: err})
+				return
+			}
+
+			if len(resp.ToolCalls) == 0 {
+				break
+			}
+
+			messages = append(messages, resp)
+
+			for _, toolCall := range resp.ToolCalls {
+				logger.Debug("executing tool", "name", toolCall.Function.Name)
+
+				result, err := registry.Execute(cmd.Context(), toolCall.Function.Name, toolCall.Function.Arguments)
+				if err != nil {
+					logger.Error("tool execution failed", "name", toolCall.Function.Name, "error", err)
+					result = fmt.Sprintf("error: %s", err.Error())
+				}
+
+				messages = append(messages, llm.ChatMessage{Role: llm.RoleTool, Content: result})
+			}
+		}
+
+		if _, err = llm.StreamChat(cmd.Context(), url, model, messages, nil, func(chunk string) {
 			streamProgram.Send(ui.StreamChunkMsg(chunk))
 		}); err != nil {
 			logger.Error("neural link severed", "error", err, "model", model, "url", url)
