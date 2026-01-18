@@ -16,6 +16,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/theantichris/ghost/internal/llm"
+	"github.com/theantichris/ghost/internal/tool"
 	"github.com/theantichris/ghost/internal/ui"
 	"github.com/theantichris/ghost/theme"
 )
@@ -89,6 +90,20 @@ func run(cmd *cobra.Command, args []string) error {
 	userPrompt := args[0]
 
 	messages := initMessages(systemPrompt, userPrompt, format)
+
+	// Check if the Tavily API key is configured
+	// If yes, create the registry and register the search tool
+	registry := tool.NewRegistry()
+
+	if tavilyAPIKey := viper.GetString("search.api-key"); tavilyAPIKey != "" {
+		maxResults := viper.GetInt("search.max-results")
+		if maxResults == 0 {
+			maxResults = 5
+		}
+
+		registry.Register(tool.NewSearch(tavilyAPIKey, maxResults))
+		logger.Debug("tool registered", "name", "web_search")
+	}
 
 	pipedInput, err := getPipedInput(os.Stdin, logger)
 	if err != nil {
