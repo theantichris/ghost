@@ -21,6 +21,7 @@ ToolCall
 ToolFunction
 ToolParameters
 WordWrap
+analyzeImages
 claude
 getColorScheme
 getPipedInput

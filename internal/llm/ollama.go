@@ -90,14 +90,53 @@ func AnalyzeImages(ctx context.Context, host, model string, messages []ChatMessa
 	return chatMessage, nil
 }
 
+// Chat sends a non-streaming request to the chat endpoint with tools and returns
+// the response message.
+func Chat(ctx context.Context, host, model string, messages []ChatMessage, tools []Tool) (ChatMessage, error) {
+	request := ChatRequest{
+		Model:    model,
+		Stream:   false,
+		Messages: messages,
+		Tools:    tools,
+	}
+
+	var chatResponse ChatResponse
+
+	err := requests.
+		URL(host + "/chat").
+		BodyJSON(&request).
+		AddValidator(nil).
+		Handle(func(resp *http.Response) error {
+			if resp.StatusCode == http.StatusNotFound {
+				return fmt.Errorf("%w: %s", ErrModelNotFound, request.Model)
+			}
+
+			if resp.StatusCode != http.StatusOK {
+				return fmt.Errorf("%w: %s", ErrUnexpectedStatus, resp.Status)
+			}
+
+			return nil
+		}).
+		ToJSON(&chatResponse).
+		Fetch(ctx)
+
+	if err != nil {
+		return ChatMessage{}, fmt.Errorf("%w", err)
+	}
+
+	// Return chatResponse.Message directly to preserve ToolCalls.
+	return chatResponse.Message, nil
+}
+
 // StreamChat sends a streaming request to the chat endpoint and returns the
 // response message.
 // onChunk is called for each streamed chunk of content.
-func StreamChat(ctx context.Context, host, model string, messages []ChatMessage, onChunk func(string)) (ChatMessage, error) {
+func StreamChat(ctx context.Context, host, model string, messages []ChatMessage, tools []Tool, onChunk func(string)) (ChatMessage, error) {
 	request := ChatRequest{
 		Model:    model,
 		Stream:   true,
 		Messages: messages,
+		Tools:    tools,
 	}
 
 	var chatContent strings.Builder

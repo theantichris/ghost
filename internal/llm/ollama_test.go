@@ -85,7 +85,7 @@ func TestStreamChat(t *testing.T) {
 				chunks = append(chunks, content)
 			}
 
-			got, err := StreamChat(context.Background(), server.URL, tt.model, tt.messages, onChunk)
+			got, err := StreamChat(context.Background(), server.URL, tt.model, tt.messages, nil, onChunk)
 
 			if tt.wantErr {
 				if err == nil {

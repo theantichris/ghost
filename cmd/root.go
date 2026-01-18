@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -133,7 +134,45 @@ func run(cmd *cobra.Command, args []string) error {
 
 		logger.Info("establishing neural link", "model", model, "url", url, "format", format)
 
-		if _, err = llm.StreamChat(cmd.Context(), url, model, messages, func(chunk string) {
+		// Tool call loop (non-streaming)
+		tools := registry.Definitions()
+
+		for {
+			// Only enter loop if we have tools
+			if len(tools) == 0 {
+				break
+			}
+
+			resp, err := llm.Chat(cmd.Context(), url, model, messages, tools)
+			if err != nil {
+				streamProgram.Send(ui.StreamErrorMsg{Err: err})
+				return
+			}
+
+			// No tool calls, exit loop and stream final response
+			if len(resp.ToolCalls) == 0 {
+				break
+			}
+
+			// Append assistant message with tool calls to history
+			messages = append(messages, resp)
+
+			// Execute each tool call
+			for _, toolCall := range resp.ToolCalls {
+				logger.Debug("executing tool", "name", toolCall.Function.Name)
+
+				result, err := registry.Execute(cmd.Context(), toolCall.Function.Name, json.RawMessage(toolCall.Function.Arguments))
+				if err != nil {
+					logger.Error("tool execution failed", "name", toolCall.Function.Name, "error", err)
+					result = fmt.Sprintf("error: %s", err.Error())
+				}
+
+				// Append tool result to history
+				messages = append(messages, llm.ChatMessage{Role: llm.RoleTool, Content: result})
+			}
+		}
+
+		if _, err = llm.StreamChat(cmd.Context(), url, model, messages, nil, func(chunk string) {
 			streamProgram.Send(ui.StreamChunkMsg(chunk))
 		}); err != nil {
 			logger.Error("neural link severed", "error", err, "model", model, "url", url)
