@@ -65,23 +65,17 @@ func AnalyzeImages(ctx context.Context, host, model string, messages []ChatMessa
 	err := requests.
 		URL(host + "/chat").
 		BodyJSON(&request).
-		AddValidator(nil).
-		Handle(func(response *http.Response) error {
-			if response.StatusCode == http.StatusNotFound {
-				return fmt.Errorf("%w: %s", ErrModelNotFound, request.Model)
-			}
-
-			if response.StatusCode != http.StatusOK {
-				return fmt.Errorf("%w: %s", ErrUnexpectedStatus, response.Status)
-			}
-
-			return nil
-		}).
 		ToJSON(&chatResponse).
 		Fetch(ctx)
 
 	if err != nil {
-		return ChatMessage{}, fmt.Errorf("%w", err)
+		errStr := err.Error()
+
+		if strings.Contains(errStr, "404") {
+			return ChatMessage{}, fmt.Errorf("%w: %s", ErrModelNotFound, request.Model)
+		}
+
+		return ChatMessage{}, fmt.Errorf("%w: %w", ErrUnexpectedStatus, err)
 	}
 
 	chatMessage := ChatMessage{
@@ -107,29 +101,26 @@ func Chat(ctx context.Context, host, model string, messages []ChatMessage, tools
 	err := requests.
 		URL(host + "/chat").
 		BodyJSON(&request).
-		AddValidator(nil).
-		Handle(func(resp *http.Response) error {
-			if resp.StatusCode == http.StatusNotFound {
-				return fmt.Errorf("%w: %s", ErrModelNotFound, request.Model)
-			}
-
-			if resp.StatusCode != http.StatusOK {
-				return fmt.Errorf("%w: %s", ErrUnexpectedStatus, resp.Status)
-			}
-
-			return nil
-		}).
 		ToJSON(&chatResponse).
 		Fetch(ctx)
 
 	if err != nil {
-		return ChatMessage{}, fmt.Errorf("%w", err)
+		errStr := err.Error()
+
+		if strings.Contains(errStr, "404") {
+			return ChatMessage{}, fmt.Errorf("%w: %s", ErrModelNotFound, request.Model)
+		}
+
+		return ChatMessage{}, fmt.Errorf("%w: %w", ErrUnexpectedStatus, err)
 	}
 
 	if chatResponse.Error != "" {
+
 		if strings.Contains(chatResponse.Error, "does not support tools") {
 			return ChatMessage{}, fmt.Errorf("%w: %s", ErrToolSupport, model)
 		}
+
+		return ChatMessage{}, fmt.Errorf("%w: %s", ErrUnexpectedStatus, chatResponse.Error)
 	}
 
 	// Return chatResponse.Message directly to preserve ToolCalls.
@@ -158,12 +149,8 @@ func StreamChat(ctx context.Context, host, model string, messages []ChatMessage,
 				_ = response.Body.Close()
 			}()
 
-			if response.StatusCode == http.StatusNotFound {
-				return fmt.Errorf("%w: %s", ErrModelNotFound, request.Model)
-			}
-
 			if response.StatusCode != http.StatusOK {
-				return fmt.Errorf("%w: %s", ErrUnexpectedStatus, response.Status)
+				return fmt.Errorf("status %d", response.StatusCode)
 			}
 
 			decoder := json.NewDecoder(response.Body)
@@ -187,7 +174,17 @@ func StreamChat(ctx context.Context, host, model string, messages []ChatMessage,
 		Fetch(ctx)
 
 	if err != nil {
-		return ChatMessage{}, fmt.Errorf("%w", err)
+		errStr := err.Error()
+
+		if strings.Contains(errStr, "404") {
+			return ChatMessage{}, fmt.Errorf("%w: %s", ErrModelNotFound, request.Model)
+		}
+
+		if strings.Contains(errStr, ErrDecodeChunk.Error()) {
+			return ChatMessage{}, err
+		}
+
+		return ChatMessage{}, fmt.Errorf("%w: %w", ErrUnexpectedStatus, err)
 	}
 
 	chatMessage := ChatMessage{
