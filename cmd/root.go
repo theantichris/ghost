@@ -92,8 +92,6 @@ func run(cmd *cobra.Command, args []string) error {
 
 	messages := initMessages(systemPrompt, userPrompt, format)
 
-	// Check if the Tavily API key is configured
-	// If yes, create the registry and register the search tool
 	registry := tool.NewRegistry()
 
 	if tavilyAPIKey := viper.GetString("search.api-key"); tavilyAPIKey != "" {
@@ -134,11 +132,9 @@ func run(cmd *cobra.Command, args []string) error {
 
 		logger.Info("establishing neural link", "model", model, "url", url, "format", format)
 
-		// Tool call loop (non-streaming)
 		tools := registry.Definitions()
 
 		for {
-			// Only enter loop if we have tools
 			if len(tools) == 0 {
 				break
 			}
@@ -149,15 +145,12 @@ func run(cmd *cobra.Command, args []string) error {
 				return
 			}
 
-			// No tool calls, exit loop and stream final response
 			if len(resp.ToolCalls) == 0 {
 				break
 			}
 
-			// Append assistant message with tool calls to history
 			messages = append(messages, resp)
 
-			// Execute each tool call
 			for _, toolCall := range resp.ToolCalls {
 				logger.Debug("executing tool", "name", toolCall.Function.Name)
 
@@ -167,7 +160,6 @@ func run(cmd *cobra.Command, args []string) error {
 					result = fmt.Sprintf("error: %s", err.Error())
 				}
 
-				// Append tool result to history
 				messages = append(messages, llm.ChatMessage{Role: llm.RoleTool, Content: result})
 			}
 		}
