@@ -26,7 +26,7 @@ func NewRegistry() Registry {
 	return registry
 }
 
-// Register adds a tool to the registry using its definition's name as they key.
+// Register adds a tool to the registry using its definition's name as the key.
 func (registry *Registry) Register(tool Tool) {
 	registry.Tools[tool.Definition().Function.Name] = tool
 }
