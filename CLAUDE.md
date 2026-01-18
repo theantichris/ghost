@@ -14,6 +14,7 @@ Ghost is a command-line AI assistant written in Go and powered by Ollama, design
 2. **Root Command** (`cmd/root.go`): Orchestrates the main execution flow:
    - Collects user prompt, piped input, and flags
    - Analyzes images if provided (using vision model)
+   - Executes tool calls in a loop before streaming final response
    - Streams LLM response using Bubbletea TUI
    - Renders final output with appropriate formatting
 3. **LLM Client** (`internal/llm/ollama.go`): Communicates with Ollama API
@@ -29,7 +30,7 @@ Configuration priority (highest to lowest):
 2. Environment variables (prefixed with `GHOST_`, dots/hyphens replaced with `*`)
 3. Config file (`~/.config/ghost/config.toml`)
 
-Implemented in `cmd/config.go` using Viper. Vision model configuration uses nested structure: `vision.model` in config file, `--vision-model` flag, or `GHOST_VISION*MODEL` env var.
+Implemented in `cmd/config.go` using Viper. Vision model configuration uses nested structure: `vision.model` in config file, `--vision-model` flag, or `GHOST_VISION*MODEL` env var. Web search uses `search.api-key` and `search.max-results` following the same pattern.
 
 ### Message Flow for Images
 
