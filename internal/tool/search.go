@@ -39,16 +39,16 @@ type searchResponse struct {
 type Search struct {
 	APIKey     string
 	MaxResults int
+	URL        string
 }
 
 // NewSearch creates and returns a new search config.
 func NewSearch(apiKey string, maxResults int) Search {
-	search := Search{
+	return Search{
 		APIKey:     apiKey,
 		MaxResults: maxResults,
+		URL:        tavilyURL,
 	}
-
-	return search
 }
 
 // Definition returns the tool schema.
@@ -95,7 +95,7 @@ func (search Search) Execute(ctx context.Context, args json.RawMessage) (string,
 
 	var resp searchResponse
 
-	err := requests.URL(tavilyURL).
+	err := requests.URL(search.URL).
 		BodyJSON(&req).
 		ToJSON(&resp).
 		Fetch(ctx)
