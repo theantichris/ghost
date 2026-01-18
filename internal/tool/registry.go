@@ -51,8 +51,8 @@ func (registry *Registry) Execute(ctx context.Context, name string, args json.Ra
 		return "", fmt.Errorf("%w: %s", ErrToolNotRegistered, name)
 	}
 
-	result, error := tool.Execute(ctx, args)
+	result, err := tool.Execute(ctx, args)
 
-	return result, error
+	return result, err
 
 }
