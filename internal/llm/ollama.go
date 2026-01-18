@@ -16,6 +16,7 @@ var (
 	ErrModelNotFound    = errors.New("AI construct not found in the system")
 	ErrUnexpectedStatus = errors.New("unexpected response from neural network")
 	ErrDecodeChunk      = errors.New("data packet decode error")
+	ErrToolSupport      = errors.New("model does not support tools")
 )
 
 // Role represents the author of a message in the chat history.
@@ -39,6 +40,7 @@ type ChatRequest struct {
 // ChatResponse holds the response from the chat endpoint.
 type ChatResponse struct {
 	Message ChatMessage `json:"message"`
+	Error   string      `json:"error,omitempty"`
 }
 
 // ChatMessage holds a single message in the chat history.
@@ -122,6 +124,12 @@ func Chat(ctx context.Context, host, model string, messages []ChatMessage, tools
 
 	if err != nil {
 		return ChatMessage{}, fmt.Errorf("%w", err)
+	}
+
+	if chatResponse.Error != "" {
+		if strings.Contains(chatResponse.Error, "does not support tools") {
+			return ChatMessage{}, fmt.Errorf("%w: %s", ErrToolSupport, model)
+		}
 	}
 
 	// Return chatResponse.Message directly to preserve ToolCalls.
