@@ -7,7 +7,8 @@
       "WebFetch(domain:docs.ollama.com)",
       "WebFetch(domain:dev.to)",
       "Bash(go build:*)",
-      "Bash(go test:*)"
+      "Bash(go test:*)",
+      "Bash(ollama list:*)"
     ]
   },
   "outputStyle": "Learning",
