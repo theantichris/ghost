@@ -50,6 +50,7 @@ ghost "Explain recursion in simple terms"
 - **Data stream analysis:** Pipe logs, files, or any text directly into Ghost
 - **Visual recon:** Feed images to vision models for analysis and description
 - **Format flexibility:** Output as plain text, JSON, or styled Markdown
+- **Web search:** Real-time web searches via Tavily API when the model needs current information
 
 ## Usage Examples
 
@@ -71,6 +72,9 @@ ghost "analyze this security feed" -i camera-feed.png
 
 # Compare surveillance data
 ghost "what changed in the facility?" -i before-raid.png -i after-raid.png
+
+# Real-time intel (requires Tavily API key)
+ghost "what are the latest vulnerabilities disclosed this week?"
 ```
 
 ## System Configuration
@@ -92,6 +96,7 @@ Configure Ghost via command-line flags, environment variables, or config file.
 export GHOST_MODEL=llama3
 export GHOST_VISION_MODEL=llama3.2-vision
 export GHOST_URL=http://localhost:11434/api
+export GHOST_SEARCH*API*KEY=tvly-xxxxx   # Tavily API key for web search
 ```
 
 ### Config File
@@ -104,6 +109,10 @@ url = "http://localhost:11434/api"
 
 [vision]
 model = "llama3.2-vision"
+
+[search]
+api-key = "tvly-xxxxx"  # Get your key at tavily.com
+max-results = 5         # Number of search results (default: 5)
 ```
 
 ## License
