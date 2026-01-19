@@ -8,6 +8,7 @@ import (
 	"charm.land/bubbles/v2/textinput"
 	"charm.land/bubbles/v2/viewport"
 	tea "charm.land/bubbletea/v2"
+	"github.com/charmbracelet/log"
 	"github.com/theantichris/ghost/internal/llm"
 )
 
@@ -34,6 +35,7 @@ type LLMErrorMsg struct {
 // ChatModel holds the TUI state.
 type ChatModel struct {
 	ctx             context.Context
+	logger          *log.Logger
 	viewport        viewport.Model
 	input           textinput.Model
 	messages        []llm.ChatMessage
@@ -50,7 +52,7 @@ type ChatModel struct {
 }
 
 // NewChatModel creates the chat model and initializes the text input.
-func NewChatModel(ctx context.Context, url, model, system string) ChatModel {
+func NewChatModel(ctx context.Context, url, model, system string, logger *log.Logger) ChatModel {
 	input := textinput.New()
 
 	messages := []llm.ChatMessage{
@@ -59,6 +61,7 @@ func NewChatModel(ctx context.Context, url, model, system string) ChatModel {
 
 	chatModel := ChatModel{
 		ctx:      ctx,
+		logger:   logger,
 		input:    input,
 		messages: messages,
 		history:  "",
@@ -115,6 +118,8 @@ func (model ChatModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			switch msg.Key().Code {
 			case tea.KeyEnter:
 				if model.cmdBuffer == "q" {
+					model.logger.Info("disconnecting from ghost")
+
 					return model, tea.Quit
 				}
 
@@ -174,6 +179,8 @@ func (model ChatModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return model, listenForChunk(model.responseCh)
 
 	case LLMDoneMsg:
+		model.logger.Debug("transmission complete", "response_length", len(model.currentResponse))
+
 		model.history += "\n\n"
 		model.viewport.SetContent(model.history)
 		model.messages = append(model.messages, llm.ChatMessage{
@@ -185,6 +192,8 @@ func (model ChatModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return model, nil
 
 	case LLMErrorMsg:
+		model.logger.Error("neural link disrupted", "error", msg.Err)
+
 		model.history += fmt.Sprintf("\n[󱙝 error: %v]\n", msg.Err)
 		model.viewport.SetContent(model.history)
 
@@ -242,6 +251,8 @@ func listenForChunk(ch <-chan string) tea.Cmd {
 // startLLMStream starts the LLM call in a goroutine.
 // It returns the first listenForChunk command to start receiving.
 func (model *ChatModel) startLLMStream() tea.Cmd {
+	model.logger.Debug("transmitting to neural network", "model", model.model, "messages", len(model.messages))
+
 	model.responseCh = make(chan string)
 
 	go func() {
