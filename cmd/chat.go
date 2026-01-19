@@ -1,6 +1,10 @@
 package cmd
 
-import "github.com/spf13/cobra"
+import (
+	tea "charm.land/bubbletea/v2"
+	"github.com/spf13/cobra"
+	"github.com/theantichris/ghost/internal/ui"
+)
 
 const (
 	chatUseText     = "chat"
@@ -23,5 +27,10 @@ func newChatCommand() *cobra.Command {
 }
 
 func runChat(cmd *cobra.Command, args []string) error {
-	return nil
+	model := ui.NewChatModel()
+	program := tea.NewProgram(model)
+
+	_, err := program.Run()
+
+	return err
 }
