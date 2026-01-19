@@ -9,7 +9,7 @@ const (
 	chatExampleText = "ghost chat"
 )
 
-func NewChatCommand() *cobra.Command {
+func newChatCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     chatUseText,
 		Short:   chatShortText,

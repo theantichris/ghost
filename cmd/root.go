@@ -74,6 +74,8 @@ func NewRootCmd() (*cobra.Command, func() error, error) {
 	cmd.PersistentFlags().StringP("url", "u", "http://localhost:11434/api", "url to the Ollama API")
 	cmd.PersistentFlags().StringP("vision-model", "V", "", "vision model to use")
 
+	cmd.AddCommand(newChatCommand())
+
 	return cmd, loggerCleanup, err
 }
 
