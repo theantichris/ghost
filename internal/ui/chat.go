@@ -33,7 +33,6 @@ type ChatModel struct {
 func NewChatModel() ChatModel {
 	input := textinput.New()
 	input.Placeholder = "enter message..."
-	input.Focus()
 
 	chatModel := ChatModel{
 		input:    input,
@@ -115,9 +114,12 @@ func (model ChatModel) View() tea.View {
 		return view
 	}
 
-	if model.mode == ModeCommand {
+	switch model.mode {
+	case ModeNormal:
+		view = tea.NewView(model.viewport.View() + "\n:[NORMAL]")
+	case ModeCommand:
 		view = tea.NewView(model.viewport.View() + "\n:" + model.cmdBuffer)
-	} else {
+	case ModeInsert:
 		view = tea.NewView(model.viewport.View() + "\n" + model.input.View())
 	}
 
