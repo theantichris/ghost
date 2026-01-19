@@ -33,29 +33,34 @@ type LLMErrorMsg struct {
 
 // ChatModel holds the TUI state.
 type ChatModel struct {
-	ctx        context.Context
-	viewport   viewport.Model
-	input      textinput.Model
-	messages   []llm.ChatMessage
-	history    string // Rendered conversation for display
-	width      int
-	height     int
-	ready      bool // True if the viewport is initialized
-	mode       Mode
-	cmdBuffer  string
-	url        string
-	model      string
-	responseCh chan string
+	ctx             context.Context
+	viewport        viewport.Model
+	input           textinput.Model
+	messages        []llm.ChatMessage
+	history         string // Rendered conversation for display
+	width           int
+	height          int
+	ready           bool // True if the viewport is initialized
+	mode            Mode
+	cmdBuffer       string
+	url             string
+	model           string
+	responseCh      chan string
+	currentResponse string
 }
 
 // NewChatModel creates the chat model and initializes the text input.
-func NewChatModel(ctx context.Context, url, model string) ChatModel {
+func NewChatModel(ctx context.Context, url, model, system string) ChatModel {
 	input := textinput.New()
+
+	messages := []llm.ChatMessage{
+		{Role: llm.RoleSystem, Content: system},
+	}
 
 	chatModel := ChatModel{
 		ctx:      ctx,
 		input:    input,
-		messages: []llm.ChatMessage{},
+		messages: messages,
 		history:  "",
 		url:      url,
 		model:    model,
@@ -147,7 +152,7 @@ func (model ChatModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 
 				model.messages = append(model.messages, llm.ChatMessage{Role: llm.RoleUser, Content: value})
-				model.history += fmt.Sprintf("You: %s\n", value)
+				model.history += fmt.Sprintf("You: %s\n\nghost: ", value)
 				model.viewport.SetContent(model.history)
 
 				model.input.SetValue("")
@@ -164,12 +169,18 @@ func (model ChatModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case LLMResponseMsg:
 		model.history += string(msg)
 		model.viewport.SetContent(model.history)
+		model.currentResponse += string(msg)
 
 		return model, listenForChunk(model.responseCh)
 
 	case LLMDoneMsg:
-		model.history += "\n"
+		model.history += "\n\n"
 		model.viewport.SetContent(model.history)
+		model.messages = append(model.messages, llm.ChatMessage{
+			Role:    llm.RoleAssistant,
+			Content: model.currentResponse,
+		})
+		model.currentResponse = ""
 
 		return model, nil
 
