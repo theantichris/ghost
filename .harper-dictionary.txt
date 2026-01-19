@@ -1,9 +1,11 @@
 Bubbletea
 ChatMessage
+ChatModel
 ChatResponse
 CyberpunkTheme
 ENV
 GoReleaser
+NewChatModel
 NewRegistry
 NewRootCmd
 NewSearch

@@ -10,7 +10,8 @@
       "Bash(go test:*)",
       "Bash(ollama list:*)",
       "mcp__github__issue_read",
-      "Bash(git -C /home/christopher/Code/ghost remote -v)"
+      "Bash(git -C /home/christopher/Code/ghost remote -v)",
+      "Bash(go run:*)"
     ]
   },
   "outputStyle": "Learning",
