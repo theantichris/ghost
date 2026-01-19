@@ -13,6 +13,7 @@ type Mode int
 const (
 	ModeNormal Mode = iota
 	ModeCommand
+	ModeInsert
 )
 
 // ChatModel holds the TUI state.
@@ -50,6 +51,8 @@ func (model ChatModel) Init() tea.Cmd {
 
 // Update handles messages and returns the updated model and optional command.
 func (model ChatModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var cmd tea.Cmd
+
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		model.width = msg.Width
@@ -88,6 +91,14 @@ func (model ChatModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				model.cmdBuffer += msg.Key().Text
 			}
 		}
+
+	default:
+		// Only update textinput in insert mode
+		if model.mode == ModeInsert {
+			model.input, cmd = model.input.Update(msg)
+		}
+
+		return model, cmd
 	}
 
 	return model, nil
