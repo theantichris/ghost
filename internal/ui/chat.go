@@ -108,7 +108,7 @@ func (model ChatModel) View() tea.View {
 	var view tea.View
 
 	if !model.ready {
-		view = tea.NewView("󱙝 initializing")
+		view = tea.NewView("󱙝 initializing...")
 		view.AltScreen = true
 
 		return view
