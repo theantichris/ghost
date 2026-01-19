@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -19,26 +20,40 @@ const (
 	ModeInsert
 )
 
+// LLMResponseMsg carries a chunk of the LLM response.
+type LLMResponseMsg string
+
+// LLMDoneMsg signals the LLM request is complete.
+type LLMDoneMsg struct{}
+
+// LLMErrorMsg signals an error from the LLM.
+type LLMErrorMsg struct {
+	Err error
+}
+
 // ChatModel holds the TUI state.
 type ChatModel struct {
-	viewport  viewport.Model
-	input     textinput.Model
-	messages  []llm.ChatMessage
-	history   string // Rendered conversation for display
-	width     int
-	height    int
-	ready     bool // True if the viewport is initialized
-	mode      Mode
-	cmdBuffer string
-	url       string
-	model     string
+	ctx        context.Context
+	viewport   viewport.Model
+	input      textinput.Model
+	messages   []llm.ChatMessage
+	history    string // Rendered conversation for display
+	width      int
+	height     int
+	ready      bool // True if the viewport is initialized
+	mode       Mode
+	cmdBuffer  string
+	url        string
+	model      string
+	responseCh chan string
 }
 
 // NewChatModel creates the chat model and initializes the text input.
-func NewChatModel(url, model string) ChatModel {
+func NewChatModel(ctx context.Context, url, model string) ChatModel {
 	input := textinput.New()
 
 	chatModel := ChatModel{
+		ctx:      ctx,
 		input:    input,
 		messages: []llm.ChatMessage{},
 		history:  "",
@@ -137,7 +152,7 @@ func (model ChatModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 				model.input.SetValue("")
 
-				return model, nil
+				return model, model.startLLMStream()
 
 			default:
 				model.input, cmd = model.input.Update(msg)
@@ -145,6 +160,24 @@ func (model ChatModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return model, cmd
 			}
 		}
+
+	case LLMResponseMsg:
+		model.history += string(msg)
+		model.viewport.SetContent(model.history)
+
+		return model, listenForChunk(model.responseCh)
+
+	case LLMDoneMsg:
+		model.history += "\n"
+		model.viewport.SetContent(model.history)
+
+		return model, nil
+
+	case LLMErrorMsg:
+		model.history += fmt.Sprintf("\n[󱙝 error: %v]\n", msg.Err)
+		model.viewport.SetContent(model.history)
+
+		return model, nil
 
 	default:
 		// Send messages for cursor blink
@@ -181,4 +214,47 @@ func (model ChatModel) View() tea.View {
 	view.AltScreen = true
 
 	return view
+}
+
+// listenForChunk returns a command that waits for the next chunk from the channel.
+func listenForChunk(ch <-chan string) tea.Cmd {
+	return func() tea.Msg {
+		chunk, ok := <-ch
+		if !ok {
+			return LLMDoneMsg{}
+		}
+
+		return LLMResponseMsg(chunk)
+	}
+}
+
+// startLLMStream starts the LLM call in a goroutine.
+// It returns the first listenForChunk command to start receiving.
+func (model *ChatModel) startLLMStream() tea.Cmd {
+	model.responseCh = make(chan string)
+
+	go func() {
+		ch := model.responseCh
+
+		_, err := llm.StreamChat(
+			model.ctx,
+			model.url,
+			model.model,
+			model.messages,
+			nil,
+			func(chunk string) {
+				ch <- chunk
+			},
+		)
+
+		if err != nil {
+			close(ch)
+
+			return
+		}
+
+		close(ch)
+	}()
+
+	return listenForChunk(model.responseCh)
 }
