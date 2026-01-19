@@ -7,15 +7,25 @@ import (
 	"github.com/theantichris/ghost/internal/llm"
 )
 
+// Mode represents the different modes the TUI can be in.
+type Mode int
+
+const (
+	ModeNormal Mode = iota
+	ModeCommand
+)
+
 // ChatModel holds the TUI state.
 type ChatModel struct {
-	viewport viewport.Model
-	input    textinput.Model
-	messages []llm.ChatMessage
-	history  string // Rendered conversation for display
-	width    int
-	height   int
-	ready    bool // True if the viewport is initialized
+	viewport  viewport.Model
+	input     textinput.Model
+	messages  []llm.ChatMessage
+	history   string // Rendered conversation for display
+	width     int
+	height    int
+	ready     bool // True if the viewport is initialized
+	mode      Mode
+	cmdBuffer string
 }
 
 // NewChatModel creates the chat model and initializes the text input.
@@ -50,6 +60,34 @@ func (model ChatModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 			model.ready = true
 		}
+
+	case tea.KeyMsg:
+		switch model.mode {
+		case ModeNormal:
+			if msg.Key().Code == ':' {
+				model.mode = ModeCommand
+				model.cmdBuffer = ""
+			}
+
+		case ModeCommand:
+			switch msg.Key().Code {
+			case tea.KeyEnter:
+				if model.cmdBuffer == "q" {
+					return model, tea.Quit
+				}
+
+				// Invalid command, return to normal mode
+				model.mode = ModeNormal
+				model.cmdBuffer = ""
+
+			case tea.KeyEscape:
+				model.mode = ModeNormal
+				model.cmdBuffer = ""
+
+			default:
+				model.cmdBuffer += msg.Key().Text
+			}
+		}
 	}
 
 	return model, nil
@@ -59,6 +97,10 @@ func (model ChatModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (model ChatModel) View() tea.View {
 	if !model.ready {
 		return tea.NewView("󱙝 initializing")
+	}
+
+	if model.mode == ModeCommand {
+		return tea.NewView(model.viewport.View() + "\n:" + model.cmdBuffer)
 	}
 
 	return tea.NewView(model.viewport.View() + "\n" + model.input.View())
