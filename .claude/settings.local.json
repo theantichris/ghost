@@ -11,7 +11,10 @@
       "Bash(ollama list:*)",
       "mcp__github__issue_read",
       "Bash(git -C /home/christopher/Code/ghost remote -v)",
-      "Bash(go run:*)"
+      "Bash(go run:*)",
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__query-docs",
+      "Bash(go doc:*)"
     ]
   },
   "outputStyle": "Learning",

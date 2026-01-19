@@ -95,13 +95,22 @@ func (model ChatModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 // View renders the current model state.
 func (model ChatModel) View() tea.View {
+	var view tea.View
+
 	if !model.ready {
-		return tea.NewView("󱙝 initializing")
+		view = tea.NewView("󱙝 initializing")
+		view.AltScreen = true
+
+		return view
 	}
 
 	if model.mode == ModeCommand {
-		return tea.NewView(model.viewport.View() + "\n:" + model.cmdBuffer)
+		view = tea.NewView(model.viewport.View() + "\n:" + model.cmdBuffer)
+	} else {
+		view = tea.NewView(model.viewport.View() + "\n" + model.input.View())
 	}
 
-	return tea.NewView(model.viewport.View() + "\n" + model.input.View())
+	view.AltScreen = true
+
+	return view
 }
