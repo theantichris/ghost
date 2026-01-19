@@ -32,7 +32,6 @@ type ChatModel struct {
 // NewChatModel creates the chat model and initializes the text input.
 func NewChatModel() ChatModel {
 	input := textinput.New()
-	input.Placeholder = "enter message..."
 
 	chatModel := ChatModel{
 		input:    input,
@@ -70,6 +69,12 @@ func (model ChatModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case ':':
 				model.mode = ModeCommand
 				model.cmdBuffer = ""
+
+			case 'i':
+				model.mode = ModeInsert
+				model.input.Focus()
+
+				return model, textinput.Blink
 			}
 
 		case ModeCommand:
@@ -90,10 +95,24 @@ func (model ChatModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			default:
 				model.cmdBuffer += msg.Key().Text
 			}
+
+		case ModeInsert:
+			switch msg.Key().Code {
+			case tea.KeyEscape:
+				model.mode = ModeNormal
+				model.input.Blur()
+
+				return model, nil
+
+			default:
+				model.input, cmd = model.input.Update(msg)
+
+				return model, cmd
+			}
 		}
 
 	default:
-		// Only update textinput in insert mode
+		// Send messages for cursor blink
 		if model.mode == ModeInsert {
 			model.input, cmd = model.input.Update(msg)
 		}
