@@ -66,7 +66,8 @@ func (model ChatModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch model.mode {
 		case ModeNormal:
-			if msg.Key().Code == ':' {
+			switch msg.Key().Code {
+			case ':':
 				model.mode = ModeCommand
 				model.cmdBuffer = ""
 			}
