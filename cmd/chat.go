@@ -3,6 +3,7 @@ package cmd
 import (
 	tea "charm.land/bubbletea/v2"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"github.com/theantichris/ghost/internal/ui"
 )
 
@@ -27,8 +28,11 @@ func newChatCommand() *cobra.Command {
 }
 
 func runChat(cmd *cobra.Command, args []string) error {
-	model := ui.NewChatModel()
-	program := tea.NewProgram(model)
+	url := viper.GetString("url")
+	model := viper.GetString("model")
+
+	chatModel := ui.NewChatModel(url, model)
+	program := tea.NewProgram(chatModel)
 
 	_, err := program.Run()
 

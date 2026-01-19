@@ -30,16 +30,20 @@ type ChatModel struct {
 	ready     bool // True if the viewport is initialized
 	mode      Mode
 	cmdBuffer string
+	url       string
+	model     string
 }
 
 // NewChatModel creates the chat model and initializes the text input.
-func NewChatModel() ChatModel {
+func NewChatModel(url, model string) ChatModel {
 	input := textinput.New()
 
 	chatModel := ChatModel{
 		input:    input,
 		messages: []llm.ChatMessage{},
 		history:  "",
+		url:      url,
+		model:    model,
 	}
 
 	return chatModel
