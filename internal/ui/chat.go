@@ -1,6 +1,9 @@
 package ui
 
 import (
+	"fmt"
+	"strings"
+
 	"charm.land/bubbles/v2/textinput"
 	"charm.land/bubbles/v2/viewport"
 	tea "charm.land/bubbletea/v2"
@@ -62,6 +65,8 @@ func (model ChatModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			model.ready = true
 		}
 
+		return model, nil
+
 	case tea.KeyMsg:
 		switch model.mode {
 		case ModeNormal:
@@ -70,11 +75,16 @@ func (model ChatModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				model.mode = ModeCommand
 				model.cmdBuffer = ""
 
+				return model, nil
+
 			case 'i':
 				model.mode = ModeInsert
 				model.input.Focus()
 
 				return model, textinput.Blink
+
+			default:
+				return model, nil
 			}
 
 		case ModeCommand:
@@ -88,12 +98,18 @@ func (model ChatModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				model.mode = ModeNormal
 				model.cmdBuffer = ""
 
+				return model, nil
+
 			case tea.KeyEscape:
 				model.mode = ModeNormal
 				model.cmdBuffer = ""
 
+				return model, nil
+
 			default:
 				model.cmdBuffer += msg.Key().Text
+
+				return model, nil
 			}
 
 		case ModeInsert:
@@ -101,6 +117,21 @@ func (model ChatModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case tea.KeyEscape:
 				model.mode = ModeNormal
 				model.input.Blur()
+
+				return model, nil
+
+			case tea.KeyEnter:
+				value := model.input.Value()
+
+				if strings.TrimSpace(value) == "" {
+					return model, nil
+				}
+
+				model.messages = append(model.messages, llm.ChatMessage{Role: llm.RoleUser, Content: value})
+				model.history += fmt.Sprintf("You: %s\n", value)
+				model.viewport.SetContent(model.history)
+
+				model.input.SetValue("")
 
 				return model, nil
 
