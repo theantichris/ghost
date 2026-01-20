@@ -17,7 +17,8 @@
       "Bash(go doc:*)",
       "mcp__github__search_issues",
       "mcp__github__list_issues",
-      "Bash(gh milestone:*)"
+      "Bash(gh milestone:*)",
+      "Bash(git remote:*)"
     ]
   },
   "outputStyle": "Learning",
