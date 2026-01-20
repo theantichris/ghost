@@ -47,10 +47,12 @@ ghost "Explain recursion in simple terms"
 ## Core Capabilities
 
 - **Intelligence on demand:** Ask questions, get explanations, analyze data
+- **Interactive chat:** Conversation mode with Vim-style keybindings
 - **Data stream analysis:** Pipe logs, files, or any text directly into Ghost
 - **Visual recon:** Feed images to vision models for analysis and description
 - **Format flexibility:** Output as plain text, JSON, or styled Markdown
-- **Web search:** Real-time web searches via Tavily API when the model needs current information
+- **Web search:** Real-time web searches via Tavily API when the model needs
+ current information
 
 ## Usage Examples
 
@@ -76,6 +78,24 @@ ghost "what changed in the facility?" -i before-raid.png -i after-raid.png
 # Real-time intel (requires Tavily API key)
 ghost "what are the latest vulnerabilities disclosed this week?"
 ```
+
+## Interactive Chat
+
+Launch a persistent conversation session with Ghost:
+
+```bash
+ghost chat
+ghost chat --model llama3
+```
+
+**Vim-style keybindings:**
+
+| Key     | Action                           |
+|---------|----------------------------------|
+| `i`     | Enter insert mode (start typing) |
+| `Esc`   | Return to normal mode            |
+| `Enter` | Send message (in insert mode)    |
+| `:q`    | Disconnect from Ghost            |
 
 ## System Configuration
 
