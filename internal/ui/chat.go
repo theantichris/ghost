@@ -47,7 +47,7 @@ type ChatModel struct {
 	cmdBuffer       string
 	url             string
 	model           string
-	responseCh      chan string
+	responseCh      chan tea.Msg
 	currentResponse string
 }
 
@@ -144,14 +144,14 @@ func (model ChatModel) View() tea.View {
 }
 
 // listenForChunk returns a command that waits for the next chunk from the channel.
-func listenForChunk(ch <-chan string) tea.Cmd {
+func listenForChunk(ch <-chan tea.Msg) tea.Cmd {
 	return func() tea.Msg {
-		chunk, ok := <-ch
+		msg, ok := <-ch
 		if !ok {
 			return LLMDoneMsg{}
 		}
 
-		return LLMResponseMsg(chunk)
+		return msg
 	}
 }
 
@@ -160,7 +160,7 @@ func listenForChunk(ch <-chan string) tea.Cmd {
 func (model *ChatModel) startLLMStream() tea.Cmd {
 	model.logger.Debug("transmitting to neural network", "model", model.model, "messages", len(model.messages))
 
-	model.responseCh = make(chan string)
+	model.responseCh = make(chan tea.Msg)
 
 	go func() {
 		ch := model.responseCh
@@ -172,14 +172,12 @@ func (model *ChatModel) startLLMStream() tea.Cmd {
 			model.messages,
 			nil,
 			func(chunk string) {
-				ch <- chunk
+				ch <- LLMResponseMsg(chunk)
 			},
 		)
 
 		if err != nil {
-			close(ch)
-
-			return
+			ch <- LLMErrorMsg{Err: err}
 		}
 
 		close(ch)

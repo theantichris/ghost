@@ -99,7 +99,7 @@ func TestChatModel_InvalidCommand(t *testing.T) {
 func TestChatModel_LLMResponseMsg(t *testing.T) {
 	model := newTestModel()
 	model.ready = true
-	model.responseCh = make(chan string)
+	model.responseCh = make(chan tea.Msg)
 
 	newModel, cmd := model.Update(LLMResponseMsg("hello "))
 
