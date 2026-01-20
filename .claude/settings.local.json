@@ -14,7 +14,10 @@
       "Bash(go run:*)",
       "mcp__context7__resolve-library-id",
       "mcp__context7__query-docs",
-      "Bash(go doc:*)"
+      "Bash(go doc:*)",
+      "mcp__github__search_issues",
+      "mcp__github__list_issues",
+      "Bash(gh milestone:*)"
     ]
   },
   "outputStyle": "Learning",
