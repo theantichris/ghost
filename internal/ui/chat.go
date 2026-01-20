@@ -83,121 +83,28 @@ func (model ChatModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		model.width = msg.Width
-		model.height = msg.Height
-
-		if !model.ready {
-			model.viewport = viewport.New(viewport.WithWidth(model.width), viewport.WithHeight(model.height-3))
-
-			model.ready = true
-		}
-
-		return model, nil
+		return model.handleWindowSize(msg)
 
 	case tea.KeyMsg:
 		switch model.mode {
 		case ModeNormal:
-			switch msg.Key().Code {
-			case ':':
-				model.mode = ModeCommand
-				model.cmdBuffer = ""
-
-				return model, nil
-
-			case 'i':
-				model.mode = ModeInsert
-				model.input.Focus()
-
-				return model, textinput.Blink
-
-			default:
-				return model, nil
-			}
+			return model.handleNormalMode(msg)
 
 		case ModeCommand:
-			switch msg.Key().Code {
-			case tea.KeyEnter:
-				if model.cmdBuffer == "q" {
-					model.logger.Info("disconnecting from ghost")
-
-					return model, tea.Quit
-				}
-
-				// Invalid command, return to normal mode
-				model.mode = ModeNormal
-				model.cmdBuffer = ""
-
-				return model, nil
-
-			case tea.KeyEscape:
-				model.mode = ModeNormal
-				model.cmdBuffer = ""
-
-				return model, nil
-
-			default:
-				model.cmdBuffer += msg.Key().Text
-
-				return model, nil
-			}
+			return model.handleCommandMode(msg)
 
 		case ModeInsert:
-			switch msg.Key().Code {
-			case tea.KeyEscape:
-				model.mode = ModeNormal
-				model.input.Blur()
-
-				return model, nil
-
-			case tea.KeyEnter:
-				value := model.input.Value()
-
-				if strings.TrimSpace(value) == "" {
-					return model, nil
-				}
-
-				model.messages = append(model.messages, llm.ChatMessage{Role: llm.RoleUser, Content: value})
-				model.history += fmt.Sprintf("You: %s\n\nghost: ", value)
-				model.viewport.SetContent(model.history)
-
-				model.input.SetValue("")
-
-				return model, model.startLLMStream()
-
-			default:
-				model.input, cmd = model.input.Update(msg)
-
-				return model, cmd
-			}
+			return model.handleInsertMode(msg)
 		}
 
 	case LLMResponseMsg:
-		model.history += string(msg)
-		model.viewport.SetContent(model.history)
-		model.currentResponse += string(msg)
-
-		return model, listenForChunk(model.responseCh)
+		return model.handleLLMResponseMsg(msg)
 
 	case LLMDoneMsg:
-		model.logger.Debug("transmission complete", "response_length", len(model.currentResponse))
-
-		model.history += "\n\n"
-		model.viewport.SetContent(model.history)
-		model.messages = append(model.messages, llm.ChatMessage{
-			Role:    llm.RoleAssistant,
-			Content: model.currentResponse,
-		})
-		model.currentResponse = ""
-
-		return model, nil
+		return model.handleLLMDoneMsg()
 
 	case LLMErrorMsg:
-		model.logger.Error("neural link disrupted", "error", msg.Err)
-
-		model.history += fmt.Sprintf("\n[󱙝 error: %v]\n", msg.Err)
-		model.viewport.SetContent(model.history)
-
-		return model, nil
+		return model.handleLLMErrorMsg(msg)
 
 	default:
 		// Send messages for cursor blink
@@ -248,7 +155,7 @@ func listenForChunk(ch <-chan string) tea.Cmd {
 	}
 }
 
-// startLLMStream starts the LLM call in a goroutine.
+// startLLMStream starts the LLM call in a go routine.
 // It returns the first listenForChunk command to start receiving.
 func (model *ChatModel) startLLMStream() tea.Cmd {
 	model.logger.Debug("transmitting to neural network", "model", model.model, "messages", len(model.messages))
@@ -279,4 +186,127 @@ func (model *ChatModel) startLLMStream() tea.Cmd {
 	}()
 
 	return listenForChunk(model.responseCh)
+}
+
+func (model ChatModel) handleWindowSize(msg tea.WindowSizeMsg) (tea.Model, tea.Cmd) {
+	model.width = msg.Width
+	model.height = msg.Height
+
+	if !model.ready {
+		model.viewport = viewport.New(viewport.WithWidth(model.width), viewport.WithHeight(model.height-3))
+
+		model.ready = true
+	}
+
+	return model, nil
+}
+
+func (model ChatModel) handleNormalMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	switch msg.Key().Code {
+	case ':':
+		model.mode = ModeCommand
+		model.cmdBuffer = ""
+
+		return model, nil
+
+	case 'i':
+		model.mode = ModeInsert
+		model.input.Focus()
+
+		return model, textinput.Blink
+
+	default:
+		return model, nil
+	}
+}
+
+func (model ChatModel) handleCommandMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	switch msg.Key().Code {
+	case tea.KeyEnter:
+		if model.cmdBuffer == "q" {
+			model.logger.Info("disconnecting from ghost")
+
+			return model, tea.Quit
+		}
+
+		// Invalid command, return to normal mode
+		model.mode = ModeNormal
+		model.cmdBuffer = ""
+
+		return model, nil
+
+	case tea.KeyEscape:
+		model.mode = ModeNormal
+		model.cmdBuffer = ""
+
+		return model, nil
+
+	default:
+		model.cmdBuffer += msg.Key().Text
+
+		return model, nil
+	}
+}
+
+func (model ChatModel) handleInsertMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	var cmd tea.Cmd
+
+	switch msg.Key().Code {
+	case tea.KeyEscape:
+		model.mode = ModeNormal
+		model.input.Blur()
+
+		return model, nil
+
+	case tea.KeyEnter:
+		value := model.input.Value()
+
+		if strings.TrimSpace(value) == "" {
+			return model, nil
+		}
+
+		model.messages = append(model.messages, llm.ChatMessage{Role: llm.RoleUser, Content: value})
+		model.history += fmt.Sprintf("You: %s\n\nghost: ", value)
+		model.viewport.SetContent(model.history)
+
+		model.input.SetValue("")
+
+		return model, model.startLLMStream()
+
+	default:
+		model.input, cmd = model.input.Update(msg)
+
+		return model, cmd
+	}
+}
+
+func (model ChatModel) handleLLMResponseMsg(msg LLMResponseMsg) (tea.Model, tea.Cmd) {
+	model.history += string(msg)
+	model.viewport.SetContent(model.history)
+	model.currentResponse += string(msg)
+
+	return model, listenForChunk(model.responseCh)
+}
+
+func (model ChatModel) handleLLMDoneMsg() (tea.Model, tea.Cmd) {
+	model.logger.Debug("transmission complete", "response_length", len(model.currentResponse))
+
+	model.history += "\n\n"
+	model.viewport.SetContent(model.history)
+	model.messages = append(model.messages, llm.ChatMessage{
+		Role:    llm.RoleAssistant,
+		Content: model.currentResponse,
+	})
+	model.currentResponse = ""
+
+	return model, nil
+}
+
+func (model ChatModel) handleLLMErrorMsg(msg LLMErrorMsg) (tea.Model, tea.Cmd) {
+	model.logger.Error("neural link disrupted", "error", msg.Err)
+
+	model.history += fmt.Sprintf("\n[󱙝 error: %v]\n", msg.Err)
+	model.viewport.SetContent(model.history)
+
+	return model, nil
 }
