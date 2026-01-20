@@ -61,7 +61,7 @@ func TestSearchExecute(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(tt.mockStatusCode)
-				w.Write([]byte(tt.mockResponse))
+				_, _ = w.Write([]byte(tt.mockResponse))
 			}))
 			defer server.Close()
 

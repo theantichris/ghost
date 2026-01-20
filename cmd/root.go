@@ -74,6 +74,8 @@ func NewRootCmd() (*cobra.Command, func() error, error) {
 	cmd.PersistentFlags().StringP("url", "u", "http://localhost:11434/api", "url to the Ollama API")
 	cmd.PersistentFlags().StringP("vision-model", "V", "", "vision model to use")
 
+	cmd.AddCommand(newChatCommand())
+
 	return cmd, loggerCleanup, err
 }
 
@@ -133,34 +135,34 @@ func run(cmd *cobra.Command, args []string) error {
 
 		tools := registry.Definitions()
 
-		for {
-			if len(tools) == 0 {
-				break
-			}
+		if len(tools) > 0 {
+			for {
 
-			resp, err := llm.Chat(cmd.Context(), url, model, messages, tools)
-			if err != nil {
-				streamProgram.Send(ui.StreamErrorMsg{Err: err})
-				return
-			}
-
-			if len(resp.ToolCalls) == 0 {
-				break
-			}
-
-			messages = append(messages, resp)
-
-			for _, toolCall := range resp.ToolCalls {
-				logger.Debug("executing tool", "name", toolCall.Function.Name)
-
-				result, err := registry.Execute(cmd.Context(), toolCall.Function.Name, toolCall.Function.Arguments)
+				resp, err := llm.Chat(cmd.Context(), url, model, messages, tools)
 				if err != nil {
-					logger.Error("tool execution failed", "name", toolCall.Function.Name, "error", err)
-					result = fmt.Sprintf("error: %s", err.Error())
+					streamProgram.Send(ui.StreamErrorMsg{Err: err})
+					return
 				}
 
-				messages = append(messages, llm.ChatMessage{Role: llm.RoleTool, Content: result})
+				if len(resp.ToolCalls) == 0 {
+					break
+				}
+
+				messages = append(messages, resp)
+
+				for _, toolCall := range resp.ToolCalls {
+					logger.Debug("executing tool", "name", toolCall.Function.Name)
+
+					result, err := registry.Execute(cmd.Context(), toolCall.Function.Name, toolCall.Function.Arguments)
+					if err != nil {
+						logger.Error("tool execution failed", "name", toolCall.Function.Name, "error", err)
+						result = fmt.Sprintf("error: %s", err.Error())
+					}
+
+					messages = append(messages, llm.ChatMessage{Role: llm.RoleTool, Content: result})
+				}
 			}
+
 		}
 
 		if _, err = llm.StreamChat(cmd.Context(), url, model, messages, nil, func(chunk string) {
