@@ -198,7 +198,7 @@ func (store *Store) DeleteThread(id string) error {
 	return nil
 }
 
-// ListThreads returns a slice of all threads in storage sort.
+// ListThreads returns a slice of all threads in storage.
 // The slice is sorted with most recent thread first.
 func (store *Store) ListThreads() ([]Thread, error) {
 	store.mu.RLock()
