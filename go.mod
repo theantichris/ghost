@@ -12,6 +12,7 @@ require (
 	github.com/charmbracelet/log v0.4.2
 	github.com/charmbracelet/x/term v0.2.2
 	github.com/google/go-cmp v0.7.0
+	github.com/google/uuid v1.6.0
 	github.com/muesli/reflow v0.3.0
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/viper v1.21.0
