@@ -55,7 +55,7 @@ type Store struct {
 // NewStore creates the threads directory in the base directory if it doesn't
 // exist then creates and returns a new store.
 func NewStore(baseDir string) (*Store, error) {
-	threadsDir := baseDir + "/threads"
+	threadsDir := filepath.Join(baseDir, "threads")
 
 	err := os.MkdirAll(threadsDir, 0750)
 	if err != nil {
