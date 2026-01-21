@@ -76,8 +76,8 @@ func (store *Store) threadPath(id string) string {
 
 // readConversation retrieves and returns a Conversation from a JSON file.
 // Assume the caller has acquired the lock.
-func (store *Store) readConversation(threadId string) (Conversation, error) {
-	bytes, err := os.ReadFile(store.threadPath(threadId))
+func (store *Store) readConversation(threadID string) (Conversation, error) {
+	bytes, err := os.ReadFile(store.threadPath(threadID))
 	if err != nil {
 		if os.IsNotExist(err) {
 			return Conversation{}, fmt.Errorf("%w: %w", ErrThreadNotFound, err)
