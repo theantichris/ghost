@@ -285,8 +285,10 @@ func (model ChatModel) handleInsertMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 func (model ChatModel) handleLLMResponseMsg(msg LLMResponseMsg) (tea.Model, tea.Cmd) {
 	model.history += string(msg)
-	model.viewport.SetContent(model.history)
 	model.currentResponse += string(msg)
+
+	model.viewport.SetContent(model.history)
+	model.viewport.GotoBottom()
 
 	return model, listenForChunk(model.responseCh)
 }
