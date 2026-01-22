@@ -159,3 +159,84 @@ func TestChatModel_LLMErrorMsg(t *testing.T) {
 		t.Error("expected error to be added to history")
 	}
 }
+
+func TestChatModel_GGStateMachine(t *testing.T) {
+	tests := []struct {
+		name          string
+		keys          []string
+		wantAwaitingG bool
+	}{
+		{
+			name:          "single g sets awaitingG",
+			keys:          []string{"g"},
+			wantAwaitingG: true,
+		},
+		{
+			name:          "gg resets awaitingG",
+			keys:          []string{"g", "g"},
+			wantAwaitingG: false,
+		},
+		{
+			name:          "g then other key resets awaitingG",
+			keys:          []string{"g", "j"},
+			wantAwaitingG: false,
+		},
+		{
+			name:          "g then i resets awaitingG",
+			keys:          []string{"g", "i"},
+			wantAwaitingG: false,
+		},
+		{
+			name:          "G resets awaitingG",
+			keys:          []string{"g", "G"},
+			wantAwaitingG: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			model := newTestModel()
+			model.mode = ModeNormal
+			model.ready = true
+
+			var result tea.Model = model
+			for _, key := range tt.keys {
+				result, _ = result.Update(tea.KeyPressMsg{Text: key})
+			}
+
+			got := result.(ChatModel).awaitingG
+			if got != tt.wantAwaitingG {
+				t.Errorf("awaitingG = %v, want %v", got, tt.wantAwaitingG)
+			}
+		})
+	}
+}
+
+func TestChatModel_VimKeybindings(t *testing.T) {
+	tests := []struct {
+		name string
+		key  string
+	}{
+		{name: "j scrolls down", key: "j"},
+		{name: "k scrolls up", key: "k"},
+		{name: "ctrl+d half page down", key: "ctrl+d"},
+		{name: "ctrl+u half page up", key: "ctrl+u"},
+		{name: "G goes to bottom", key: "G"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			model := newTestModel()
+			model.mode = ModeNormal
+			model.ready = true
+
+			// Verify key is handled without error and stays in normal mode
+			newModel, _ := model.Update(tea.KeyPressMsg{Text: tt.key})
+			got := newModel.(ChatModel)
+
+			if got.mode != ModeNormal {
+				t.Errorf("mode = %v, want ModeNormal", got.mode)
+			}
+		})
+	}
+}
