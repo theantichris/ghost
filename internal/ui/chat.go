@@ -196,6 +196,9 @@ func (model ChatModel) handleWindowSize(msg tea.WindowSizeMsg) (tea.Model, tea.C
 		model.viewport = viewport.New(viewport.WithWidth(model.width), viewport.WithHeight(model.height-inputHeight))
 
 		model.ready = true
+	} else {
+		model.viewport.SetWidth(msg.Width)
+		model.viewport.SetHeight(msg.Height - inputHeight)
 	}
 
 	return model, nil
