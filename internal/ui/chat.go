@@ -52,6 +52,7 @@ type ChatModel struct {
 	model           string
 	responseCh      chan tea.Msg
 	currentResponse string
+	awaitingG       bool
 }
 
 // NewChatModel creates the chat model and initializes the text input.
@@ -206,6 +207,9 @@ func (model ChatModel) handleWindowSize(msg tea.WindowSizeMsg) (tea.Model, tea.C
 }
 
 func (model ChatModel) handleNormalMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	wasAwaitingG := model.awaitingG
+	model.awaitingG = false
+
 	switch msg.String() {
 	case ":":
 		model.mode = ModeCommand
@@ -239,12 +243,23 @@ func (model ChatModel) handleNormalMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 		return model, nil
 
+	case "g":
+		if wasAwaitingG {
+			model.viewport.GotoTop()
+		} else {
+			model.awaitingG = true
+		}
+
+		return model, nil
+
 	case "G":
 		model.viewport.GotoBottom()
 
 		return model, nil
 
 	default:
+		model.awaitingG = false
+
 		return model, nil
 	}
 }
