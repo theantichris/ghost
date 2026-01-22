@@ -109,7 +109,7 @@ func (model ChatModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return model.handleLLMErrorMsg(msg)
 
 	default:
-		// Send messages for cursor blink
+		// Pass through to textinput
 		var cmd tea.Cmd
 
 		if model.mode == ModeInsert {
@@ -193,6 +193,8 @@ func (model *ChatModel) startLLMStream() tea.Cmd {
 func (model ChatModel) handleWindowSize(msg tea.WindowSizeMsg) (tea.Model, tea.Cmd) {
 	model.width = msg.Width
 	model.height = msg.Height
+
+	model.input.SetWidth(model.width - len(model.input.Prompt))
 
 	if !model.ready {
 		model.viewport = viewport.New(viewport.WithWidth(model.width), viewport.WithHeight(model.height-inputHeight))
