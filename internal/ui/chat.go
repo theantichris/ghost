@@ -15,6 +15,8 @@ import (
 // Mode represents the different modes the TUI can be in.
 type Mode int
 
+const inputHeight = 3
+
 const (
 	ModeNormal Mode = iota
 	ModeCommand
@@ -191,7 +193,7 @@ func (model ChatModel) handleWindowSize(msg tea.WindowSizeMsg) (tea.Model, tea.C
 	model.height = msg.Height
 
 	if !model.ready {
-		model.viewport = viewport.New(viewport.WithWidth(model.width), viewport.WithHeight(model.height-3))
+		model.viewport = viewport.New(viewport.WithWidth(model.width), viewport.WithHeight(model.height-inputHeight))
 
 		model.ready = true
 	}
