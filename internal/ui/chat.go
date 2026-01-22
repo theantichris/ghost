@@ -8,6 +8,7 @@ import (
 	"charm.land/bubbles/v2/textinput"
 	"charm.land/bubbles/v2/viewport"
 	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"github.com/charmbracelet/log"
 	"github.com/theantichris/ghost/internal/llm"
 )
@@ -268,11 +269,10 @@ func (model ChatModel) handleInsertMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			return model, nil
 		}
 
+		model.input.SetValue("")
 		model.messages = append(model.messages, llm.ChatMessage{Role: llm.RoleUser, Content: value})
 		model.history += fmt.Sprintf("You: %s\n\nghost: ", value)
-		model.viewport.SetContent(model.history)
-
-		model.input.SetValue("")
+		model.viewport.SetContent(model.renderHistory())
 
 		return model, model.startLLMStream()
 
@@ -286,8 +286,7 @@ func (model ChatModel) handleInsertMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 func (model ChatModel) handleLLMResponseMsg(msg LLMResponseMsg) (tea.Model, tea.Cmd) {
 	model.history += string(msg)
 	model.currentResponse += string(msg)
-
-	model.viewport.SetContent(model.history)
+	model.viewport.SetContent(model.renderHistory())
 	model.viewport.GotoBottom()
 
 	return model, listenForChunk(model.responseCh)
@@ -297,11 +296,12 @@ func (model ChatModel) handleLLMDoneMsg() (tea.Model, tea.Cmd) {
 	model.logger.Debug("transmission complete", "response_length", len(model.currentResponse))
 
 	model.history += "\n\n"
-	model.viewport.SetContent(model.history)
+	model.viewport.SetContent(model.renderHistory())
 	model.messages = append(model.messages, llm.ChatMessage{
 		Role:    llm.RoleAssistant,
 		Content: model.currentResponse,
 	})
+
 	model.currentResponse = ""
 
 	return model, nil
@@ -311,7 +311,12 @@ func (model ChatModel) handleLLMErrorMsg(msg LLMErrorMsg) (tea.Model, tea.Cmd) {
 	model.logger.Error("neural link disrupted", "error", msg.Err)
 
 	model.history += fmt.Sprintf("\n[󱙝 error: %v]\n", msg.Err)
-	model.viewport.SetContent(model.history)
+	model.viewport.SetContent(model.renderHistory())
 
 	return model, nil
+}
+
+// renderHistory returns the model history word wrapped to the width of the viewport.
+func (model ChatModel) renderHistory() string {
+	return lipgloss.NewStyle().Width(model.viewport.Width()).Render(model.history)
 }
