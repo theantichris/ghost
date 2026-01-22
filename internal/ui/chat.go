@@ -8,12 +8,15 @@ import (
 	"charm.land/bubbles/v2/textinput"
 	"charm.land/bubbles/v2/viewport"
 	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"github.com/charmbracelet/log"
 	"github.com/theantichris/ghost/internal/llm"
 )
 
 // Mode represents the different modes the TUI can be in.
 type Mode int
+
+const inputHeight = 3
 
 const (
 	ModeNormal Mode = iota
@@ -49,6 +52,7 @@ type ChatModel struct {
 	model           string
 	responseCh      chan tea.Msg
 	currentResponse string
+	awaitingG       bool
 }
 
 // NewChatModel creates the chat model and initializes the text input.
@@ -191,31 +195,56 @@ func (model ChatModel) handleWindowSize(msg tea.WindowSizeMsg) (tea.Model, tea.C
 	model.height = msg.Height
 
 	if !model.ready {
-		model.viewport = viewport.New(viewport.WithWidth(model.width), viewport.WithHeight(model.height-3))
+		model.viewport = viewport.New(viewport.WithWidth(model.width), viewport.WithHeight(model.height-inputHeight))
 
 		model.ready = true
+	} else {
+		model.viewport.SetWidth(msg.Width)
+		model.viewport.SetHeight(msg.Height - inputHeight)
 	}
 
 	return model, nil
 }
 
 func (model ChatModel) handleNormalMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
-	switch msg.Key().Code {
-	case ':':
+	wasAwaitingG := model.awaitingG
+	model.awaitingG = false
+
+	switch msg.String() {
+	case ":":
 		model.mode = ModeCommand
 		model.cmdBuffer = ""
 
-		return model, nil
-
-	case 'i':
+	case "i":
 		model.mode = ModeInsert
 		model.input.Focus()
 
 		return model, textinput.Blink
 
-	default:
-		return model, nil
+	case "j":
+		model.viewport.ScrollDown(1)
+
+	case "k":
+		model.viewport.ScrollUp(1)
+
+	case "ctrl+d":
+		model.viewport.HalfPageDown()
+
+	case "ctrl+u":
+		model.viewport.HalfPageUp()
+
+	case "g":
+		if wasAwaitingG {
+			model.viewport.GotoTop()
+		} else {
+			model.awaitingG = true
+		}
+
+	case "G":
+		model.viewport.GotoBottom()
 	}
+
+	return model, nil
 }
 
 func (model ChatModel) handleCommandMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
@@ -263,11 +292,10 @@ func (model ChatModel) handleInsertMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			return model, nil
 		}
 
+		model.input.SetValue("")
 		model.messages = append(model.messages, llm.ChatMessage{Role: llm.RoleUser, Content: value})
 		model.history += fmt.Sprintf("You: %s\n\nghost: ", value)
-		model.viewport.SetContent(model.history)
-
-		model.input.SetValue("")
+		model.viewport.SetContent(model.renderHistory())
 
 		return model, model.startLLMStream()
 
@@ -280,8 +308,9 @@ func (model ChatModel) handleInsertMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 func (model ChatModel) handleLLMResponseMsg(msg LLMResponseMsg) (tea.Model, tea.Cmd) {
 	model.history += string(msg)
-	model.viewport.SetContent(model.history)
 	model.currentResponse += string(msg)
+	model.viewport.SetContent(model.renderHistory())
+	model.viewport.GotoBottom()
 
 	return model, listenForChunk(model.responseCh)
 }
@@ -290,11 +319,12 @@ func (model ChatModel) handleLLMDoneMsg() (tea.Model, tea.Cmd) {
 	model.logger.Debug("transmission complete", "response_length", len(model.currentResponse))
 
 	model.history += "\n\n"
-	model.viewport.SetContent(model.history)
+	model.viewport.SetContent(model.renderHistory())
 	model.messages = append(model.messages, llm.ChatMessage{
 		Role:    llm.RoleAssistant,
 		Content: model.currentResponse,
 	})
+
 	model.currentResponse = ""
 
 	return model, nil
@@ -304,7 +334,12 @@ func (model ChatModel) handleLLMErrorMsg(msg LLMErrorMsg) (tea.Model, tea.Cmd) {
 	model.logger.Error("neural link disrupted", "error", msg.Err)
 
 	model.history += fmt.Sprintf("\n[󱙝 error: %v]\n", msg.Err)
-	model.viewport.SetContent(model.history)
+	model.viewport.SetContent(model.renderHistory())
 
 	return model, nil
+}
+
+// renderHistory returns the model history word wrapped to the width of the viewport.
+func (model ChatModel) renderHistory() string {
+	return lipgloss.NewStyle().Width(model.viewport.Width()).Render(model.history)
 }
