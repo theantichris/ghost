@@ -242,9 +242,6 @@ func (model ChatModel) handleNormalMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 	case "G":
 		model.viewport.GotoBottom()
-
-	default:
-		model.awaitingG = false
 	}
 
 	return model, nil
