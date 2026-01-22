@@ -215,8 +215,6 @@ func (model ChatModel) handleNormalMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		model.mode = ModeCommand
 		model.cmdBuffer = ""
 
-		return model, nil
-
 	case "i":
 		model.mode = ModeInsert
 		model.input.Focus()
@@ -226,22 +224,14 @@ func (model ChatModel) handleNormalMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case "j":
 		model.viewport.ScrollDown(1)
 
-		return model, nil
-
 	case "k":
 		model.viewport.ScrollUp(1)
-
-		return model, nil
 
 	case "ctrl+d":
 		model.viewport.HalfPageDown()
 
-		return model, nil
-
 	case "ctrl+u":
 		model.viewport.HalfPageUp()
-
-		return model, nil
 
 	case "g":
 		if wasAwaitingG {
@@ -250,18 +240,14 @@ func (model ChatModel) handleNormalMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			model.awaitingG = true
 		}
 
-		return model, nil
-
 	case "G":
 		model.viewport.GotoBottom()
 
-		return model, nil
-
 	default:
 		model.awaitingG = false
-
-		return model, nil
 	}
+
+	return model, nil
 }
 
 func (model ChatModel) handleCommandMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
