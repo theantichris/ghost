@@ -206,18 +206,43 @@ func (model ChatModel) handleWindowSize(msg tea.WindowSizeMsg) (tea.Model, tea.C
 }
 
 func (model ChatModel) handleNormalMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
-	switch msg.Key().Code {
-	case ':':
+	switch msg.String() {
+	case ":":
 		model.mode = ModeCommand
 		model.cmdBuffer = ""
 
 		return model, nil
 
-	case 'i':
+	case "i":
 		model.mode = ModeInsert
 		model.input.Focus()
 
 		return model, textinput.Blink
+
+	case "j":
+		model.viewport.ScrollDown(1)
+
+		return model, nil
+
+	case "k":
+		model.viewport.ScrollUp(1)
+
+		return model, nil
+
+	case "ctrl+d":
+		model.viewport.HalfPageDown()
+
+		return model, nil
+
+	case "ctrl+u":
+		model.viewport.HalfPageUp()
+
+		return model, nil
+
+	case "G":
+		model.viewport.GotoBottom()
+
+		return model, nil
 
 	default:
 		return model, nil
