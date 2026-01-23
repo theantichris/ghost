@@ -12,8 +12,8 @@ points: 5
 
 Support composing multi-line messages in the chat input. Essential for pasting code blocks, writing longer prompts, or formatting structured input.
 
-- [ ] Enable multi-line text input in Bubbletea
-- [ ] Define key combo for newline vs send (e.g., `shift+enter` for newline, `enter` to send)
+- [x] Enable multi-line text input in Bubbletea
+- [x] Define key combo for newline vs send (e.g., `shift+enter` for newline, `enter` to send)
 - [x] Scroll input area as content grows
 - [ ] tests
 - [ ] documentation
