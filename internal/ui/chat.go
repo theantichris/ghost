@@ -289,7 +289,7 @@ func (model ChatModel) handleInsertMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		model.mode = ModeNormal
 		model.input.Blur()
 
-	case "shift+enter":
+	case "shift+enter", "ctrl+j":
 		value := model.input.Value() + "\n"
 		model.input.SetValue(value)
 
