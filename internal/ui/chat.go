@@ -59,6 +59,7 @@ type ChatModel struct {
 // NewChatModel creates the chat model and initializes the text input.
 func NewChatModel(ctx context.Context, url, model, system string, logger *log.Logger) ChatModel {
 	input := textarea.New()
+	input.ShowLineNumbers = false
 
 	messages := []llm.ChatMessage{
 		{Role: llm.RoleSystem, Content: system},
