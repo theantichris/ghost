@@ -288,8 +288,6 @@ func (model ChatModel) handleInsertMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		model.mode = ModeNormal
 		model.input.Blur()
 
-		return model, nil
-
 	case tea.KeyEnter:
 		value := model.input.Value()
 
@@ -309,6 +307,8 @@ func (model ChatModel) handleInsertMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 		return model, cmd
 	}
+
+	return model, nil
 }
 
 func (model ChatModel) handleLLMResponseMsg(msg LLMResponseMsg) (tea.Model, tea.Cmd) {
