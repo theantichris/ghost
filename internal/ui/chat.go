@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"charm.land/bubbles/v2/textarea"
 	"charm.land/bubbles/v2/textinput"
 	"charm.land/bubbles/v2/viewport"
 	tea "charm.land/bubbletea/v2"
@@ -40,7 +41,7 @@ type ChatModel struct {
 	ctx             context.Context
 	logger          *log.Logger
 	viewport        viewport.Model
-	input           textinput.Model
+	input           textarea.Model
 	messages        []llm.ChatMessage
 	history         string // Rendered conversation for display
 	width           int
@@ -57,7 +58,7 @@ type ChatModel struct {
 
 // NewChatModel creates the chat model and initializes the text input.
 func NewChatModel(ctx context.Context, url, model, system string, logger *log.Logger) ChatModel {
-	input := textinput.New()
+	input := textarea.New()
 
 	messages := []llm.ChatMessage{
 		{Role: llm.RoleSystem, Content: system},
