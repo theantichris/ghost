@@ -18,7 +18,10 @@
       "mcp__github__search_issues",
       "mcp__github__list_issues",
       "Bash(gh milestone:*)",
-      "Bash(git remote:*)"
+      "Bash(git remote:*)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(gh issue list:*)",
+      "WebFetch(domain:api.github.com)"
     ]
   },
   "outputStyle": "Learning",
