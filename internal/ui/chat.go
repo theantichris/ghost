@@ -281,12 +281,19 @@ func (model ChatModel) handleCommandMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 }
 
 func (model ChatModel) handleInsertMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	model.logger.Debug("key pressed", "string", msg.String(), "code", msg.Key().Code, "mod", msg.Key().Mod)
 	var cmd tea.Cmd
 
 	switch msg.String() {
 	case "esc":
 		model.mode = ModeNormal
 		model.input.Blur()
+
+	case "shift+enter":
+		value := model.input.Value() + "\n"
+		model.input.SetValue(value)
+
+		return model, nil
 
 	case "enter":
 		value := model.input.Value()
