@@ -32,7 +32,7 @@ func TestChatModel_ModeTransitions(t *testing.T) {
 		{
 			name:      "escape returns to normal from insert",
 			startMode: ModeInsert,
-			msg:       tea.KeyPressMsg{Code: tea.KeyEscape},
+			msg:       tea.KeyPressMsg{Code: tea.KeyEscape, Text: "esc"},
 			wantMode:  ModeNormal,
 		},
 		{
@@ -44,7 +44,7 @@ func TestChatModel_ModeTransitions(t *testing.T) {
 		{
 			name:      "escape returns to normal from command",
 			startMode: ModeCommand,
-			msg:       tea.KeyPressMsg{Code: tea.KeyEscape},
+			msg:       tea.KeyPressMsg{Code: tea.KeyEscape, Text: "esc"},
 			wantMode:  ModeNormal,
 		},
 	}
