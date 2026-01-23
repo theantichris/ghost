@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"charm.land/bubbles/v2/textarea"
 	"charm.land/bubbles/v2/textinput"
 	"charm.land/bubbles/v2/viewport"
 	tea "charm.land/bubbletea/v2"
@@ -40,7 +41,7 @@ type ChatModel struct {
 	ctx             context.Context
 	logger          *log.Logger
 	viewport        viewport.Model
-	input           textinput.Model
+	input           textarea.Model
 	messages        []llm.ChatMessage
 	history         string // Rendered conversation for display
 	width           int
@@ -57,7 +58,9 @@ type ChatModel struct {
 
 // NewChatModel creates the chat model and initializes the text input.
 func NewChatModel(ctx context.Context, url, model, system string, logger *log.Logger) ChatModel {
-	input := textinput.New()
+	input := textarea.New()
+	input.ShowLineNumbers = false
+	input.SetHeight(2)
 
 	messages := []llm.ChatMessage{
 		{Role: llm.RoleSystem, Content: system},
@@ -109,7 +112,7 @@ func (model ChatModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return model.handleLLMErrorMsg(msg)
 
 	default:
-		// Send messages for cursor blink
+		// Pass through to textinput
 		var cmd tea.Cmd
 
 		if model.mode == ModeInsert {
@@ -135,11 +138,11 @@ func (model ChatModel) View() tea.View {
 
 	switch model.mode {
 	case ModeNormal:
-		view = tea.NewView(model.viewport.View() + "\n:[NORMAL]")
+		view = tea.NewView(model.viewport.View() + "\n[NORMAL]\n" + model.input.View())
 	case ModeCommand:
-		view = tea.NewView(model.viewport.View() + "\n:" + model.cmdBuffer)
+		view = tea.NewView(model.viewport.View() + "\n:" + model.cmdBuffer + "\n" + model.input.View())
 	case ModeInsert:
-		view = tea.NewView(model.viewport.View() + "\n" + model.input.View())
+		view = tea.NewView(model.viewport.View() + "\n[INSERT]\n" + model.input.View())
 	}
 
 	view.AltScreen = true
@@ -193,6 +196,8 @@ func (model *ChatModel) startLLMStream() tea.Cmd {
 func (model ChatModel) handleWindowSize(msg tea.WindowSizeMsg) (tea.Model, tea.Cmd) {
 	model.width = msg.Width
 	model.height = msg.Height
+
+	model.input.SetWidth(model.width - len(model.input.Prompt))
 
 	if !model.ready {
 		model.viewport = viewport.New(viewport.WithWidth(model.width), viewport.WithHeight(model.height-inputHeight))
@@ -276,16 +281,21 @@ func (model ChatModel) handleCommandMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 }
 
 func (model ChatModel) handleInsertMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	model.logger.Debug("key pressed", "string", msg.String(), "code", msg.Key().Code, "mod", msg.Key().Mod)
 	var cmd tea.Cmd
 
-	switch msg.Key().Code {
-	case tea.KeyEscape:
+	switch msg.String() {
+	case "esc":
 		model.mode = ModeNormal
 		model.input.Blur()
 
+	case "shift+enter", "ctrl+j":
+		value := model.input.Value() + "\n"
+		model.input.SetValue(value)
+
 		return model, nil
 
-	case tea.KeyEnter:
+	case "enter":
 		value := model.input.Value()
 
 		if strings.TrimSpace(value) == "" {
@@ -304,6 +314,8 @@ func (model ChatModel) handleInsertMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 		return model, cmd
 	}
+
+	return model, nil
 }
 
 func (model ChatModel) handleLLMResponseMsg(msg LLMResponseMsg) (tea.Model, tea.Cmd) {
