@@ -8,6 +8,7 @@ This is just a samply entry point. You can modify it and add content or add link
 to create your own wiki style documentation
 
 Press `Tab/Enter` to select and follow this [link](linked.md) to see how.
+You can also check out the [Bubbletea Key Reference](bubbletea-keys.md) for UI keybinding patterns.
 You can refer to external documentation by linking an [external link](https://raw.githubusercontent.com/boolean-maybe/navidown/main/README.md)
 
  You can also create multiple entry points such as:
