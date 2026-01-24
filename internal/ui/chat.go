@@ -315,8 +315,11 @@ func (model ChatModel) handleInsertMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		}
 
 		model.inputHistoryIndex++
-		if model.inputHistoryIndex > len(model.inputHistory)-1 {
-			model.inputHistoryIndex = len(model.inputHistory) - 1
+		if model.inputHistoryIndex == len(model.inputHistory) {
+			model.inputHistoryIndex = len(model.inputHistory)
+			model.input.SetValue("")
+
+			return model, nil
 		}
 
 		model.input.SetValue(model.inputHistory[model.inputHistoryIndex])
@@ -330,7 +333,6 @@ func (model ChatModel) handleInsertMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 		model.inputHistory = append(model.inputHistory, value)
 		model.inputHistoryIndex = len(model.inputHistory)
-		model.logger.Debug("updated input history", "length", len(model.inputHistory), "index", model.inputHistoryIndex)
 
 		model.input.SetValue("")
 		model.messages = append(model.messages, llm.ChatMessage{Role: llm.RoleUser, Content: value})
