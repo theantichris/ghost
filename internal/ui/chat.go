@@ -284,7 +284,6 @@ func (model ChatModel) handleCommandMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 }
 
 func (model ChatModel) handleInsertMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
-	model.logger.Debug("key pressed", "string", msg.String(), "code", msg.Key().Code, "mod", msg.Key().Mod)
 	var cmd tea.Cmd
 
 	switch msg.String() {
@@ -298,6 +297,30 @@ func (model ChatModel) handleInsertMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 		return model, nil
 
+	case "up":
+		if len(model.inputHistory) == 0 {
+			return model, nil
+		}
+
+		model.inputHistoryIndex--
+		if model.inputHistoryIndex < 0 {
+			model.inputHistoryIndex = 0
+		}
+
+		model.input.SetValue(model.inputHistory[model.inputHistoryIndex])
+
+	case "down":
+		if len(model.inputHistory) == 0 {
+			return model, nil
+		}
+
+		model.inputHistoryIndex++
+		if model.inputHistoryIndex > len(model.inputHistory)-1 {
+			model.inputHistoryIndex = len(model.inputHistory) - 1
+		}
+
+		model.input.SetValue(model.inputHistory[model.inputHistoryIndex])
+
 	case "enter":
 		value := model.input.Value()
 
@@ -306,7 +329,8 @@ func (model ChatModel) handleInsertMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		}
 
 		model.inputHistory = append(model.inputHistory, value)
-		model.inputHistoryIndex = 0
+		model.inputHistoryIndex = len(model.inputHistory)
+		model.logger.Debug("updated input history", "length", len(model.inputHistory), "index", model.inputHistoryIndex)
 
 		model.input.SetValue("")
 		model.messages = append(model.messages, llm.ChatMessage{Role: llm.RoleUser, Content: value})
