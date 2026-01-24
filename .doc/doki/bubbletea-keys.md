@@ -1,8 +1,8 @@
 # Bubbletea Key Reference
 
-Complete reference for `KeyMsg.String()` values in Bubbletea's `tea.KeyMsg`.
+[back to root](index.md)
 
-[← Back to index](index.md)
+Complete reference for `KeyMsg.String()` values in Bubbletea's `tea.KeyMsg`.
 
 ## Basic Keys
 
