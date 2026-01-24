@@ -2,11 +2,13 @@
 id: tiki-gh184
 title: Input history navigation
 type: story
-status: todo
+status: in_progress
+tags:
+    - enhancement
+assignee: Christopher Lamm
 priority: 3
-tags: [enhancement]
+points: 5
 ---
-
 ## Description
 
 Recall previously sent messages using Vim-style keybindings. Allows quick reuse or modification of earlier prompts within the current session.
