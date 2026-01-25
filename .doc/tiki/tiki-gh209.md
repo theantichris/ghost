@@ -2,7 +2,7 @@
 id: tiki-gh209
 title: Web search in chat
 type: story
-status: in_progress
+status: done
 tags:
     - enhancement
 assignee: Christopher Lamm
@@ -15,8 +15,8 @@ Support web search in the chat TUI.
 
 - [x] Add web search
 - [x] logging
-- [ ] tests
-- [ ] documentation
+- [x] tests
+- [x] documentation
 
 ---
 GitHub: <https://github.com/theantichris/ghost/issues/209>
