@@ -182,6 +182,9 @@ func (model *ChatModel) startLLMStream() tea.Cmd {
 		messages, err := agent.RunToolLoop(model.ctx, model.toolRegistry, model.url, model.model, model.messages, model.logger)
 		if err != nil {
 			ch <- LLMErrorMsg{Err: err}
+			close(ch)
+
+			return
 		}
 
 		model.messages = messages
