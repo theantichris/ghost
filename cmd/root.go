@@ -15,6 +15,7 @@ import (
 	"github.com/charmbracelet/x/term"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/theantichris/ghost/v3/internal/agent"
 	"github.com/theantichris/ghost/v3/internal/llm"
 	"github.com/theantichris/ghost/v3/internal/tool"
 	"github.com/theantichris/ghost/v3/internal/ui"
@@ -126,30 +127,10 @@ func run(cmd *cobra.Command, args []string) error {
 		tools := registry.Definitions()
 
 		if len(tools) > 0 {
-			for {
-				resp, err := llm.Chat(cmd.Context(), url, model, messages, tools)
-				if err != nil {
-					streamProgram.Send(ui.StreamErrorMsg{Err: err})
-					return
-				}
-
-				if len(resp.ToolCalls) == 0 {
-					break
-				}
-
-				messages = append(messages, resp)
-
-				for _, toolCall := range resp.ToolCalls {
-					logger.Debug("executing tool", "name", toolCall.Function.Name)
-
-					result, err := registry.Execute(cmd.Context(), toolCall.Function.Name, toolCall.Function.Arguments)
-					if err != nil {
-						logger.Error("tool execution failed", "name", toolCall.Function.Name, "error", err)
-						result = fmt.Sprintf("error: %s", err.Error())
-					}
-
-					messages = append(messages, llm.ChatMessage{Role: llm.RoleTool, Content: result})
-				}
+			messages, err = agent.RunToolLoop(cmd.Context(), registry, url, model, messages, tools, logger)
+			if err != nil {
+				streamProgram.Send(ui.StreamErrorMsg{Err: err})
+				return
 			}
 		}
 
