@@ -43,7 +43,7 @@ type ChatModel struct {
 	viewport          viewport.Model
 	input             textarea.Model
 	messages          []llm.ChatMessage
-	history           string // Rendered conversation for display
+	chatHistory       string // Rendered conversation for display
 	width             int
 	height            int
 	ready             bool // True if the viewport is initialized
@@ -73,7 +73,7 @@ func NewChatModel(ctx context.Context, url, model, system string, logger *log.Lo
 		logger:            logger,
 		input:             input,
 		messages:          messages,
-		history:           "",
+		chatHistory:       "",
 		url:               url,
 		model:             model,
 		inputHistoryIndex: 0,
@@ -336,7 +336,7 @@ func (model ChatModel) handleInsertMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 		model.input.SetValue("")
 		model.messages = append(model.messages, llm.ChatMessage{Role: llm.RoleUser, Content: value})
-		model.history += fmt.Sprintf("You: %s\n\nghost: ", value)
+		model.chatHistory += fmt.Sprintf("You: %s\n\nghost: ", value)
 		model.viewport.SetContent(model.renderHistory())
 
 		return model, model.startLLMStream()
@@ -351,7 +351,7 @@ func (model ChatModel) handleInsertMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 }
 
 func (model ChatModel) handleLLMResponseMsg(msg LLMResponseMsg) (tea.Model, tea.Cmd) {
-	model.history += string(msg)
+	model.chatHistory += string(msg)
 	model.currentResponse += string(msg)
 	model.viewport.SetContent(model.renderHistory())
 	model.viewport.GotoBottom()
@@ -362,7 +362,7 @@ func (model ChatModel) handleLLMResponseMsg(msg LLMResponseMsg) (tea.Model, tea.
 func (model ChatModel) handleLLMDoneMsg() (tea.Model, tea.Cmd) {
 	model.logger.Debug("transmission complete", "response_length", len(model.currentResponse))
 
-	model.history += "\n\n"
+	model.chatHistory += "\n\n"
 	model.viewport.SetContent(model.renderHistory())
 	model.messages = append(model.messages, llm.ChatMessage{
 		Role:    llm.RoleAssistant,
@@ -377,7 +377,7 @@ func (model ChatModel) handleLLMDoneMsg() (tea.Model, tea.Cmd) {
 func (model ChatModel) handleLLMErrorMsg(msg LLMErrorMsg) (tea.Model, tea.Cmd) {
 	model.logger.Error("neural link disrupted", "error", msg.Err)
 
-	model.history += fmt.Sprintf("\n[󱙝 error: %v]\n", msg.Err)
+	model.chatHistory += fmt.Sprintf("\n[󱙝 error: %v]\n", msg.Err)
 	model.viewport.SetContent(model.renderHistory())
 
 	return model, nil
@@ -385,5 +385,5 @@ func (model ChatModel) handleLLMErrorMsg(msg LLMErrorMsg) (tea.Model, tea.Cmd) {
 
 // renderHistory returns the model history word wrapped to the width of the viewport.
 func (model ChatModel) renderHistory() string {
-	return lipgloss.NewStyle().Width(model.viewport.Width()).Render(model.history)
+	return lipgloss.NewStyle().Width(model.viewport.Width()).Render(model.chatHistory)
 }

@@ -105,8 +105,8 @@ func TestChatModel_LLMResponseMsg(t *testing.T) {
 
 	got := newModel.(ChatModel)
 
-	if got.history != "hello " {
-		t.Errorf("history = %q, want %q", got.history, "hello ")
+	if got.chatHistory != "hello " {
+		t.Errorf("history = %q, want %q", got.chatHistory, "hello ")
 	}
 
 	if got.currentResponse != "hello " {
@@ -122,7 +122,7 @@ func TestChatModel_LLMDoneMsg(t *testing.T) {
 	model := newTestModel()
 	model.ready = true
 	model.currentResponse = "test response"
-	model.history = "You: hi\n\nghost: test response"
+	model.chatHistory = "You: hi\n\nghost: test response"
 
 	newModel, _ := model.Update(LLMDoneMsg{})
 
@@ -155,7 +155,7 @@ func TestChatModel_LLMErrorMsg(t *testing.T) {
 
 	got := newModel.(ChatModel)
 
-	if got.history == "" {
+	if got.chatHistory == "" {
 		t.Error("expected error to be added to history")
 	}
 }
@@ -420,11 +420,11 @@ func TestChatModel_HandleInsertMode(t *testing.T) {
 				t.Errorf("message count = %d, want %d", len(got.messages), tt.wantMessageCount)
 			}
 
-			if tt.wantHistoryEmpty && got.history != "" {
-				t.Errorf("history = %q, want empty", got.history)
+			if tt.wantHistoryEmpty && got.chatHistory != "" {
+				t.Errorf("history = %q, want empty", got.chatHistory)
 			}
 
-			if !tt.wantHistoryEmpty && got.history == "" {
+			if !tt.wantHistoryEmpty && got.chatHistory == "" {
 				t.Error("history is empty, want non-empty")
 			}
 
