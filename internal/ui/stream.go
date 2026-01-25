@@ -4,7 +4,7 @@ import (
 	"charm.land/bubbles/v2/key"
 	"charm.land/bubbles/v2/spinner"
 	tea "charm.land/bubbletea/v2"
-	"github.com/theantichris/ghost/theme"
+	"github.com/theantichris/ghost/v3/theme"
 )
 
 var quitKeys = key.NewBinding(

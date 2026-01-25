@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/carlmjohnson/requests"
-	"github.com/theantichris/ghost/internal/llm"
+	"github.com/theantichris/ghost/v3/internal/llm"
 )
 
 const tavilyURL = "https://api.tavily.com/search"

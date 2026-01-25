@@ -6,7 +6,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/theantichris/ghost/internal/llm"
+	"github.com/theantichris/ghost/v3/internal/llm"
 )
 
 type mockTool struct {

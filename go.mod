@@ -1,4 +1,4 @@
-module github.com/theantichris/ghost
+module github.com/theantichris/ghost/v3
 
 go 1.25.5
 
