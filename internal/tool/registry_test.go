@@ -5,37 +5,14 @@ import (
 	"encoding/json"
 	"errors"
 	"testing"
-
-	"github.com/theantichris/ghost/v3/internal/llm"
 )
-
-type mockTool struct {
-	name   string
-	result string
-	err    error
-}
-
-func (tool mockTool) Definition() llm.Tool {
-	return llm.Tool{
-		Type: "function",
-		Function: llm.ToolFunction{
-			Name:        tool.name,
-			Description: "mock tool",
-			Parameters:  llm.ToolParameters{Type: "object"},
-		},
-	}
-}
-
-func (tool mockTool) Execute(ctx context.Context, args json.RawMessage) (string, error) {
-	return tool.result, tool.err
-}
 
 func TestRegister(t *testing.T) {
 	registry := NewRegistry()
 
-	tool := mockTool{
-		name:   "mock tool",
-		result: "mock result",
+	tool := MockTool{
+		Name:   "mock tool",
+		Result: "mock result",
 	}
 
 	registry.Register(tool)
@@ -49,9 +26,9 @@ func TestRegister(t *testing.T) {
 func TestDefinitions(t *testing.T) {
 	registry := NewRegistry()
 
-	tool := mockTool{
-		name:   "mock tool",
-		result: "mock result",
+	tool := MockTool{
+		Name:   "mock tool",
+		Result: "mock result",
 	}
 
 	registry.Tools[tool.Definition().Function.Name] = tool
@@ -70,19 +47,19 @@ func TestDefinitions(t *testing.T) {
 func TestExecute(t *testing.T) {
 	tests := []struct {
 		name       string
-		tool       mockTool
+		tool       MockTool
 		calledTool string
 		wantErr    bool
 		err        error
 	}{
 		{
 			name:       "executes tool",
-			tool:       mockTool{name: "mock tool", result: "mock result"},
+			tool:       MockTool{Name: "mock tool", Result: "mock result"},
 			calledTool: "mock tool",
 		},
 		{
 			name:       "returns error for unknown tool",
-			tool:       mockTool{name: "mock tool", result: "mock result"},
+			tool:       MockTool{Name: "mock tool", Result: "mock result"},
 			calledTool: "unknown tool",
 			wantErr:    true,
 			err:        ErrToolNotRegistered,
@@ -113,8 +90,8 @@ func TestExecute(t *testing.T) {
 				t.Fatalf("Execute() err = %v, want nil", err)
 			}
 
-			if got != tt.tool.result {
-				t.Errorf("Execute() got = %s, want %s", got, tt.tool.result)
+			if got != tt.tool.Result {
+				t.Errorf("Execute() got = %s, want %s", got, tt.tool.Result)
 			}
 		})
 	}
