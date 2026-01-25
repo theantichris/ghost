@@ -38,22 +38,24 @@ type LLMErrorMsg struct {
 
 // ChatModel holds the TUI state.
 type ChatModel struct {
-	ctx             context.Context
-	logger          *log.Logger
-	viewport        viewport.Model
-	input           textarea.Model
-	messages        []llm.ChatMessage
-	history         string // Rendered conversation for display
-	width           int
-	height          int
-	ready           bool // True if the viewport is initialized
-	mode            Mode
-	cmdBuffer       string
-	url             string
-	model           string
-	responseCh      chan tea.Msg
-	currentResponse string
-	awaitingG       bool
+	ctx               context.Context
+	logger            *log.Logger
+	viewport          viewport.Model
+	input             textarea.Model
+	messages          []llm.ChatMessage
+	history           string // Rendered conversation for display
+	width             int
+	height            int
+	ready             bool // True if the viewport is initialized
+	mode              Mode
+	cmdBuffer         string
+	url               string
+	model             string
+	responseCh        chan tea.Msg
+	currentResponse   string
+	awaitingG         bool
+	inputHistory      []string
+	inputHistoryIndex int
 }
 
 // NewChatModel creates the chat model and initializes the text input.
@@ -67,13 +69,14 @@ func NewChatModel(ctx context.Context, url, model, system string, logger *log.Lo
 	}
 
 	chatModel := ChatModel{
-		ctx:      ctx,
-		logger:   logger,
-		input:    input,
-		messages: messages,
-		history:  "",
-		url:      url,
-		model:    model,
+		ctx:               ctx,
+		logger:            logger,
+		input:             input,
+		messages:          messages,
+		history:           "",
+		url:               url,
+		model:             model,
+		inputHistoryIndex: 0,
 	}
 
 	return chatModel
@@ -281,7 +284,6 @@ func (model ChatModel) handleCommandMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 }
 
 func (model ChatModel) handleInsertMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
-	model.logger.Debug("key pressed", "string", msg.String(), "code", msg.Key().Code, "mod", msg.Key().Mod)
 	var cmd tea.Cmd
 
 	switch msg.String() {
@@ -295,12 +297,42 @@ func (model ChatModel) handleInsertMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 		return model, nil
 
+	case "up":
+		if len(model.inputHistory) == 0 {
+			return model, nil
+		}
+
+		model.inputHistoryIndex--
+		if model.inputHistoryIndex < 0 {
+			model.inputHistoryIndex = 0
+		}
+
+		model.input.SetValue(model.inputHistory[model.inputHistoryIndex])
+
+	case "down":
+		if len(model.inputHistory) == 0 {
+			return model, nil
+		}
+
+		model.inputHistoryIndex++
+		if model.inputHistoryIndex >= len(model.inputHistory) {
+			model.inputHistoryIndex = len(model.inputHistory)
+			model.input.SetValue("")
+
+			return model, nil
+		}
+
+		model.input.SetValue(model.inputHistory[model.inputHistoryIndex])
+
 	case "enter":
 		value := model.input.Value()
 
 		if strings.TrimSpace(value) == "" {
 			return model, nil
 		}
+
+		model.inputHistory = append(model.inputHistory, value)
+		model.inputHistoryIndex = len(model.inputHistory)
 
 		model.input.SetValue("")
 		model.messages = append(model.messages, llm.ChatMessage{Role: llm.RoleUser, Content: value})
