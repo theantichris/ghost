@@ -2,7 +2,7 @@
 id: tiki-gh184
 title: Input history navigation
 type: story
-status: in_progress
+status: done
 tags:
     - enhancement
 assignee: Christopher Lamm
@@ -17,8 +17,8 @@ Recall previously sent messages using Vim-style keybindings. Allows quick reuse 
 - [x] Navigate history with arrow keys
 - [x] Restore input field content when navigating
 - [x] Clear history position on new input
-- [ ] tests
-- [ ] documentation
+- [x] tests
+- [x] documentation
 
 ---
 GitHub: <https://github.com/theantichris/ghost/issues/184>
