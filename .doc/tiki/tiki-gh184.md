@@ -13,10 +13,10 @@ points: 5
 
 Recall previously sent messages using Vim-style keybindings. Allows quick reuse or modification of earlier prompts within the current session.
 
-- [ ] Store sent messages in session history
-- [ ] Navigate history with `ctrl-p`/`ctrl-n` or arrow keys
-- [ ] Restore input field content when navigating
-- [ ] Clear history position on new input
+- [x] Store sent messages in session history
+- [x] Navigate history with arrow keys
+- [x] Restore input field content when navigating
+- [x] Clear history position on new input
 - [ ] tests
 - [ ] documentation
 
