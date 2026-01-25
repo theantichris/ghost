@@ -15,10 +15,10 @@ import (
 	"github.com/charmbracelet/x/term"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/theantichris/ghost/internal/llm"
-	"github.com/theantichris/ghost/internal/tool"
-	"github.com/theantichris/ghost/internal/ui"
-	"github.com/theantichris/ghost/theme"
+	"github.com/theantichris/ghost/v3/internal/llm"
+	"github.com/theantichris/ghost/v3/internal/tool"
+	"github.com/theantichris/ghost/v3/internal/ui"
+	"github.com/theantichris/ghost/v3/theme"
 )
 
 const (

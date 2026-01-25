@@ -5,8 +5,8 @@ import (
 	"os"
 
 	"github.com/charmbracelet/fang"
-	"github.com/theantichris/ghost/cmd"
-	"github.com/theantichris/ghost/theme"
+	"github.com/theantichris/ghost/v3/cmd"
+	"github.com/theantichris/ghost/v3/theme"
 )
 
 func main() {

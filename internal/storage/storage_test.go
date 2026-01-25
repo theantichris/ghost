@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/theantichris/ghost/internal/llm"
+	"github.com/theantichris/ghost/v3/internal/llm"
 )
 
 func setupTestStore(t *testing.T) *Store {

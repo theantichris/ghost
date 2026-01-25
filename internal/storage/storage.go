@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/theantichris/ghost/internal/llm"
+	"github.com/theantichris/ghost/v3/internal/llm"
 )
 
 var (

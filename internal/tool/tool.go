@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/theantichris/ghost/internal/llm"
+	"github.com/theantichris/ghost/v3/internal/llm"
 )
 
 // Tool is the interface that all the tools the LLM uses must implement.

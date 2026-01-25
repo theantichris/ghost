@@ -8,7 +8,7 @@ import (
 
 	"github.com/charmbracelet/log"
 	"github.com/google/go-cmp/cmp"
-	"github.com/theantichris/ghost/internal/llm"
+	"github.com/theantichris/ghost/v3/internal/llm"
 )
 
 func TestInitMessages(t *testing.T) {

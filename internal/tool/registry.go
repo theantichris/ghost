@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/theantichris/ghost/internal/llm"
+	"github.com/theantichris/ghost/v3/internal/llm"
 )
 
 var ErrToolNotRegistered = errors.New("tool not registered")
