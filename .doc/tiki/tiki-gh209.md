@@ -2,11 +2,13 @@
 id: tiki-gh209
 title: Web search in chat
 type: story
-status: todo
+status: in_progress
+tags:
+    - enhancement
+assignee: Christopher Lamm
 priority: 3
-tags: [enhancement]
+points: 5
 ---
-
 ## Description
 
 Support web search in the chat TUI.
