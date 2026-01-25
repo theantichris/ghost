@@ -315,7 +315,7 @@ func (model ChatModel) handleInsertMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		}
 
 		model.inputHistoryIndex++
-		if model.inputHistoryIndex == len(model.inputHistory) {
+		if model.inputHistoryIndex >= len(model.inputHistory) {
 			model.inputHistoryIndex = len(model.inputHistory)
 			model.input.SetValue("")
 
