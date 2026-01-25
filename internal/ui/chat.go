@@ -184,7 +184,7 @@ func (model *ChatModel) startLLMStream() tea.Cmd {
 			ch <- LLMErrorMsg{Err: err}
 		}
 
-		model.messages = append(model.messages, messages...)
+		model.messages = messages
 
 		_, err = llm.StreamChat(
 			model.ctx,
