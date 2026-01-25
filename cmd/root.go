@@ -15,6 +15,7 @@ import (
 	"github.com/charmbracelet/x/term"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/theantichris/ghost/v3/internal/agent"
 	"github.com/theantichris/ghost/v3/internal/llm"
 	"github.com/theantichris/ghost/v3/internal/tool"
 	"github.com/theantichris/ghost/v3/internal/ui"
@@ -93,17 +94,7 @@ func run(cmd *cobra.Command, args []string) error {
 
 	messages := initMessages(systemPrompt, userPrompt, format)
 
-	registry := tool.NewRegistry()
-
-	if tavilyAPIKey := viper.GetString("search.api-key"); tavilyAPIKey != "" {
-		maxResults := viper.GetInt("search.max-results")
-		if maxResults == 0 {
-			maxResults = 5
-		}
-
-		registry.Register(tool.NewSearch(tavilyAPIKey, maxResults))
-		logger.Debug("tool registered", "name", "web_search")
-	}
+	registry := registerTools(logger)
 
 	pipedInput, err := getPipedInput(os.Stdin, logger)
 	if err != nil {
@@ -133,36 +124,10 @@ func run(cmd *cobra.Command, args []string) error {
 
 		logger.Info("establishing neural link", "model", model, "url", url, "format", format)
 
-		tools := registry.Definitions()
-
-		if len(tools) > 0 {
-			for {
-
-				resp, err := llm.Chat(cmd.Context(), url, model, messages, tools)
-				if err != nil {
-					streamProgram.Send(ui.StreamErrorMsg{Err: err})
-					return
-				}
-
-				if len(resp.ToolCalls) == 0 {
-					break
-				}
-
-				messages = append(messages, resp)
-
-				for _, toolCall := range resp.ToolCalls {
-					logger.Debug("executing tool", "name", toolCall.Function.Name)
-
-					result, err := registry.Execute(cmd.Context(), toolCall.Function.Name, toolCall.Function.Arguments)
-					if err != nil {
-						logger.Error("tool execution failed", "name", toolCall.Function.Name, "error", err)
-						result = fmt.Sprintf("error: %s", err.Error())
-					}
-
-					messages = append(messages, llm.ChatMessage{Role: llm.RoleTool, Content: result})
-				}
-			}
-
+		messages, err = agent.RunToolLoop(cmd.Context(), registry, url, model, messages, logger)
+		if err != nil {
+			streamProgram.Send(ui.StreamErrorMsg{Err: err})
+			return
 		}
 
 		if _, err = llm.StreamChat(cmd.Context(), url, model, messages, nil, func(chunk string) {
@@ -291,4 +256,21 @@ func encodeImage(image string) (string, error) {
 	encodedImage := base64.StdEncoding.EncodeToString(imageBytes)
 
 	return encodedImage, nil
+}
+
+// registerTools creates and returns a new tool.Registry after registering tools.
+func registerTools(logger *log.Logger) tool.Registry {
+	registry := tool.NewRegistry()
+
+	if tavilyAPIKey := viper.GetString("search.api-key"); tavilyAPIKey != "" {
+		maxResults := viper.GetInt("search.max-results")
+		if maxResults == 0 {
+			maxResults = 5
+		}
+
+		registry.Register(tool.NewSearch(tavilyAPIKey, maxResults))
+		logger.Debug("tool registered", "name", "web_search")
+	}
+
+	return registry
 }

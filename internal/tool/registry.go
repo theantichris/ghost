@@ -54,5 +54,4 @@ func (registry *Registry) Execute(ctx context.Context, name string, args json.Ra
 	result, err := tool.Execute(ctx, args)
 
 	return result, err
-
 }

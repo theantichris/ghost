@@ -33,10 +33,11 @@ func runChat(cmd *cobra.Command, args []string) error {
 
 	url := viper.GetString("url")
 	model := viper.GetString("model")
+	registry := registerTools(logger)
 
 	logger.Info("entering ghost chat", "model", model, "url", url)
 
-	chatModel := ui.NewChatModel(cmd.Context(), url, model, systemPrompt, logger)
+	chatModel := ui.NewChatModel(cmd.Context(), url, model, systemPrompt, registry, logger)
 	program := tea.NewProgram(chatModel)
 
 	_, err := program.Run()
