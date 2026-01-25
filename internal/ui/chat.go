@@ -12,6 +12,7 @@ import (
 	"charm.land/lipgloss/v2"
 	"github.com/charmbracelet/log"
 	"github.com/theantichris/ghost/v3/internal/llm"
+	"github.com/theantichris/ghost/v3/internal/tool"
 )
 
 // Mode represents the different modes the TUI can be in.
@@ -56,10 +57,11 @@ type ChatModel struct {
 	awaitingG         bool
 	inputHistory      []string
 	inputHistoryIndex int
+	toolRegistry      tool.Registry
 }
 
 // NewChatModel creates the chat model and initializes the text input.
-func NewChatModel(ctx context.Context, url, model, system string, logger *log.Logger) ChatModel {
+func NewChatModel(ctx context.Context, url, model, system string, registry tool.Registry, logger *log.Logger) ChatModel {
 	input := textarea.New()
 	input.ShowLineNumbers = false
 	input.SetHeight(2)
@@ -77,6 +79,7 @@ func NewChatModel(ctx context.Context, url, model, system string, logger *log.Lo
 		url:               url,
 		model:             model,
 		inputHistoryIndex: 0,
+		toolRegistry:      registry,
 	}
 
 	return chatModel
@@ -172,8 +175,38 @@ func (model *ChatModel) startLLMStream() tea.Cmd {
 
 	model.responseCh = make(chan tea.Msg)
 
+	tools := model.toolRegistry.Definitions()
+
 	go func() {
 		ch := model.responseCh
+
+		if len(tools) > 0 {
+			for {
+				toolResp, err := llm.Chat(model.ctx, model.url, model.model, model.messages, tools)
+				if err != nil {
+					ch <- LLMErrorMsg{Err: err}
+					return
+				}
+
+				if len(toolResp.ToolCalls) == 0 {
+					break
+				}
+
+				model.messages = append(model.messages, toolResp)
+
+				for _, toolCall := range toolResp.ToolCalls {
+					model.logger.Debug("executing tool", "name", toolCall.Function.Name)
+
+					toolResult, err := model.toolRegistry.Execute(model.ctx, toolCall.Function.Name, toolCall.Function.Arguments)
+					if err != nil {
+						model.logger.Error("tool execution failed", "name", toolCall.Function.Name, "error", err)
+						toolResult = fmt.Sprintf("error: %s", err.Error())
+					}
+
+					model.messages = append(model.messages, llm.ChatMessage{Role: llm.RoleTool, Content: toolResult})
+				}
+			}
+		}
 
 		_, err := llm.StreamChat(
 			model.ctx,

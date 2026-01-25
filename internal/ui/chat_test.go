@@ -8,12 +8,14 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"github.com/charmbracelet/log"
 	"github.com/theantichris/ghost/v3/internal/llm"
+	"github.com/theantichris/ghost/v3/internal/tool"
 )
 
 func newTestModel() ChatModel {
 	logger := log.New(io.Discard)
+	registry := tool.NewRegistry()
 
-	return NewChatModel(context.Background(), "http://localhost:11434/api", "test-model", "test system", logger)
+	return NewChatModel(context.Background(), "http://localhost:11434/api", "test-model", "test system", registry, logger)
 }
 
 func TestChatModel_ModeTransitions(t *testing.T) {

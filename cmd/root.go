@@ -127,7 +127,6 @@ func run(cmd *cobra.Command, args []string) error {
 
 		if len(tools) > 0 {
 			for {
-
 				resp, err := llm.Chat(cmd.Context(), url, model, messages, tools)
 				if err != nil {
 					streamProgram.Send(ui.StreamErrorMsg{Err: err})
@@ -152,7 +151,6 @@ func run(cmd *cobra.Command, args []string) error {
 					messages = append(messages, llm.ChatMessage{Role: llm.RoleTool, Content: result})
 				}
 			}
-
 		}
 
 		if _, err = llm.StreamChat(cmd.Context(), url, model, messages, nil, func(chunk string) {
