@@ -103,6 +103,8 @@ ghost chat --model llama3
 | `Ctrl+u`       | Scroll up half page                       |
 | `gg`           | Go to top                                 |
 | `G`            | Go to bottom                              |
+| `up`           | Go back in input history                  |
+| `down`         | Go forward in input history               |
 | `:q`           | Disconnect from Ghost                     |
 
 ## System Configuration
