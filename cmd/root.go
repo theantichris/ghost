@@ -93,17 +93,7 @@ func run(cmd *cobra.Command, args []string) error {
 
 	messages := initMessages(systemPrompt, userPrompt, format)
 
-	registry := tool.NewRegistry()
-
-	if tavilyAPIKey := viper.GetString("search.api-key"); tavilyAPIKey != "" {
-		maxResults := viper.GetInt("search.max-results")
-		if maxResults == 0 {
-			maxResults = 5
-		}
-
-		registry.Register(tool.NewSearch(tavilyAPIKey, maxResults))
-		logger.Debug("tool registered", "name", "web_search")
-	}
+	registry := registerTools(logger)
 
 	pipedInput, err := getPipedInput(os.Stdin, logger)
 	if err != nil {
@@ -291,4 +281,21 @@ func encodeImage(image string) (string, error) {
 	encodedImage := base64.StdEncoding.EncodeToString(imageBytes)
 
 	return encodedImage, nil
+}
+
+// registerTools creates and returns a new tool.Registry after registering tools.
+func registerTools(logger *log.Logger) tool.Registry {
+	registry := tool.NewRegistry()
+
+	if tavilyAPIKey := viper.GetString("search.api-key"); tavilyAPIKey != "" {
+		maxResults := viper.GetInt("search.max-results")
+		if maxResults == 0 {
+			maxResults = 5
+		}
+
+		registry.Register(tool.NewSearch(tavilyAPIKey, maxResults))
+		logger.Debug("tool registered", "name", "web_search")
+	}
+
+	return registry
 }
