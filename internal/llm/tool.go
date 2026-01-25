@@ -1,6 +1,8 @@
 package llm
 
-import "encoding/json"
+import (
+	"encoding/json"
+)
 
 // Tool defines a tool available to the LLM.
 type Tool struct {

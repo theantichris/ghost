@@ -11,6 +11,7 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
 	"github.com/charmbracelet/log"
+	"github.com/theantichris/ghost/v3/internal/agent"
 	"github.com/theantichris/ghost/v3/internal/llm"
 	"github.com/theantichris/ghost/v3/internal/tool"
 )
@@ -181,31 +182,12 @@ func (model *ChatModel) startLLMStream() tea.Cmd {
 		ch := model.responseCh
 
 		if len(tools) > 0 {
-			for {
-				toolResp, err := llm.Chat(model.ctx, model.url, model.model, model.messages, tools)
-				if err != nil {
-					ch <- LLMErrorMsg{Err: err}
-					return
-				}
-
-				if len(toolResp.ToolCalls) == 0 {
-					break
-				}
-
-				model.messages = append(model.messages, toolResp)
-
-				for _, toolCall := range toolResp.ToolCalls {
-					model.logger.Debug("executing tool", "name", toolCall.Function.Name)
-
-					toolResult, err := model.toolRegistry.Execute(model.ctx, toolCall.Function.Name, toolCall.Function.Arguments)
-					if err != nil {
-						model.logger.Error("tool execution failed", "name", toolCall.Function.Name, "error", err)
-						toolResult = fmt.Sprintf("error: %s", err.Error())
-					}
-
-					model.messages = append(model.messages, llm.ChatMessage{Role: llm.RoleTool, Content: toolResult})
-				}
+			messages, err := agent.RunToolLoop(model.ctx, model.toolRegistry, model.url, model.model, model.messages, tools, model.logger)
+			if err != nil {
+				ch <- LLMErrorMsg{Err: err}
 			}
+
+			model.messages = append(model.messages, messages...)
 		}
 
 		_, err := llm.StreamChat(
