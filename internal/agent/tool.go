@@ -11,7 +11,15 @@ import (
 
 // RunToolLoop sends a request to the LLM and executes any tool calls needed.
 // Results are appended to messages and returned.
-func RunToolLoop(ctx context.Context, registry tool.Registry, url, model string, messages []llm.ChatMessage, tools []llm.Tool, logger *log.Logger) ([]llm.ChatMessage, error) {
+// Returns early if no tools are registered.
+func RunToolLoop(ctx context.Context, registry tool.Registry, url, model string, messages []llm.ChatMessage, logger *log.Logger) ([]llm.ChatMessage, error) {
+	tools := registry.Definitions()
+	if len(tools) == 0 {
+		logger.Debug("no tools registered, exiting tool loop")
+
+		return messages, nil
+	}
+
 	for {
 		resp, err := llm.Chat(ctx, url, model, messages, tools)
 		if err != nil {

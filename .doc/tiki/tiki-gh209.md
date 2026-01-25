@@ -13,8 +13,8 @@ points: 5
 
 Support web search in the chat TUI.
 
-- [ ] Add web search
-- [ ] logging
+- [x] Add web search
+- [x] logging
 - [ ] tests
 - [ ] documentation
 

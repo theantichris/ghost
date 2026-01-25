@@ -124,14 +124,10 @@ func run(cmd *cobra.Command, args []string) error {
 
 		logger.Info("establishing neural link", "model", model, "url", url, "format", format)
 
-		tools := registry.Definitions()
-
-		if len(tools) > 0 {
-			messages, err = agent.RunToolLoop(cmd.Context(), registry, url, model, messages, tools, logger)
-			if err != nil {
-				streamProgram.Send(ui.StreamErrorMsg{Err: err})
-				return
-			}
+		messages, err = agent.RunToolLoop(cmd.Context(), registry, url, model, messages, logger)
+		if err != nil {
+			streamProgram.Send(ui.StreamErrorMsg{Err: err})
+			return
 		}
 
 		if _, err = llm.StreamChat(cmd.Context(), url, model, messages, nil, func(chunk string) {

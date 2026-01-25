@@ -176,21 +176,17 @@ func (model *ChatModel) startLLMStream() tea.Cmd {
 
 	model.responseCh = make(chan tea.Msg)
 
-	tools := model.toolRegistry.Definitions()
-
 	go func() {
 		ch := model.responseCh
 
-		if len(tools) > 0 {
-			messages, err := agent.RunToolLoop(model.ctx, model.toolRegistry, model.url, model.model, model.messages, tools, model.logger)
-			if err != nil {
-				ch <- LLMErrorMsg{Err: err}
-			}
-
-			model.messages = append(model.messages, messages...)
+		messages, err := agent.RunToolLoop(model.ctx, model.toolRegistry, model.url, model.model, model.messages, model.logger)
+		if err != nil {
+			ch <- LLMErrorMsg{Err: err}
 		}
 
-		_, err := llm.StreamChat(
+		model.messages = append(model.messages, messages...)
+
+		_, err = llm.StreamChat(
 			model.ctx,
 			model.url,
 			model.model,
