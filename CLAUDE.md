@@ -90,3 +90,13 @@ Conventional commits format (`feat:`, `fix:`, `refactor:`, `test:`, `docs:`)
 - **CLI-first**: Prioritize terminal experience with proper TTY detection
 - **Teach, don't implement**: When helping users, explain patterns and provide
  code examples rather than immediately editing files
+
+## Documentation
+
+### VHS Tape Files (GIF Demos)
+
+- Located in `documentation/` directory
+- Standard settings: Fish shell, 14pt font, 1200x600 dimensions
+- Use `ghost` command (not `go run .`) in demos for cleaner output
+- Key timing: 500ms between user actions, 12-20s for LLM response streaming
+- Generate GIFs with `vhs <filename>.tape` from the documentation directory
