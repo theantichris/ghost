@@ -4,7 +4,7 @@ title: Image analysis in chat
 type: story
 status: todo
 priority: 3
-tags: [enhancement]
+tags: [enhancement, epic23-tui]
 ---
 
 ## Description

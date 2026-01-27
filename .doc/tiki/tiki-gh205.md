@@ -4,7 +4,7 @@ title: Refactor root command to use channel-based streaming pattern
 type: story
 status: todo
 priority: 3
-tags: [enhancement]
+tags: [enhancement, epic23-tui]
 ---
 
 ## Description

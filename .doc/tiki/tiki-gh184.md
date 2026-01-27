@@ -5,6 +5,7 @@ type: story
 status: done
 tags:
     - enhancement
+    - epic23-tui
 assignee: Christopher Lamm
 priority: 3
 points: 5

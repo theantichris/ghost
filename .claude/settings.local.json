@@ -21,7 +21,11 @@
       "Bash(git remote:*)",
       "WebFetch(domain:raw.githubusercontent.com)",
       "Bash(gh issue list:*)",
-      "WebFetch(domain:api.github.com)"
+      "WebFetch(domain:api.github.com)",
+      "mcp__github__get_file_contents",
+      "mcp__github__search_code",
+      "Bash(find:*)",
+      "Bash(xargs cat:*)"
     ]
   },
   "outputStyle": "Learning",
