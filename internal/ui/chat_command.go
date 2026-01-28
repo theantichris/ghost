@@ -1,15 +1,29 @@
 package ui
 
-import tea "charm.land/bubbletea/v2"
+import (
+	"strings"
+
+	tea "charm.land/bubbletea/v2"
+)
 
 func (model ChatModel) handleCommandMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch msg.Key().Code {
 	case tea.KeyEnter:
-		switch model.cmdBuffer {
+		parts := strings.SplitN(model.cmdBuffer, " ", 2)
+		cmd := parts[0]
+		var arg string
+		if len(parts) > 1 {
+			arg = parts[1]
+		}
+
+		switch cmd {
 		case "q":
 			model.logger.Info("disconnecting from ghost")
 
 			return model, tea.Quit
+
+		case "r":
+			_ = arg
 		}
 
 		// Invalid command, return to normal mode
