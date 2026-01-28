@@ -28,7 +28,7 @@ func ReadFileForContext(path string) (string, error) {
 	}
 
 	if info.Size() > maxFileSize {
-		return "", fmt.Errorf("%w: %w (%d bytes)", ErrFileSize, err, info.Size())
+		return "", fmt.Errorf("%w (%d bytes)", ErrFileSize, info.Size())
 	}
 
 	content, err := os.ReadFile(path)
