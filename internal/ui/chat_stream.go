@@ -6,6 +6,7 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"github.com/theantichris/ghost/v3/internal/agent"
 	"github.com/theantichris/ghost/v3/internal/llm"
+	"github.com/theantichris/ghost/v3/theme"
 )
 
 // listenForChunk returns a command that waits for the next chunk from the channel.
@@ -88,7 +89,7 @@ func (model ChatModel) handleLLMDoneMsg() (tea.Model, tea.Cmd) {
 func (model ChatModel) handleLLMErrorMsg(msg LLMErrorMsg) (tea.Model, tea.Cmd) {
 	model.logger.Error("neural link disrupted", "error", msg.Err)
 
-	model.chatHistory += fmt.Sprintf("\n[󱙝 error: %v]\n", msg.Err)
+	model.chatHistory += fmt.Sprintf("\n[%s error: %v]\n", theme.GlyphInfo, msg.Err)
 	model.viewport.SetContent(model.renderHistory())
 
 	return model, nil

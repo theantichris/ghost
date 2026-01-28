@@ -2,10 +2,12 @@ package ui
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 
 	tea "charm.land/bubbletea/v2"
 	"github.com/theantichris/ghost/v3/internal/llm"
+	"github.com/theantichris/ghost/v3/theme"
 )
 
 func TestChatModel_HandleLLMMessages(t *testing.T) {
@@ -48,7 +50,7 @@ func TestChatModel_HandleLLMMessages(t *testing.T) {
 			currentResponse:     "",
 			chatHistory:         "",
 			msg:                 LLMErrorMsg{Err: errors.New("test error")},
-			wantChatHistory:     "\n[󱙝 error: test error]\n",
+			wantChatHistory:     fmt.Sprintf("\n[%s error: test error]\n", theme.GlyphInfo),
 			wantCurrentResponse: "",
 			wantMessageCount:    1,
 			wantCmd:             false,

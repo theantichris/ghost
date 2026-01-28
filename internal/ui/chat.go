@@ -11,6 +11,7 @@ import (
 	"github.com/charmbracelet/log"
 	"github.com/theantichris/ghost/v3/internal/llm"
 	"github.com/theantichris/ghost/v3/internal/tool"
+	"github.com/theantichris/ghost/v3/theme"
 )
 
 // Mode represents the different modes the TUI can be in.
@@ -134,7 +135,7 @@ func (model ChatModel) View() tea.View {
 	var view tea.View
 
 	if !model.ready {
-		view = tea.NewView("󱙝 initializing...")
+		view = tea.NewView(theme.GlyphInfo + " initializing...")
 		view.AltScreen = true
 
 		return view
