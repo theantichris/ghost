@@ -33,7 +33,7 @@ func ReadFileForContext(path string) (string, error) {
 
 	content, err := os.ReadFile(path)
 	if err != nil {
-		return "", fmt.Errorf("%w, %w", ErrReadFile, err)
+		return "", fmt.Errorf("%w: %w", ErrReadFile, err)
 	}
 
 	return fmt.Sprintf("[FILE: %s]\n%s", path, string(content)), nil
