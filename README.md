@@ -90,22 +90,23 @@ ghost chat --model llama3
 
 **Vim-style keybindings:**
 
-| Key            | Action                                    |
-|----------------|-------------------------------------------|
-| `i`            | Enter insert mode (start typing)          |
-| `Esc`          | Return to normal mode                     |
-| `Enter`        | Send message (in insert mode)             |
-| `Shift+Enter`  | Insert newline (requires terminal support)|
-| `Ctrl+j`       | Insert newline                            |
-| `j`            | Scroll down one line                      |
-| `k`            | Scroll up one line                        |
-| `Ctrl+d`       | Scroll down half page                     |
-| `Ctrl+u`       | Scroll up half page                       |
-| `gg`           | Go to top                                 |
-| `G`            | Go to bottom                              |
-| `up`           | Go back in input history                  |
-| `down`         | Go forward in input history               |
-| `:q`           | Disconnect from Ghost                     |
+| Key            | Action                                                       |
+|----------------|--------------------------------------------------------------|
+| `i`            | Enter insert mode (start typing)                             |
+| `Esc`          | Return to normal mode                                        |
+| `Enter`        | Send message (in insert mode)                                |
+| `Shift+Enter`  | Insert newline (requires terminal support)                   |
+| `Ctrl+j`       | Insert newline                                               |
+| `j`            | Scroll down one line                                         |
+| `k`            | Scroll up one line                                           |
+| `Ctrl+d`       | Scroll down half page                                        |
+| `Ctrl+u`       | Scroll up half page                                          |
+| `gg`           | Go to top                                                    |
+| `G`            | Go to bottom                                                 |
+| `up`           | Go back in input history                                     |
+| `down`         | Go forward in input history                                  |
+| `:r <path>`    | Read file into conversation context, requires absolute path  |
+| `:q`           | Disconnect from Ghost                                        |
 
 ## System Configuration
 

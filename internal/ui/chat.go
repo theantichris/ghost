@@ -2,8 +2,6 @@ package ui
 
 import (
 	"context"
-	"fmt"
-	"strings"
 
 	"charm.land/bubbles/v2/textarea"
 	"charm.land/bubbles/v2/textinput"
@@ -11,9 +9,9 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
 	"github.com/charmbracelet/log"
-	"github.com/theantichris/ghost/v3/internal/agent"
 	"github.com/theantichris/ghost/v3/internal/llm"
 	"github.com/theantichris/ghost/v3/internal/tool"
+	"github.com/theantichris/ghost/v3/theme"
 )
 
 // Mode represents the different modes the TUI can be in.
@@ -137,7 +135,7 @@ func (model ChatModel) View() tea.View {
 	var view tea.View
 
 	if !model.ready {
-		view = tea.NewView("󱙝 initializing...")
+		view = tea.NewView(theme.GlyphInfo + " initializing...")
 		view.AltScreen = true
 
 		return view
@@ -157,59 +155,6 @@ func (model ChatModel) View() tea.View {
 	return view
 }
 
-// listenForChunk returns a command that waits for the next chunk from the channel.
-func listenForChunk(ch <-chan tea.Msg) tea.Cmd {
-	return func() tea.Msg {
-		msg, ok := <-ch
-		if !ok {
-			return LLMDoneMsg{}
-		}
-
-		return msg
-	}
-}
-
-// startLLMStream starts the LLM call in a go routine.
-// It returns the first listenForChunk command to start receiving.
-func (model *ChatModel) startLLMStream() tea.Cmd {
-	model.logger.Debug("transmitting to neural network", "model", model.model, "messages", len(model.messages))
-
-	model.responseCh = make(chan tea.Msg)
-
-	go func() {
-		ch := model.responseCh
-
-		messages, err := agent.RunToolLoop(model.ctx, model.toolRegistry, model.url, model.model, model.messages, model.logger)
-		if err != nil {
-			ch <- LLMErrorMsg{Err: err}
-			close(ch)
-
-			return
-		}
-
-		model.messages = messages
-
-		_, err = llm.StreamChat(
-			model.ctx,
-			model.url,
-			model.model,
-			model.messages,
-			nil,
-			func(chunk string) {
-				ch <- LLMResponseMsg(chunk)
-			},
-		)
-
-		if err != nil {
-			ch <- LLMErrorMsg{Err: err}
-		}
-
-		close(ch)
-	}()
-
-	return listenForChunk(model.responseCh)
-}
-
 func (model ChatModel) handleWindowSize(msg tea.WindowSizeMsg) (tea.Model, tea.Cmd) {
 	model.width = msg.Width
 	model.height = msg.Height
@@ -224,175 +169,6 @@ func (model ChatModel) handleWindowSize(msg tea.WindowSizeMsg) (tea.Model, tea.C
 		model.viewport.SetWidth(msg.Width)
 		model.viewport.SetHeight(msg.Height - inputHeight)
 	}
-
-	return model, nil
-}
-
-func (model ChatModel) handleNormalMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
-	wasAwaitingG := model.awaitingG
-	model.awaitingG = false
-
-	switch msg.String() {
-	case ":":
-		model.mode = ModeCommand
-		model.cmdBuffer = ""
-
-	case "i":
-		model.mode = ModeInsert
-		model.input.Focus()
-
-		return model, textinput.Blink
-
-	case "j":
-		model.viewport.ScrollDown(1)
-
-	case "k":
-		model.viewport.ScrollUp(1)
-
-	case "ctrl+d":
-		model.viewport.HalfPageDown()
-
-	case "ctrl+u":
-		model.viewport.HalfPageUp()
-
-	case "g":
-		if wasAwaitingG {
-			model.viewport.GotoTop()
-		} else {
-			model.awaitingG = true
-		}
-
-	case "G":
-		model.viewport.GotoBottom()
-	}
-
-	return model, nil
-}
-
-func (model ChatModel) handleCommandMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
-	switch msg.Key().Code {
-	case tea.KeyEnter:
-		if model.cmdBuffer == "q" {
-			model.logger.Info("disconnecting from ghost")
-
-			return model, tea.Quit
-		}
-
-		// Invalid command, return to normal mode
-		model.mode = ModeNormal
-		model.cmdBuffer = ""
-
-		return model, nil
-
-	case tea.KeyEscape:
-		model.mode = ModeNormal
-		model.cmdBuffer = ""
-
-		return model, nil
-
-	default:
-		model.cmdBuffer += msg.Key().Text
-
-		return model, nil
-	}
-}
-
-func (model ChatModel) handleInsertMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
-	var cmd tea.Cmd
-
-	switch msg.String() {
-	case "esc":
-		model.mode = ModeNormal
-		model.input.Blur()
-
-	case "shift+enter", "ctrl+j":
-		value := model.input.Value() + "\n"
-		model.input.SetValue(value)
-
-		return model, nil
-
-	case "up":
-		if len(model.inputHistory) == 0 {
-			return model, nil
-		}
-
-		model.inputHistoryIndex--
-		if model.inputHistoryIndex < 0 {
-			model.inputHistoryIndex = 0
-		}
-
-		model.input.SetValue(model.inputHistory[model.inputHistoryIndex])
-
-	case "down":
-		if len(model.inputHistory) == 0 {
-			return model, nil
-		}
-
-		model.inputHistoryIndex++
-		if model.inputHistoryIndex >= len(model.inputHistory) {
-			model.inputHistoryIndex = len(model.inputHistory)
-			model.input.SetValue("")
-
-			return model, nil
-		}
-
-		model.input.SetValue(model.inputHistory[model.inputHistoryIndex])
-
-	case "enter":
-		value := model.input.Value()
-
-		if strings.TrimSpace(value) == "" {
-			return model, nil
-		}
-
-		model.inputHistory = append(model.inputHistory, value)
-		model.inputHistoryIndex = len(model.inputHistory)
-
-		model.input.SetValue("")
-		model.messages = append(model.messages, llm.ChatMessage{Role: llm.RoleUser, Content: value})
-		model.chatHistory += fmt.Sprintf("You: %s\n\nghost: ", value)
-		model.viewport.SetContent(model.renderHistory())
-
-		return model, model.startLLMStream()
-
-	default:
-		model.input, cmd = model.input.Update(msg)
-
-		return model, cmd
-	}
-
-	return model, nil
-}
-
-func (model ChatModel) handleLLMResponseMsg(msg LLMResponseMsg) (tea.Model, tea.Cmd) {
-	model.chatHistory += string(msg)
-	model.currentResponse += string(msg)
-	model.viewport.SetContent(model.renderHistory())
-	model.viewport.GotoBottom()
-
-	return model, listenForChunk(model.responseCh)
-}
-
-func (model ChatModel) handleLLMDoneMsg() (tea.Model, tea.Cmd) {
-	model.logger.Debug("transmission complete", "response_length", len(model.currentResponse))
-
-	model.chatHistory += "\n\n"
-	model.viewport.SetContent(model.renderHistory())
-	model.messages = append(model.messages, llm.ChatMessage{
-		Role:    llm.RoleAssistant,
-		Content: model.currentResponse,
-	})
-
-	model.currentResponse = ""
-
-	return model, nil
-}
-
-func (model ChatModel) handleLLMErrorMsg(msg LLMErrorMsg) (tea.Model, tea.Cmd) {
-	model.logger.Error("neural link disrupted", "error", msg.Err)
-
-	model.chatHistory += fmt.Sprintf("\n[󱙝 error: %v]\n", msg.Err)
-	model.viewport.SetContent(model.renderHistory())
 
 	return model, nil
 }

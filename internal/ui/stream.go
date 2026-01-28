@@ -111,7 +111,7 @@ func (model StreamModel) View() tea.View {
 		return tea.NewView(content)
 	}
 
-	processingMessage := theme.FgAccent0.Render("󱙝 processing") + model.spinner.View()
+	processingMessage := theme.FgAccent0.Render(theme.GlyphInfo+" processing") + model.spinner.View()
 
 	return tea.NewView(processingMessage)
 }
