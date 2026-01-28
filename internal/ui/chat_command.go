@@ -1,9 +1,12 @@
 package ui
 
 import (
+	"fmt"
 	"strings"
 
 	tea "charm.land/bubbletea/v2"
+	"github.com/theantichris/ghost/v3/internal/agent"
+	"github.com/theantichris/ghost/v3/internal/llm"
 )
 
 func (model ChatModel) handleCommandMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
@@ -13,7 +16,7 @@ func (model ChatModel) handleCommandMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		cmd := parts[0]
 		var arg string
 		if len(parts) > 1 {
-			arg = parts[1]
+			arg = strings.TrimSpace(parts[1])
 		}
 
 		switch cmd {
@@ -23,10 +26,33 @@ func (model ChatModel) handleCommandMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			return model, tea.Quit
 
 		case "r":
-			_ = arg
+			if arg == "" {
+				model.chatHistory += "\n[󱙜 error: no file path provided]\n"
+				model.viewport.SetContent(model.renderHistory())
+				model.mode = ModeNormal
+				model.cmdBuffer = ""
+
+				return model, nil
+			}
+
+			content, err := agent.ReadFileForContext(arg)
+			if err != nil {
+				model.logger.Error("file read failed", "path", arg, "error", err)
+				model.chatHistory += fmt.Sprintf("\n[󱙜 error: %s]\n", err.Error())
+				model.viewport.SetContent(model.renderHistory())
+				model.mode = ModeNormal
+				model.cmdBuffer = ""
+
+				return model, nil
+			}
+
+			model.messages = append(model.messages, llm.ChatMessage{Role: llm.RoleUser, Content: content})
+			model.logger.Info("file loaded into context", "path", arg)
+
+			model.chatHistory += fmt.Sprintf("\n[󱙝 loaded: %s]\n", arg)
+			model.viewport.SetContent(model.renderHistory())
 		}
 
-		// Invalid command, return to normal mode
 		model.mode = ModeNormal
 		model.cmdBuffer = ""
 
