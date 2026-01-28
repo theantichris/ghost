@@ -24,7 +24,7 @@ func ReadFileForContext(path string) (string, error) {
 	}
 
 	if info.IsDir() {
-		return "", fmt.Errorf("%w: %w", ErrIsDir, err)
+		return "", ErrIsDir
 	}
 
 	if info.Size() > maxFileSize {
