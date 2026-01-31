@@ -113,7 +113,7 @@ func run(cmd *cobra.Command, args []string) error {
 		messages = append(messages, pipedMessage)
 	}
 
-	streamModel := ui.NewStreamModel(format) // TODO: do I need to pass format here?
+	streamModel := ui.NewStreamModel(format)
 
 	var programOpts []tea.ProgramOption
 	if ttyIn, ttyOut, err := tea.OpenTTY(); err == nil {
