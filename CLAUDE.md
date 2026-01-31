@@ -25,9 +25,16 @@ Ghost is a command-line AI assistant written in Go and powered by Ollama, design
 3. **LLM Client** (`internal/llm/ollama.go`): Communicates with Ollama API
    - `StreamChat()`: Streaming chat with callback for each chunk
    - `AnalyzeImages()`: Non-streaming vision model requests
-4. **UI Layer** (`internal/ui/stream.go`): Bubbletea model for interactive streaming
- display
+4. **UI Layer** (`internal/ui/`): Bubbletea models for interactive display
+   - `stream.go`: Streaming model for single-shot queries
+   - `chat.go`: Core ChatModel struct, types, Init, Update, View
+   - `chat_normal.go`: Normal mode key handling
+   - `chat_command.go`: Command mode (`:` commands like `:q`, `:r`)
+   - `chat_insert.go`: Insert mode text input handling
+   - `chat_stream.go`: LLM streaming and response handling
 5. **Theme System** (`theme/`): Handles cyberpunk-themed rendering and formatting
+   - UI glyphs in `theme/glyph.go`: Use `theme.GlyphInfo` (󱙝) and `theme.GlyphError`
+    (󱙜)
 
 ### Configuration System
 
@@ -75,7 +82,11 @@ All packages define custom error types (e.g., `ErrImageAnalysis`, `ErrModelNotFo
 
 **Testing**:
 
+- One test function per code function: Test function name matches the function
+being tested
+  (e.g., `TestChatModel_HandleCommandMode` tests `handleCommandMode`)
 - Use table-driven tests pattern (see `cmd/root_test.go`, `internal/llm/ollama_test.go`)
+- Test file naming mirrors source files (e.g., `chat_command_test.go` for `chat_command.go`)
 - Use `errors.Is()` for error comparison
 - Use `t.Fatalf()` for unexpected errors, `t.Errorf()` for assertions
 
