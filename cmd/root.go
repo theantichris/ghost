@@ -114,7 +114,15 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 
 	streamModel := ui.NewStreamModel(format) // TODO: do I need to pass format here?
-	streamProgram := tea.NewProgram(streamModel)
+
+	var programOpts []tea.ProgramOption
+	if ttyIn, ttyOut, err := tea.OpenTTY(); err == nil {
+		programOpts = append(programOpts, tea.WithInput(ttyIn), tea.WithOutput(ttyOut))
+		defer func() { _ = ttyIn.Close() }()
+		defer func() { _ = ttyOut.Close() }()
+	}
+
+	streamProgram := tea.NewProgram(streamModel, programOpts...)
 
 	go func() {
 		imageAnalysis, err := agent.AnalyseImages(cmd.Context(), url, visionModel, images, logger)
