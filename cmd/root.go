@@ -95,7 +95,7 @@ func run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	messages := initMessages(agent.SystemPrompt, userPrompt, format)
+	messages := agent.NewMessageHistory(agent.SystemPrompt, userPrompt, format)
 
 	registry := registerTools(logger)
 
@@ -194,26 +194,6 @@ func getPipedInput(file *os.File, logger *log.Logger) (string, error) {
 	}
 
 	return input, nil
-}
-
-// initMessages creates and returns an initial message history.
-func initMessages(system, prompt, format string) []llm.ChatMessage {
-	messages := []llm.ChatMessage{
-		{Role: llm.RoleSystem, Content: system},
-	}
-
-	if format != "" {
-		switch format {
-		case "json":
-			messages = append(messages, llm.ChatMessage{Role: llm.RoleSystem, Content: agent.JSONPrompt})
-		case "markdown":
-			messages = append(messages, llm.ChatMessage{Role: llm.RoleSystem, Content: agent.MarkdownPrompt})
-		}
-	}
-
-	messages = append(messages, llm.ChatMessage{Role: llm.RoleUser, Content: prompt})
-
-	return messages
 }
 
 // registerTools creates and returns a new tool.Registry after registering tools.

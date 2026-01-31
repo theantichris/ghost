@@ -30,7 +30,7 @@ func AnalyseImages(ctx context.Context, url, visionModel string, images []string
 		}
 
 		prompt := fmt.Sprintf("Filename: %s\n\n%s", filename, visionPrompt)
-		messages := initMessages(visionSystemPrompt, prompt, "markdown")
+		messages := NewMessageHistory(visionSystemPrompt, prompt, "markdown")
 		messages[len(messages)-1].Images = []string{encodedImage} // Attach images to user prompt message.
 
 		logger.Info("initializing visual recon", "model", visionModel, "url", url, "filename", filename, "format", "markdown")
@@ -60,9 +60,8 @@ func encodeImage(image string) (string, error) {
 	return encodedImage, nil
 }
 
-// initMessages creates and returns an initial message history.
-// TODO: duplicated with cmd/root.go
-func initMessages(system, prompt, format string) []llm.ChatMessage {
+// NewMessageHistory creates and returns an initial message history.
+func NewMessageHistory(system, prompt, format string) []llm.ChatMessage {
 	messages := []llm.ChatMessage{
 		{Role: llm.RoleSystem, Content: system},
 	}

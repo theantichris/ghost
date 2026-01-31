@@ -146,7 +146,7 @@ func TestInitMessages(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := initMessages(tt.system, tt.prompt, tt.format)
+			got := NewMessageHistory(tt.system, tt.prompt, tt.format)
 
 			if diff := cmp.Diff(tt.want, got); diff != "" {
 				t.Errorf("initMessages() mismatch (-want +got):\n%s", diff)
