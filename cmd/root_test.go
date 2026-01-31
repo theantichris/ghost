@@ -8,6 +8,7 @@ import (
 
 	"github.com/charmbracelet/log"
 	"github.com/google/go-cmp/cmp"
+	"github.com/theantichris/ghost/v3/internal/agent"
 	"github.com/theantichris/ghost/v3/internal/llm"
 )
 
@@ -35,7 +36,7 @@ func TestInitMessages(t *testing.T) {
 			format: "json",
 			want: []llm.ChatMessage{
 				{Role: llm.RoleSystem, Content: "system prompt"},
-				{Role: llm.RoleSystem, Content: jsonPrompt},
+				{Role: llm.RoleSystem, Content: agent.JSONPrompt},
 				{Role: llm.RoleUser, Content: "user prompt"},
 			},
 		},
@@ -46,8 +47,7 @@ func TestInitMessages(t *testing.T) {
 			format: "markdown",
 			want: []llm.ChatMessage{
 				{Role: llm.RoleSystem, Content: "system prompt"},
-				{Role: llm.RoleSystem, Content: markdownPrompt},
-				{Role: llm.RoleUser, Content: "user prompt"},
+				{Role: llm.RoleSystem, Content: agent.MarkdownPrompt}, {Role: llm.RoleUser, Content: "user prompt"},
 			},
 		},
 	}

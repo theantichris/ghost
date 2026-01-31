@@ -117,7 +117,7 @@ func TestInitMessages(t *testing.T) {
 			format: "json",
 			want: []llm.ChatMessage{
 				{Role: llm.RoleSystem, Content: "system prompt"},
-				{Role: llm.RoleSystem, Content: jsonPrompt},
+				{Role: llm.RoleSystem, Content: JSONPrompt},
 				{Role: llm.RoleUser, Content: "user prompt"},
 			},
 		},
@@ -128,7 +128,7 @@ func TestInitMessages(t *testing.T) {
 			format: "markdown",
 			want: []llm.ChatMessage{
 				{Role: llm.RoleSystem, Content: "system prompt"},
-				{Role: llm.RoleSystem, Content: markdownPrompt},
+				{Role: llm.RoleSystem, Content: MarkdownPrompt},
 				{Role: llm.RoleUser, Content: "user prompt"},
 			},
 		},

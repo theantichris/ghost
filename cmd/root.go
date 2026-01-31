@@ -95,7 +95,7 @@ func run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	messages := initMessages(systemPrompt, userPrompt, format)
+	messages := initMessages(agent.SystemPrompt, userPrompt, format)
 
 	registry := registerTools(logger)
 
@@ -197,9 +197,9 @@ func initMessages(system, prompt, format string) []llm.ChatMessage {
 	if format != "" {
 		switch format {
 		case "json":
-			messages = append(messages, llm.ChatMessage{Role: llm.RoleSystem, Content: jsonPrompt})
+			messages = append(messages, llm.ChatMessage{Role: llm.RoleSystem, Content: agent.JSONPrompt})
 		case "markdown":
-			messages = append(messages, llm.ChatMessage{Role: llm.RoleSystem, Content: markdownPrompt})
+			messages = append(messages, llm.ChatMessage{Role: llm.RoleSystem, Content: agent.MarkdownPrompt})
 		}
 	}
 
