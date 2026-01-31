@@ -113,7 +113,7 @@ func run(cmd *cobra.Command, args []string) error {
 		messages = append(messages, pipedMessage)
 	}
 
-	streamModel := ui.NewStreamModel(format)
+	streamModel := ui.NewStreamModel(format) // TODO: do I need to pass format here?
 	streamProgram := tea.NewProgram(streamModel)
 
 	go func() {
