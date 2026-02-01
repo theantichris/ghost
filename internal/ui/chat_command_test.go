@@ -118,6 +118,24 @@ func TestChatModel_HandleCommandMode(t *testing.T) {
 			wantChatHistoryMatch: fmt.Sprintf("[%s error:", theme.GlyphError),
 			wantMessageCount:     1,
 		},
+		{
+			name:                 "i without path shows error",
+			cmdBuffer:            "i",
+			msg:                  tea.KeyPressMsg{Code: tea.KeyEnter},
+			wantMode:             ModeNormal,
+			wantCmdBuffer:        "",
+			wantChatHistoryMatch: fmt.Sprintf("[%s error: no image path provided]", theme.GlyphError),
+			wantMessageCount:     1,
+		},
+		{
+			name:                 "i with whitespace-only path shows error",
+			cmdBuffer:            "i   ",
+			msg:                  tea.KeyPressMsg{Code: tea.KeyEnter},
+			wantMode:             ModeNormal,
+			wantCmdBuffer:        "",
+			wantChatHistoryMatch: fmt.Sprintf("[%s error: no image path provided]", theme.GlyphError),
+			wantMessageCount:     1,
+		},
 	}
 
 	for _, tt := range tests {
