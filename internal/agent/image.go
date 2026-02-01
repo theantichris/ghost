@@ -19,7 +19,7 @@ var ErrImageAnalysis = errors.New("visual recon failed")
 func AnalyseImages(ctx context.Context, url, visionModel string, images []string, logger *log.Logger) ([]llm.ChatMessage, error) {
 	var imageAnalysis []llm.ChatMessage
 
-	// Loop through each image and send it to the LLM for analysis, attact response to returned messages.
+	// Loop through each image and send it to the LLM for analysis, attach response to returned messages.
 	for _, image := range images {
 		filename := filepath.Base(image)
 		logger.Debug("digitizing visual data", "filename", filename)
