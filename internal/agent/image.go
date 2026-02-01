@@ -37,6 +37,7 @@ func AnalyseImages(ctx context.Context, url, visionModel string, images []string
 
 		response, err := llm.AnalyzeImages(ctx, url, visionModel, messages)
 		if err != nil {
+			logger.Error("visual recon failed", "filename", filename, "model", visionModel, "error", err)
 			return []llm.ChatMessage{}, err
 		}
 
