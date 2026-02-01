@@ -65,7 +65,30 @@ func AnalyzeImages(ctx context.Context, host, model string, messages []ChatMessa
 	err := requests.
 		URL(host + "/chat").
 		BodyJSON(&request).
-		ToJSON(&chatResponse).
+		AddValidator(nil).
+		Handle(func(response *http.Response) error {
+			defer func() {
+				_ = response.Body.Close()
+			}()
+
+			if err := json.NewDecoder(response.Body).Decode(&chatResponse); err != nil {
+				return fmt.Errorf("%w: %w", ErrDecodeChunk, err)
+			}
+
+			if response.StatusCode != http.StatusOK {
+				if chatResponse.Error != "" {
+					return fmt.Errorf("status %d: %s", response.StatusCode, chatResponse.Error)
+				}
+
+				return fmt.Errorf("status %d", response.StatusCode)
+			}
+
+			if chatResponse.Error != "" {
+				return fmt.Errorf("%s", chatResponse.Error)
+			}
+
+			return nil
+		}).
 		Fetch(ctx)
 
 	if err != nil {
@@ -137,6 +160,11 @@ func StreamChat(ctx context.Context, host, model string, messages []ChatMessage,
 			}()
 
 			if response.StatusCode != http.StatusOK {
+				var errResponse ChatResponse
+				if err := json.NewDecoder(response.Body).Decode(&errResponse); err == nil && errResponse.Error != "" {
+					return fmt.Errorf("status %d: %s", response.StatusCode, errResponse.Error)
+				}
+
 				return fmt.Errorf("status %d", response.StatusCode)
 			}
 
