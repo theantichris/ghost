@@ -51,6 +51,7 @@ type ChatModel struct {
 	cmdBuffer         string
 	url               string
 	model             string
+	visionModel       string
 	responseCh        chan tea.Msg
 	currentResponse   string
 	awaitingG         bool
@@ -60,7 +61,7 @@ type ChatModel struct {
 }
 
 // NewChatModel creates the chat model and initializes the text input.
-func NewChatModel(ctx context.Context, url, model, system string, registry tool.Registry, logger *log.Logger) ChatModel {
+func NewChatModel(ctx context.Context, url, model, visionModel, system string, registry tool.Registry, logger *log.Logger) ChatModel {
 	input := textarea.New()
 	input.ShowLineNumbers = false
 	input.SetHeight(2)
@@ -77,6 +78,7 @@ func NewChatModel(ctx context.Context, url, model, system string, registry tool.
 		chatHistory:       "",
 		url:               url,
 		model:             model,
+		visionModel:       visionModel,
 		inputHistoryIndex: 0,
 		toolRegistry:      registry,
 	}

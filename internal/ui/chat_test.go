@@ -12,5 +12,5 @@ func newTestModel() ChatModel {
 	logger := log.New(io.Discard)
 	registry := tool.NewRegistry()
 
-	return NewChatModel(context.Background(), "http://localhost:11434/api", "test-model", "test system", registry, logger)
+	return NewChatModel(context.Background(), "http://localhost:11434/api", "test-model", "test-vision-model", "test system", registry, logger)
 }

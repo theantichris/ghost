@@ -21,6 +21,9 @@ func (model ChatModel) handleCommandMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		}
 
 		switch cmd {
+		case "i":
+			return model.handleImage(arg)
+
 		case "q":
 			model.logger.Info("disconnecting from ghost")
 
@@ -41,6 +44,39 @@ func (model ChatModel) handleCommandMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	default:
 		model.cmdBuffer += msg.Key().Text
 	}
+
+	return model, nil
+}
+
+func (model ChatModel) handleImage(arg string) (tea.Model, tea.Cmd) {
+	if arg == "" {
+		model.chatHistory += fmt.Sprintf("\n[%s error: no image path provided]\n", theme.GlyphError)
+		model.viewport.SetContent(model.renderHistory())
+		model.mode = ModeNormal
+		model.cmdBuffer = ""
+
+		return model, nil
+	}
+
+	content, err := agent.AnalyseImages(model.ctx, model.url, model.visionModel, []string{arg}, model.logger)
+	if err != nil {
+		model.logger.Error("image read failed", "path", arg, "error", err)
+		model.chatHistory += fmt.Sprintf("\n[%s error: %s]\n", theme.GlyphError, err.Error())
+		model.viewport.SetContent(model.renderHistory())
+		model.mode = ModeNormal
+		model.cmdBuffer = ""
+
+		return model, nil
+	}
+
+	model.messages = append(model.messages, content...)
+	model.logger.Info("image loaded into context", "path", arg)
+
+	model.chatHistory += fmt.Sprintf("\n[%s loaded: %s]\n", theme.GlyphInfo, arg)
+	model.viewport.SetContent(model.renderHistory())
+
+	model.mode = ModeNormal
+	model.cmdBuffer = ""
 
 	return model, nil
 }
