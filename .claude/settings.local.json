@@ -25,7 +25,8 @@
       "mcp__github__get_file_contents",
       "mcp__github__search_code",
       "Bash(find:*)",
-      "Bash(xargs cat:*)"
+      "Bash(xargs cat:*)",
+      "Bash(grep:*)"
     ]
   },
   "outputStyle": "Learning",

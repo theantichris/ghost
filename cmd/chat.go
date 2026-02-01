@@ -5,6 +5,7 @@ import (
 	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/theantichris/ghost/v3/internal/agent"
 	"github.com/theantichris/ghost/v3/internal/ui"
 )
 
@@ -33,11 +34,12 @@ func runChat(cmd *cobra.Command, args []string) error {
 
 	url := viper.GetString("url")
 	model := viper.GetString("model")
+	visionModel := viper.GetString("vision.model")
 	registry := registerTools(logger)
 
 	logger.Info("entering ghost chat", "model", model, "url", url)
 
-	chatModel := ui.NewChatModel(cmd.Context(), url, model, systemPrompt, registry, logger)
+	chatModel := ui.NewChatModel(cmd.Context(), url, model, visionModel, agent.SystemPrompt, registry, logger)
 	program := tea.NewProgram(chatModel)
 
 	_, err := program.Run()

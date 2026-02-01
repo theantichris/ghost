@@ -31,6 +31,8 @@ func (model *ChatModel) startLLMStream() tea.Cmd {
 	go func() {
 		ch := model.responseCh
 
+		// TODO: Analyze images
+
 		messages, err := agent.RunToolLoop(model.ctx, model.toolRegistry, model.url, model.model, model.messages, model.logger)
 		if err != nil {
 			ch <- LLMErrorMsg{Err: err}

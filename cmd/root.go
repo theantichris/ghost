@@ -2,12 +2,10 @@ package cmd
 
 import (
 	"context"
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"strings"
 
 	tea "charm.land/bubbletea/v2"
@@ -37,7 +35,6 @@ Send prompts directly or pipe data through for analysis.`
 var (
 	isTTY = term.IsTerminal(os.Stdout.Fd())
 
-	ErrImageAnalysis = errors.New("visual recon failed")
 	ErrPipedInput    = errors.New("data stream interrupted")
 	ErrStreamDisplay = errors.New("output buffer overrun")
 	ErrRender        = errors.New("rendering matrix collapsed")
@@ -89,10 +86,16 @@ func run(cmd *cobra.Command, args []string) error {
 
 	url := viper.GetString("url")
 	model := viper.GetString("model")
+	visionModel := viper.GetString("vision.model")
 	format := strings.ToLower(viper.GetString("format"))
 	userPrompt := args[0]
 
-	messages := initMessages(systemPrompt, userPrompt, format)
+	images, err := cmd.Flags().GetStringArray("image")
+	if err != nil {
+		return err
+	}
+
+	messages := agent.NewMessageHistory(agent.SystemPrompt, userPrompt, format)
 
 	registry := registerTools(logger)
 
@@ -111,10 +114,18 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 
 	streamModel := ui.NewStreamModel(format)
-	streamProgram := tea.NewProgram(streamModel)
+
+	var programOpts []tea.ProgramOption
+	if ttyIn, ttyOut, err := tea.OpenTTY(); err == nil {
+		programOpts = append(programOpts, tea.WithInput(ttyIn), tea.WithOutput(ttyOut))
+		defer func() { _ = ttyIn.Close() }()
+		defer func() { _ = ttyOut.Close() }()
+	}
+
+	streamProgram := tea.NewProgram(streamModel, programOpts...)
 
 	go func() {
-		imageAnalysis, err := analyzeImages(cmd, url)
+		imageAnalysis, err := agent.AnalyseImages(cmd.Context(), url, visionModel, images, logger)
 		if err != nil {
 			streamProgram.Send(ui.StreamErrorMsg{Err: err})
 			return
@@ -160,47 +171,6 @@ func run(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// analyzeImages sends a request to the model to analyze images and returns a
-// slice of chat messages with the reports.
-func analyzeImages(cmd *cobra.Command, url string) ([]llm.ChatMessage, error) {
-	logger := cmd.Context().Value(loggerKey{}).(*log.Logger)
-
-	visionModel := viper.GetString("vision.model")
-	var imageAnalysis []llm.ChatMessage
-
-	imagePaths, err := cmd.Flags().GetStringArray("image")
-	if err != nil {
-		return []llm.ChatMessage{}, err
-	}
-
-	for _, image := range imagePaths {
-		filename := filepath.Base(image)
-		logger.Debug("digitizing visual data", "filename", filename)
-
-		encodedImage, err := encodeImage(image)
-		if err != nil {
-			return []llm.ChatMessage{}, err
-		}
-
-		prompt := fmt.Sprintf("Filename: %s\n\n%s", filename, visionPrompt)
-		messages := initMessages(visionSystemPrompt, prompt, "markdown")
-		messages[len(messages)-1].Images = []string{encodedImage} // Attach images to prompt message.
-
-		logger.Info("initiating visual recon", "model", visionModel, "url", url, "filename", filename, "format", "markdown")
-
-		response, err := llm.AnalyzeImages(cmd.Context(), url, visionModel, messages)
-		if err != nil {
-			return []llm.ChatMessage{}, err
-		}
-
-		logger.Debug("visual recon complete", "filename", filename, "analysis", response.Content)
-
-		imageAnalysis = append(imageAnalysis, llm.ChatMessage{Role: llm.RoleUser, Content: response.Content})
-	}
-
-	return imageAnalysis, nil
-}
-
 // getPipedInput detects, reads, and returns any input piped to the command.
 func getPipedInput(file *os.File, logger *log.Logger) (string, error) {
 	fileInfo, err := file.Stat()
@@ -224,38 +194,6 @@ func getPipedInput(file *os.File, logger *log.Logger) (string, error) {
 	}
 
 	return input, nil
-}
-
-// initMessages creates and returns an initial message history.
-func initMessages(system, prompt, format string) []llm.ChatMessage {
-	messages := []llm.ChatMessage{
-		{Role: llm.RoleSystem, Content: system},
-	}
-
-	if format != "" {
-		switch format {
-		case "json":
-			messages = append(messages, llm.ChatMessage{Role: llm.RoleSystem, Content: jsonPrompt})
-		case "markdown":
-			messages = append(messages, llm.ChatMessage{Role: llm.RoleSystem, Content: markdownPrompt})
-		}
-	}
-
-	messages = append(messages, llm.ChatMessage{Role: llm.RoleUser, Content: prompt})
-
-	return messages
-}
-
-// encodedImage takes an image path and returns a base64 encoded string.
-func encodeImage(image string) (string, error) {
-	imageBytes, err := os.ReadFile(image)
-	if err != nil {
-		return "", fmt.Errorf("%w: failed to read %s: %w", ErrImageAnalysis, image, err)
-	}
-
-	encodedImage := base64.StdEncoding.EncodeToString(imageBytes)
-
-	return encodedImage, nil
 }
 
 // registerTools creates and returns a new tool.Registry after registering tools.
