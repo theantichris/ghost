@@ -4,6 +4,7 @@ import (
 	"charm.land/bubbles/v2/key"
 	"charm.land/bubbles/v2/spinner"
 	tea "charm.land/bubbletea/v2"
+	"github.com/charmbracelet/log"
 	"github.com/theantichris/ghost/v3/theme"
 )
 
@@ -24,6 +25,7 @@ type StreamErrorMsg struct {
 
 // StreamModel handles the UI for streaming LLM responses.
 type StreamModel struct {
+	logger  *log.Logger   // Logger for error visibility.
 	width   int           // Terminal width
 	content string        // Accumulated response content.
 	done    bool          // Whether streaming has finished.
@@ -33,12 +35,13 @@ type StreamModel struct {
 }
 
 // NewStreamModel creates and returns StreamModel.
-func NewStreamModel(format string) StreamModel {
+func NewStreamModel(format string, logger *log.Logger) StreamModel {
 	s := spinner.New()
 	s.Spinner = spinner.Ellipsis
 	s.Style = theme.FgAccent0
 
 	return StreamModel{
+		logger:  logger,
 		width:   80,
 		content: "",
 		done:    false,
@@ -101,6 +104,7 @@ func (model StreamModel) View() tea.View {
 	if model.content != "" {
 		content, err := theme.RenderContent(model.content, model.format, true)
 		if err != nil {
+			model.logger.Error("content render failed", "error", err, "format", model.format)
 			return tea.NewView("")
 		}
 

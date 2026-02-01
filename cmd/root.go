@@ -113,13 +113,15 @@ func run(cmd *cobra.Command, args []string) error {
 		messages = append(messages, pipedMessage)
 	}
 
-	streamModel := ui.NewStreamModel(format)
+	streamModel := ui.NewStreamModel(format, logger)
 
 	var programOpts []tea.ProgramOption
 	if ttyIn, ttyOut, err := tea.OpenTTY(); err == nil {
 		programOpts = append(programOpts, tea.WithInput(ttyIn), tea.WithOutput(ttyOut))
 		defer func() { _ = ttyIn.Close() }()
 		defer func() { _ = ttyOut.Close() }()
+	} else {
+		logger.Debug("TTY unavailable, using standard I/O", "error", err)
 	}
 
 	streamProgram := tea.NewProgram(streamModel, programOpts...)
