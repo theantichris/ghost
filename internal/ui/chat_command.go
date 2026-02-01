@@ -91,6 +91,9 @@ func (model ChatModel) handleFile(arg string) (tea.Model, tea.Cmd) {
 		return model, nil
 	}
 
+	// TODO: Detect file type
+	// TODO: Route to text or image handler
+
 	content, err := agent.ReadFileForContext(arg)
 	if err != nil {
 		model.logger.Error("file read failed", "path", arg, "error", err)
@@ -101,6 +104,8 @@ func (model ChatModel) handleFile(arg string) (tea.Model, tea.Cmd) {
 
 		return model, nil
 	}
+
+	// TODO: handle response for text and image file
 
 	model.messages = append(model.messages, llm.ChatMessage{Role: llm.RoleUser, Content: content})
 	model.logger.Info("file loaded into context", "path", arg)
