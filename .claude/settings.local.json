@@ -26,7 +26,8 @@
       "mcp__github__search_code",
       "Bash(find:*)",
       "Bash(xargs cat:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(gh issue view:*)"
     ]
   },
   "outputStyle": "Learning",
