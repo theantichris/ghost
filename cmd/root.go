@@ -107,7 +107,7 @@ func run(cmd *cobra.Command, args []string) error {
 	if pipedInput != "" {
 		pipedMessage := llm.ChatMessage{
 			Role:    llm.RoleUser,
-			Content: pipedInput,
+			Content: fmt.Sprintf("[PIPED INPUT]:\n%s", pipedInput),
 		}
 
 		messages = append(messages, pipedMessage)
