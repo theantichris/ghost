@@ -41,6 +41,9 @@ var (
 	}
 )
 
+// DetectFileType returns a FileType based on files mime type and path.
+// Returns FileTypeDir if path is a directory.
+// Returns ErrFileTypeUnSupported if the file type is not supported.
 func DetectFileType(path string) (FileType, error) {
 	info, err := os.Stat(path)
 	if err != nil {
@@ -70,23 +73,39 @@ func DetectFileType(path string) (FileType, error) {
 	mime := http.DetectContentType(buffer)
 	mediaType := strings.SplitN(mime, ";", 2)[0]
 
-	if slices.Contains(imageFileTypes, mediaType) {
+	if isImage(mediaType, path) {
 		return FileTypeImage, nil
 	}
 
-	if mediaType == "text/xml" && filepath.Ext(path) == ".svg" {
-		return FileTypeImage, nil
-	}
-
-	if strings.HasPrefix(mediaType, "text/") {
-		return FileTypeText, nil
-	}
-
-	if slices.Contains(textFileTypes, mediaType) {
+	if isText(mediaType) {
 		return FileTypeText, nil
 	}
 
 	return "", ErrFileTypeUnsupported
+}
+
+func isImage(mediaType, path string) bool {
+	if slices.Contains(imageFileTypes, mediaType) {
+		return true
+	}
+
+	if mediaType == "text/xml" && filepath.Ext(path) == ".svg" {
+		return true
+	}
+
+	return false
+}
+
+func isText(mediaType string) bool {
+	if strings.HasPrefix(mediaType, "text/") {
+		return true
+	}
+
+	if slices.Contains(textFileTypes, mediaType) {
+		return true
+	}
+
+	return false
 }
 
 // ReadFileForContext reads a file and returns formatted content for the LLM.
