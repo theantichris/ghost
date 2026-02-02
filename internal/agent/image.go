@@ -31,7 +31,8 @@ func AnalyseImages(ctx context.Context, url, visionModel string, images []string
 		}
 
 		prompt := fmt.Sprintf("Filename: %s\n\n%s", filename, visionPrompt)
-		messages := NewMessageHistory(visionSystemPrompt, prompt, "markdown")
+		messages := NewMessageHistory(visionSystemPrompt, "markdown")
+		messages = append(messages, llm.ChatMessage{Role: llm.RoleUser, Content: prompt})
 		messages[len(messages)-1].Images = []string{encodedImage} // Attach images to user prompt message.
 
 		logger.Info("initializing visual recon", "model", visionModel, "url", url, "filename", filename, "format", "markdown")

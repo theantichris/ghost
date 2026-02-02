@@ -95,7 +95,7 @@ func run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	messages := agent.NewMessageHistory(agent.SystemPrompt, userPrompt, format)
+	messages := agent.NewMessageHistory(agent.SystemPrompt, format)
 
 	registry := tool.NewRegistry(tavilyAPIKey, maxResults, logger)
 
@@ -112,6 +112,8 @@ func run(cmd *cobra.Command, args []string) error {
 
 		messages = append(messages, pipedMessage)
 	}
+
+	messages = append(messages, llm.ChatMessage{Role: llm.RoleUser, Content: userPrompt})
 
 	streamModel := ui.NewStreamModel(format, logger)
 

@@ -2,8 +2,9 @@ package agent
 
 import "github.com/theantichris/ghost/v3/internal/llm"
 
-// NewMessageHistory creates and returns an initial message history.
-func NewMessageHistory(system, prompt, format string) []llm.ChatMessage {
+// NewMessageHistory creates and returns an initial message history with system
+// messages.
+func NewMessageHistory(system, format string) []llm.ChatMessage {
 	messages := []llm.ChatMessage{
 		{Role: llm.RoleSystem, Content: system},
 	}
@@ -16,8 +17,6 @@ func NewMessageHistory(system, prompt, format string) []llm.ChatMessage {
 			messages = append(messages, llm.ChatMessage{Role: llm.RoleSystem, Content: MarkdownPrompt})
 		}
 	}
-
-	messages = append(messages, llm.ChatMessage{Role: llm.RoleUser, Content: prompt})
 
 	return messages
 }
