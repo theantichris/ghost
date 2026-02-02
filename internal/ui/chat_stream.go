@@ -47,7 +47,7 @@ func (model *ChatModel) startLLMStream() tea.Cmd {
 		close(ch)
 	}()
 
-	return ListenForChunk(model.responseCh)
+	return listenForChunk(model.responseCh)
 }
 
 func (model ChatModel) handleLLMResponseMsg(msg LLMResponseMsg) (tea.Model, tea.Cmd) {
@@ -56,7 +56,7 @@ func (model ChatModel) handleLLMResponseMsg(msg LLMResponseMsg) (tea.Model, tea.
 	model.viewport.SetContent(model.renderHistory())
 	model.viewport.GotoBottom()
 
-	return model, ListenForChunk(model.responseCh)
+	return model, listenForChunk(model.responseCh)
 }
 
 func (model ChatModel) handleLLMDoneMsg() (tea.Model, tea.Cmd) {

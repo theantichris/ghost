@@ -15,9 +15,6 @@ var quitKeys = key.NewBinding(
 // StreamChunkMsg represents a chunk of text received from the LLM.
 type StreamChunkMsg string
 
-// StreamDoneMsg signals that streaming has completed.
-type StreamDoneMsg struct{}
-
 // StreamErrorMsg signals an error occurred during streaming.
 type StreamErrorMsg struct {
 	Err error
@@ -74,7 +71,7 @@ func (model StreamModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		return model, nil
 
-	case StreamDoneMsg:
+	case LLMDoneMsg:
 		model.done = true
 
 		return model, tea.Quit

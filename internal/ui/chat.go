@@ -28,9 +28,6 @@ const (
 // LLMResponseMsg carries a chunk of the LLM response.
 type LLMResponseMsg string
 
-// LLMDoneMsg signals the LLM request is complete.
-type LLMDoneMsg struct{}
-
 // LLMErrorMsg signals an error from the LLM.
 type LLMErrorMsg struct {
 	Err error

@@ -151,7 +151,7 @@ func run(cmd *cobra.Command, args []string) error {
 			logger.Error("neural link severed", "error", err, "model", model, "url", url)
 			streamProgram.Send(ui.StreamErrorMsg{Err: err})
 		} else {
-			streamProgram.Send(ui.StreamDoneMsg{})
+			streamProgram.Send(ui.LLMDoneMsg{})
 		}
 	}()
 
