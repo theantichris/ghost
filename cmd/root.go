@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"strings"
 
@@ -35,7 +34,6 @@ Send prompts directly or pipe data through for analysis.`
 var (
 	isTTY = term.IsTerminal(os.Stdout.Fd())
 
-	ErrPipedInput    = errors.New("data stream interrupted")
 	ErrStreamDisplay = errors.New("output buffer overrun")
 	ErrRender        = errors.New("rendering matrix collapsed")
 )
@@ -99,9 +97,9 @@ func run(cmd *cobra.Command, args []string) error {
 
 	registry := registerTools(logger)
 
-	pipedInput, err := getPipedInput(os.Stdin, logger)
+	pipedInput, err := agent.GetPipedInput(os.Stdin, logger)
 	if err != nil {
-		return fmt.Errorf("%w: %w", ErrPipedInput, err)
+		return fmt.Errorf("%w: %w", agent.ErrPipedInput, err)
 	}
 
 	if pipedInput != "" {
@@ -171,31 +169,6 @@ func run(cmd *cobra.Command, args []string) error {
 	fmt.Fprintln(cmd.OutOrStdout(), render)
 
 	return nil
-}
-
-// getPipedInput detects, reads, and returns any input piped to the command.
-func getPipedInput(file *os.File, logger *log.Logger) (string, error) {
-	fileInfo, err := file.Stat()
-	if err != nil {
-		return "", nil
-	}
-
-	if fileInfo.Mode()&os.ModeCharDevice != 0 {
-		return "", nil
-	}
-
-	pipedInput, err := io.ReadAll(io.LimitReader(file, 10<<20))
-	if err != nil {
-		return "", fmt.Errorf("%w: %w", ErrPipedInput, err)
-	}
-
-	input := strings.TrimSpace(string(pipedInput))
-
-	if len(input) > 0 {
-		logger.Debug("intercepted data stream", "size_bytes", len(input))
-	}
-
-	return input, nil
 }
 
 // registerTools creates and returns a new tool.Registry after registering tools.
