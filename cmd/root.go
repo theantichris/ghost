@@ -86,6 +86,8 @@ func run(cmd *cobra.Command, args []string) error {
 	model := viper.GetString("model")
 	visionModel := viper.GetString("vision.model")
 	format := strings.ToLower(viper.GetString("format"))
+	tavilyAPIKey := viper.GetString("search.api-key")
+	maxResults := viper.GetInt("search.max-results")
 	userPrompt := args[0]
 
 	images, err := cmd.Flags().GetStringArray("image")
@@ -95,7 +97,7 @@ func run(cmd *cobra.Command, args []string) error {
 
 	messages := agent.NewMessageHistory(agent.SystemPrompt, userPrompt, format)
 
-	registry := registerTools(logger)
+	registry := tool.NewRegistry(tavilyAPIKey, maxResults, logger)
 
 	pipedInput, err := agent.GetPipedInput(os.Stdin, logger)
 	if err != nil {
@@ -169,21 +171,4 @@ func run(cmd *cobra.Command, args []string) error {
 	fmt.Fprintln(cmd.OutOrStdout(), render)
 
 	return nil
-}
-
-// registerTools creates and returns a new tool.Registry after registering tools.
-func registerTools(logger *log.Logger) tool.Registry {
-	registry := tool.NewRegistry()
-
-	if tavilyAPIKey := viper.GetString("search.api-key"); tavilyAPIKey != "" {
-		maxResults := viper.GetInt("search.max-results")
-		if maxResults == 0 {
-			maxResults = 5
-		}
-
-		registry.Register(tool.NewSearch(tavilyAPIKey, maxResults))
-		logger.Debug("tool registered", "name", "web_search")
-	}
-
-	return registry
 }

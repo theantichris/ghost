@@ -4,11 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"io"
 	"testing"
+
+	"github.com/charmbracelet/log"
 )
 
 func TestRegister(t *testing.T) {
-	registry := NewRegistry()
+	logger := log.New(io.Discard)
+	registry := NewRegistry("", 0, logger)
 
 	tool := MockTool{
 		Name:   "mock tool",
@@ -24,7 +28,8 @@ func TestRegister(t *testing.T) {
 }
 
 func TestDefinitions(t *testing.T) {
-	registry := NewRegistry()
+	logger := log.New(io.Discard)
+	registry := NewRegistry("", 0, logger)
 
 	tool := MockTool{
 		Name:   "mock tool",
@@ -68,7 +73,8 @@ func TestExecute(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			registry := NewRegistry()
+			logger := log.New(io.Discard)
+			registry := NewRegistry("", 0, logger)
 
 			registry.Tools[tt.tool.Definition().Function.Name] = tt.tool
 
