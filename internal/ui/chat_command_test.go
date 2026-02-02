@@ -119,21 +119,43 @@ func TestChatModel_HandleCommandMode(t *testing.T) {
 			wantMessageCount:     1,
 		},
 		{
-			name:                 "i without path shows error",
-			cmdBuffer:            "i",
+			name:      "r with GIF file shows unsupported error",
+			cmdBuffer: "r ",
+			setupFile: func(t *testing.T) string {
+				dir := t.TempDir()
+				path := filepath.Join(dir, "test.gif")
+				// GIF magic bytes
+				gifBytes := []byte{0x47, 0x49, 0x46, 0x38, 0x39, 0x61, 0x01, 0x00, 0x01, 0x00, 0x00, 0x00}
+				err := os.WriteFile(path, gifBytes, 0644)
+				if err != nil {
+					t.Fatalf("failed to create test file: %v", err)
+				}
+				return path
+			},
 			msg:                  tea.KeyPressMsg{Code: tea.KeyEnter},
 			wantMode:             ModeNormal,
 			wantCmdBuffer:        "",
-			wantChatHistoryMatch: fmt.Sprintf("[%s error: no image path provided]", theme.GlyphError),
+			wantChatHistoryMatch: "unsupported",
 			wantMessageCount:     1,
 		},
 		{
-			name:                 "i with whitespace-only path shows error",
-			cmdBuffer:            "i   ",
+			name:      "r with binary file shows unsupported error",
+			cmdBuffer: "r ",
+			setupFile: func(t *testing.T) string {
+				dir := t.TempDir()
+				path := filepath.Join(dir, "test.exe")
+				// ELF magic bytes
+				elfBytes := []byte{0x7F, 0x45, 0x4C, 0x46, 0x02, 0x01, 0x01, 0x00}
+				err := os.WriteFile(path, elfBytes, 0644)
+				if err != nil {
+					t.Fatalf("failed to create test file: %v", err)
+				}
+				return path
+			},
 			msg:                  tea.KeyPressMsg{Code: tea.KeyEnter},
 			wantMode:             ModeNormal,
 			wantCmdBuffer:        "",
-			wantChatHistoryMatch: fmt.Sprintf("[%s error: no image path provided]", theme.GlyphError),
+			wantChatHistoryMatch: "unsupported",
 			wantMessageCount:     1,
 		},
 	}

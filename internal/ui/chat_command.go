@@ -21,16 +21,13 @@ func (model ChatModel) handleCommandMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		}
 
 		switch cmd {
-		case "i":
-			return model.handleImage(arg)
-
 		case "q":
 			model.logger.Info("disconnecting from ghost")
 
 			return model, tea.Quit
 
 		case "r":
-			return model.handleFile(arg)
+			return model.readFile(arg)
 		}
 
 		// Resets mode for invalid commands.
@@ -48,40 +45,7 @@ func (model ChatModel) handleCommandMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	return model, nil
 }
 
-func (model ChatModel) handleImage(arg string) (tea.Model, tea.Cmd) {
-	if arg == "" {
-		model.chatHistory += fmt.Sprintf("\n[%s error: no image path provided]\n", theme.GlyphError)
-		model.viewport.SetContent(model.renderHistory())
-		model.mode = ModeNormal
-		model.cmdBuffer = ""
-
-		return model, nil
-	}
-
-	content, err := agent.AnalyseImages(model.ctx, model.url, model.visionModel, []string{arg}, model.logger)
-	if err != nil {
-		model.logger.Error("image read failed", "path", arg, "error", err)
-		model.chatHistory += fmt.Sprintf("\n[%s error: %s]\n", theme.GlyphError, err.Error())
-		model.viewport.SetContent(model.renderHistory())
-		model.mode = ModeNormal
-		model.cmdBuffer = ""
-
-		return model, nil
-	}
-
-	model.messages = append(model.messages, content...)
-	model.logger.Info("image loaded into context", "path", arg)
-
-	model.chatHistory += fmt.Sprintf("\n[%s loaded: %s]\n", theme.GlyphInfo, arg)
-	model.viewport.SetContent(model.renderHistory())
-
-	model.mode = ModeNormal
-	model.cmdBuffer = ""
-
-	return model, nil
-}
-
-func (model ChatModel) handleFile(arg string) (tea.Model, tea.Cmd) {
+func (model ChatModel) readFile(arg string) (tea.Model, tea.Cmd) {
 	if arg == "" {
 		model.chatHistory += fmt.Sprintf("\n[%s error: no file path provided]\n", theme.GlyphError)
 		model.viewport.SetContent(model.renderHistory())
@@ -91,9 +55,9 @@ func (model ChatModel) handleFile(arg string) (tea.Model, tea.Cmd) {
 		return model, nil
 	}
 
-	content, err := agent.ReadFileForContext(arg)
+	fileType, err := agent.DetectFileType(arg)
 	if err != nil {
-		model.logger.Error("file read failed", "path", arg, "error", err)
+		model.logger.Error("failed to validate file", "error", err.Error(), "path", arg)
 		model.chatHistory += fmt.Sprintf("\n[%s error: %s]\n", theme.GlyphError, err.Error())
 		model.viewport.SetContent(model.renderHistory())
 		model.mode = ModeNormal
@@ -102,10 +66,62 @@ func (model ChatModel) handleFile(arg string) (tea.Model, tea.Cmd) {
 		return model, nil
 	}
 
-	model.messages = append(model.messages, llm.ChatMessage{Role: llm.RoleUser, Content: content})
-	model.logger.Info("file loaded into context", "path", arg)
+	switch fileType {
+	case agent.FileTypeDir:
+		model.chatHistory += fmt.Sprintf("\n[%s error: file is directory]\n", theme.GlyphError)
+		model.viewport.SetContent(model.renderHistory())
+		model.mode = ModeNormal
+		model.cmdBuffer = ""
 
-	model.chatHistory += fmt.Sprintf("\n[%s loaded: %s]\n", theme.GlyphInfo, arg)
+	case agent.FileTypeImage:
+		return model.analyzeImage(arg)
+
+	case agent.FileTypeText:
+		return model.readTextFile(arg)
+	}
+
+	return model, nil
+}
+
+func (model ChatModel) analyzeImage(path string) (tea.Model, tea.Cmd) {
+	content, err := agent.AnalyseImages(model.ctx, model.url, model.visionModel, []string{path}, model.logger)
+	if err != nil {
+		model.logger.Error("image read failed", "path", path, "error", err)
+		model.chatHistory += fmt.Sprintf("\n[%s error: %s]\n", theme.GlyphError, err.Error())
+		model.viewport.SetContent(model.renderHistory())
+		model.mode = ModeNormal
+		model.cmdBuffer = ""
+
+		return model, nil
+	}
+
+	model.messages = append(model.messages, content...)
+	model.logger.Info("image loaded into context", "path", path)
+
+	model.chatHistory += fmt.Sprintf("\n[%s loaded image: %s]\n", theme.GlyphInfo, path)
+	model.viewport.SetContent(model.renderHistory())
+
+	model.mode = ModeNormal
+	model.cmdBuffer = ""
+
+	return model, nil
+}
+
+func (model ChatModel) readTextFile(path string) (tea.Model, tea.Cmd) {
+	content, err := agent.ReadFileForContext(path)
+	if err != nil {
+		model.logger.Error("file read failed", "path", path, "error", err)
+		model.chatHistory += fmt.Sprintf("\n[%s error: %s]\n", theme.GlyphError, err.Error())
+		model.viewport.SetContent(model.renderHistory())
+		model.mode = ModeNormal
+		model.cmdBuffer = ""
+
+		return model, nil
+	}
+	model.messages = append(model.messages, llm.ChatMessage{Role: llm.RoleUser, Content: content})
+	model.logger.Info("loaded file", "path", path)
+
+	model.chatHistory += fmt.Sprintf("\n[%s loaded: %s]\n", theme.GlyphInfo, path)
 	model.viewport.SetContent(model.renderHistory())
 
 	model.mode = ModeNormal

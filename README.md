@@ -106,7 +106,6 @@ ghost chat --model llama3
 | `up`           | Go back in input history                                     |
 | `down`         | Go forward in input history                                  |
 | `:r <path>`    | Read file into conversation context, requires absolute path  |
-| `:i <path>`    | Read image into conversation context, requires absolute path |
 | `:q`           | Disconnect from Ghost                                        |
 
 ## System Configuration
