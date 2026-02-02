@@ -65,12 +65,12 @@ func DetectFileType(path string) (FileType, error) {
 	defer func() { _ = file.Close() }()
 
 	buffer := make([]byte, 512)
-	_, err = file.Read(buffer)
+	n, err := file.Read(buffer)
 	if err != nil {
 		return "", fmt.Errorf("%w: %w", ErrReadFile, err)
 	}
 
-	mime := http.DetectContentType(buffer)
+	mime := http.DetectContentType(buffer[:n])
 	mediaType := strings.SplitN(mime, ";", 2)[0]
 
 	if isImage(mediaType, path) {
