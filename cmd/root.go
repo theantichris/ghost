@@ -173,7 +173,6 @@ func run(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// TODO: should problem go in agent
 // getPipedInput detects, reads, and returns any input piped to the command.
 func getPipedInput(file *os.File, logger *log.Logger) (string, error) {
 	fileInfo, err := file.Stat()
