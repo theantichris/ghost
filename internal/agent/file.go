@@ -43,7 +43,7 @@ var (
 
 // DetectFileType returns a FileType based on files mime type and path.
 // Returns FileTypeDir if path is a directory.
-// Returns ErrFileTypeUnSupported if the file type is not supported.
+// Returns ErrFileTypeUnsupported if the file type is not supported.
 func DetectFileType(path string) (FileType, error) {
 	info, err := os.Stat(path)
 	if err != nil {
