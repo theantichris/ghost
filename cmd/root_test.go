@@ -2,62 +2,53 @@ package cmd
 
 import (
 	"errors"
-	"io"
-	"os"
 	"testing"
 
-	"github.com/charmbracelet/log"
 	"github.com/google/go-cmp/cmp"
 	"github.com/theantichris/ghost/v3/internal/agent"
 	"github.com/theantichris/ghost/v3/internal/llm"
 )
 
-func TestInitMessages(t *testing.T) {
+func TestNewMessageHistory(t *testing.T) {
 	tests := []struct {
 		name   string
 		system string
-		prompt string
 		format string
 		want   []llm.ChatMessage
 	}{
 		{
 			name:   "returns message history with no format",
 			system: "system prompt",
-			prompt: "user prompt",
 			want: []llm.ChatMessage{
 				{Role: llm.RoleSystem, Content: "system prompt"},
-				{Role: llm.RoleUser, Content: "user prompt"},
 			},
 		},
 		{
 			name:   "returns message history with JSON format",
 			system: "system prompt",
-			prompt: "user prompt",
 			format: "json",
 			want: []llm.ChatMessage{
 				{Role: llm.RoleSystem, Content: "system prompt"},
 				{Role: llm.RoleSystem, Content: agent.JSONPrompt},
-				{Role: llm.RoleUser, Content: "user prompt"},
 			},
 		},
 		{
 			name:   "returns message history with markdown format",
 			system: "system prompt",
-			prompt: "user prompt",
 			format: "markdown",
 			want: []llm.ChatMessage{
 				{Role: llm.RoleSystem, Content: "system prompt"},
-				{Role: llm.RoleSystem, Content: agent.MarkdownPrompt}, {Role: llm.RoleUser, Content: "user prompt"},
+				{Role: llm.RoleSystem, Content: agent.MarkdownPrompt},
 			},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := agent.NewMessageHistory(tt.system, tt.prompt, tt.format)
+			got := agent.NewMessageHistory(tt.system, tt.format)
 
 			if diff := cmp.Diff(tt.want, got); diff != "" {
-				t.Errorf("initMessages() mismatch (-want +got):\n%s", diff)
+				t.Errorf("NewMessageHistory() mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}
@@ -107,75 +98,6 @@ func TestValidateFormat(t *testing.T) {
 
 			if err != nil {
 				t.Fatalf("validateFormat() error = %v, want no error", err)
-			}
-		})
-	}
-}
-
-func TestGetPipedInput(t *testing.T) {
-	tests := []struct {
-		name    string
-		content string
-		want    string
-		wantErr bool
-	}{
-		{
-			name:    "trims whitespace",
-			content: "  hello world  \n",
-			want:    "hello world",
-		},
-		{
-			name:    "empty input",
-			content: "",
-			want:    "",
-		},
-		{
-			name:    "multiline input",
-			content: "line1\nline2\nline3",
-			want:    "line1\nline2\nline3",
-		},
-		{
-			name:    "only whitespace",
-			content: "   \n\t\n  ",
-			want:    "",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			logger := log.New(io.Discard)
-
-			tmpFile, err := os.CreateTemp("", "ghost-test-*")
-			if err != nil {
-				t.Fatalf("Failed to create temp file: %v", err)
-			}
-
-			defer func(tempFile *os.File) {
-				_ = os.Remove(tempFile.Name())
-			}(tmpFile)
-
-			defer func(tempFile *os.File) {
-				_ = tmpFile.Close()
-			}(tmpFile)
-
-			_, err = tmpFile.WriteString(tt.content)
-			if err != nil {
-				t.Fatalf("Failed to write to temp file: %v", err)
-			}
-
-			_, err = tmpFile.Seek(0, 0)
-			if err != nil {
-				t.Fatalf("Failed to seek temp file: %v", err)
-			}
-
-			got, err := getPipedInput(tmpFile, logger)
-
-			if (err != nil) != tt.wantErr {
-				t.Fatalf("getPipedInput() error = %v, wantErr %v", err, tt.wantErr)
-			}
-
-			if got != tt.want {
-				t.Errorf("getPipedInput() = %q, want %q", got, tt.want)
 			}
 		})
 	}

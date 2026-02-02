@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"path/filepath"
-	"slices"
 	"strings"
 )
 
@@ -82,52 +80,4 @@ func DetectFileType(path string) (FileType, error) {
 	}
 
 	return "", ErrFileTypeUnsupported
-}
-
-func isImage(mediaType, path string) bool {
-	if slices.Contains(imageFileTypes, mediaType) {
-		return true
-	}
-
-	if mediaType == "text/xml" && filepath.Ext(path) == ".svg" {
-		return true
-	}
-
-	return false
-}
-
-func isText(mediaType string) bool {
-	if strings.HasPrefix(mediaType, "text/") {
-		return true
-	}
-
-	if slices.Contains(textFileTypes, mediaType) {
-		return true
-	}
-
-	return false
-}
-
-// ReadFileForContext reads a file and returns formatted content for the LLM.
-// Returns the formatted content and any error encountered.
-func ReadFileForContext(path string) (string, error) {
-	info, err := os.Stat(path)
-	if err != nil {
-		return "", fmt.Errorf("%w: %w", ErrFileAccess, err)
-	}
-
-	if info.IsDir() {
-		return "", ErrIsDir
-	}
-
-	if info.Size() > maxFileSize {
-		return "", fmt.Errorf("%w (%d bytes)", ErrFileSize, info.Size())
-	}
-
-	content, err := os.ReadFile(path)
-	if err != nil {
-		return "", fmt.Errorf("%w: %w", ErrReadFile, err)
-	}
-
-	return fmt.Sprintf("[FILE: %s]\n%s", path, string(content)), nil
 }

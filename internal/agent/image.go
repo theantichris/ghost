@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 
 	"github.com/charmbracelet/log"
 	"github.com/theantichris/ghost/v3/internal/llm"
@@ -30,7 +31,8 @@ func AnalyseImages(ctx context.Context, url, visionModel string, images []string
 		}
 
 		prompt := fmt.Sprintf("Filename: %s\n\n%s", filename, visionPrompt)
-		messages := NewMessageHistory(visionSystemPrompt, prompt, "markdown")
+		messages := NewMessageHistory(visionSystemPrompt, "markdown")
+		messages = append(messages, llm.ChatMessage{Role: llm.RoleUser, Content: prompt})
 		messages[len(messages)-1].Images = []string{encodedImage} // Attach images to user prompt message.
 
 		logger.Info("initializing visual recon", "model", visionModel, "url", url, "filename", filename, "format", "markdown")
@@ -61,22 +63,14 @@ func encodeImage(image string) (string, error) {
 	return encodedImage, nil
 }
 
-// NewMessageHistory creates and returns an initial message history.
-func NewMessageHistory(system, prompt, format string) []llm.ChatMessage {
-	messages := []llm.ChatMessage{
-		{Role: llm.RoleSystem, Content: system},
+func isImage(mediaType, path string) bool {
+	if slices.Contains(imageFileTypes, mediaType) {
+		return true
 	}
 
-	if format != "" {
-		switch format {
-		case "json":
-			messages = append(messages, llm.ChatMessage{Role: llm.RoleSystem, Content: JSONPrompt})
-		case "markdown":
-			messages = append(messages, llm.ChatMessage{Role: llm.RoleSystem, Content: MarkdownPrompt})
-		}
+	if mediaType == "text/xml" && filepath.Ext(path) == ".svg" {
+		return true
 	}
 
-	messages = append(messages, llm.ChatMessage{Role: llm.RoleUser, Content: prompt})
-
-	return messages
+	return false
 }

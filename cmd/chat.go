@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/theantichris/ghost/v3/internal/agent"
+	"github.com/theantichris/ghost/v3/internal/tool"
 	"github.com/theantichris/ghost/v3/internal/ui"
 )
 
@@ -35,7 +36,10 @@ func runChat(cmd *cobra.Command, args []string) error {
 	url := viper.GetString("url")
 	model := viper.GetString("model")
 	visionModel := viper.GetString("vision.model")
-	registry := registerTools(logger)
+	tavilyAPIKey := viper.GetString("search.api-key")
+	maxResults := viper.GetInt("search.max-results")
+
+	registry := tool.NewRegistry(tavilyAPIKey, maxResults, logger)
 
 	logger.Info("entering ghost chat", "model", model, "url", url)
 

@@ -118,7 +118,7 @@ func TestRunToolLoop(t *testing.T) {
 			defer server.Close()
 
 			logger := log.New(io.Discard)
-			registry := tool.NewRegistry()
+			registry := tool.NewRegistry("", 0, logger)
 
 			if tt.registerTool {
 				registry.Register(tool.MockTool{

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"strings"
 
@@ -35,7 +34,6 @@ Send prompts directly or pipe data through for analysis.`
 var (
 	isTTY = term.IsTerminal(os.Stdout.Fd())
 
-	ErrPipedInput    = errors.New("data stream interrupted")
 	ErrStreamDisplay = errors.New("output buffer overrun")
 	ErrRender        = errors.New("rendering matrix collapsed")
 )
@@ -88,6 +86,8 @@ func run(cmd *cobra.Command, args []string) error {
 	model := viper.GetString("model")
 	visionModel := viper.GetString("vision.model")
 	format := strings.ToLower(viper.GetString("format"))
+	tavilyAPIKey := viper.GetString("search.api-key")
+	maxResults := viper.GetInt("search.max-results")
 	userPrompt := args[0]
 
 	images, err := cmd.Flags().GetStringArray("image")
@@ -95,23 +95,25 @@ func run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	messages := agent.NewMessageHistory(agent.SystemPrompt, userPrompt, format)
+	messages := agent.NewMessageHistory(agent.SystemPrompt, format)
 
-	registry := registerTools(logger)
+	registry := tool.NewRegistry(tavilyAPIKey, maxResults, logger)
 
-	pipedInput, err := getPipedInput(os.Stdin, logger)
+	pipedInput, err := agent.GetPipedInput(os.Stdin, logger)
 	if err != nil {
-		return fmt.Errorf("%w: %w", ErrPipedInput, err)
+		return fmt.Errorf("%w: %w", agent.ErrPipedInput, err)
 	}
 
 	if pipedInput != "" {
 		pipedMessage := llm.ChatMessage{
 			Role:    llm.RoleUser,
-			Content: pipedInput,
+			Content: fmt.Sprintf("[PIPED INPUT]:\n%s", pipedInput),
 		}
 
 		messages = append(messages, pipedMessage)
 	}
+
+	messages = append(messages, llm.ChatMessage{Role: llm.RoleUser, Content: userPrompt})
 
 	streamModel := ui.NewStreamModel(format, logger)
 
@@ -171,46 +173,4 @@ func run(cmd *cobra.Command, args []string) error {
 	fmt.Fprintln(cmd.OutOrStdout(), render)
 
 	return nil
-}
-
-// getPipedInput detects, reads, and returns any input piped to the command.
-func getPipedInput(file *os.File, logger *log.Logger) (string, error) {
-	fileInfo, err := file.Stat()
-	if err != nil {
-		return "", nil
-	}
-
-	if fileInfo.Mode()&os.ModeCharDevice != 0 {
-		return "", nil
-	}
-
-	pipedInput, err := io.ReadAll(io.LimitReader(file, 10<<20))
-	if err != nil {
-		return "", fmt.Errorf("%w: %w", ErrPipedInput, err)
-	}
-
-	input := strings.TrimSpace(string(pipedInput))
-
-	if len(input) > 0 {
-		logger.Debug("intercepted data stream", "size_bytes", len(input))
-	}
-
-	return input, nil
-}
-
-// registerTools creates and returns a new tool.Registry after registering tools.
-func registerTools(logger *log.Logger) tool.Registry {
-	registry := tool.NewRegistry()
-
-	if tavilyAPIKey := viper.GetString("search.api-key"); tavilyAPIKey != "" {
-		maxResults := viper.GetInt("search.max-results")
-		if maxResults == 0 {
-			maxResults = 5
-		}
-
-		registry.Register(tool.NewSearch(tavilyAPIKey, maxResults))
-		logger.Debug("tool registered", "name", "web_search")
-	}
-
-	return registry
 }

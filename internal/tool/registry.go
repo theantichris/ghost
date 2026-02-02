@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/charmbracelet/log"
 	"github.com/theantichris/ghost/v3/internal/llm"
 )
 
@@ -18,9 +19,18 @@ type Registry struct {
 }
 
 // NewRegistry creates a new Registry and initializes the tool map.
-func NewRegistry() Registry {
+func NewRegistry(tavilyAPIKey string, maxResults int, logger *log.Logger) Registry {
 	registry := Registry{
 		Tools: map[string]Tool{},
+	}
+
+	if tavilyAPIKey != "" {
+		if maxResults == 0 {
+			maxResults = 5
+		}
+
+		registry.Register(NewSearch(tavilyAPIKey, maxResults))
+		logger.Debug("tool registered", "name", "web_search")
 	}
 
 	return registry
