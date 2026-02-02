@@ -98,7 +98,7 @@ func (model ChatModel) analyzeImage(path string) (tea.Model, tea.Cmd) {
 	model.messages = append(model.messages, content...)
 	model.logger.Info("image loaded into context", "path", path)
 
-	model.chatHistory += fmt.Sprintf("\n[%s loaded: %s]\n", theme.GlyphInfo, path)
+	model.chatHistory += fmt.Sprintf("\n[%s loaded image: %s]\n", theme.GlyphInfo, path)
 	model.viewport.SetContent(model.renderHistory())
 
 	model.mode = ModeNormal
@@ -119,7 +119,7 @@ func (model ChatModel) readTextFile(path string) (tea.Model, tea.Cmd) {
 		return model, nil
 	}
 	model.messages = append(model.messages, llm.ChatMessage{Role: llm.RoleUser, Content: content})
-	model.logger.Info("file loaded into context", "path", path)
+	model.logger.Info("loaded file", "path", path)
 
 	model.chatHistory += fmt.Sprintf("\n[%s loaded: %s]\n", theme.GlyphInfo, path)
 	model.viewport.SetContent(model.renderHistory())
