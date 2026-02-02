@@ -57,7 +57,7 @@ func (model ChatModel) readFile(arg string) (tea.Model, tea.Cmd) {
 
 	fileType, err := agent.DetectFileType(arg)
 	if err != nil {
-		model.logger.Error("failed to validate image", "error", err.Error(), "path", arg)
+		model.logger.Error("failed to validate file", "error", err.Error(), "path", arg)
 		model.chatHistory += fmt.Sprintf("\n[%s error: %s]\n", theme.GlyphError, err.Error())
 		model.viewport.SetContent(model.renderHistory())
 		model.mode = ModeNormal
