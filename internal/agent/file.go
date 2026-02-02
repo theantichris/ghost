@@ -95,9 +95,9 @@ func isText(mediaType string) bool {
 	return false
 }
 
-// ReadFileForContext reads a file and returns formatted content for the LLM.
+// ReadTextFile reads a file and returns formatted content for the LLM.
 // Returns the formatted content and any error encountered.
-func ReadFileForContext(path string) (string, error) {
+func ReadTextFile(path string) (string, error) {
 	info, err := os.Stat(path)
 	if err != nil {
 		return "", fmt.Errorf("%w: %w", ErrFileAccess, err)
