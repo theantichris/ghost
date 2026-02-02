@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"path/filepath"
 	"slices"
 	"strings"
 )
@@ -82,18 +81,6 @@ func DetectFileType(path string) (FileType, error) {
 	}
 
 	return "", ErrFileTypeUnsupported
-}
-
-func isImage(mediaType, path string) bool {
-	if slices.Contains(imageFileTypes, mediaType) {
-		return true
-	}
-
-	if mediaType == "text/xml" && filepath.Ext(path) == ".svg" {
-		return true
-	}
-
-	return false
 }
 
 func isText(mediaType string) bool {

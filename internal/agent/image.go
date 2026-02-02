@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 
 	"github.com/charmbracelet/log"
 	"github.com/theantichris/ghost/v3/internal/llm"
@@ -59,4 +60,16 @@ func encodeImage(image string) (string, error) {
 	encodedImage := base64.StdEncoding.EncodeToString(imageBytes)
 
 	return encodedImage, nil
+}
+
+func isImage(mediaType, path string) bool {
+	if slices.Contains(imageFileTypes, mediaType) {
+		return true
+	}
+
+	if mediaType == "text/xml" && filepath.Ext(path) == ".svg" {
+		return true
+	}
+
+	return false
 }
