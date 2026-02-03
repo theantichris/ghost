@@ -18,11 +18,11 @@ func (model *ChatModel) startLLMStream() tea.Cmd {
 
 	go func() {
 		ch := model.responseCh
+		defer close(ch)
 
 		messages, err := agent.RunToolLoop(model.ctx, model.toolRegistry, model.url, model.model, model.messages, model.logger)
 		if err != nil {
 			ch <- LLMErrorMsg{Err: err}
-			close(ch)
 
 			return
 		}
@@ -43,8 +43,6 @@ func (model *ChatModel) startLLMStream() tea.Cmd {
 		if err != nil {
 			ch <- LLMErrorMsg{Err: err}
 		}
-
-		close(ch)
 	}()
 
 	return listenForChunk(model.responseCh)

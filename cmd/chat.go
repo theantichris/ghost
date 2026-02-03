@@ -43,7 +43,8 @@ func runChat(cmd *cobra.Command, args []string) error {
 
 	logger.Info("entering ghost chat", "model", model, "url", url)
 
-	chatModel := ui.NewChatModel(cmd.Context(), url, model, visionModel, agent.SystemPrompt, registry, logger)
+	config := ui.ModelConfig{Context: cmd.Context(), URL: url, Model: model, VisionModel: visionModel, System: agent.SystemPrompt, Registry: registry, Logger: logger}
+	chatModel := ui.NewChatModel(config)
 	program := tea.NewProgram(chatModel)
 
 	_, err := program.Run()
