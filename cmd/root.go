@@ -115,7 +115,18 @@ func run(cmd *cobra.Command, args []string) error {
 
 	messages = append(messages, llm.ChatMessage{Role: llm.RoleUser, Content: userPrompt})
 
-	streamModel := ui.NewStreamModel(format, logger)
+	config := ui.ModelConfig{
+		Context:     cmd.Context(),
+		Logger:      logger,
+		URL:         url,
+		Model:       model,
+		VisionModel: visionModel,
+		Format:      format,
+		Messages:    messages,
+		Images:      images,
+		Registry:    registry,
+	}
+	streamModel := ui.NewStreamModel(config)
 
 	var programOpts []tea.ProgramOption
 	if ttyIn, ttyOut, err := tea.OpenTTY(); err == nil {
@@ -127,33 +138,6 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 
 	streamProgram := tea.NewProgram(streamModel, programOpts...)
-
-	go func() {
-		imageAnalysis, err := agent.AnalyseImages(cmd.Context(), url, visionModel, images, logger)
-		if err != nil {
-			streamProgram.Send(ui.StreamErrorMsg{Err: err})
-			return
-		}
-
-		messages = append(messages, imageAnalysis...)
-
-		logger.Info("establishing neural link", "model", model, "url", url, "format", format)
-
-		messages, err = agent.RunToolLoop(cmd.Context(), registry, url, model, messages, logger)
-		if err != nil {
-			streamProgram.Send(ui.StreamErrorMsg{Err: err})
-			return
-		}
-
-		if _, err = llm.StreamChat(cmd.Context(), url, model, messages, nil, func(chunk string) {
-			streamProgram.Send(ui.StreamChunkMsg(chunk))
-		}); err != nil {
-			logger.Error("neural link severed", "error", err, "model", model, "url", url)
-			streamProgram.Send(ui.StreamErrorMsg{Err: err})
-		} else {
-			streamProgram.Send(ui.StreamDoneMsg{})
-		}
-	}()
 
 	returnedModel, err := streamProgram.Run()
 	if err != nil {

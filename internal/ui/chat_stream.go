@@ -9,18 +9,6 @@ import (
 	"github.com/theantichris/ghost/v3/theme"
 )
 
-// listenForChunk returns a command that waits for the next chunk from the channel.
-func listenForChunk(ch <-chan tea.Msg) tea.Cmd {
-	return func() tea.Msg {
-		msg, ok := <-ch
-		if !ok {
-			return LLMDoneMsg{}
-		}
-
-		return msg
-	}
-}
-
 // startLLMStream starts the LLM call in a go routine.
 // It returns the first listenForChunk command to start receiving.
 func (model *ChatModel) startLLMStream() tea.Cmd {
@@ -30,13 +18,11 @@ func (model *ChatModel) startLLMStream() tea.Cmd {
 
 	go func() {
 		ch := model.responseCh
-
-		// TODO: Analyze images
+		defer close(ch)
 
 		messages, err := agent.RunToolLoop(model.ctx, model.toolRegistry, model.url, model.model, model.messages, model.logger)
 		if err != nil {
 			ch <- LLMErrorMsg{Err: err}
-			close(ch)
 
 			return
 		}
@@ -57,8 +43,6 @@ func (model *ChatModel) startLLMStream() tea.Cmd {
 		if err != nil {
 			ch <- LLMErrorMsg{Err: err}
 		}
-
-		close(ch)
 	}()
 
 	return listenForChunk(model.responseCh)

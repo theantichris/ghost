@@ -1,10 +1,15 @@
 package ui
 
 import (
+	"context"
+
 	"charm.land/bubbles/v2/key"
 	"charm.land/bubbles/v2/spinner"
 	tea "charm.land/bubbletea/v2"
 	"github.com/charmbracelet/log"
+	"github.com/theantichris/ghost/v3/internal/agent"
+	"github.com/theantichris/ghost/v3/internal/llm"
+	"github.com/theantichris/ghost/v3/internal/tool"
 	"github.com/theantichris/ghost/v3/theme"
 )
 
@@ -15,9 +20,6 @@ var quitKeys = key.NewBinding(
 // StreamChunkMsg represents a chunk of text received from the LLM.
 type StreamChunkMsg string
 
-// StreamDoneMsg signals that streaming has completed.
-type StreamDoneMsg struct{}
-
 // StreamErrorMsg signals an error occurred during streaming.
 type StreamErrorMsg struct {
 	Err error
@@ -25,35 +27,51 @@ type StreamErrorMsg struct {
 
 // StreamModel handles the UI for streaming LLM responses.
 type StreamModel struct {
-	logger  *log.Logger   // Logger for error visibility.
-	width   int           // Terminal width
-	content string        // Accumulated response content.
-	done    bool          // Whether streaming has finished.
-	Err     error         // Error if streaming failed.
-	spinner spinner.Model // Animated spinner.
-	format  string        // Format for output.
+	ctx          context.Context
+	logger       *log.Logger // Logger for error visibility.
+	width        int         // Terminal width
+	content      string      // Accumulated response content.
+	messages     []llm.ChatMessage
+	url          string
+	model        string
+	visionModel  string
+	images       []string
+	toolRegistry tool.Registry
+	done         bool          // Whether streaming has finished.
+	Err          error         // Error if streaming failed.
+	spinner      spinner.Model // Animated spinner.
+	format       string        // Format for output.
+	responseCh   chan tea.Msg
 }
 
 // NewStreamModel creates and returns StreamModel.
-func NewStreamModel(format string, logger *log.Logger) StreamModel {
+func NewStreamModel(config ModelConfig) StreamModel {
 	s := spinner.New()
 	s.Spinner = spinner.Ellipsis
 	s.Style = theme.FgAccent0
 
 	return StreamModel{
-		logger:  logger,
-		width:   80,
-		content: "",
-		done:    false,
-		Err:     nil,
-		spinner: s,
-		format:  format,
+		ctx:          config.Context,
+		logger:       config.Logger,
+		width:        80,
+		messages:     config.Messages,
+		url:          config.URL,
+		model:        config.Model,
+		visionModel:  config.VisionModel,
+		images:       config.Images,
+		toolRegistry: config.Registry,
+		content:      "",
+		done:         false,
+		Err:          nil,
+		spinner:      s,
+		format:       config.Format,
+		responseCh:   make(chan tea.Msg),
 	}
 }
 
 // Init starts the spinner's animation loop.
 func (model StreamModel) Init() tea.Cmd {
-	return model.spinner.Tick
+	return tea.Batch(model.spinner.Tick, model.startStream())
 }
 
 // Update handles messages and returns the updated model and optional command.
@@ -72,9 +90,9 @@ func (model StreamModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case StreamChunkMsg:
 		model.content += string(msg)
 
-		return model, nil
+		return model, listenForChunk(model.responseCh)
 
-	case StreamDoneMsg:
+	case LLMDoneMsg:
 		model.done = true
 
 		return model, tea.Quit
@@ -128,4 +146,41 @@ func (model StreamModel) Content() string {
 	}
 
 	return theme.WordWrap(model.width, model.content, theme.FgText)
+}
+
+func (model StreamModel) startStream() tea.Cmd {
+	model.logger.Debug("establishing to neural network", "model", model.model, "messages", len(model.messages))
+
+	go func() {
+		ch := model.responseCh
+		defer close(ch)
+
+		imageAnalysis, err := agent.AnalyseImages(model.ctx, model.url, model.visionModel, model.images, model.logger)
+		if err != nil {
+			ch <- StreamErrorMsg{Err: err}
+
+			return
+		}
+
+		model.messages = append(model.messages, imageAnalysis...)
+
+		model.messages, err = agent.RunToolLoop(model.ctx, model.toolRegistry, model.url, model.model, model.messages, model.logger)
+		if err != nil {
+			ch <- StreamErrorMsg{Err: err}
+
+			return
+		}
+
+		_, err = llm.StreamChat(model.ctx, model.url, model.model, model.messages, nil, func(chunk string) {
+			ch <- StreamChunkMsg(chunk)
+		})
+
+		if err != nil {
+			ch <- StreamErrorMsg{Err: err}
+
+			return
+		}
+	}()
+
+	return listenForChunk(model.responseCh)
 }

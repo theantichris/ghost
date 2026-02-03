@@ -28,9 +28,6 @@ const (
 // LLMResponseMsg carries a chunk of the LLM response.
 type LLMResponseMsg string
 
-// LLMDoneMsg signals the LLM request is complete.
-type LLMDoneMsg struct{}
-
 // LLMErrorMsg signals an error from the LLM.
 type LLMErrorMsg struct {
 	Err error
@@ -61,26 +58,26 @@ type ChatModel struct {
 }
 
 // NewChatModel creates the chat model and initializes the text input.
-func NewChatModel(ctx context.Context, url, model, visionModel, system string, registry tool.Registry, logger *log.Logger) ChatModel {
+func NewChatModel(config ModelConfig) ChatModel {
 	input := textarea.New()
 	input.ShowLineNumbers = false
 	input.SetHeight(2)
 
 	messages := []llm.ChatMessage{
-		{Role: llm.RoleSystem, Content: system},
+		{Role: llm.RoleSystem, Content: config.System},
 	}
 
 	chatModel := ChatModel{
-		ctx:               ctx,
-		logger:            logger,
+		ctx:               config.Context,
+		logger:            config.Logger,
 		input:             input,
 		messages:          messages,
 		chatHistory:       "",
-		url:               url,
-		model:             model,
-		visionModel:       visionModel,
+		url:               config.URL,
+		model:             config.Model,
+		visionModel:       config.VisionModel,
 		inputHistoryIndex: 0,
-		toolRegistry:      registry,
+		toolRegistry:      config.Registry,
 	}
 
 	return chatModel
