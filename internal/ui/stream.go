@@ -149,7 +149,7 @@ func (model StreamModel) Content() string {
 }
 
 func (model StreamModel) startStream() tea.Cmd {
-	model.logger.Debug("transmitting to neural network", "model", model.model, "messages", len(model.messages))
+	model.logger.Debug("establishing to neural network", "model", model.model, "messages", len(model.messages))
 
 	go func() {
 		ch := model.responseCh
