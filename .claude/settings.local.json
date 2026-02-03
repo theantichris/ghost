@@ -27,7 +27,8 @@
       "Bash(find:*)",
       "Bash(xargs cat:*)",
       "Bash(grep:*)",
-      "Bash(gh issue view:*)"
+      "Bash(gh issue view:*)",
+      "mcp__github__issue_write"
     ]
   },
   "outputStyle": "Learning",
