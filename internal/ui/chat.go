@@ -46,7 +46,6 @@ type ChatModel struct {
 	ready             bool // True if the viewport is initialized
 	mode              Mode
 	cmdInput          textinput.Model
-	cmdBuffer         string
 	url               string
 	model             string
 	visionModel       string

@@ -26,101 +26,103 @@ func TestChatModel_HandleCommandMode(t *testing.T) {
 
 	tests := []struct {
 		name                 string
-		cmdBuffer            string
-		setupFile            func(t *testing.T) string // returns file path to append to cmdBuffer
+		inputValue           string
+		setupFile            func(t *testing.T) string // returns file path to append to inputValue
 		msg                  tea.Msg
 		wantMode             Mode
-		wantCmdBuffer        string
+		wantInputValue       string
 		wantQuit             bool
+		wantCmd              bool   // true if we expect any command (not just quit)
 		wantChatHistoryMatch string // substring to check in chatHistory (empty = skip check)
 		wantMessageCount     int    // 0 = skip check
 		wantLastRole         llm.Role
 	}{
 		{
-			name:          "q command quits",
-			cmdBuffer:     "q",
-			msg:           tea.KeyPressMsg{Code: tea.KeyEnter},
-			wantMode:      ModeCommand,
-			wantCmdBuffer: "q",
-			wantQuit:      true,
+			name:           "q command quits",
+			inputValue:     "q",
+			msg:            tea.KeyPressMsg{Code: tea.KeyEnter},
+			wantMode:       ModeCommand,
+			wantInputValue: "q",
+			wantQuit:       true,
 		},
 		{
-			name:          "invalid command returns to normal mode",
-			cmdBuffer:     "invalid",
-			msg:           tea.KeyPressMsg{Code: tea.KeyEnter},
-			wantMode:      ModeNormal,
-			wantCmdBuffer: "",
-			wantQuit:      false,
+			name:           "invalid command returns to normal mode",
+			inputValue:     "invalid",
+			msg:            tea.KeyPressMsg{Code: tea.KeyEnter},
+			wantMode:       ModeNormal,
+			wantInputValue: "",
+			wantQuit:       false,
 		},
 		{
-			name:          "escape returns to normal mode",
-			cmdBuffer:     "partial",
-			msg:           tea.KeyPressMsg{Code: tea.KeyEscape},
-			wantMode:      ModeNormal,
-			wantCmdBuffer: "",
-			wantQuit:      false,
+			name:           "escape returns to normal mode",
+			inputValue:     "partial",
+			msg:            tea.KeyPressMsg{Code: tea.KeyEscape},
+			wantMode:       ModeNormal,
+			wantInputValue: "",
+			wantQuit:       false,
 		},
 		{
-			name:          "typing appends to buffer",
-			cmdBuffer:     "q",
-			msg:           tea.KeyPressMsg{Code: 'u', Text: "u"},
-			wantMode:      ModeCommand,
-			wantCmdBuffer: "qu",
-			wantQuit:      false,
+			name:           "typing appends to buffer",
+			inputValue:     "q",
+			msg:            tea.KeyPressMsg{Code: 'u', Text: "u"},
+			wantMode:       ModeCommand,
+			wantInputValue: "qu",
+			wantQuit:       false,
+			wantCmd:        true, // textinput returns cursor blink command
 		},
 		{
 			name:                 "r without path shows error",
-			cmdBuffer:            "r",
+			inputValue:           "r",
 			msg:                  tea.KeyPressMsg{Code: tea.KeyEnter},
 			wantMode:             ModeNormal,
-			wantCmdBuffer:        "",
+			wantInputValue:       "",
 			wantChatHistoryMatch: fmt.Sprintf("[%s error: no file path provided]", theme.GlyphError),
 			wantMessageCount:     1,
 		},
 		{
 			name:                 "r with whitespace-only path shows error",
-			cmdBuffer:            "r   ",
+			inputValue:           "r   ",
 			msg:                  tea.KeyPressMsg{Code: tea.KeyEnter},
 			wantMode:             ModeNormal,
-			wantCmdBuffer:        "",
+			wantInputValue:       "",
 			wantChatHistoryMatch: fmt.Sprintf("[%s error: no file path provided]", theme.GlyphError),
 			wantMessageCount:     1,
 		},
 		{
 			name:                 "r with nonexistent file shows error",
-			cmdBuffer:            "r /nonexistent/file/path.txt",
+			inputValue:           "r /nonexistent/file/path.txt",
 			msg:                  tea.KeyPressMsg{Code: tea.KeyEnter},
 			wantMode:             ModeNormal,
-			wantCmdBuffer:        "",
+			wantInputValue:       "",
 			wantChatHistoryMatch: fmt.Sprintf("[%s error:", theme.GlyphError),
 			wantMessageCount:     1,
 		},
 		{
 			name:                 "r with valid file loads content",
-			cmdBuffer:            "r ",
+			inputValue:           "r ",
 			setupFile:            createTempFile,
 			msg:                  tea.KeyPressMsg{Code: tea.KeyEnter},
 			wantMode:             ModeNormal,
-			wantCmdBuffer:        "",
+			wantInputValue:       "",
 			wantChatHistoryMatch: fmt.Sprintf("[%s loaded:", theme.GlyphInfo),
 			wantMessageCount:     2,
 			wantLastRole:         llm.RoleUser,
 		},
 		{
-			name:      "r with directory shows error",
-			cmdBuffer: "r ",
+			name:       "r with directory shows error",
+			inputValue: "r ",
 			setupFile: func(t *testing.T) string {
 				return t.TempDir()
 			},
 			msg:                  tea.KeyPressMsg{Code: tea.KeyEnter},
 			wantMode:             ModeNormal,
-			wantCmdBuffer:        "",
+			wantInputValue:       "",
 			wantChatHistoryMatch: fmt.Sprintf("[%s error:", theme.GlyphError),
 			wantMessageCount:     1,
 		},
 		{
-			name:      "r with GIF file shows unsupported error",
-			cmdBuffer: "r ",
+			name:       "r with GIF file shows unsupported error",
+			inputValue: "r ",
 			setupFile: func(t *testing.T) string {
 				dir := t.TempDir()
 				path := filepath.Join(dir, "test.gif")
@@ -134,13 +136,13 @@ func TestChatModel_HandleCommandMode(t *testing.T) {
 			},
 			msg:                  tea.KeyPressMsg{Code: tea.KeyEnter},
 			wantMode:             ModeNormal,
-			wantCmdBuffer:        "",
+			wantInputValue:       "",
 			wantChatHistoryMatch: "unsupported",
 			wantMessageCount:     1,
 		},
 		{
-			name:      "r with binary file shows unsupported error",
-			cmdBuffer: "r ",
+			name:       "r with binary file shows unsupported error",
+			inputValue: "r ",
 			setupFile: func(t *testing.T) string {
 				dir := t.TempDir()
 				path := filepath.Join(dir, "test.exe")
@@ -154,7 +156,7 @@ func TestChatModel_HandleCommandMode(t *testing.T) {
 			},
 			msg:                  tea.KeyPressMsg{Code: tea.KeyEnter},
 			wantMode:             ModeNormal,
-			wantCmdBuffer:        "",
+			wantInputValue:       "",
 			wantChatHistoryMatch: "unsupported",
 			wantMessageCount:     1,
 		},
@@ -166,13 +168,13 @@ func TestChatModel_HandleCommandMode(t *testing.T) {
 			model.mode = ModeCommand
 			model.ready = true
 
-			// Setup file and append path to cmdBuffer if needed
-			cmdBuffer := tt.cmdBuffer
+			// Setup file and append path to inputValue if needed
+			inputValue := tt.inputValue
 			if tt.setupFile != nil {
 				path := tt.setupFile(t)
-				cmdBuffer += path
+				inputValue += path
 			}
-			model.cmdBuffer = cmdBuffer
+			model.cmdInput.SetValue(inputValue)
 
 			newModel, cmd := model.Update(tt.msg)
 			got := newModel.(ChatModel)
@@ -181,16 +183,20 @@ func TestChatModel_HandleCommandMode(t *testing.T) {
 				t.Errorf("mode = %v, want %v", got.mode, tt.wantMode)
 			}
 
-			if got.cmdBuffer != tt.wantCmdBuffer {
-				t.Errorf("cmdBuffer = %q, want %q", got.cmdBuffer, tt.wantCmdBuffer)
+			if got.cmdInput.Value() != tt.wantInputValue {
+				t.Errorf("cmdInput value = %q, want %q", got.cmdInput.Value(), tt.wantInputValue)
 			}
 
 			if tt.wantQuit && cmd == nil {
 				t.Error("expected quit command, got nil")
 			}
 
-			if !tt.wantQuit && cmd != nil {
+			if !tt.wantQuit && !tt.wantCmd && cmd != nil {
 				t.Errorf("expected no command, got %v", cmd)
+			}
+
+			if tt.wantCmd && cmd == nil {
+				t.Error("expected command, got nil")
 			}
 
 			if tt.wantChatHistoryMatch != "" && !strings.Contains(got.chatHistory, tt.wantChatHistoryMatch) {
