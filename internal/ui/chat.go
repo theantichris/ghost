@@ -121,11 +121,15 @@ func (model ChatModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return model.handleLLMErrorMsg(msg)
 
 	default:
-		// Pass through to textinput
+		// Pass through to textinputs
 		var cmd tea.Cmd
 
 		if model.mode == ModeInsert {
 			model.input, cmd = model.input.Update(msg)
+		}
+
+		if model.mode == ModeCommand {
+			model.cmdInput, cmd = model.cmdInput.Update(msg)
 		}
 
 		return model, cmd
