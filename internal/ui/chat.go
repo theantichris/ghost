@@ -45,6 +45,7 @@ type ChatModel struct {
 	height            int
 	ready             bool // True if the viewport is initialized
 	mode              Mode
+	cmdInput          textinput.Model
 	cmdBuffer         string
 	url               string
 	model             string
@@ -63,6 +64,10 @@ func NewChatModel(config ModelConfig) ChatModel {
 	input.ShowLineNumbers = false
 	input.SetHeight(2)
 
+	cmdInput := textinput.New()
+	cmdInput.Prompt = ":"
+	cmdInput.Focus()
+
 	messages := []llm.ChatMessage{
 		{Role: llm.RoleSystem, Content: config.System},
 	}
@@ -71,6 +76,7 @@ func NewChatModel(config ModelConfig) ChatModel {
 		ctx:               config.Context,
 		logger:            config.Logger,
 		input:             input,
+		cmdInput:          cmdInput,
 		messages:          messages,
 		chatHistory:       "",
 		url:               config.URL,
