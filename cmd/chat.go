@@ -36,13 +36,14 @@ func runChat(cmd *cobra.Command, args []string) error {
 	tavilyAPIKey := viper.GetString("search.api-key")
 	maxResults := viper.GetInt("search.max-results")
 
-	config := ui.ModelConfig{Context: cmd.Context(),
+	config := ui.ModelConfig{
+		Context:     cmd.Context(),
+		Logger:      logger,
 		URL:         viper.GetString("url"),
 		Model:       viper.GetString("model"),
 		VisionModel: viper.GetString("vision.model"),
 		System:      agent.SystemPrompt,
 		Registry:    tool.NewRegistry(tavilyAPIKey, maxResults, logger),
-		Logger:      logger,
 	}
 
 	chatModel := ui.NewChatModel(config)
