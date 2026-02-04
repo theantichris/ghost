@@ -147,11 +147,11 @@ func (model ChatModel) View() tea.View {
 
 	switch model.mode {
 	case ModeNormal:
-		view = tea.NewView(model.viewport.View() + "\n[NORMAL]\n" + model.input.View())
+		view = tea.NewView(model.viewport.View() + "\n" + model.input.View() + "\n[NOR]")
 	case ModeCommand:
-		view = tea.NewView(model.viewport.View() + "\n" + model.cmdInput.View() + "\n" + model.input.View())
+		view = tea.NewView(model.viewport.View() + "\n" + model.input.View() + "\n" + model.cmdInput.View())
 	case ModeInsert:
-		view = tea.NewView(model.viewport.View() + "\n[INSERT]\n" + model.input.View())
+		view = tea.NewView(model.viewport.View() + "\n" + model.input.View() + "\n[INS]")
 	}
 
 	view.AltScreen = true
