@@ -45,7 +45,7 @@ type ChatModel struct {
 	height            int
 	ready             bool // True if the viewport is initialized
 	mode              Mode
-	cmdBuffer         string
+	cmdInput          textinput.Model
 	url               string
 	model             string
 	visionModel       string
@@ -63,6 +63,10 @@ func NewChatModel(config ModelConfig) ChatModel {
 	input.ShowLineNumbers = false
 	input.SetHeight(2)
 
+	cmdInput := textinput.New()
+	cmdInput.Prompt = ":"
+	cmdInput.Focus()
+
 	messages := []llm.ChatMessage{
 		{Role: llm.RoleSystem, Content: config.System},
 	}
@@ -71,6 +75,7 @@ func NewChatModel(config ModelConfig) ChatModel {
 		ctx:               config.Context,
 		logger:            config.Logger,
 		input:             input,
+		cmdInput:          cmdInput,
 		messages:          messages,
 		chatHistory:       "",
 		url:               config.URL,
@@ -116,11 +121,15 @@ func (model ChatModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return model.handleLLMErrorMsg(msg)
 
 	default:
-		// Pass through to textinput
+		// Pass through to textinputs
 		var cmd tea.Cmd
 
 		if model.mode == ModeInsert {
 			model.input, cmd = model.input.Update(msg)
+		}
+
+		if model.mode == ModeCommand {
+			model.cmdInput, cmd = model.cmdInput.Update(msg)
 		}
 
 		return model, cmd
@@ -142,11 +151,11 @@ func (model ChatModel) View() tea.View {
 
 	switch model.mode {
 	case ModeNormal:
-		view = tea.NewView(model.viewport.View() + "\n[NORMAL]\n" + model.input.View())
+		view = tea.NewView(model.viewport.View() + "\n" + model.input.View() + "\n[NOR]")
 	case ModeCommand:
-		view = tea.NewView(model.viewport.View() + "\n:" + model.cmdBuffer + "\n" + model.input.View())
+		view = tea.NewView(model.viewport.View() + "\n" + model.input.View() + "\n" + model.cmdInput.View())
 	case ModeInsert:
-		view = tea.NewView(model.viewport.View() + "\n[INSERT]\n" + model.input.View())
+		view = tea.NewView(model.viewport.View() + "\n" + model.input.View() + "\n[INS]")
 	}
 
 	view.AltScreen = true

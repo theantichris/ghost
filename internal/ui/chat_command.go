@@ -13,7 +13,7 @@ import (
 func (model ChatModel) handleCommandMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch msg.Key().Code {
 	case tea.KeyEnter:
-		parts := strings.SplitN(model.cmdBuffer, " ", 2)
+		parts := strings.SplitN(model.cmdInput.Value(), " ", 2)
 		cmd := parts[0]
 		var arg string
 		if len(parts) > 1 {
@@ -32,14 +32,17 @@ func (model ChatModel) handleCommandMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 		// Resets mode for invalid commands.
 		model.mode = ModeNormal
-		model.cmdBuffer = ""
+		model.cmdInput.Reset()
 
 	case tea.KeyEscape:
 		model.mode = ModeNormal
-		model.cmdBuffer = ""
+		model.cmdInput.Reset()
 
 	default:
-		model.cmdBuffer += msg.Key().Text
+		var cmd tea.Cmd
+		model.cmdInput, cmd = model.cmdInput.Update(msg)
+
+		return model, cmd
 	}
 
 	return model, nil
@@ -50,7 +53,7 @@ func (model ChatModel) readFile(arg string) (tea.Model, tea.Cmd) {
 		model.chatHistory += fmt.Sprintf("\n[%s error: no file path provided]\n", theme.GlyphError)
 		model.viewport.SetContent(model.renderHistory())
 		model.mode = ModeNormal
-		model.cmdBuffer = ""
+		model.cmdInput.Reset()
 
 		return model, nil
 	}
@@ -61,7 +64,7 @@ func (model ChatModel) readFile(arg string) (tea.Model, tea.Cmd) {
 		model.chatHistory += fmt.Sprintf("\n[%s error: %s]\n", theme.GlyphError, err.Error())
 		model.viewport.SetContent(model.renderHistory())
 		model.mode = ModeNormal
-		model.cmdBuffer = ""
+		model.cmdInput.Reset()
 
 		return model, nil
 	}
@@ -71,7 +74,7 @@ func (model ChatModel) readFile(arg string) (tea.Model, tea.Cmd) {
 		model.chatHistory += fmt.Sprintf("\n[%s error: file is directory]\n", theme.GlyphError)
 		model.viewport.SetContent(model.renderHistory())
 		model.mode = ModeNormal
-		model.cmdBuffer = ""
+		model.cmdInput.Reset()
 
 	case agent.FileTypeImage:
 		return model.analyzeImage(arg)
@@ -90,7 +93,7 @@ func (model ChatModel) analyzeImage(path string) (tea.Model, tea.Cmd) {
 		model.chatHistory += fmt.Sprintf("\n[%s error: %s]\n", theme.GlyphError, err.Error())
 		model.viewport.SetContent(model.renderHistory())
 		model.mode = ModeNormal
-		model.cmdBuffer = ""
+		model.cmdInput.Reset()
 
 		return model, nil
 	}
@@ -102,7 +105,7 @@ func (model ChatModel) analyzeImage(path string) (tea.Model, tea.Cmd) {
 	model.viewport.SetContent(model.renderHistory())
 
 	model.mode = ModeNormal
-	model.cmdBuffer = ""
+	model.cmdInput.Reset()
 
 	return model, nil
 }
@@ -114,7 +117,7 @@ func (model ChatModel) readTextFile(path string) (tea.Model, tea.Cmd) {
 		model.chatHistory += fmt.Sprintf("\n[%s error: %s]\n", theme.GlyphError, err.Error())
 		model.viewport.SetContent(model.renderHistory())
 		model.mode = ModeNormal
-		model.cmdBuffer = ""
+		model.cmdInput.Reset()
 
 		return model, nil
 	}
@@ -125,7 +128,7 @@ func (model ChatModel) readTextFile(path string) (tea.Model, tea.Cmd) {
 	model.viewport.SetContent(model.renderHistory())
 
 	model.mode = ModeNormal
-	model.cmdBuffer = ""
+	model.cmdInput.Reset()
 
 	return model, nil
 }

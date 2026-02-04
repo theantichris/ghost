@@ -33,18 +33,22 @@ func newChatCommand() *cobra.Command {
 func runChat(cmd *cobra.Command, args []string) error {
 	logger := cmd.Context().Value(loggerKey{}).(*log.Logger)
 
-	url := viper.GetString("url")
-	model := viper.GetString("model")
-	visionModel := viper.GetString("vision.model")
 	tavilyAPIKey := viper.GetString("search.api-key")
 	maxResults := viper.GetInt("search.max-results")
 
-	registry := tool.NewRegistry(tavilyAPIKey, maxResults, logger)
+	config := ui.ModelConfig{
+		Context:     cmd.Context(),
+		Logger:      logger,
+		URL:         viper.GetString("url"),
+		Model:       viper.GetString("model"),
+		VisionModel: viper.GetString("vision.model"),
+		System:      agent.SystemPrompt,
+		Registry:    tool.NewRegistry(tavilyAPIKey, maxResults, logger),
+	}
 
-	logger.Info("entering ghost chat", "model", model, "url", url)
-
-	config := ui.ModelConfig{Context: cmd.Context(), URL: url, Model: model, VisionModel: visionModel, System: agent.SystemPrompt, Registry: registry, Logger: logger}
 	chatModel := ui.NewChatModel(config)
+
+	logger.Info("entering chat", "ollama_url", config.URL, "chat_model", config.Model, "vision_model", config.VisionModel)
 	program := tea.NewProgram(chatModel)
 
 	_, err := program.Run()

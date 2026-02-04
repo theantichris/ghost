@@ -82,22 +82,8 @@ func NewRootCmd() (*cobra.Command, func() error, error) {
 func run(cmd *cobra.Command, args []string) error {
 	logger := cmd.Context().Value(loggerKey{}).(*log.Logger)
 
-	url := viper.GetString("url")
-	model := viper.GetString("model")
-	visionModel := viper.GetString("vision.model")
 	format := strings.ToLower(viper.GetString("format"))
-	tavilyAPIKey := viper.GetString("search.api-key")
-	maxResults := viper.GetInt("search.max-results")
-	userPrompt := args[0]
-
-	images, err := cmd.Flags().GetStringArray("image")
-	if err != nil {
-		return err
-	}
-
 	messages := agent.NewMessageHistory(agent.SystemPrompt, format)
-
-	registry := tool.NewRegistry(tavilyAPIKey, maxResults, logger)
 
 	pipedInput, err := agent.GetPipedInput(os.Stdin, logger)
 	if err != nil {
@@ -113,14 +99,24 @@ func run(cmd *cobra.Command, args []string) error {
 		messages = append(messages, pipedMessage)
 	}
 
-	messages = append(messages, llm.ChatMessage{Role: llm.RoleUser, Content: userPrompt})
+	// Append user message.
+	messages = append(messages, llm.ChatMessage{Role: llm.RoleUser, Content: args[0]})
+
+	images, err := cmd.Flags().GetStringArray("image")
+	if err != nil {
+		return err
+	}
+
+	tavilyAPIKey := viper.GetString("search.api-key")
+	maxResults := viper.GetInt("search.max-results")
+	registry := tool.NewRegistry(tavilyAPIKey, maxResults, logger)
 
 	config := ui.ModelConfig{
 		Context:     cmd.Context(),
 		Logger:      logger,
-		URL:         url,
-		Model:       model,
-		VisionModel: visionModel,
+		URL:         viper.GetString("url"),
+		Model:       viper.GetString("model"),
+		VisionModel: viper.GetString("vision.model"),
 		Format:      format,
 		Messages:    messages,
 		Images:      images,
