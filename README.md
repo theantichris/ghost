@@ -79,6 +79,16 @@ ghost "what changed in the facility?" -i before-raid.png -i after-raid.png
 ghost "what are the latest vulnerabilities disclosed this week?"
 ```
 
+## Memory Banks
+
+Conversations are stored as JSON files at `$XDG_DATA_HOME/ghost/threads/`:
+
+- **Linux**: `~/.local/share/ghost/threads/`
+- **macOS**: `~/Library/Application Support/ghost/threads/`
+- **Windows**: `%AppData%\ghost\threads\`
+
+Each conversation is a `{uuid}.json` file, making them easy to back up or inspect.
+
 ## Interactive Chat
 
 Launch a persistent conversation session with Ghost:
@@ -112,7 +122,7 @@ ghost chat --model llama3
 
 Configure Ghost via command-line flags, environment variables, or config file.
 
-### Command Flags
+### CLI Command Flags
 
 - `-m, --model`: Model to use (e.g., `llama3`)
 - `-V, --vision-model`: Vision model for images (defaults to main model)
