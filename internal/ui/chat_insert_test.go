@@ -160,7 +160,7 @@ func TestChatModel_HandleInsertMode(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			model := newTestModel()
+			model := newTestModel(t)
 			model.mode = ModeInsert
 			model.ready = true
 			model.input.SetValue(tt.inputValue)

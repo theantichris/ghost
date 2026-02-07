@@ -5,6 +5,7 @@ import (
 
 	"github.com/charmbracelet/log"
 	"github.com/theantichris/ghost/v3/internal/llm"
+	"github.com/theantichris/ghost/v3/internal/storage"
 	"github.com/theantichris/ghost/v3/internal/tool"
 )
 
@@ -20,4 +21,5 @@ type ModelConfig struct {
 	Messages    []llm.ChatMessage
 	Images      []string
 	Registry    tool.Registry
+	Store       *storage.Store
 }

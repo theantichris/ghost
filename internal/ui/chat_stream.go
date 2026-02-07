@@ -62,10 +62,9 @@ func (model ChatModel) handleLLMDoneMsg() (tea.Model, tea.Cmd) {
 
 	model.chatHistory += "\n\n"
 	model.viewport.SetContent(model.renderHistory())
-	model.messages = append(model.messages, llm.ChatMessage{
-		Role:    llm.RoleAssistant,
-		Content: model.currentResponse,
-	})
+	assistantMsg := llm.ChatMessage{Role: llm.RoleAssistant, Content: model.currentResponse}
+	model.messages = append(model.messages, assistantMsg)
+	model = model.saveMessage(assistantMsg)
 
 	model.currentResponse = ""
 

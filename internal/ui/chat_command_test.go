@@ -164,7 +164,7 @@ func TestChatModel_HandleCommandMode(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			model := newTestModel()
+			model := newTestModel(t)
 			model.mode = ModeCommand
 			model.ready = true
 
