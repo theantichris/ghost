@@ -32,7 +32,8 @@
       "Bash(gh api:*)",
       "Bash(gh issue create:*)",
       "mcp__github__get_me",
-      "mcp__github__add_issue_comment"
+      "mcp__github__add_issue_comment",
+      "Bash(go mod graph:*)"
     ]
   },
   "outputStyle": "Learning",
