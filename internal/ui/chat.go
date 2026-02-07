@@ -10,6 +10,7 @@ import (
 	"charm.land/lipgloss/v2"
 	"github.com/charmbracelet/log"
 	"github.com/theantichris/ghost/v3/internal/llm"
+	"github.com/theantichris/ghost/v3/internal/storage"
 	"github.com/theantichris/ghost/v3/internal/tool"
 	"github.com/theantichris/ghost/v3/theme"
 )
@@ -55,6 +56,7 @@ type ChatModel struct {
 	inputHistory      []string
 	inputHistoryIndex int
 	toolRegistry      tool.Registry
+	store             *storage.Store
 }
 
 // NewChatModel creates the chat model and initializes the text input.
@@ -83,6 +85,7 @@ func NewChatModel(config ModelConfig) ChatModel {
 		visionModel:       config.VisionModel,
 		inputHistoryIndex: 0,
 		toolRegistry:      config.Registry,
+		store:             config.Store,
 	}
 
 	return chatModel
