@@ -59,7 +59,7 @@ func TestChatModel_HandleLLMMessages(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			model := newTestModel()
+			model := newTestModel(t)
 			model.ready = true
 			model.currentResponse = tt.currentResponse
 			model.chatHistory = tt.chatHistory

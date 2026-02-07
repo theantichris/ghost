@@ -89,7 +89,7 @@ func TestChatModel_HandleNormalMode(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			model := newTestModel()
+			model := newTestModel(t)
 			model.mode = ModeNormal
 			model.ready = true
 

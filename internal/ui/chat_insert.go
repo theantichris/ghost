@@ -60,7 +60,9 @@ func (model ChatModel) handleInsertMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		model.inputHistoryIndex = len(model.inputHistory)
 
 		model.input.SetValue("")
-		model.messages = append(model.messages, llm.ChatMessage{Role: llm.RoleUser, Content: value})
+		userMsg := llm.ChatMessage{Role: llm.RoleUser, Content: value}
+		model.messages = append(model.messages, userMsg)
+		model = model.saveMessage(userMsg)
 		model.chatHistory += fmt.Sprintf("You: %s\n\nghost: ", value)
 		model.viewport.SetContent(model.renderHistory())
 

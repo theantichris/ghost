@@ -57,6 +57,7 @@ type ChatModel struct {
 	inputHistoryIndex int
 	toolRegistry      tool.Registry
 	store             *storage.Store
+	threadID          string // ID of current conversation
 }
 
 // NewChatModel creates the chat model and initializes the text input.
