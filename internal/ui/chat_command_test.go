@@ -160,6 +160,13 @@ func TestChatModel_HandleCommandMode(t *testing.T) {
 			wantChatHistoryMatch: "unsupported",
 			wantMessageCount:     1,
 		},
+		{
+			name:           "t command switches to thread list mode",
+			inputValue:     "t",
+			msg:            tea.KeyPressMsg{Code: tea.KeyEnter},
+			wantMode:       ModeThreadList,
+			wantInputValue: "",
+		},
 	}
 
 	for _, tt := range tests {
