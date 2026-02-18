@@ -28,6 +28,9 @@ func (model ChatModel) handleCommandMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 		case "r":
 			return model.readFile(arg)
+
+		case "t":
+			return model.createThreadList()
 		}
 
 		// Resets mode for invalid commands.
@@ -44,6 +47,24 @@ func (model ChatModel) handleCommandMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 		return model, cmd
 	}
+
+	return model, nil
+}
+
+func (model ChatModel) createThreadList() (tea.Model, tea.Cmd) {
+	threadList, err := NewThreadListModel(model.store, model.width, model.height, *model.logger)
+	if err != nil {
+		model.logger.Error("error creating thread list", "error", err)
+		model.chatHistory += fmt.Sprintf("\n[%s error: %s]\n", theme.GlyphError, err.Error())
+		model.viewport.SetContent(model.renderHistory())
+		model.mode = ModeNormal
+		model.cmdInput.Reset()
+
+		return model, nil
+	}
+
+	model.mode = ModeThreadList
+	model.threadList = threadList
 
 	return model, nil
 }

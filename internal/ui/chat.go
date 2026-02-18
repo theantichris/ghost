@@ -24,6 +24,7 @@ const (
 	ModeNormal Mode = iota
 	ModeCommand
 	ModeInsert
+	ModeThreadList
 )
 
 // LLMResponseMsg carries a chunk of the LLM response.
@@ -58,6 +59,7 @@ type ChatModel struct {
 	toolRegistry      tool.Registry
 	store             *storage.Store
 	threadID          string // ID of current conversation
+	threadList        ThreadListModel
 }
 
 // NewChatModel creates the chat model and initializes the text input.
@@ -113,6 +115,9 @@ func (model ChatModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case ModeInsert:
 			return model.handleInsertMode(msg)
+
+		case ModeThreadList:
+			return model.handleThreadListMode(msg)
 		}
 
 	case LLMResponseMsg:
@@ -160,6 +165,8 @@ func (model ChatModel) View() tea.View {
 		view = tea.NewView(model.viewport.View() + "\n" + model.input.View() + "\n" + model.cmdInput.View())
 	case ModeInsert:
 		view = tea.NewView(model.viewport.View() + "\n" + model.input.View() + "\n[INS]")
+	case ModeThreadList:
+		view = model.threadList.View()
 	}
 
 	view.AltScreen = true
@@ -183,6 +190,19 @@ func (model ChatModel) handleWindowSize(msg tea.WindowSizeMsg) (tea.Model, tea.C
 	}
 
 	return model, nil
+}
+
+func (model ChatModel) handleThreadListMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	if msg.String() == "esc" {
+		model.mode = ModeNormal
+
+		return model, nil
+	}
+
+	listModel, cmd := model.threadList.Update(msg)
+	model.threadList = listModel.(ThreadListModel)
+
+	return model, cmd
 }
 
 // renderHistory returns the model history word wrapped to the width of the viewport.
