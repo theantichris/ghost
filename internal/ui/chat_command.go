@@ -65,6 +65,7 @@ func (model ChatModel) createThreadList() (tea.Model, tea.Cmd) {
 
 	model.mode = ModeThreadList
 	model.threadList = threadList
+	model.cmdInput.Reset()
 
 	return model, nil
 }
