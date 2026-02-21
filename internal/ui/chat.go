@@ -160,11 +160,17 @@ func (model ChatModel) View() tea.View {
 
 	switch model.mode {
 	case ModeNormal:
-		view = tea.NewView(model.viewport.View() + "\n" + model.userInput.View() + "\n[NOR]")
+		view = tea.NewView(
+			lipgloss.JoinVertical(lipgloss.Left, model.viewport.View(), model.userInput.View(), "[NOR]"),
+		)
 	case ModeCommand:
-		view = tea.NewView(model.viewport.View() + "\n" + model.userInput.View() + "\n" + model.cmdInput.View())
+		view = tea.NewView(
+			lipgloss.JoinVertical(lipgloss.Left, model.viewport.View(), model.userInput.View(), model.cmdInput.View()),
+		)
 	case ModeInsert:
-		view = tea.NewView(model.viewport.View() + "\n" + model.userInput.View() + "\n[INS]")
+		view = tea.NewView(
+			lipgloss.JoinVertical(lipgloss.Left, model.viewport.View(), model.userInput.View(), "[INS]"),
+		)
 	case ModeThreadList:
 		view = model.threadList.View()
 	}
