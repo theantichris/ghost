@@ -21,7 +21,7 @@ func newTestModel(t *testing.T) ChatModel {
 		t.Fatalf("failed to create test store: %v", err)
 	}
 
-	config := ModelConfig{Context: context.Background(), URL: "http://localhost/11434/api", Model: "test-model", VisionModel: "test-vision-model", Registry: registry, Logger: logger, Store: store}
+	config := ModelConfig{Context: context.Background(), URL: "http://localhost/11434/api", ChatLLM: "test-model", VisionLLM: "test-vision-model", Registry: registry, Logger: logger, Store: store}
 
 	return NewChatModel(config)
 }

@@ -18,7 +18,7 @@ func newTestStreamModel() StreamModel {
 	config := ModelConfig{
 		Context:  context.Background(),
 		URL:      "http://localhost/11434/api",
-		Model:    "test-model",
+		ChatLLM:  "test-model",
 		Registry: registry,
 		Logger:   logger,
 	}

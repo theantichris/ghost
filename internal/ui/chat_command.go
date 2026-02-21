@@ -109,7 +109,7 @@ func (model ChatModel) readFile(arg string) (tea.Model, tea.Cmd) {
 }
 
 func (model ChatModel) analyzeImage(path string) (tea.Model, tea.Cmd) {
-	content, err := agent.AnalyseImages(model.ctx, model.url, model.visionModel, []string{path}, model.logger)
+	content, err := agent.AnalyseImages(model.ctx, model.url, model.visionLLM, []string{path}, model.logger)
 	if err != nil {
 		model.logger.Error("image read failed", "path", path, "error", err)
 		model.chatHistory += fmt.Sprintf("\n[%s error: %s]\n", theme.GlyphError, err.Error())

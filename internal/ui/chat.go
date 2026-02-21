@@ -49,8 +49,8 @@ type ChatModel struct {
 	mode              Mode
 	cmdInput          textinput.Model
 	url               string
-	model             string
-	visionModel       string
+	chatLLM           string
+	visionLLM         string
 	responseCh        chan tea.Msg
 	currentResponse   string
 	awaitingG         bool
@@ -84,8 +84,8 @@ func NewChatModel(config ModelConfig) ChatModel {
 		messages:          messages,
 		chatHistory:       "",
 		url:               config.URL,
-		model:             config.Model,
-		visionModel:       config.VisionModel,
+		chatLLM:           config.ChatLLM,
+		visionLLM:         config.VisionLLM,
 		inputHistoryIndex: 0,
 		toolRegistry:      config.Registry,
 		store:             config.Store,
