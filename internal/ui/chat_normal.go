@@ -19,7 +19,7 @@ func (model ChatModel) handleNormalMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 	case "i":
 		model.mode = ModeInsert
-		model.input.Focus()
+		model.userInput.Focus()
 
 		return model, textinput.Blink
 

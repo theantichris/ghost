@@ -163,7 +163,7 @@ func TestChatModel_HandleInsertMode(t *testing.T) {
 			model := newTestModel(t)
 			model.mode = ModeInsert
 			model.ready = true
-			model.input.SetValue(tt.inputValue)
+			model.userInput.SetValue(tt.inputValue)
 
 			if tt.inputHistory != nil {
 				model.inputHistory = tt.inputHistory
@@ -177,8 +177,8 @@ func TestChatModel_HandleInsertMode(t *testing.T) {
 				t.Errorf("mode = %v, want %v", got.mode, tt.wantMode)
 			}
 
-			if got.input.Value() != tt.wantInputValue {
-				t.Errorf("input value = %q, want %q", got.input.Value(), tt.wantInputValue)
+			if got.userInput.Value() != tt.wantInputValue {
+				t.Errorf("input value = %q, want %q", got.userInput.Value(), tt.wantInputValue)
 			}
 
 			if len(got.messages) != tt.wantMessageCount {
