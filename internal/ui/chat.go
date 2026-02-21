@@ -52,8 +52,8 @@ type ChatModel struct {
 	chatLLM           string
 	visionLLM         string
 	responseCh        chan tea.Msg
-	currentResponse   string
-	awaitingG         bool
+	currentResponse   string // Buffer for the LLM's streaming response
+	awaitingG         bool   // Used for gg command
 	inputHistory      []string
 	inputHistoryIndex int
 	toolRegistry      tool.Registry
