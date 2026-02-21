@@ -11,15 +11,15 @@ import (
 
 // ModelConfig holds the configuration options for the UI models.
 type ModelConfig struct {
-	Context     context.Context
-	Logger      *log.Logger
-	URL         string
-	Model       string
-	VisionModel string
-	Format      string
-	System      string
-	Messages    []llm.ChatMessage
-	Images      []string
-	Registry    tool.Registry
-	Store       *storage.Store
+	Context   context.Context
+	Logger    *log.Logger
+	URL       string
+	ChatLLM   string
+	VisionLLM string
+	Format    string
+	System    string
+	Messages  []llm.ChatMessage
+	Images    []string
+	Registry  tool.Registry
+	Store     *storage.Store
 }

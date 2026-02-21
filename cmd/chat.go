@@ -16,21 +16,14 @@ import (
 	"github.com/theantichris/ghost/v3/internal/ui"
 )
 
-const (
-	chatUseText     = "chat"
-	chatShortText   = "starts ghost in chat mode"
-	chatLongText    = "starts ghost in chat mode, use :q to quit"
-	chatExampleText = "ghost chat"
-)
-
 var ErrHomeDir = errors.New("failed to retrieve user home directory")
 
 func newChatCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     chatUseText,
-		Short:   chatShortText,
-		Long:    chatLongText,
-		Example: chatExampleText,
+		Use:     "chat",
+		Short:   "starts ghost in chat mode",
+		Long:    "starts ghost in chat mode, use :q to quit",
+		Example: "ghost chat",
 		Args:    cobra.NoArgs,
 		RunE:    runChat,
 	}
@@ -65,21 +58,20 @@ func runChat(cmd *cobra.Command, args []string) error {
 	}
 
 	config := ui.ModelConfig{
-		Context:     cmd.Context(),
-		Logger:      logger,
-		URL:         viper.GetString("url"),
-		Model:       viper.GetString("model"),
-		VisionModel: viper.GetString("vision.model"),
-		System:      agent.SystemPrompt,
-		Registry:    tool.NewRegistry(tavilyAPIKey, maxResults, logger),
-		Store:       store,
+		Context:   cmd.Context(),
+		Logger:    logger,
+		URL:       viper.GetString("url"),
+		ChatLLM:   viper.GetString("model"),
+		VisionLLM: viper.GetString("vision.model"),
+		System:    agent.SystemPrompt,
+		Registry:  tool.NewRegistry(tavilyAPIKey, maxResults, logger),
+		Store:     store,
 	}
 
 	chatModel := ui.NewChatModel(config)
 
-	logger.Info("entering chat", "ollama_url", config.URL, "chat_model", config.Model, "vision_model", config.VisionModel)
+	logger.Info("entering chat", "ollama_url", config.URL, "chat_model", config.ChatLLM, "vision_model", config.VisionLLM)
 	program := tea.NewProgram(chatModel)
-
 	_, err = program.Run()
 
 	return err

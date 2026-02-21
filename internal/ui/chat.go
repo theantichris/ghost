@@ -2,6 +2,7 @@ package ui
 
 import (
 	"context"
+	"fmt"
 
 	"charm.land/bubbles/v2/textarea"
 	"charm.land/bubbles/v2/textinput"
@@ -18,14 +19,14 @@ import (
 // Mode represents the different modes the TUI can be in.
 type Mode int
 
-const inputHeight = 3
-
 const (
 	ModeNormal Mode = iota
 	ModeCommand
 	ModeInsert
 	ModeThreadList
 )
+
+const inputHeight = 3
 
 // LLMResponseMsg carries a chunk of the LLM response.
 type LLMResponseMsg string
@@ -40,7 +41,7 @@ type ChatModel struct {
 	ctx               context.Context
 	logger            *log.Logger
 	viewport          viewport.Model
-	input             textarea.Model
+	userInput         textarea.Model
 	messages          []llm.ChatMessage
 	chatHistory       string // Rendered conversation for display
 	width             int
@@ -49,11 +50,11 @@ type ChatModel struct {
 	mode              Mode
 	cmdInput          textinput.Model
 	url               string
-	model             string
-	visionModel       string
+	chatLLM           string
+	visionLLM         string
 	responseCh        chan tea.Msg
-	currentResponse   string
-	awaitingG         bool
+	currentResponse   string // Buffer for the LLM's streaming response
+	awaitingG         bool   // Used for gg command
 	inputHistory      []string
 	inputHistoryIndex int
 	toolRegistry      tool.Registry
@@ -64,9 +65,9 @@ type ChatModel struct {
 
 // NewChatModel creates the chat model and initializes the text input.
 func NewChatModel(config ModelConfig) ChatModel {
-	input := textarea.New()
-	input.ShowLineNumbers = false
-	input.SetHeight(2)
+	userInput := textarea.New()
+	userInput.ShowLineNumbers = false
+	userInput.SetHeight(2)
 
 	cmdInput := textinput.New()
 	cmdInput.Prompt = ":"
@@ -79,13 +80,13 @@ func NewChatModel(config ModelConfig) ChatModel {
 	chatModel := ChatModel{
 		ctx:               config.Context,
 		logger:            config.Logger,
-		input:             input,
+		userInput:         userInput,
 		cmdInput:          cmdInput,
 		messages:          messages,
 		chatHistory:       "",
 		url:               config.URL,
-		model:             config.Model,
-		visionModel:       config.VisionModel,
+		chatLLM:           config.ChatLLM,
+		visionLLM:         config.VisionLLM,
 		inputHistoryIndex: 0,
 		toolRegistry:      config.Registry,
 		store:             config.Store,
@@ -130,11 +131,11 @@ func (model ChatModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return model.handleLLMErrorMsg(msg)
 
 	default:
-		// Pass through to textinputs
+		// Pass through to inputs
 		var cmd tea.Cmd
 
 		if model.mode == ModeInsert {
-			model.input, cmd = model.input.Update(msg)
+			model.userInput, cmd = model.userInput.Update(msg)
 		}
 
 		if model.mode == ModeCommand {
@@ -160,11 +161,17 @@ func (model ChatModel) View() tea.View {
 
 	switch model.mode {
 	case ModeNormal:
-		view = tea.NewView(model.viewport.View() + "\n" + model.input.View() + "\n[NOR]")
+		view = tea.NewView(
+			lipgloss.JoinVertical(lipgloss.Left, model.viewport.View(), model.userInput.View(), "[NOR]"),
+		)
 	case ModeCommand:
-		view = tea.NewView(model.viewport.View() + "\n" + model.input.View() + "\n" + model.cmdInput.View())
+		view = tea.NewView(
+			lipgloss.JoinVertical(lipgloss.Left, model.viewport.View(), model.userInput.View(), model.cmdInput.View()),
+		)
 	case ModeInsert:
-		view = tea.NewView(model.viewport.View() + "\n" + model.input.View() + "\n[INS]")
+		view = tea.NewView(
+			lipgloss.JoinVertical(lipgloss.Left, model.viewport.View(), model.userInput.View(), "[INS]"),
+		)
 	case ModeThreadList:
 		view = model.threadList.View()
 	}
@@ -178,7 +185,7 @@ func (model ChatModel) handleWindowSize(msg tea.WindowSizeMsg) (tea.Model, tea.C
 	model.width = msg.Width
 	model.height = msg.Height
 
-	model.input.SetWidth(model.width - len(model.input.Prompt))
+	model.userInput.SetWidth(model.width - len(model.userInput.Prompt))
 
 	if !model.ready {
 		model.viewport = viewport.New(viewport.WithWidth(model.width), viewport.WithHeight(model.height-inputHeight))
@@ -193,12 +200,31 @@ func (model ChatModel) handleWindowSize(msg tea.WindowSizeMsg) (tea.Model, tea.C
 }
 
 func (model ChatModel) handleThreadListMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
-	if msg.String() == "esc" {
+	switch msg.String() {
+	case "esc":
 		model.mode = ModeNormal
+
+		return model, nil
+
+	case "enter":
+		selectedThread, ok := model.threadList.list.SelectedItem().(threadItem)
+		if ok {
+			var err error
+			model, err = model.loadThread(selectedThread.thread.ID)
+			if err != nil {
+				model.logger.Error("error loading thread", "thread_id", selectedThread.thread.ID, "error", err.Error())
+				model.chatHistory += fmt.Sprintf("\n[%s error: %s]\n", theme.GlyphError, err.Error())
+			}
+		}
+
+		model.viewport.SetContent(model.renderHistory())
+		model.mode = ModeNormal
+		model.cmdInput.Reset()
 
 		return model, nil
 	}
 
+	// Pass through to the list model update
 	listModel, cmd := model.threadList.Update(msg)
 	model.threadList = listModel.(ThreadListModel)
 

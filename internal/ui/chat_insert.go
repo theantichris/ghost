@@ -14,11 +14,11 @@ func (model ChatModel) handleInsertMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch msg.String() {
 	case "esc":
 		model.mode = ModeNormal
-		model.input.Blur()
+		model.userInput.Blur()
 
 	case "shift+enter", "ctrl+j":
-		value := model.input.Value() + "\n"
-		model.input.SetValue(value)
+		value := model.userInput.Value() + "\n"
+		model.userInput.SetValue(value)
 
 		return model, nil
 
@@ -32,7 +32,7 @@ func (model ChatModel) handleInsertMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			model.inputHistoryIndex = 0
 		}
 
-		model.input.SetValue(model.inputHistory[model.inputHistoryIndex])
+		model.userInput.SetValue(model.inputHistory[model.inputHistoryIndex])
 
 	case "down":
 		if len(model.inputHistory) == 0 {
@@ -42,15 +42,15 @@ func (model ChatModel) handleInsertMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		model.inputHistoryIndex++
 		if model.inputHistoryIndex >= len(model.inputHistory) {
 			model.inputHistoryIndex = len(model.inputHistory)
-			model.input.SetValue("")
+			model.userInput.SetValue("")
 
 			return model, nil
 		}
 
-		model.input.SetValue(model.inputHistory[model.inputHistoryIndex])
+		model.userInput.SetValue(model.inputHistory[model.inputHistoryIndex])
 
 	case "enter":
-		value := model.input.Value()
+		value := model.userInput.Value()
 
 		if strings.TrimSpace(value) == "" {
 			return model, nil
@@ -59,7 +59,7 @@ func (model ChatModel) handleInsertMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		model.inputHistory = append(model.inputHistory, value)
 		model.inputHistoryIndex = len(model.inputHistory)
 
-		model.input.SetValue("")
+		model.userInput.SetValue("")
 		userMsg := llm.ChatMessage{Role: llm.RoleUser, Content: value}
 		model.messages = append(model.messages, userMsg)
 		model = model.saveMessage(userMsg)
@@ -69,7 +69,7 @@ func (model ChatModel) handleInsertMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return model, model.startLLMStream()
 
 	default:
-		model.input, cmd = model.input.Update(msg)
+		model.userInput, cmd = model.userInput.Update(msg)
 
 		return model, cmd
 	}

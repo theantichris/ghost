@@ -12,7 +12,7 @@ import (
 // startLLMStream starts the LLM call in a go routine.
 // It returns the first listenForChunk command to start receiving.
 func (model *ChatModel) startLLMStream() tea.Cmd {
-	model.logger.Debug("transmitting to neural network", "model", model.model, "messages", len(model.messages))
+	model.logger.Debug("transmitting to neural network", "model", model.chatLLM, "messages", len(model.messages))
 
 	model.responseCh = make(chan tea.Msg)
 
@@ -20,7 +20,7 @@ func (model *ChatModel) startLLMStream() tea.Cmd {
 		ch := model.responseCh
 		defer close(ch)
 
-		messages, err := agent.RunToolLoop(model.ctx, model.toolRegistry, model.url, model.model, model.messages, model.logger)
+		messages, err := agent.RunToolLoop(model.ctx, model.toolRegistry, model.url, model.chatLLM, model.messages, model.logger)
 		if err != nil {
 			ch <- LLMErrorMsg{Err: err}
 
@@ -32,7 +32,7 @@ func (model *ChatModel) startLLMStream() tea.Cmd {
 		_, err = llm.StreamChat(
 			model.ctx,
 			model.url,
-			model.model,
+			model.chatLLM,
 			model.messages,
 			nil,
 			func(chunk string) {

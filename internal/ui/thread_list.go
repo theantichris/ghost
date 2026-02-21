@@ -11,11 +11,11 @@ import (
 type ThreadListModel struct {
 	list   list.Model
 	store  *storage.Store
-	logger log.Logger
+	logger *log.Logger
 }
 
 // NewThreadListModel creates a new model and stores the current list of threads.
-func NewThreadListModel(store *storage.Store, width, height int, logger log.Logger) (ThreadListModel, error) {
+func NewThreadListModel(store *storage.Store, width, height int, logger *log.Logger) (ThreadListModel, error) {
 	threads, err := store.ListThreads()
 	if err != nil {
 		return ThreadListModel{}, err

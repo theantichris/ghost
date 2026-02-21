@@ -33,7 +33,8 @@
       "Bash(gh issue create:*)",
       "mcp__github__get_me",
       "mcp__github__add_issue_comment",
-      "Bash(go mod graph:*)"
+      "Bash(go mod graph:*)",
+      "Skill(reflect)"
     ]
   },
   "outputStyle": "Learning",

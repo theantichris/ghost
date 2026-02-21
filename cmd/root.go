@@ -112,15 +112,15 @@ func run(cmd *cobra.Command, args []string) error {
 	registry := tool.NewRegistry(tavilyAPIKey, maxResults, logger)
 
 	config := ui.ModelConfig{
-		Context:     cmd.Context(),
-		Logger:      logger,
-		URL:         viper.GetString("url"),
-		Model:       viper.GetString("model"),
-		VisionModel: viper.GetString("vision.model"),
-		Format:      format,
-		Messages:    messages,
-		Images:      images,
-		Registry:    registry,
+		Context:   cmd.Context(),
+		Logger:    logger,
+		URL:       viper.GetString("url"),
+		ChatLLM:   viper.GetString("model"),
+		VisionLLM: viper.GetString("vision.model"),
+		Format:    format,
+		Messages:  messages,
+		Images:    images,
+		Registry:  registry,
 	}
 	streamModel := ui.NewStreamModel(config)
 
