@@ -18,14 +18,14 @@ import (
 // Mode represents the different modes the TUI can be in.
 type Mode int
 
-const inputHeight = 3
-
 const (
 	ModeNormal Mode = iota
 	ModeCommand
 	ModeInsert
 	ModeThreadList
 )
+
+const inputHeight = 3
 
 // LLMResponseMsg carries a chunk of the LLM response.
 type LLMResponseMsg string

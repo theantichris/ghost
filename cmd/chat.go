@@ -72,7 +72,6 @@ func runChat(cmd *cobra.Command, args []string) error {
 
 	logger.Info("entering chat", "ollama_url", config.URL, "chat_model", config.Model, "vision_model", config.VisionModel)
 	program := tea.NewProgram(chatModel)
-
 	_, err = program.Run()
 
 	return err
