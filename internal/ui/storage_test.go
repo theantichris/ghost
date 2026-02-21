@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/theantichris/ghost/v3/internal/llm"
@@ -108,6 +109,102 @@ func TestChatModel_CreateThread(t *testing.T) {
 
 			if thread.Title != tt.wantTitle {
 				t.Errorf("createThread() title = %q, want %q", thread.Title, tt.wantTitle)
+			}
+		})
+	}
+}
+
+func TestChatModel_LoadThread(t *testing.T) {
+	tests := []struct {
+		name               string
+		seedMessages       []llm.ChatMessage
+		threadID           string // empty means use seeded thread
+		wantErr            bool
+		wantMessageCount   int
+		wantHistoryContain []string
+		wantHistoryExclude []string
+	}{
+		{
+			name: "loads user and assistant messages",
+			seedMessages: []llm.ChatMessage{
+				{Role: llm.RoleUser, Content: "hello ghost"},
+				{Role: llm.RoleAssistant, Content: "greetings runner"},
+			},
+			wantMessageCount:   2,
+			wantHistoryContain: []string{"You: hello ghost", "ghost: greetings runner"},
+		},
+		{
+			name: "excludes system and tool messages from history",
+			seedMessages: []llm.ChatMessage{
+				{Role: llm.RoleSystem, Content: "you are a cyberpunk AI"},
+				{Role: llm.RoleUser, Content: "hello ghost"},
+				{Role: llm.RoleTool, Content: "tool output here"},
+			},
+			wantMessageCount:   3,
+			wantHistoryContain: []string{"You: hello ghost"},
+			wantHistoryExclude: []string{"you are a cyberpunk AI", "tool output here"},
+		},
+		{
+			name:     "invalid thread ID returns error",
+			threadID: "nonexistent-id",
+			wantErr:  true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			model := newTestModel(t)
+
+			threadID := tt.threadID
+
+			if threadID == "" {
+				thread, err := model.store.CreateThread("test thread")
+				if err != nil {
+					t.Fatalf("failed to create thread: %v", err)
+				}
+
+				threadID = thread.ID
+
+				for _, msg := range tt.seedMessages {
+					_, err := model.store.AddMessage(threadID, msg)
+					if err != nil {
+						t.Fatalf("failed to add message: %v", err)
+					}
+				}
+			}
+
+			model, err := model.loadThread(threadID)
+
+			if tt.wantErr {
+				if err == nil {
+					t.Fatal("loadThread() err = nil, want error")
+				}
+
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("loadThread() err = %v, want nil", err)
+			}
+
+			if model.threadID != threadID {
+				t.Errorf("loadThread() threadID = %q, want %q", model.threadID, threadID)
+			}
+
+			if len(model.messages) != tt.wantMessageCount {
+				t.Errorf("loadThread() message count = %d, want %d", len(model.messages), tt.wantMessageCount)
+			}
+
+			for _, want := range tt.wantHistoryContain {
+				if !strings.Contains(model.chatHistory, want) {
+					t.Errorf("loadThread() chatHistory missing %q", want)
+				}
+			}
+
+			for _, exclude := range tt.wantHistoryExclude {
+				if strings.Contains(model.chatHistory, exclude) {
+					t.Errorf("loadThread() chatHistory should not contain %q", exclude)
+				}
 			}
 		})
 	}
