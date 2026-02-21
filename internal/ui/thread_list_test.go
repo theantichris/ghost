@@ -52,7 +52,7 @@ func TestNewThreadListModel(t *testing.T) {
 
 			logger := log.New(io.Discard)
 
-			model, err := NewThreadListModel(store, 80, 24, *logger)
+			model, err := NewThreadListModel(store, 80, 24, logger)
 			if err != nil {
 				t.Fatalf("NewThreadListModel() error = %v", err)
 			}
@@ -95,7 +95,7 @@ func TestThreadListModel_Update(t *testing.T) {
 
 			logger := log.New(io.Discard)
 
-			model, err := NewThreadListModel(store, 80, 24, *logger)
+			model, err := NewThreadListModel(store, 80, 24, logger)
 			if err != nil {
 				t.Fatalf("NewThreadListModel() error = %v", err)
 			}
@@ -126,7 +126,7 @@ func TestThreadListModel_View(t *testing.T) {
 
 	logger := log.New(io.Discard)
 
-	model, err := NewThreadListModel(store, 80, 24, *logger)
+	model, err := NewThreadListModel(store, 80, 24, logger)
 	if err != nil {
 		t.Fatalf("NewThreadListModel() error = %v", err)
 	}
