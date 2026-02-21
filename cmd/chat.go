@@ -22,7 +22,7 @@ func newChatCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "chat",
 		Short:   "starts ghost in chat mode",
-		Long:    "sharts ghost in chat mode, use :q to quit",
+		Long:    "starts ghost in chat mode, use :q to quit",
 		Example: "ghost chat",
 		Args:    cobra.NoArgs,
 		RunE:    runChat,
