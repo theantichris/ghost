@@ -2,6 +2,7 @@ package ui
 
 import (
 	"context"
+	"fmt"
 
 	"charm.land/bubbles/v2/textarea"
 	"charm.land/bubbles/v2/textinput"
@@ -202,6 +203,23 @@ func (model ChatModel) handleThreadListMode(msg tea.KeyMsg) (tea.Model, tea.Cmd)
 	switch msg.String() {
 	case "esc":
 		model.mode = ModeNormal
+
+		return model, nil
+
+	case "enter":
+		selectedThread, ok := model.threadList.list.SelectedItem().(threadItem)
+		if ok {
+			var err error
+			model, err = model.loadThread(selectedThread.thread.ID)
+			if err != nil {
+				model.logger.Error("error loading thread", "thread_id", selectedThread.thread.ID, "error", err.Error())
+				model.chatHistory += fmt.Sprintf("\n[%s error: %s]\n", theme.GlyphError, err.Error())
+			}
+		}
+
+		model.viewport.SetContent(model.renderHistory())
+		model.mode = ModeNormal
+		model.cmdInput.Reset()
 
 		return model, nil
 	}
