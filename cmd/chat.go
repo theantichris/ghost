@@ -16,21 +16,14 @@ import (
 	"github.com/theantichris/ghost/v3/internal/ui"
 )
 
-const (
-	chatUseText     = "chat"
-	chatShortText   = "starts ghost in chat mode"
-	chatLongText    = "starts ghost in chat mode, use :q to quit"
-	chatExampleText = "ghost chat"
-)
-
 var ErrHomeDir = errors.New("failed to retrieve user home directory")
 
 func newChatCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     chatUseText,
-		Short:   chatShortText,
-		Long:    chatLongText,
-		Example: chatExampleText,
+		Use:     "chat",
+		Short:   "starts ghost in chat mode",
+		Long:    "sharts ghost in chat mode, use :q to quit",
+		Example: "ghost chat",
 		Args:    cobra.NoArgs,
 		RunE:    runChat,
 	}
