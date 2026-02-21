@@ -199,12 +199,14 @@ func (model ChatModel) handleWindowSize(msg tea.WindowSizeMsg) (tea.Model, tea.C
 }
 
 func (model ChatModel) handleThreadListMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
-	if msg.String() == "esc" {
+	switch msg.String() {
+	case "esc":
 		model.mode = ModeNormal
 
 		return model, nil
 	}
 
+	// Pass through to the list model update
 	listModel, cmd := model.threadList.Update(msg)
 	model.threadList = listModel.(ThreadListModel)
 
