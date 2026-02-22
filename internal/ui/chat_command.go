@@ -22,14 +22,7 @@ func (model ChatModel) handleCommandMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 		switch cmd {
 		case "n":
-			model.messages = []llm.ChatMessage{{Role: llm.RoleSystem, Content: model.systemPrompt}}
-			model.chatHistory = ""
-			model.threadID = ""
-			model.viewport.SetContent("")
-			model.cmdInput.Reset()
-			model.mode = ModeNormal
-
-			return model, nil
+			return model.newChat()
 
 		case "q":
 			model.logger.Info("disconnecting from ghost")
@@ -161,6 +154,17 @@ func (model ChatModel) readTextFile(path string) (tea.Model, tea.Cmd) {
 
 	model.mode = ModeNormal
 	model.cmdInput.Reset()
+
+	return model, nil
+}
+
+func (model ChatModel) newChat() (tea.Model, tea.Cmd) {
+	model.messages = []llm.ChatMessage{{Role: llm.RoleSystem, Content: model.systemPrompt}}
+	model.chatHistory = ""
+	model.threadID = ""
+	model.viewport.SetContent("")
+	model.cmdInput.Reset()
+	model.mode = ModeNormal
 
 	return model, nil
 }
