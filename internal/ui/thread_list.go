@@ -3,15 +3,17 @@ package ui
 import (
 	"charm.land/bubbles/v2/list"
 	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"github.com/charmbracelet/log"
 	"github.com/theantichris/ghost/v3/internal/storage"
 )
 
 // ThreadListModel holds the state for the thread list.
 type ThreadListModel struct {
-	list   list.Model
-	store  *storage.Store
-	logger *log.Logger
+	list          list.Model
+	store         *storage.Store
+	width, height int
+	logger        *log.Logger
 }
 
 // NewThreadListModel creates a new model and stores the current list of threads.
@@ -34,6 +36,8 @@ func NewThreadListModel(store *storage.Store, width, height int, logger *log.Log
 	model := ThreadListModel{
 		list:   list,
 		store:  store,
+		width:  width,
+		height: height,
 		logger: logger,
 	}
 
@@ -55,7 +59,9 @@ func (model ThreadListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 // View renders model state.
 func (model ThreadListModel) View() tea.View {
-	view := tea.NewView(model.list.View())
+	view := tea.NewView(
+		lipgloss.Place(model.width, model.height, lipgloss.Left, lipgloss.Center, model.list.View()),
+	)
 
 	return view
 }
