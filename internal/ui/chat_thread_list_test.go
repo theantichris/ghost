@@ -101,6 +101,29 @@ func TestChatModel_HandleThreadListMode(t *testing.T) {
 	}
 }
 
+// testMsg is an arbitrary message type that hits the default branch of Update.
+type testMsg struct{}
+
+func TestChatModel_Update_NonKeyMsgForwardsToThreadList(t *testing.T) {
+	model := newTestModel(t)
+
+	threadList, err := NewThreadListModel(model.store, 80, 24, model.logger)
+	if err != nil {
+		t.Fatalf("failed to create thread list model: %v", err)
+	}
+
+	model.threadList = threadList
+	model.mode = ModeThreadList
+	model.ready = true
+
+	result, _ := model.Update(testMsg{})
+	got := result.(ChatModel)
+
+	if got.mode != ModeThreadList {
+		t.Errorf("mode = %v, want %v", got.mode, ModeThreadList)
+	}
+}
+
 func TestChatModel_HandleThreadListMode_LoadsMessages(t *testing.T) {
 	model := newTestModel(t)
 
