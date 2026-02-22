@@ -21,6 +21,16 @@ func (model ChatModel) handleCommandMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		}
 
 		switch cmd {
+		case "n":
+			model.messages = []llm.ChatMessage{{Role: llm.RoleSystem, Content: model.systemPrompt}}
+			model.chatHistory = ""
+			model.threadID = ""
+			model.viewport.SetContent("")
+			model.cmdInput.Reset()
+			model.mode = ModeNormal
+
+			return model, nil
+
 		case "q":
 			model.logger.Info("disconnecting from ghost")
 

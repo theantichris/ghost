@@ -39,6 +39,7 @@ type LLMErrorMsg struct {
 // ChatModel holds the TUI state.
 type ChatModel struct {
 	ctx               context.Context
+	systemPrompt      string
 	logger            *log.Logger
 	viewport          viewport.Model
 	userInput         textarea.Model
@@ -79,6 +80,7 @@ func NewChatModel(config ModelConfig) ChatModel {
 
 	chatModel := ChatModel{
 		ctx:               config.Context,
+		systemPrompt:      config.System,
 		logger:            config.Logger,
 		userInput:         userInput,
 		cmdInput:          cmdInput,
