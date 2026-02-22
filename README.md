@@ -115,6 +115,7 @@ ghost chat --model llama3
 | `G`            | Go to bottom                                                 |
 | `up`           | Go back in input history                                     |
 | `down`         | Go forward in input history                                  |
+| `:n`           | Start a new chat thread                                      |
 | `:r <path>`    | Read file into conversation context, requires absolute path  |
 | `:t`           | View thread history                                          |
 | `:q`           | Disconnect from Ghost                                        |

@@ -161,6 +161,15 @@ func TestChatModel_HandleCommandMode(t *testing.T) {
 			wantMessageCount:     1,
 		},
 		{
+			name:             "n command starts new conversation",
+			inputValue:       "n",
+			msg:              tea.KeyPressMsg{Code: tea.KeyEnter},
+			wantMode:         ModeNormal,
+			wantInputValue:   "",
+			wantMessageCount: 1,
+			wantLastRole:     llm.RoleSystem,
+		},
+		{
 			name:           "t command switches to thread list mode",
 			inputValue:     "t",
 			msg:            tea.KeyPressMsg{Code: tea.KeyEnter},
@@ -221,5 +230,45 @@ func TestChatModel_HandleCommandMode(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestChatModel_NewChat(t *testing.T) {
+	model := newTestModel(t)
+	model.threadID = "old-thread-id"
+	model.chatHistory = "previous conversation"
+	model.messages = append(model.messages, llm.ChatMessage{Role: llm.RoleUser, Content: "hello"})
+	model.cmdInput.SetValue("n")
+	model.mode = ModeCommand
+
+	result, cmd := model.newChat()
+	got := result.(ChatModel)
+
+	if cmd != nil {
+		t.Errorf("expected no command, got %v", cmd)
+	}
+
+	if got.threadID != "" {
+		t.Errorf("threadID = %q, want empty", got.threadID)
+	}
+
+	if got.chatHistory != "" {
+		t.Errorf("chatHistory = %q, want empty", got.chatHistory)
+	}
+
+	if got.mode != ModeNormal {
+		t.Errorf("mode = %v, want %v", got.mode, ModeNormal)
+	}
+
+	if len(got.messages) != 1 {
+		t.Fatalf("messages count = %d, want 1", len(got.messages))
+	}
+
+	if got.messages[0].Role != llm.RoleSystem {
+		t.Errorf("messages[0].Role = %v, want %v", got.messages[0].Role, llm.RoleSystem)
+	}
+
+	if got.cmdInput.Value() != "" {
+		t.Errorf("cmdInput value = %q, want empty", got.cmdInput.Value())
 	}
 }
