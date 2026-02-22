@@ -134,12 +134,18 @@ func (model ChatModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// Pass through to inputs
 		var cmd tea.Cmd
 
-		if model.mode == ModeInsert {
+		switch model.mode {
+		case ModeInsert:
 			model.userInput, cmd = model.userInput.Update(msg)
-		}
 
-		if model.mode == ModeCommand {
+		case ModeCommand:
 			model.cmdInput, cmd = model.cmdInput.Update(msg)
+
+		case ModeThreadList:
+			listModel, cmd := model.threadList.Update(msg)
+			model.threadList = listModel.(ThreadListModel)
+
+			return model, cmd
 		}
 
 		return model, cmd
