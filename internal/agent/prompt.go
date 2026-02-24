@@ -60,24 +60,31 @@ func LoadPrompts(configDir string, logger *log.Logger) (Prompt, error) {
 		return prompt, fmt.Errorf("%w: %w", ErrPromptLoad, err)
 	}
 
-	promptPath := filepath.Join(promptDir, "system.md")
-	bytes, err := os.ReadFile(promptPath)
+	prompt.System, err = loadPrompt(promptDir, "system.md", systemPrompt)
 	if err != nil {
-		if errors.Is(err, fs.ErrNotExist) {
-			err := os.WriteFile(promptPath, []byte(systemPrompt), 0640)
-			if err != nil {
-				logger.Error(ErrPromptLoad.Error(), "error", err.Error())
-				return prompt, fmt.Errorf("%w: %w", ErrPromptLoad, err)
-			}
-
-			prompt.System = systemPrompt
-		} else {
-			logger.Error(ErrPromptLoad.Error(), "error", err.Error())
-			return prompt, fmt.Errorf("%w: %w", ErrPromptLoad, err)
-		}
-	} else {
-		prompt.System = string(bytes)
+		logger.Error(ErrPromptLoad.Error(), "file", "system.md", "error", err.Error())
+		return prompt, err
 	}
 
 	return prompt, nil
+}
+
+func loadPrompt(promptDir, filename, defaultPrompt string) (string, error) {
+	path := filepath.Join(promptDir, filename)
+
+	bytes, err := os.ReadFile(path)
+	if err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			err := os.WriteFile(path, []byte(defaultPrompt), 0640)
+			if err != nil {
+				return "", fmt.Errorf("%w: %w", ErrPromptLoad, err)
+			}
+
+			return defaultPrompt, nil
+		} else {
+			return "", fmt.Errorf("%w: %w", ErrPromptLoad, err)
+		}
+	}
+
+	return string(bytes), nil
 }
