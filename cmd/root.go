@@ -31,6 +31,8 @@ Send prompts directly or pipe data through for analysis.`
 	ghost "tell me a joke"`
 )
 
+type promptKey struct{}
+
 var (
 	isTTY = term.IsTerminal(os.Stdout.Fd())
 
@@ -55,6 +57,18 @@ func NewRootCmd() (*cobra.Command, func() error, error) {
 		Args:    cobra.MinimumNArgs(1),
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			cmd.SetContext(context.WithValue(cmd.Context(), loggerKey{}, logger))
+
+			configDir, err := configDir()
+			if err != nil {
+				return err
+			}
+
+			prompts, err := agent.LoadPrompts(configDir, logger)
+			if err != nil {
+				return err
+			}
+
+			cmd.SetContext(context.WithValue(cmd.Context(), promptKey{}, prompts))
 
 			return initConfig(cmd, cfgFile)
 		},
@@ -83,7 +97,8 @@ func run(cmd *cobra.Command, args []string) error {
 	logger := cmd.Context().Value(loggerKey{}).(*log.Logger)
 
 	format := strings.ToLower(viper.GetString("format"))
-	messages := agent.NewMessageHistory(agent.SystemPrompt, format)
+	prompts := cmd.Context().Value(promptKey{}).(agent.Prompt)
+	messages := agent.NewMessageHistory(prompts.System, format)
 
 	pipedInput, err := agent.GetPipedInput(os.Stdin, logger)
 	if err != nil {
