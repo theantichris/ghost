@@ -28,6 +28,7 @@ type StreamErrorMsg struct {
 // StreamModel handles the UI for streaming LLM responses.
 type StreamModel struct {
 	ctx          context.Context
+	prompts      agent.Prompt
 	logger       *log.Logger // Logger for error visibility.
 	width        int         // Terminal width
 	content      string      // Accumulated response content.
@@ -52,6 +53,7 @@ func NewStreamModel(config ModelConfig) StreamModel {
 
 	return StreamModel{
 		ctx:          config.Context,
+		prompts:      config.Prompts,
 		logger:       config.Logger,
 		width:        80,
 		messages:     config.Messages,
@@ -155,7 +157,7 @@ func (model StreamModel) startStream() tea.Cmd {
 		ch := model.responseCh
 		defer close(ch)
 
-		imageAnalysis, err := agent.AnalyseImages(model.ctx, model.url, model.visionModel, model.images, model.logger)
+		imageAnalysis, err := agent.AnalyseImages(model.ctx, model.url, model.visionModel, model.prompts, model.images, model.logger)
 		if err != nil {
 			ch <- StreamErrorMsg{Err: err}
 

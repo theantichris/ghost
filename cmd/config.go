@@ -30,10 +30,12 @@ func initConfig(cmd *cobra.Command, cfgFile string) error {
 	if cfgFile != "" {
 		viper.SetConfigFile(cfgFile)
 	} else {
-		home, err := os.UserHomeDir()
-		cobra.CheckErr(err)
+		configDir, err := configDir()
+		if err != nil {
+			return fmt.Errorf("%w: %w", ErrConfig, err)
+		}
 
-		viper.AddConfigPath(filepath.Join(home, ".config", "ghost"))
+		viper.AddConfigPath(configDir)
 		viper.SetConfigName("config.toml")
 		viper.SetConfigType("toml")
 	}
@@ -81,6 +83,15 @@ func initConfig(cmd *cobra.Command, cfgFile string) error {
 	}
 
 	return nil
+}
+
+func configDir() (string, error) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", err
+	}
+
+	return filepath.Join(home, ".config", "ghost"), nil
 }
 
 // validateFormat returns an error if the format flag isn't a valid value.

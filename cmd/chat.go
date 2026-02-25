@@ -57,13 +57,15 @@ func runChat(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	prompts := cmd.Context().Value(promptKey{}).(agent.Prompt)
+
 	config := ui.ModelConfig{
 		Context:   cmd.Context(),
 		Logger:    logger,
 		URL:       viper.GetString("url"),
 		ChatLLM:   viper.GetString("model"),
 		VisionLLM: viper.GetString("vision.model"),
-		System:    agent.SystemPrompt,
+		Prompts:   prompts,
 		Registry:  tool.NewRegistry(tavilyAPIKey, maxResults, logger),
 		Store:     store,
 	}

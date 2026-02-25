@@ -181,7 +181,7 @@ func TestAnalyseImages(t *testing.T) {
 				imagePaths = append(imagePaths, tmpFile.Name())
 			}
 
-			got, err := AnalyseImages(context.Background(), server.URL, "test-model", imagePaths, logger)
+			got, err := AnalyseImages(context.Background(), server.URL, "test-model", Prompt{}, imagePaths, logger)
 
 			if tt.wantErr {
 				if err == nil {
@@ -226,7 +226,7 @@ func TestAnalyseImages_FileReadError(t *testing.T) {
 	}))
 	defer server.Close()
 
-	_, err := AnalyseImages(context.Background(), server.URL, "test-model", []string{"/nonexistent/image.png"}, logger)
+	_, err := AnalyseImages(context.Background(), server.URL, "test-model", Prompt{}, []string{"/nonexistent/image.png"}, logger)
 
 	if err == nil {
 		t.Fatal("AnalyseImages() err = nil, want error")
