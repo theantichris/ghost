@@ -99,9 +99,9 @@ func loadPrompt(promptDir, filename, defaultValue string) (string, error) {
 			}
 
 			return defaultValue, nil
-		} else {
-			return "", fmt.Errorf("%w: %w", ErrPromptLoad, err)
 		}
+
+		return "", fmt.Errorf("%w: %w", ErrPromptLoad, err)
 	}
 
 	return string(bytes), nil
