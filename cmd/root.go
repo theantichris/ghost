@@ -128,6 +128,7 @@ func run(cmd *cobra.Command, args []string) error {
 
 	config := ui.ModelConfig{
 		Context:   cmd.Context(),
+		Prompts:   cmd.Context().Value(promptKey{}).(agent.Prompt),
 		Logger:    logger,
 		URL:       viper.GetString("url"),
 		ChatLLM:   viper.GetString("model"),

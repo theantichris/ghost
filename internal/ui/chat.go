@@ -10,6 +10,7 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
 	"github.com/charmbracelet/log"
+	"github.com/theantichris/ghost/v3/internal/agent"
 	"github.com/theantichris/ghost/v3/internal/llm"
 	"github.com/theantichris/ghost/v3/internal/storage"
 	"github.com/theantichris/ghost/v3/internal/tool"
@@ -39,7 +40,7 @@ type LLMErrorMsg struct {
 // ChatModel holds the TUI state.
 type ChatModel struct {
 	ctx               context.Context
-	systemPrompt      string
+	prompts           agent.Prompt
 	logger            *log.Logger
 	viewport          viewport.Model
 	userInput         textarea.Model
@@ -75,12 +76,12 @@ func NewChatModel(config ModelConfig) ChatModel {
 	cmdInput.Focus()
 
 	messages := []llm.ChatMessage{
-		{Role: llm.RoleSystem, Content: config.System},
+		{Role: llm.RoleSystem, Content: config.Prompts.System},
 	}
 
 	chatModel := ChatModel{
 		ctx:               config.Context,
-		systemPrompt:      config.System,
+		prompts:           config.Prompts,
 		logger:            config.Logger,
 		userInput:         userInput,
 		cmdInput:          cmdInput,

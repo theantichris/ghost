@@ -65,7 +65,7 @@ func runChat(cmd *cobra.Command, args []string) error {
 		URL:       viper.GetString("url"),
 		ChatLLM:   viper.GetString("model"),
 		VisionLLM: viper.GetString("vision.model"),
-		System:    prompts.System,
+		Prompts:   prompts,
 		Registry:  tool.NewRegistry(tavilyAPIKey, maxResults, logger),
 		Store:     store,
 	}

@@ -60,9 +60,24 @@ func LoadPrompts(configDir string, logger *log.Logger) (Prompt, error) {
 		return prompt, fmt.Errorf("%w: %w", ErrPromptLoad, err)
 	}
 
-	prompt.System, err = loadPrompt(promptDir, "system.md", systemPrompt)
+	var filename = "system.md"
+	prompt.System, err = loadPrompt(promptDir, filename, systemPrompt)
 	if err != nil {
-		logger.Error(ErrPromptLoad.Error(), "file", "system.md", "error", err.Error())
+		logger.Error(ErrPromptLoad.Error(), "file", filename, "error", err.Error())
+		return prompt, err
+	}
+
+	filename = "vision_system.md"
+	prompt.VisionSystem, err = loadPrompt(promptDir, filename, visionSystemPrompt)
+	if err != nil {
+		logger.Error(ErrPromptLoad.Error(), "file", filename, "error", err.Error())
+		return prompt, err
+	}
+
+	filename = "vision.md"
+	prompt.Vision, err = loadPrompt(promptDir, filename, visionPrompt)
+	if err != nil {
+		logger.Error(ErrPromptLoad.Error(), "file", filename, "error", err.Error())
 		return prompt, err
 	}
 
