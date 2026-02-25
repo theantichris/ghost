@@ -17,7 +17,7 @@ var ErrImageAnalysis = errors.New("visual recon failed")
 
 // AnalyzeImages sends requests to the LLM to analyze images and returns a slice
 // of llm.ChatMessage with the reports.
-func AnalyseImages(ctx context.Context, url, visionModel, visionSystemPrompt, visionPrompt string, images []string, logger *log.Logger) ([]llm.ChatMessage, error) {
+func AnalyseImages(ctx context.Context, url, visionModel string, prompts Prompt, images []string, logger *log.Logger) ([]llm.ChatMessage, error) {
 	var imageAnalysis []llm.ChatMessage
 
 	// Loop through each image and send it to the LLM for analysis, attach response to returned messages.
@@ -31,7 +31,7 @@ func AnalyseImages(ctx context.Context, url, visionModel, visionSystemPrompt, vi
 		}
 
 		prompt := fmt.Sprintf("Filename: %s\n\n%s", filename, visionPrompt)
-		messages := NewMessageHistory(visionSystemPrompt, "markdown")
+		messages := NewMessageHistory(prompts.VisionSystem, prompts.JSON, prompts.Markdown, "markdown")
 		messages = append(messages, llm.ChatMessage{Role: llm.RoleUser, Content: prompt})
 		messages[len(messages)-1].Images = []string{encodedImage} // Attach images to user prompt message.
 

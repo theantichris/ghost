@@ -157,7 +157,7 @@ func (model StreamModel) startStream() tea.Cmd {
 		ch := model.responseCh
 		defer close(ch)
 
-		imageAnalysis, err := agent.AnalyseImages(model.ctx, model.url, model.visionModel, model.prompts.VisionSystem, model.prompts.Vision, model.images, model.logger)
+		imageAnalysis, err := agent.AnalyseImages(model.ctx, model.url, model.visionModel, model.prompts, model.images, model.logger)
 		if err != nil {
 			ch <- StreamErrorMsg{Err: err}
 

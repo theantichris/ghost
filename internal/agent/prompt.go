@@ -14,10 +14,10 @@ import (
 const systemPrompt = "You are ghost, a cyberpunk AI assistant."
 
 // JSONPrompt instructs ghost to return its response in JSON.
-const JSONPrompt = "Format the response as json without enclosing backticks."
+const jsonPrompt = "Format the response as json without enclosing backticks."
 
 // MarkdownPrompt instructs ghost to return its response in Markdown.
-const MarkdownPrompt = "Format the response as markdown without enclosing backticks."
+const markdownPrompt = "Format the response as markdown without enclosing backticks."
 
 const visionSystemPrompt = `You are the vision module for a cyberpunk AI assistant named ghost.
 
@@ -45,6 +45,8 @@ type Prompt struct {
 	System       string
 	VisionSystem string
 	Vision       string
+	JSON         string
+	Markdown     string
 }
 
 // LoadPrompts reads the prompt files and saves the content to the Prompt struct.
@@ -68,6 +70,8 @@ func LoadPrompts(configDir string, logger *log.Logger) (Prompt, error) {
 		{"system.md", systemPrompt, &prompt.System},
 		{"vision_system.md", visionSystemPrompt, &prompt.VisionSystem},
 		{"vision.md", visionPrompt, &prompt.Vision},
+		{"json.md", jsonPrompt, &prompt.JSON},
+		{"markdown.md", markdownPrompt, &prompt.Markdown},
 	}
 
 	for _, target := range targets {

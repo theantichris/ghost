@@ -27,7 +27,7 @@ func TestNewMessageHistory(t *testing.T) {
 			format: "json",
 			want: []llm.ChatMessage{
 				{Role: llm.RoleSystem, Content: "system prompt"},
-				{Role: llm.RoleSystem, Content: JSONPrompt},
+				{Role: llm.RoleSystem, Content: "json prompt"},
 			},
 		},
 		{
@@ -36,7 +36,7 @@ func TestNewMessageHistory(t *testing.T) {
 			format: "markdown",
 			want: []llm.ChatMessage{
 				{Role: llm.RoleSystem, Content: "system prompt"},
-				{Role: llm.RoleSystem, Content: MarkdownPrompt},
+				{Role: llm.RoleSystem, Content: "markdown prompt"},
 			},
 		},
 		{
@@ -51,7 +51,7 @@ func TestNewMessageHistory(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := NewMessageHistory(tt.system, tt.format)
+			got := NewMessageHistory(tt.system, "json prompt", "markdown prompt", tt.format)
 
 			if diff := cmp.Diff(tt.want, got); diff != "" {
 				t.Errorf("NewMessageHistory() mismatch (-want +got):\n%s", diff)
