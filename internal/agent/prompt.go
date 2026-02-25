@@ -60,42 +60,41 @@ func LoadPrompts(configDir string, logger *log.Logger) (Prompt, error) {
 		return prompt, fmt.Errorf("%w: %w", ErrPromptLoad, err)
 	}
 
-	var filename = "system.md"
-	prompt.System, err = loadPrompt(promptDir, filename, systemPrompt)
-	if err != nil {
-		logger.Error(ErrPromptLoad.Error(), "file", filename, "error", err.Error())
-		return prompt, err
+	targets := []struct {
+		filename     string
+		defaultValue string
+		dest         *string
+	}{
+		{"system.md", systemPrompt, &prompt.System},
+		{"vision_system.md", visionSystemPrompt, &prompt.VisionSystem},
+		{"vision.md", visionPrompt, &prompt.Vision},
 	}
 
-	filename = "vision_system.md"
-	prompt.VisionSystem, err = loadPrompt(promptDir, filename, visionSystemPrompt)
-	if err != nil {
-		logger.Error(ErrPromptLoad.Error(), "file", filename, "error", err.Error())
-		return prompt, err
-	}
+	for _, target := range targets {
+		result, err := loadPrompt(promptDir, target.filename, target.defaultValue)
+		if err != nil {
+			logger.Error(ErrPromptLoad.Error(), "file", target.filename, "error", err.Error())
+			return prompt, err
+		}
 
-	filename = "vision.md"
-	prompt.Vision, err = loadPrompt(promptDir, filename, visionPrompt)
-	if err != nil {
-		logger.Error(ErrPromptLoad.Error(), "file", filename, "error", err.Error())
-		return prompt, err
+		*target.dest = result
 	}
 
 	return prompt, nil
 }
 
-func loadPrompt(promptDir, filename, defaultPrompt string) (string, error) {
+func loadPrompt(promptDir, filename, defaultValue string) (string, error) {
 	path := filepath.Join(promptDir, filename)
 
 	bytes, err := os.ReadFile(path)
 	if err != nil {
 		if errors.Is(err, fs.ErrNotExist) {
-			err := os.WriteFile(path, []byte(defaultPrompt), 0640)
+			err := os.WriteFile(path, []byte(defaultValue), 0640)
 			if err != nil {
 				return "", fmt.Errorf("%w: %w", ErrPromptLoad, err)
 			}
 
-			return defaultPrompt, nil
+			return defaultValue, nil
 		} else {
 			return "", fmt.Errorf("%w: %w", ErrPromptLoad, err)
 		}
