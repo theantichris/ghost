@@ -8,6 +8,7 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 	"github.com/charmbracelet/log"
+	"github.com/theantichris/ghost/v3/internal/agent"
 	"github.com/theantichris/ghost/v3/internal/tool"
 )
 
@@ -19,6 +20,7 @@ func newTestStreamModel() StreamModel {
 		Context:  context.Background(),
 		URL:      "http://localhost/11434/api",
 		ChatLLM:  "test-model",
+		Prompts:  agent.Prompt{System: "test system prompt"},
 		Registry: registry,
 		Logger:   logger,
 	}
