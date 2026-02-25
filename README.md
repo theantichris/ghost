@@ -158,6 +158,23 @@ api-key = "tvly-xxxxx"  # Get your key at tavily.com
 max-results = 5         # Number of search results (default: 5)
 ```
 
+## Prompt Firmware
+
+Ghost's personality and behavior are driven by editable prompt files stored at
+`~/.config/ghost/prompts/`. On first run, Ghost writes sensible defaults to each
+file — crack them open and reprogram your AI to suit the mission.
+
+| File                | Controls                                      |
+|---------------------|-----------------------------------------------|
+| `system.md`         | Core system personality and behavior           |
+| `vision_system.md`  | Vision model system instructions               |
+| `vision.md`         | Vision analysis user prompt                    |
+| `json.md`           | JSON output formatting directive               |
+| `markdown.md`       | Markdown output formatting directive           |
+
+All files are standard Markdown. Edit any file, restart Ghost, and your changes
+take effect immediately.
+
 ## License
 
 MIT
