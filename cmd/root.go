@@ -15,21 +15,11 @@ import (
 	"github.com/theantichris/ghost/v3/internal/agent"
 	"github.com/theantichris/ghost/v3/internal/llm"
 	"github.com/theantichris/ghost/v3/internal/tool"
-	"github.com/theantichris/ghost/v3/internal/ui"
-	"github.com/theantichris/ghost/v3/theme"
+	"github.com/theantichris/ghost/v3/internal/tui"
+	"github.com/theantichris/ghost/v3/style"
 )
 
-const (
-	Version = "dev"
-
-	useText   = "ghost <prompt>"
-	shortText = "ghost is a local cyberpunk AI assistant."
-	longText  = `Ghost is a local cyberpunk AI assistant.
-Send prompts directly or pipe data through for analysis.`
-	exampleText = `  ghost "explain this code" < main.go
-	cat error.log | ghost "what's wrong here"
-	ghost "tell me a joke"`
-)
+const Version = "dev"
 
 type promptKey struct{}
 
@@ -50,11 +40,13 @@ func NewRootCmd() (*cobra.Command, func() error, error) {
 	var cfgFile string
 
 	cmd := &cobra.Command{
-		Use:     useText,
-		Short:   shortText,
-		Long:    longText,
-		Example: exampleText,
-		Args:    cobra.MinimumNArgs(1),
+		Use:   "ghost <prompt>",
+		Short: "ghost is a local cyberpunk AI assistant.",
+		Long:  "Ghost is a local cyberpunk AI Assistant.\nSend prompts directly or pipe data through for analysis.",
+		Example: `  ghost "explain this code" < main.go
+	cat error.log | ghost "what's wrong here"
+	ghost "tell me a joke"`,
+		Args: cobra.MinimumNArgs(1),
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			cmd.SetContext(context.WithValue(cmd.Context(), loggerKey{}, logger))
 
@@ -126,7 +118,7 @@ func run(cmd *cobra.Command, args []string) error {
 	maxResults := viper.GetInt("search.max-results")
 	registry := tool.NewRegistry(tavilyAPIKey, maxResults, logger)
 
-	config := ui.ModelConfig{
+	config := tui.ModelConfig{
 		Context:   cmd.Context(),
 		Prompts:   cmd.Context().Value(promptKey{}).(agent.Prompt),
 		Logger:    logger,
@@ -138,7 +130,7 @@ func run(cmd *cobra.Command, args []string) error {
 		Images:    images,
 		Registry:  registry,
 	}
-	streamModel := ui.NewStreamModel(config)
+	streamModel := tui.NewStreamModel(config)
 
 	var programOpts []tea.ProgramOption
 	if ttyIn, ttyOut, err := tea.OpenTTY(); err == nil {
@@ -156,12 +148,12 @@ func run(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("%w: %w", ErrStreamDisplay, err)
 	}
 
-	finalModel := returnedModel.(ui.StreamModel)
+	finalModel := returnedModel.(tui.StreamModel)
 	if finalModel.Err != nil {
 		return finalModel.Err
 	}
 
-	render, err := theme.RenderContent(finalModel.Content(), format, isTTY)
+	render, err := style.RenderContent(finalModel.Content(), format, isTTY)
 	if err != nil {
 		return fmt.Errorf("%w: %w", ErrRender, err)
 	}
