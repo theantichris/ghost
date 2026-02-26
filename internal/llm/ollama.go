@@ -19,16 +19,6 @@ var (
 	ErrToolSupport      = errors.New("model does not support tools")
 )
 
-// Role represents the author of a message in the chat history.
-type Role string
-
-const (
-	RoleSystem    Role = "system"
-	RoleUser      Role = "user"
-	RoleAssistant Role = "assistant"
-	RoleTool      Role = "tool"
-)
-
 // ChatRequest holds the information for the chat endpoint.
 type ChatRequest struct {
 	Model    string        `json:"model"`
@@ -41,14 +31,6 @@ type ChatRequest struct {
 type ChatResponse struct {
 	Message ChatMessage `json:"message"`
 	Error   string      `json:"error,omitempty"`
-}
-
-// ChatMessage holds a single message in the chat history.
-type ChatMessage struct {
-	Role      Role       `json:"role"`
-	Content   string     `json:"content"`
-	Images    []string   `json:"images,omitempty"`
-	ToolCalls []ToolCall `json:"tool_calls,omitempty"`
 }
 
 // AnalyzeImages sends a request to the chat endpoint with images to analyze and

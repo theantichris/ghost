@@ -31,7 +31,7 @@ func AnalyseImages(ctx context.Context, url, visionModel string, prompts Prompt,
 		}
 
 		prompt := fmt.Sprintf("Filename: %s\n\n%s", filename, visionPrompt)
-		messages := NewMessageHistory(prompts.VisionSystem, prompts.JSON, prompts.Markdown, "markdown")
+		messages := llm.NewMessageHistory(prompts.VisionSystem, prompts.JSON, prompts.Markdown, "markdown")
 		messages = append(messages, llm.ChatMessage{Role: llm.RoleUser, Content: prompt})
 		messages[len(messages)-1].Images = []string{encodedImage} // Attach images to user prompt message.
 
