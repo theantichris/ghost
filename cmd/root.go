@@ -87,9 +87,14 @@ func NewRootCmd() (*cobra.Command, func() error, error) {
 // the response.
 func run(cmd *cobra.Command, args []string) error {
 	logger := cmd.Context().Value(loggerKey{}).(*log.Logger)
+	prompts := cmd.Context().Value(promptKey{}).(agent.Prompt)
 
 	format := strings.ToLower(viper.GetString("format"))
-	prompts := cmd.Context().Value(promptKey{}).(agent.Prompt)
+	images, err := cmd.Flags().GetStringArray("image")
+	if err != nil {
+		return err
+	}
+
 	messages := llm.NewMessageHistory(prompts.System, prompts.JSON, prompts.Markdown, format)
 
 	pipedInput, err := agent.GetPipedInput(os.Stdin, logger)
@@ -106,31 +111,26 @@ func run(cmd *cobra.Command, args []string) error {
 		messages = append(messages, pipedMessage)
 	}
 
-	// Append user message.
 	messages = append(messages, llm.ChatMessage{Role: llm.RoleUser, Content: args[0]})
 
-	images, err := cmd.Flags().GetStringArray("image")
-	if err != nil {
-		return err
-	}
-
-	tavilyAPIKey := viper.GetString("search.api-key")
-	maxResults := viper.GetInt("search.max-results")
-	registry := tool.NewRegistry(tavilyAPIKey, maxResults, logger)
-
-	config := tui.ModelConfig{
-		Context:   cmd.Context(),
-		Prompts:   cmd.Context().Value(promptKey{}).(agent.Prompt),
-		Logger:    logger,
-		URL:       viper.GetString("url"),
-		ChatLLM:   viper.GetString("model"),
-		VisionLLM: viper.GetString("vision.model"),
-		Format:    format,
-		Messages:  messages,
-		Images:    images,
-		Registry:  registry,
-	}
-	streamModel := tui.NewStreamModel(config)
+	streamModel := tui.NewStreamModel(
+		tui.ModelConfig{
+			Context:   cmd.Context(),
+			Prompts:   prompts,
+			Logger:    logger,
+			URL:       viper.GetString("url"),
+			ChatLLM:   viper.GetString("model"),
+			VisionLLM: viper.GetString("vision.model"),
+			Format:    format,
+			Messages:  messages,
+			Images:    images,
+			Registry: tool.NewRegistry(
+				viper.GetString("search.api-key"),
+				viper.GetInt("search.max-results"),
+				logger,
+			),
+		},
+	)
 
 	var programOpts []tea.ProgramOption
 	if ttyIn, ttyOut, err := tea.OpenTTY(); err == nil {
