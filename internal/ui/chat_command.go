@@ -10,7 +10,7 @@ import (
 	"github.com/theantichris/ghost/v3/theme"
 )
 
-func (model ChatModel) handleCommandMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+func (model ChatModel) handleCommandMode(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	switch msg.Key().Code {
 	case tea.KeyEnter:
 		parts := strings.SplitN(model.cmdInput.Value(), " ", 2)

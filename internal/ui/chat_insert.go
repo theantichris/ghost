@@ -8,7 +8,7 @@ import (
 	"github.com/theantichris/ghost/v3/internal/llm"
 )
 
-func (model ChatModel) handleInsertMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+func (model ChatModel) handleInsertMode(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 
 	switch msg.String() {
