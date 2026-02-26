@@ -133,7 +133,7 @@ func TestThreadListModel_View(t *testing.T) {
 
 	view := model.View()
 
-	if view.Content == nil {
-		t.Error("View() returned nil content")
+	if view.Content == "" {
+		t.Error("View() returned empty content")
 	}
 }

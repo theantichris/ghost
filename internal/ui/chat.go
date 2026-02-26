@@ -109,7 +109,7 @@ func (model ChatModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		return model.handleWindowSize(msg)
 
-	case tea.KeyMsg:
+	case tea.KeyPressMsg:
 		switch model.mode {
 		case ModeNormal:
 			return model.handleNormalMode(msg)
@@ -208,7 +208,7 @@ func (model ChatModel) handleWindowSize(msg tea.WindowSizeMsg) (tea.Model, tea.C
 	return model, nil
 }
 
-func (model ChatModel) handleThreadListMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+func (model ChatModel) handleThreadListMode(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	switch msg.String() {
 	case "esc":
 		model.mode = ModeNormal
