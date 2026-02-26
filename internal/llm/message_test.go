@@ -1,10 +1,9 @@
-package agent
+package llm
 
 import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/theantichris/ghost/v3/internal/llm"
 )
 
 func TestNewMessageHistory(t *testing.T) {
@@ -12,39 +11,39 @@ func TestNewMessageHistory(t *testing.T) {
 		name   string
 		system string
 		format string
-		want   []llm.ChatMessage
+		want   []ChatMessage
 	}{
 		{
 			name:   "returns message history with no format",
 			system: "system prompt",
-			want: []llm.ChatMessage{
-				{Role: llm.RoleSystem, Content: "system prompt"},
+			want: []ChatMessage{
+				{Role: RoleSystem, Content: "system prompt"},
 			},
 		},
 		{
 			name:   "returns message history with JSON format",
 			system: "system prompt",
 			format: "json",
-			want: []llm.ChatMessage{
-				{Role: llm.RoleSystem, Content: "system prompt"},
-				{Role: llm.RoleSystem, Content: "json prompt"},
+			want: []ChatMessage{
+				{Role: RoleSystem, Content: "system prompt"},
+				{Role: RoleSystem, Content: "json prompt"},
 			},
 		},
 		{
 			name:   "returns message history with markdown format",
 			system: "system prompt",
 			format: "markdown",
-			want: []llm.ChatMessage{
-				{Role: llm.RoleSystem, Content: "system prompt"},
-				{Role: llm.RoleSystem, Content: "markdown prompt"},
+			want: []ChatMessage{
+				{Role: RoleSystem, Content: "system prompt"},
+				{Role: RoleSystem, Content: "markdown prompt"},
 			},
 		},
 		{
 			name:   "ignores unknown format",
 			system: "system prompt",
 			format: "unknown",
-			want: []llm.ChatMessage{
-				{Role: llm.RoleSystem, Content: "system prompt"},
+			want: []ChatMessage{
+				{Role: RoleSystem, Content: "system prompt"},
 			},
 		},
 	}

@@ -90,7 +90,7 @@ func run(cmd *cobra.Command, args []string) error {
 
 	format := strings.ToLower(viper.GetString("format"))
 	prompts := cmd.Context().Value(promptKey{}).(agent.Prompt)
-	messages := agent.NewMessageHistory(prompts.System, prompts.JSON, prompts.Markdown, format)
+	messages := llm.NewMessageHistory(prompts.System, prompts.JSON, prompts.Markdown, format)
 
 	pipedInput, err := agent.GetPipedInput(os.Stdin, logger)
 	if err != nil {
