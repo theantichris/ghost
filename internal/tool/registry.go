@@ -12,6 +12,12 @@ import (
 
 var ErrToolNotRegistered = errors.New("tool not registered")
 
+// Tool is the interface that all the tools the LLM uses must implement.
+type Tool interface {
+	Definition() llm.Tool
+	Execute(ctx context.Context, args json.RawMessage) (string, error)
+}
+
 // Registry holds all available tools, provides their definitions to send to chat
 // requests, and dispatches execution to the right tool by name.
 type Registry struct {
