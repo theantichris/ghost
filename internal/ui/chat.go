@@ -14,7 +14,7 @@ import (
 	"github.com/theantichris/ghost/v3/internal/llm"
 	"github.com/theantichris/ghost/v3/internal/storage"
 	"github.com/theantichris/ghost/v3/internal/tool"
-	"github.com/theantichris/ghost/v3/theme"
+	"github.com/theantichris/ghost/v3/style"
 )
 
 // Mode represents the different modes the TUI can be in.
@@ -162,7 +162,7 @@ func (model ChatModel) View() tea.View {
 	var view tea.View
 
 	if !model.ready {
-		view = tea.NewView(theme.GlyphInfo + " initializing...")
+		view = tea.NewView(style.GlyphInfo + " initializing...")
 		view.AltScreen = true
 
 		return view
@@ -222,7 +222,7 @@ func (model ChatModel) handleThreadListMode(msg tea.KeyPressMsg) (tea.Model, tea
 			model, err = model.loadThread(selectedThread.thread.ID)
 			if err != nil {
 				model.logger.Error("error loading thread", "thread_id", selectedThread.thread.ID, "error", err.Error())
-				model.chatHistory += fmt.Sprintf("\n[%s error: %s]\n", theme.GlyphError, err.Error())
+				model.chatHistory += fmt.Sprintf("\n[%s error: %s]\n", style.GlyphError, err.Error())
 			}
 		}
 

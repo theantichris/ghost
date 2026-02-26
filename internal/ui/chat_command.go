@@ -7,7 +7,7 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"github.com/theantichris/ghost/v3/internal/agent"
 	"github.com/theantichris/ghost/v3/internal/llm"
-	"github.com/theantichris/ghost/v3/theme"
+	"github.com/theantichris/ghost/v3/style"
 )
 
 func (model ChatModel) handleCommandMode(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
@@ -58,7 +58,7 @@ func (model ChatModel) createThreadList() (tea.Model, tea.Cmd) {
 	threadList, err := NewThreadListModel(model.store, model.width, model.height, model.logger)
 	if err != nil {
 		model.logger.Error("error creating thread list", "error", err)
-		model.chatHistory += fmt.Sprintf("\n[%s error: %s]\n", theme.GlyphError, err.Error())
+		model.chatHistory += fmt.Sprintf("\n[%s error: %s]\n", style.GlyphError, err.Error())
 		model.viewport.SetContent(model.renderHistory())
 		model.mode = ModeNormal
 		model.cmdInput.Reset()
@@ -75,7 +75,7 @@ func (model ChatModel) createThreadList() (tea.Model, tea.Cmd) {
 
 func (model ChatModel) readFile(arg string) (tea.Model, tea.Cmd) {
 	if arg == "" {
-		model.chatHistory += fmt.Sprintf("\n[%s error: no file path provided]\n", theme.GlyphError)
+		model.chatHistory += fmt.Sprintf("\n[%s error: no file path provided]\n", style.GlyphError)
 		model.viewport.SetContent(model.renderHistory())
 		model.mode = ModeNormal
 		model.cmdInput.Reset()
@@ -86,7 +86,7 @@ func (model ChatModel) readFile(arg string) (tea.Model, tea.Cmd) {
 	fileType, err := agent.DetectFileType(arg)
 	if err != nil {
 		model.logger.Error("failed to validate file", "error", err.Error(), "path", arg)
-		model.chatHistory += fmt.Sprintf("\n[%s error: %s]\n", theme.GlyphError, err.Error())
+		model.chatHistory += fmt.Sprintf("\n[%s error: %s]\n", style.GlyphError, err.Error())
 		model.viewport.SetContent(model.renderHistory())
 		model.mode = ModeNormal
 		model.cmdInput.Reset()
@@ -96,7 +96,7 @@ func (model ChatModel) readFile(arg string) (tea.Model, tea.Cmd) {
 
 	switch fileType {
 	case agent.FileTypeDir:
-		model.chatHistory += fmt.Sprintf("\n[%s error: file is directory]\n", theme.GlyphError)
+		model.chatHistory += fmt.Sprintf("\n[%s error: file is directory]\n", style.GlyphError)
 		model.viewport.SetContent(model.renderHistory())
 		model.mode = ModeNormal
 		model.cmdInput.Reset()
@@ -115,7 +115,7 @@ func (model ChatModel) analyzeImage(path string) (tea.Model, tea.Cmd) {
 	content, err := agent.AnalyseImages(model.ctx, model.url, model.visionLLM, model.prompts, []string{path}, model.logger)
 	if err != nil {
 		model.logger.Error("image read failed", "path", path, "error", err)
-		model.chatHistory += fmt.Sprintf("\n[%s error: %s]\n", theme.GlyphError, err.Error())
+		model.chatHistory += fmt.Sprintf("\n[%s error: %s]\n", style.GlyphError, err.Error())
 		model.viewport.SetContent(model.renderHistory())
 		model.mode = ModeNormal
 		model.cmdInput.Reset()
@@ -126,7 +126,7 @@ func (model ChatModel) analyzeImage(path string) (tea.Model, tea.Cmd) {
 	model.messages = append(model.messages, content...)
 	model.logger.Info("image loaded into context", "path", path)
 
-	model.chatHistory += fmt.Sprintf("\n[%s loaded image: %s]\n", theme.GlyphInfo, path)
+	model.chatHistory += fmt.Sprintf("\n[%s loaded image: %s]\n", style.GlyphInfo, path)
 	model.viewport.SetContent(model.renderHistory())
 
 	model.mode = ModeNormal
@@ -139,7 +139,7 @@ func (model ChatModel) readTextFile(path string) (tea.Model, tea.Cmd) {
 	content, err := agent.ReadTextFile(path)
 	if err != nil {
 		model.logger.Error("file read failed", "path", path, "error", err)
-		model.chatHistory += fmt.Sprintf("\n[%s error: %s]\n", theme.GlyphError, err.Error())
+		model.chatHistory += fmt.Sprintf("\n[%s error: %s]\n", style.GlyphError, err.Error())
 		model.viewport.SetContent(model.renderHistory())
 		model.mode = ModeNormal
 		model.cmdInput.Reset()
@@ -149,7 +149,7 @@ func (model ChatModel) readTextFile(path string) (tea.Model, tea.Cmd) {
 	model.messages = append(model.messages, llm.ChatMessage{Role: llm.RoleUser, Content: content})
 	model.logger.Info("loaded file", "path", path)
 
-	model.chatHistory += fmt.Sprintf("\n[%s loaded: %s]\n", theme.GlyphInfo, path)
+	model.chatHistory += fmt.Sprintf("\n[%s loaded: %s]\n", style.GlyphInfo, path)
 	model.viewport.SetContent(model.renderHistory())
 
 	model.mode = ModeNormal

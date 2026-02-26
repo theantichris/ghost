@@ -10,7 +10,7 @@ import (
 	"github.com/theantichris/ghost/v3/internal/agent"
 	"github.com/theantichris/ghost/v3/internal/llm"
 	"github.com/theantichris/ghost/v3/internal/tool"
-	"github.com/theantichris/ghost/v3/theme"
+	"github.com/theantichris/ghost/v3/style"
 )
 
 var quitKeys = key.NewBinding(
@@ -49,7 +49,7 @@ type StreamModel struct {
 func NewStreamModel(config ModelConfig) StreamModel {
 	s := spinner.New()
 	s.Spinner = spinner.Ellipsis
-	s.Style = theme.FgAccent0
+	s.Style = style.FgAccent0
 
 	return StreamModel{
 		ctx:          config.Context,
@@ -122,20 +122,20 @@ func (model StreamModel) View() tea.View {
 	}
 
 	if model.content != "" {
-		content, err := theme.RenderContent(model.content, model.format, true)
+		content, err := style.RenderContent(model.content, model.format, true)
 		if err != nil {
 			model.logger.Error("content render failed", "error", err, "format", model.format)
 			return tea.NewView("")
 		}
 
 		if model.format == "" {
-			content = theme.WordWrap(model.width, content, theme.FgText)
+			content = style.WordWrap(model.width, content, style.FgText)
 		}
 
 		return tea.NewView(content)
 	}
 
-	processingMessage := theme.FgAccent0.Render(theme.GlyphInfo+" processing") + model.spinner.View()
+	processingMessage := style.FgAccent0.Render(style.GlyphInfo+" processing") + model.spinner.View()
 
 	return tea.NewView(processingMessage)
 }
@@ -147,7 +147,7 @@ func (model StreamModel) Content() string {
 		return model.content
 	}
 
-	return theme.WordWrap(model.width, model.content, theme.FgText)
+	return style.WordWrap(model.width, model.content, style.FgText)
 }
 
 func (model StreamModel) startStream() tea.Cmd {

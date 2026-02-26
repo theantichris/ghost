@@ -6,7 +6,7 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"github.com/theantichris/ghost/v3/internal/agent"
 	"github.com/theantichris/ghost/v3/internal/llm"
-	"github.com/theantichris/ghost/v3/theme"
+	"github.com/theantichris/ghost/v3/style"
 )
 
 // startLLMStream starts the LLM call in a go routine.
@@ -74,7 +74,7 @@ func (model ChatModel) handleLLMDoneMsg() (tea.Model, tea.Cmd) {
 func (model ChatModel) handleLLMErrorMsg(msg LLMErrorMsg) (tea.Model, tea.Cmd) {
 	model.logger.Error("neural link disrupted", "error", msg.Err)
 
-	model.chatHistory += fmt.Sprintf("\n[%s error: %v]\n", theme.GlyphInfo, msg.Err)
+	model.chatHistory += fmt.Sprintf("\n[%s error: %v]\n", style.GlyphInfo, msg.Err)
 	model.viewport.SetContent(model.renderHistory())
 
 	return model, nil

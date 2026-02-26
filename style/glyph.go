@@ -1,4 +1,4 @@
-package theme
+package style
 
 // Glyphs for consistent UI messaging
 const (

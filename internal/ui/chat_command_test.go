@@ -9,7 +9,7 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 	"github.com/theantichris/ghost/v3/internal/llm"
-	"github.com/theantichris/ghost/v3/theme"
+	"github.com/theantichris/ghost/v3/style"
 )
 
 func TestChatModel_HandleCommandMode(t *testing.T) {
@@ -76,7 +76,7 @@ func TestChatModel_HandleCommandMode(t *testing.T) {
 			msg:                  tea.KeyPressMsg{Code: tea.KeyEnter},
 			wantMode:             ModeNormal,
 			wantInputValue:       "",
-			wantChatHistoryMatch: fmt.Sprintf("[%s error: no file path provided]", theme.GlyphError),
+			wantChatHistoryMatch: fmt.Sprintf("[%s error: no file path provided]", style.GlyphError),
 			wantMessageCount:     1,
 		},
 		{
@@ -85,7 +85,7 @@ func TestChatModel_HandleCommandMode(t *testing.T) {
 			msg:                  tea.KeyPressMsg{Code: tea.KeyEnter},
 			wantMode:             ModeNormal,
 			wantInputValue:       "",
-			wantChatHistoryMatch: fmt.Sprintf("[%s error: no file path provided]", theme.GlyphError),
+			wantChatHistoryMatch: fmt.Sprintf("[%s error: no file path provided]", style.GlyphError),
 			wantMessageCount:     1,
 		},
 		{
@@ -94,7 +94,7 @@ func TestChatModel_HandleCommandMode(t *testing.T) {
 			msg:                  tea.KeyPressMsg{Code: tea.KeyEnter},
 			wantMode:             ModeNormal,
 			wantInputValue:       "",
-			wantChatHistoryMatch: fmt.Sprintf("[%s error:", theme.GlyphError),
+			wantChatHistoryMatch: fmt.Sprintf("[%s error:", style.GlyphError),
 			wantMessageCount:     1,
 		},
 		{
@@ -104,7 +104,7 @@ func TestChatModel_HandleCommandMode(t *testing.T) {
 			msg:                  tea.KeyPressMsg{Code: tea.KeyEnter},
 			wantMode:             ModeNormal,
 			wantInputValue:       "",
-			wantChatHistoryMatch: fmt.Sprintf("[%s loaded:", theme.GlyphInfo),
+			wantChatHistoryMatch: fmt.Sprintf("[%s loaded:", style.GlyphInfo),
 			wantMessageCount:     2,
 			wantLastRole:         llm.RoleUser,
 		},
@@ -117,7 +117,7 @@ func TestChatModel_HandleCommandMode(t *testing.T) {
 			msg:                  tea.KeyPressMsg{Code: tea.KeyEnter},
 			wantMode:             ModeNormal,
 			wantInputValue:       "",
-			wantChatHistoryMatch: fmt.Sprintf("[%s error:", theme.GlyphError),
+			wantChatHistoryMatch: fmt.Sprintf("[%s error:", style.GlyphError),
 			wantMessageCount:     1,
 		},
 		{

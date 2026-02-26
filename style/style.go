@@ -1,4 +1,4 @@
-package theme
+package style
 
 import (
 	"charm.land/lipgloss/v2"

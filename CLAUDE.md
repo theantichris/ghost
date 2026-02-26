@@ -21,7 +21,7 @@ vars (e.g., `vision.model` / `--vision-model` / `GHOST_VISION*MODEL`).
 - Standard Go formatting (enforced by pre-commit)
 - Wrap errors with `fmt.Errorf("%w", err)` for proper error chains
 - Cyberpunk aesthetic in user-facing messages (e.g., "neural link", "data stream")
-- UI glyphs: `theme.GlyphInfo` (󱙝) and `theme.GlyphError` (󱙜)
+- UI glyphs: `style.GlyphInfo` (󱙝) and `style.GlyphError` (󱙜)
 - Table-driven tests, one test function per code function
   (e.g., `TestChatModel_HandleCommandMode` tests `handleCommandMode`)
 - Test file naming mirrors source files (e.g., `chat_command_test.go`)

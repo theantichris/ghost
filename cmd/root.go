@@ -16,7 +16,7 @@ import (
 	"github.com/theantichris/ghost/v3/internal/llm"
 	"github.com/theantichris/ghost/v3/internal/tool"
 	"github.com/theantichris/ghost/v3/internal/ui"
-	"github.com/theantichris/ghost/v3/theme"
+	"github.com/theantichris/ghost/v3/style"
 )
 
 const Version = "dev"
@@ -153,7 +153,7 @@ func run(cmd *cobra.Command, args []string) error {
 		return finalModel.Err
 	}
 
-	render, err := theme.RenderContent(finalModel.Content(), format, isTTY)
+	render, err := style.RenderContent(finalModel.Content(), format, isTTY)
 	if err != nil {
 		return fmt.Errorf("%w: %w", ErrRender, err)
 	}

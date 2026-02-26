@@ -7,7 +7,7 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 	"github.com/theantichris/ghost/v3/internal/llm"
-	"github.com/theantichris/ghost/v3/theme"
+	"github.com/theantichris/ghost/v3/style"
 )
 
 func TestChatModel_HandleLLMMessages(t *testing.T) {
@@ -50,7 +50,7 @@ func TestChatModel_HandleLLMMessages(t *testing.T) {
 			currentResponse:     "",
 			chatHistory:         "",
 			msg:                 LLMErrorMsg{Err: errors.New("test error")},
-			wantChatHistory:     fmt.Sprintf("\n[%s error: test error]\n", theme.GlyphInfo),
+			wantChatHistory:     fmt.Sprintf("\n[%s error: test error]\n", style.GlyphInfo),
 			wantCurrentResponse: "",
 			wantMessageCount:    1,
 			wantCmd:             false,
