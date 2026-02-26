@@ -15,7 +15,7 @@ import (
 	"github.com/theantichris/ghost/v3/internal/agent"
 	"github.com/theantichris/ghost/v3/internal/llm"
 	"github.com/theantichris/ghost/v3/internal/tool"
-	"github.com/theantichris/ghost/v3/internal/ui"
+	"github.com/theantichris/ghost/v3/internal/tui"
 	"github.com/theantichris/ghost/v3/style"
 )
 
@@ -118,7 +118,7 @@ func run(cmd *cobra.Command, args []string) error {
 	maxResults := viper.GetInt("search.max-results")
 	registry := tool.NewRegistry(tavilyAPIKey, maxResults, logger)
 
-	config := ui.ModelConfig{
+	config := tui.ModelConfig{
 		Context:   cmd.Context(),
 		Prompts:   cmd.Context().Value(promptKey{}).(agent.Prompt),
 		Logger:    logger,
@@ -130,7 +130,7 @@ func run(cmd *cobra.Command, args []string) error {
 		Images:    images,
 		Registry:  registry,
 	}
-	streamModel := ui.NewStreamModel(config)
+	streamModel := tui.NewStreamModel(config)
 
 	var programOpts []tea.ProgramOption
 	if ttyIn, ttyOut, err := tea.OpenTTY(); err == nil {
@@ -148,7 +148,7 @@ func run(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("%w: %w", ErrStreamDisplay, err)
 	}
 
-	finalModel := returnedModel.(ui.StreamModel)
+	finalModel := returnedModel.(tui.StreamModel)
 	if finalModel.Err != nil {
 		return finalModel.Err
 	}
