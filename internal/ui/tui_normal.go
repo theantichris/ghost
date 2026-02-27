@@ -33,7 +33,7 @@ var normalKeyMap = keyMap{
 	),
 	goToTop: key.NewBinding(
 		key.WithKeys("g"),
-		key.WithHelp("g", "go to top"),
+		key.WithHelp("gg", "go to top"),
 	),
 	goToBottom: key.NewBinding(
 		key.WithKeys("G"),
