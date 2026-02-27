@@ -4,25 +4,49 @@ import (
 	"fmt"
 	"strings"
 
+	"charm.land/bubbles/v2/key"
 	tea "charm.land/bubbletea/v2"
 	"github.com/theantichris/ghost/v3/internal/llm"
 )
 
+var insertKeyMap = keyMap{
+	esc: key.NewBinding(
+		key.WithKeys("esc"),
+		key.WithHelp("esc", "normal mode"),
+	),
+	newline: key.NewBinding(
+		key.WithKeys("shift+enter", "ctrl+j"),
+		key.WithHelp("shift+enter/ctrl+j", "add newline"),
+	),
+	up: key.NewBinding(
+		key.WithKeys("up"),
+		key.WithHelp("up", "input history back"),
+	),
+	down: key.NewBinding(
+		key.WithKeys("down"),
+		key.WithHelp("down", "input history forward"),
+	),
+	enter: key.NewBinding(
+		key.WithKeys("enter"),
+		key.WithHelp("enter", "send message"),
+	),
+}
+
 func (model TUIModel) handleInsertMode(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 
-	switch msg.String() {
-	case "esc":
+	switch {
+	case key.Matches(msg, insertKeyMap.esc):
 		model.mode = ModeNormal
 		model.userInput.Blur()
 
-	case "shift+enter", "ctrl+j":
+	case key.Matches(msg, insertKeyMap.newline):
 		value := model.userInput.Value() + "\n"
 		model.userInput.SetValue(value)
 
 		return model, nil
 
-	case "up":
+	case key.Matches(msg, insertKeyMap.up):
 		if len(model.inputHistory) == 0 {
 			return model, nil
 		}
@@ -34,7 +58,7 @@ func (model TUIModel) handleInsertMode(msg tea.KeyPressMsg) (tea.Model, tea.Cmd)
 
 		model.userInput.SetValue(model.inputHistory[model.inputHistoryIndex])
 
-	case "down":
+	case key.Matches(msg, insertKeyMap.down):
 		if len(model.inputHistory) == 0 {
 			return model, nil
 		}
@@ -49,7 +73,7 @@ func (model TUIModel) handleInsertMode(msg tea.KeyPressMsg) (tea.Model, tea.Cmd)
 
 		model.userInput.SetValue(model.inputHistory[model.inputHistoryIndex])
 
-	case "enter":
+	case key.Matches(msg, insertKeyMap.enter):
 		value := model.userInput.Value()
 
 		if strings.TrimSpace(value) == "" {

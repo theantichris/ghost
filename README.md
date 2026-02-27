@@ -107,8 +107,8 @@ ghost chat --model llama3
 | `Enter`        | Send message (in insert mode)                                |
 | `Shift+Enter`  | Insert newline (requires terminal support)                   |
 | `Ctrl+j`       | Insert newline                                               |
-| `j`            | Scroll down one line                                         |
-| `k`            | Scroll up one line                                           |
+| `j`/`down`     | Scroll down one line                                         |
+| `k`/`up`       | Scroll up one line                                           |
 | `Ctrl+d`       | Scroll down half page                                        |
 | `Ctrl+u`       | Scroll up half page                                          |
 | `gg`           | Go to top                                                    |
