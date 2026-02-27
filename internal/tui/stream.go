@@ -87,7 +87,7 @@ func NewStreamModel(config ModelConfig, userPrompt string) (StreamModel, error) 
 	}, nil
 }
 
-// Init starts the spinner's animation loop.
+// Init starts the spinner's animation loop and the LLM response stream.
 func (model StreamModel) Init() tea.Cmd {
 	return tea.Batch(model.spinner.Tick, model.startStream())
 }
