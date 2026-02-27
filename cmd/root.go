@@ -131,6 +131,8 @@ func run(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("%w: %w", ErrStreamDisplay, err)
 	}
 
+	// Bubble Tea clears the output once it exists so rerender the content to
+	// Stdout.
 	finalModel := returnedModel.(tui.StreamModel)
 	if finalModel.Err != nil {
 		return finalModel.Err
