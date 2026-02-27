@@ -20,6 +20,8 @@ import (
 
 const Version = "dev"
 
+// Cobra context keys
+type loggerKey struct{}
 type promptKey struct{}
 
 var (
