@@ -12,7 +12,7 @@ import (
 	"github.com/theantichris/ghost/v3/internal/tool"
 )
 
-func newTestStreamModel(t *testing.T) StreamModel {
+func newTestCLIModel(t *testing.T) CLIModel {
 	t.Helper()
 
 	logger := log.New(io.Discard)
@@ -27,7 +27,7 @@ func newTestStreamModel(t *testing.T) StreamModel {
 		Logger:   logger,
 	}
 
-	model, err := NewStreamModel(config, "test prompt")
+	model, err := NewCLIModel(config, "test prompt")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -35,7 +35,7 @@ func newTestStreamModel(t *testing.T) StreamModel {
 	return model
 }
 
-func TestStreamModel_Update(t *testing.T) {
+func TestCLIModel_Update(t *testing.T) {
 	tests := []struct {
 		name        string
 		msg         tea.Msg
@@ -74,10 +74,10 @@ func TestStreamModel_Update(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			model := newTestStreamModel(t)
+			model := newTestCLIModel(t)
 
 			newModel, cmd := model.Update(tt.msg)
-			got := newModel.(StreamModel)
+			got := newModel.(CLIModel)
 
 			if got.content != tt.wantContent {
 				t.Errorf("content = %q, want %q", got.content, tt.wantContent)
@@ -106,13 +106,13 @@ func TestStreamModel_Update(t *testing.T) {
 	}
 }
 
-func TestStreamModel_ChunkAccumulation(t *testing.T) {
-	model := newTestStreamModel(t)
+func TestCLIModel_ChunkAccumulation(t *testing.T) {
+	model := newTestCLIModel(t)
 
 	chunks := []string{"Hello", " ", "world", "!"}
 	for _, chunk := range chunks {
 		newModel, _ := model.Update(StreamChunkMsg(chunk))
-		model = newModel.(StreamModel)
+		model = newModel.(CLIModel)
 	}
 
 	want := "Hello world!"

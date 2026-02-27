@@ -112,7 +112,7 @@ func run(cmd *cobra.Command, args []string) error {
 		),
 	}
 
-	streamModel, err := ui.NewStreamModel(modelConfig, args[0])
+	streamModel, err := ui.NewCLIModel(modelConfig, args[0])
 	if err != nil {
 		return err
 	}
@@ -135,7 +135,7 @@ func run(cmd *cobra.Command, args []string) error {
 
 	// Bubble Tea clears the output once it exits so rerender the content to
 	// Stdout.
-	finalModel := returnedModel.(ui.StreamModel)
+	finalModel := returnedModel.(ui.CLIModel)
 	if finalModel.Err != nil {
 		return finalModel.Err
 	}
