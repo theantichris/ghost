@@ -29,14 +29,6 @@ const (
 
 const inputHeight = 3
 
-// LLMResponseMsg carries a chunk of the LLM response.
-type LLMResponseMsg string
-
-// LLMErrorMsg signals an error from the LLM.
-type LLMErrorMsg struct {
-	Err error
-}
-
 // TUIModel holds the TUI state.
 type TUIModel struct {
 	ctx               context.Context

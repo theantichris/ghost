@@ -2,6 +2,14 @@ package ui
 
 import tea "charm.land/bubbletea/v2"
 
+// LLMResponseMsg carries a chunk of the LLM response.
+type LLMResponseMsg string
+
+// LLMErrorMsg signals an error from the LLM.
+type LLMErrorMsg struct {
+	Err error
+}
+
 // LLMDoneMsg signals the LLM request is complete.
 type LLMDoneMsg struct{}
 
