@@ -13,7 +13,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/theantichris/ghost/v3/internal/agent"
-	"github.com/theantichris/ghost/v3/internal/llm"
 	"github.com/theantichris/ghost/v3/internal/tool"
 	"github.com/theantichris/ghost/v3/internal/tui"
 	"github.com/theantichris/ghost/v3/style"
@@ -95,42 +94,26 @@ func run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	messages := llm.NewMessageHistory(prompts.System, prompts.JSON, prompts.Markdown, format)
+	modelConfig := tui.ModelConfig{
+		Context:   cmd.Context(),
+		Prompts:   prompts,
+		Logger:    logger,
+		URL:       viper.GetString("url"),
+		ChatLLM:   viper.GetString("model"),
+		VisionLLM: viper.GetString("vision.model"),
+		Format:    format,
+		Images:    images,
+		Registry: tool.NewRegistry(
+			viper.GetString("search.api-key"),
+			viper.GetInt("search.max-results"),
+			logger,
+		),
+	}
 
-	pipedInput, err := agent.GetPipedInput(os.Stdin, logger)
+	streamModel, err := tui.NewStreamModel(modelConfig, args[0])
 	if err != nil {
-		return fmt.Errorf("%w: %w", agent.ErrPipedInput, err)
+		return err
 	}
-
-	if pipedInput != "" {
-		pipedMessage := llm.ChatMessage{
-			Role:    llm.RoleUser,
-			Content: fmt.Sprintf("[PIPED INPUT]:\n%s", pipedInput),
-		}
-
-		messages = append(messages, pipedMessage)
-	}
-
-	messages = append(messages, llm.ChatMessage{Role: llm.RoleUser, Content: args[0]})
-
-	streamModel := tui.NewStreamModel(
-		tui.ModelConfig{
-			Context:   cmd.Context(),
-			Prompts:   prompts,
-			Logger:    logger,
-			URL:       viper.GetString("url"),
-			ChatLLM:   viper.GetString("model"),
-			VisionLLM: viper.GetString("vision.model"),
-			Format:    format,
-			Messages:  messages,
-			Images:    images,
-			Registry: tool.NewRegistry(
-				viper.GetString("search.api-key"),
-				viper.GetInt("search.max-results"),
-				logger,
-			),
-		},
-	)
 
 	var programOpts []tea.ProgramOption
 	if ttyIn, ttyOut, err := tea.OpenTTY(); err == nil {

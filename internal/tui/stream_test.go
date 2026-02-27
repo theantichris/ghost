@@ -12,7 +12,9 @@ import (
 	"github.com/theantichris/ghost/v3/internal/tool"
 )
 
-func newTestStreamModel() StreamModel {
+func newTestStreamModel(t *testing.T) StreamModel {
+	t.Helper()
+
 	logger := log.New(io.Discard)
 	registry := tool.NewRegistry("", 0, logger)
 
@@ -25,7 +27,12 @@ func newTestStreamModel() StreamModel {
 		Logger:   logger,
 	}
 
-	return NewStreamModel(config)
+	model, err := NewStreamModel(config, "test prompt")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return model
 }
 
 func TestStreamModel_Update(t *testing.T) {
@@ -67,7 +74,7 @@ func TestStreamModel_Update(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			model := newTestStreamModel()
+			model := newTestStreamModel(t)
 
 			newModel, cmd := model.Update(tt.msg)
 			got := newModel.(StreamModel)
@@ -100,7 +107,7 @@ func TestStreamModel_Update(t *testing.T) {
 }
 
 func TestStreamModel_ChunkAccumulation(t *testing.T) {
-	model := newTestStreamModel()
+	model := newTestStreamModel(t)
 
 	chunks := []string{"Hello", " ", "world", "!"}
 	for _, chunk := range chunks {

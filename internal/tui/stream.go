@@ -2,6 +2,7 @@ package tui
 
 import (
 	"context"
+	"os"
 
 	"charm.land/bubbles/v2/key"
 	"charm.land/bubbles/v2/spinner"
@@ -46,17 +47,32 @@ type StreamModel struct {
 }
 
 // NewStreamModel creates and returns StreamModel.
-func NewStreamModel(config ModelConfig) StreamModel {
+func NewStreamModel(config ModelConfig, userPrompt string) (StreamModel, error) {
 	s := spinner.New()
 	s.Spinner = spinner.Ellipsis
 	s.Style = style.FgAccent0
+
+	messages := llm.NewMessageHistory(config.Prompts.System, config.Prompts.JSON, config.Prompts.Markdown, config.Format)
+
+	pipedInput, err := agent.GetPipedInput(os.Stdin, config.Logger)
+	if err != nil {
+		return StreamModel{}, err
+	}
+
+	if pipedInput != "" {
+		pipedMessage := llm.ChatMessage{Role: llm.RoleUser, Content: pipedInput}
+
+		messages = append(messages, pipedMessage)
+	}
+
+	messages = append(messages, llm.ChatMessage{Role: llm.RoleUser, Content: userPrompt})
 
 	return StreamModel{
 		ctx:          config.Context,
 		prompts:      config.Prompts,
 		logger:       config.Logger,
 		width:        80,
-		messages:     config.Messages,
+		messages:     messages,
 		url:          config.URL,
 		model:        config.ChatLLM,
 		visionModel:  config.VisionLLM,
@@ -68,7 +84,7 @@ func NewStreamModel(config ModelConfig) StreamModel {
 		spinner:      s,
 		format:       config.Format,
 		responseCh:   make(chan tea.Msg),
-	}
+	}, nil
 }
 
 // Init starts the spinner's animation loop.
