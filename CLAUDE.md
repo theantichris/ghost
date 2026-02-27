@@ -23,8 +23,8 @@ vars (e.g., `vision.model` / `--vision-model` / `GHOST_VISION*MODEL`).
 - Cyberpunk aesthetic in user-facing messages (e.g., "neural link", "data stream")
 - UI glyphs: `style.GlyphInfo` (󱙝) and `style.GlyphError` (󱙜)
 - Table-driven tests, one test function per code function
-  (e.g., `TestChatModel_HandleCommandMode` tests `handleCommandMode`)
-- Test file naming mirrors source files (e.g., `chat_command_test.go`)
+  (e.g., `TestTUIModel_HandleCommandMode` tests `handleCommandMode`)
+- Test file naming mirrors source files (e.g., `tui_command_test.go`)
 - Use `errors.Is()` for error comparison
 - Conventional commits (`feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `chore:`,
  `perf:`, `build:`, `ci:`, `style:`)

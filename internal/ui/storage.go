@@ -8,7 +8,7 @@ import (
 	"github.com/theantichris/ghost/v3/internal/storage"
 )
 
-func (model ChatModel) saveMessage(chatMsg llm.ChatMessage) ChatModel {
+func (model TUIModel) saveMessage(chatMsg llm.ChatMessage) TUIModel {
 	if model.threadID == "" {
 		thread, err := model.createThread(chatMsg.Content)
 		if err != nil {
@@ -26,7 +26,7 @@ func (model ChatModel) saveMessage(chatMsg llm.ChatMessage) ChatModel {
 	return model
 }
 
-func (model ChatModel) loadThread(threadID string) (ChatModel, error) {
+func (model TUIModel) loadThread(threadID string) (TUIModel, error) {
 	messages, err := model.store.GetMessages(threadID)
 	if err != nil {
 		model.logger.Error("failed to get messages", "thread_id", threadID, "error", err.Error())
@@ -65,7 +65,7 @@ func (model ChatModel) loadThread(threadID string) (ChatModel, error) {
 	return model, nil
 }
 
-func (model ChatModel) createThread(content string) (*storage.Thread, error) {
+func (model TUIModel) createThread(content string) (*storage.Thread, error) {
 	words := strings.Fields(content)
 	title := ""
 

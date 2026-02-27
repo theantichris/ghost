@@ -6,7 +6,7 @@ import (
 	tea "charm.land/bubbletea/v2"
 )
 
-func TestChatModel_HandleInsertMode(t *testing.T) {
+func TestTUIModel_HandleInsertMode(t *testing.T) {
 	tests := []struct {
 		name                  string
 		inputValue            string
@@ -171,7 +171,7 @@ func TestChatModel_HandleInsertMode(t *testing.T) {
 			}
 
 			newModel, _ := model.Update(tt.msg)
-			got := newModel.(ChatModel)
+			got := newModel.(TUIModel)
 
 			if got.mode != tt.wantMode {
 				t.Errorf("mode = %v, want %v", got.mode, tt.wantMode)

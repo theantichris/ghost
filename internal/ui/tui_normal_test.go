@@ -6,7 +6,7 @@ import (
 	tea "charm.land/bubbletea/v2"
 )
 
-func TestChatModel_HandleNormalMode(t *testing.T) {
+func TestTUIModel_HandleNormalMode(t *testing.T) {
 	tests := []struct {
 		name          string
 		keys          []string
@@ -98,7 +98,7 @@ func TestChatModel_HandleNormalMode(t *testing.T) {
 				result, _ = result.Update(tea.KeyPressMsg{Text: key})
 			}
 
-			got := result.(ChatModel)
+			got := result.(TUIModel)
 
 			if got.mode != tt.wantMode {
 				t.Errorf("mode = %v, want %v", got.mode, tt.wantMode)

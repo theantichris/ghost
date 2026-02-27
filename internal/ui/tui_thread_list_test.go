@@ -7,7 +7,7 @@ import (
 	"github.com/theantichris/ghost/v3/internal/llm"
 )
 
-func TestChatModel_HandleThreadListMode(t *testing.T) {
+func TestTUIModel_HandleThreadListMode(t *testing.T) {
 	tests := []struct {
 		name             string
 		seedMessages     []llm.ChatMessage // messages to add to the seeded thread
@@ -78,7 +78,7 @@ func TestChatModel_HandleThreadListMode(t *testing.T) {
 			model.ready = true
 
 			result, _ := model.Update(tt.msg)
-			got := result.(ChatModel)
+			got := result.(TUIModel)
 
 			if got.mode != tt.wantMode {
 				t.Errorf("mode = %v, want %v", got.mode, tt.wantMode)
@@ -104,7 +104,7 @@ func TestChatModel_HandleThreadListMode(t *testing.T) {
 // testMsg is an arbitrary message type that hits the default branch of Update.
 type testMsg struct{}
 
-func TestChatModel_Update_NonKeyMsgForwardsToThreadList(t *testing.T) {
+func TestTUIModel_Update_NonKeyMsgForwardsToThreadList(t *testing.T) {
 	model := newTestModel(t)
 
 	threadList, err := NewThreadListModel(model.store, 80, 24, model.logger)
@@ -117,14 +117,14 @@ func TestChatModel_Update_NonKeyMsgForwardsToThreadList(t *testing.T) {
 	model.ready = true
 
 	result, _ := model.Update(testMsg{})
-	got := result.(ChatModel)
+	got := result.(TUIModel)
 
 	if got.mode != ModeThreadList {
 		t.Errorf("mode = %v, want %v", got.mode, ModeThreadList)
 	}
 }
 
-func TestChatModel_HandleThreadListMode_LoadsMessages(t *testing.T) {
+func TestTUIModel_HandleThreadListMode_LoadsMessages(t *testing.T) {
 	model := newTestModel(t)
 
 	thread, err := model.store.CreateThread("test thread")
@@ -155,7 +155,7 @@ func TestChatModel_HandleThreadListMode_LoadsMessages(t *testing.T) {
 	model.ready = true
 
 	result, _ := model.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
-	got := result.(ChatModel)
+	got := result.(TUIModel)
 
 	// Verify all messages were loaded (not just the thread ID).
 	if len(got.messages) != len(seedMessages) {

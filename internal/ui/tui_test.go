@@ -11,7 +11,7 @@ import (
 	"github.com/theantichris/ghost/v3/internal/tool"
 )
 
-func newTestModel(t *testing.T) ChatModel {
+func newTestModel(t *testing.T) TUIModel {
 	t.Helper()
 
 	logger := log.New(io.Discard)
@@ -24,5 +24,5 @@ func newTestModel(t *testing.T) ChatModel {
 
 	config := ModelConfig{Context: context.Background(), URL: "http://localhost/11434/api", ChatLLM: "test-model", VisionLLM: "test-vision-model", Prompts: agent.Prompt{System: "test system prompt"}, Registry: registry, Logger: logger, Store: store}
 
-	return NewChatModel(config)
+	return NewTUIModel(config)
 }

@@ -70,7 +70,7 @@ func runChat(cmd *cobra.Command, args []string) error {
 		Store:     store,
 	}
 
-	chatModel := ui.NewChatModel(config)
+	chatModel := ui.NewTUIModel(config)
 
 	logger.Info("entering chat", "ollama_url", config.URL, "chat_model", config.ChatLLM, "vision_model", config.VisionLLM)
 	program := tea.NewProgram(chatModel)
