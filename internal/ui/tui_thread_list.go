@@ -11,7 +11,7 @@ import (
 var threadListKeyMap = keyMap{
 	esc: key.NewBinding(
 		key.WithKeys("esc"),
-		key.WithHelp("esc", "normal model"),
+		key.WithHelp("esc", "normal mode"),
 	),
 	enter: key.NewBinding(
 		key.WithKeys("enter"),
