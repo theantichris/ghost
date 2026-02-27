@@ -1,4 +1,4 @@
-package tui
+package ui
 
 import (
 	"context"
@@ -26,8 +26,8 @@ type StreamErrorMsg struct {
 	Err error
 }
 
-// StreamModel handles the UI for streaming LLM responses.
-type StreamModel struct {
+// CLIModel handles the UI for streaming LLM responses.
+type CLIModel struct {
 	ctx          context.Context
 	prompts      agent.Prompt
 	logger       *log.Logger // Logger for error visibility.
@@ -46,8 +46,8 @@ type StreamModel struct {
 	responseCh   chan tea.Msg
 }
 
-// NewStreamModel creates and returns StreamModel.
-func NewStreamModel(config ModelConfig, userPrompt string) (StreamModel, error) {
+// NewCLIModel creates and returns CLIModel.
+func NewCLIModel(config ModelConfig, userPrompt string) (CLIModel, error) {
 	s := spinner.New()
 	s.Spinner = spinner.Ellipsis
 	s.Style = style.FgAccent0
@@ -56,7 +56,7 @@ func NewStreamModel(config ModelConfig, userPrompt string) (StreamModel, error) 
 
 	pipedInput, err := agent.GetPipedInput(os.Stdin, config.Logger)
 	if err != nil {
-		return StreamModel{}, err
+		return CLIModel{}, err
 	}
 
 	if pipedInput != "" {
@@ -67,7 +67,7 @@ func NewStreamModel(config ModelConfig, userPrompt string) (StreamModel, error) 
 
 	messages = append(messages, llm.ChatMessage{Role: llm.RoleUser, Content: userPrompt})
 
-	return StreamModel{
+	return CLIModel{
 		ctx:          config.Context,
 		prompts:      config.Prompts,
 		logger:       config.Logger,
@@ -88,12 +88,12 @@ func NewStreamModel(config ModelConfig, userPrompt string) (StreamModel, error) 
 }
 
 // Init starts the spinner's animation loop and the LLM response stream.
-func (model StreamModel) Init() tea.Cmd {
+func (model CLIModel) Init() tea.Cmd {
 	return tea.Batch(model.spinner.Tick, model.startStream())
 }
 
 // Update handles messages and returns the updated model and optional command.
-func (model StreamModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (model CLIModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		model.width = msg.Width
@@ -132,7 +132,7 @@ func (model StreamModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 // View renders the current model state.
-func (model StreamModel) View() tea.View {
+func (model CLIModel) View() tea.View {
 	if model.done {
 		return tea.NewView("") // Clear the view.
 	}
@@ -158,7 +158,7 @@ func (model StreamModel) View() tea.View {
 
 // Content returns the full model content with styling for normal text.
 // JSON and Markdown output are returned raw.
-func (model StreamModel) Content() string {
+func (model CLIModel) Content() string {
 	if model.format == "json" || model.format == "markdown" {
 		return model.content
 	}
@@ -166,7 +166,7 @@ func (model StreamModel) Content() string {
 	return style.WordWrap(model.width, model.content, style.FgText)
 }
 
-func (model StreamModel) startStream() tea.Cmd {
+func (model CLIModel) startStream() tea.Cmd {
 	model.logger.Debug("establishing to neural network", "model", model.model, "messages", len(model.messages))
 
 	go func() {

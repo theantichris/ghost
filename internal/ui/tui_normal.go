@@ -1,11 +1,11 @@
-package tui
+package ui
 
 import (
 	"charm.land/bubbles/v2/textinput"
 	tea "charm.land/bubbletea/v2"
 )
 
-func (model ChatModel) handleNormalMode(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
+func (model TUIModel) handleNormalMode(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	wasAwaitingG := model.awaitingG
 	model.awaitingG = false
 

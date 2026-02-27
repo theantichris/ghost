@@ -14,7 +14,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/theantichris/ghost/v3/internal/agent"
 	"github.com/theantichris/ghost/v3/internal/tool"
-	"github.com/theantichris/ghost/v3/internal/tui"
+	"github.com/theantichris/ghost/v3/internal/ui"
 	"github.com/theantichris/ghost/v3/style"
 )
 
@@ -96,7 +96,7 @@ func run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	modelConfig := tui.ModelConfig{
+	modelConfig := ui.ModelConfig{
 		Context:   cmd.Context(),
 		Prompts:   prompts,
 		Logger:    logger,
@@ -112,7 +112,7 @@ func run(cmd *cobra.Command, args []string) error {
 		),
 	}
 
-	streamModel, err := tui.NewStreamModel(modelConfig, args[0])
+	streamModel, err := ui.NewCLIModel(modelConfig, args[0])
 	if err != nil {
 		return err
 	}
@@ -135,7 +135,7 @@ func run(cmd *cobra.Command, args []string) error {
 
 	// Bubble Tea clears the output once it exits so rerender the content to
 	// Stdout.
-	finalModel := returnedModel.(tui.StreamModel)
+	finalModel := returnedModel.(ui.CLIModel)
 	if finalModel.Err != nil {
 		return finalModel.Err
 	}

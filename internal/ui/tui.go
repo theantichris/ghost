@@ -1,4 +1,4 @@
-package tui
+package ui
 
 import (
 	"context"
@@ -37,8 +37,8 @@ type LLMErrorMsg struct {
 	Err error
 }
 
-// ChatModel holds the TUI state.
-type ChatModel struct {
+// TUIModel holds the TUI state.
+type TUIModel struct {
 	ctx               context.Context
 	prompts           agent.Prompt
 	logger            *log.Logger
@@ -65,8 +65,8 @@ type ChatModel struct {
 	threadList        ThreadListModel
 }
 
-// NewChatModel creates the chat model and initializes the text input.
-func NewChatModel(config ModelConfig) ChatModel {
+// NewTUIModel creates the chat model and initializes the text input.
+func NewTUIModel(config ModelConfig) TUIModel {
 	userInput := textarea.New()
 	userInput.ShowLineNumbers = false
 	userInput.SetHeight(2)
@@ -79,7 +79,7 @@ func NewChatModel(config ModelConfig) ChatModel {
 		{Role: llm.RoleSystem, Content: config.Prompts.System},
 	}
 
-	chatModel := ChatModel{
+	chatModel := TUIModel{
 		ctx:               config.Context,
 		prompts:           config.Prompts,
 		logger:            config.Logger,
@@ -99,12 +99,12 @@ func NewChatModel(config ModelConfig) ChatModel {
 }
 
 // Init starts the cursor blink animation.
-func (model ChatModel) Init() tea.Cmd {
+func (model TUIModel) Init() tea.Cmd {
 	return textinput.Blink
 }
 
 // Update handles messages and returns the updated model and optional command.
-func (model ChatModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (model TUIModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		return model.handleWindowSize(msg)
@@ -158,7 +158,7 @@ func (model ChatModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 // View renders the current model state.
-func (model ChatModel) View() tea.View {
+func (model TUIModel) View() tea.View {
 	var view tea.View
 
 	if !model.ready {
@@ -190,7 +190,7 @@ func (model ChatModel) View() tea.View {
 	return view
 }
 
-func (model ChatModel) handleWindowSize(msg tea.WindowSizeMsg) (tea.Model, tea.Cmd) {
+func (model TUIModel) handleWindowSize(msg tea.WindowSizeMsg) (tea.Model, tea.Cmd) {
 	model.width = msg.Width
 	model.height = msg.Height
 
@@ -208,7 +208,7 @@ func (model ChatModel) handleWindowSize(msg tea.WindowSizeMsg) (tea.Model, tea.C
 	return model, nil
 }
 
-func (model ChatModel) handleThreadListMode(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
+func (model TUIModel) handleThreadListMode(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	switch msg.String() {
 	case "esc":
 		model.mode = ModeNormal
@@ -241,6 +241,6 @@ func (model ChatModel) handleThreadListMode(msg tea.KeyPressMsg) (tea.Model, tea
 }
 
 // renderHistory returns the model history word wrapped to the width of the viewport.
-func (model ChatModel) renderHistory() string {
+func (model TUIModel) renderHistory() string {
 	return lipgloss.NewStyle().Width(model.viewport.Width()).Render(model.chatHistory)
 }

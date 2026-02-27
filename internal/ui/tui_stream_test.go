@@ -1,4 +1,4 @@
-package tui
+package ui
 
 import (
 	"errors"
@@ -10,7 +10,7 @@ import (
 	"github.com/theantichris/ghost/v3/style"
 )
 
-func TestChatModel_HandleLLMMessages(t *testing.T) {
+func TestTUIModel_HandleLLMMessages(t *testing.T) {
 	tests := []struct {
 		name                string
 		currentResponse     string
@@ -66,7 +66,7 @@ func TestChatModel_HandleLLMMessages(t *testing.T) {
 			model.responseCh = make(chan tea.Msg)
 
 			newModel, cmd := model.Update(tt.msg)
-			got := newModel.(ChatModel)
+			got := newModel.(TUIModel)
 
 			if got.chatHistory != tt.wantChatHistory {
 				t.Errorf("chatHistory = %q, want %q", got.chatHistory, tt.wantChatHistory)

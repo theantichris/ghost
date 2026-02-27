@@ -1,4 +1,4 @@
-package tui
+package ui
 
 import (
 	"fmt"
@@ -10,7 +10,7 @@ import (
 	"github.com/theantichris/ghost/v3/style"
 )
 
-func (model ChatModel) handleCommandMode(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
+func (model TUIModel) handleCommandMode(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
 	switch msg.Key().Code {
 	case tea.KeyEnter:
 		parts := strings.SplitN(model.cmdInput.Value(), " ", 2)
@@ -54,7 +54,7 @@ func (model ChatModel) handleCommandMode(msg tea.KeyPressMsg) (tea.Model, tea.Cm
 	return model, nil
 }
 
-func (model ChatModel) createThreadList() (tea.Model, tea.Cmd) {
+func (model TUIModel) createThreadList() (tea.Model, tea.Cmd) {
 	threadList, err := NewThreadListModel(model.store, model.width, model.height, model.logger)
 	if err != nil {
 		model.logger.Error("error creating thread list", "error", err)
@@ -73,7 +73,7 @@ func (model ChatModel) createThreadList() (tea.Model, tea.Cmd) {
 	return model, nil
 }
 
-func (model ChatModel) readFile(arg string) (tea.Model, tea.Cmd) {
+func (model TUIModel) readFile(arg string) (tea.Model, tea.Cmd) {
 	if arg == "" {
 		model.chatHistory += fmt.Sprintf("\n[%s error: no file path provided]\n", style.GlyphError)
 		model.viewport.SetContent(model.renderHistory())
@@ -111,7 +111,7 @@ func (model ChatModel) readFile(arg string) (tea.Model, tea.Cmd) {
 	return model, nil
 }
 
-func (model ChatModel) analyzeImage(path string) (tea.Model, tea.Cmd) {
+func (model TUIModel) analyzeImage(path string) (tea.Model, tea.Cmd) {
 	content, err := agent.AnalyseImages(model.ctx, model.url, model.visionLLM, model.prompts, []string{path}, model.logger)
 	if err != nil {
 		model.logger.Error("image read failed", "path", path, "error", err)
@@ -135,7 +135,7 @@ func (model ChatModel) analyzeImage(path string) (tea.Model, tea.Cmd) {
 	return model, nil
 }
 
-func (model ChatModel) readTextFile(path string) (tea.Model, tea.Cmd) {
+func (model TUIModel) readTextFile(path string) (tea.Model, tea.Cmd) {
 	content, err := agent.ReadTextFile(path)
 	if err != nil {
 		model.logger.Error("file read failed", "path", path, "error", err)
@@ -158,7 +158,7 @@ func (model ChatModel) readTextFile(path string) (tea.Model, tea.Cmd) {
 	return model, nil
 }
 
-func (model ChatModel) newChat() (tea.Model, tea.Cmd) {
+func (model TUIModel) newChat() (tea.Model, tea.Cmd) {
 	model.messages = []llm.ChatMessage{{Role: llm.RoleSystem, Content: model.prompts.System}}
 	model.chatHistory = ""
 	model.threadID = ""

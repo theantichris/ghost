@@ -1,4 +1,4 @@
-package tui
+package ui
 
 import (
 	"strings"
@@ -7,7 +7,7 @@ import (
 	"github.com/theantichris/ghost/v3/internal/llm"
 )
 
-func TestChatModel_SaveMessage(t *testing.T) {
+func TestTUIModel_SaveMessage(t *testing.T) {
 	tests := []struct {
 		name             string
 		messages         []llm.ChatMessage
@@ -75,7 +75,7 @@ func TestChatModel_SaveMessage(t *testing.T) {
 	}
 }
 
-func TestChatModel_CreateThread(t *testing.T) {
+func TestTUIModel_CreateThread(t *testing.T) {
 	tests := []struct {
 		name      string
 		content   string
@@ -114,7 +114,7 @@ func TestChatModel_CreateThread(t *testing.T) {
 	}
 }
 
-func TestChatModel_LoadThread(t *testing.T) {
+func TestTUIModel_LoadThread(t *testing.T) {
 	tests := []struct {
 		name               string
 		seedMessages       []llm.ChatMessage

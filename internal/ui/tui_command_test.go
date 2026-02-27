@@ -1,4 +1,4 @@
-package tui
+package ui
 
 import (
 	"fmt"
@@ -12,7 +12,7 @@ import (
 	"github.com/theantichris/ghost/v3/style"
 )
 
-func TestChatModel_HandleCommandMode(t *testing.T) {
+func TestTUIModel_HandleCommandMode(t *testing.T) {
 	// Helper to create a temp file
 	createTempFile := func(t *testing.T) string {
 		dir := t.TempDir()
@@ -193,7 +193,7 @@ func TestChatModel_HandleCommandMode(t *testing.T) {
 			model.cmdInput.SetValue(inputValue)
 
 			newModel, cmd := model.Update(tt.msg)
-			got := newModel.(ChatModel)
+			got := newModel.(TUIModel)
 
 			if got.mode != tt.wantMode {
 				t.Errorf("mode = %v, want %v", got.mode, tt.wantMode)
@@ -233,7 +233,7 @@ func TestChatModel_HandleCommandMode(t *testing.T) {
 	}
 }
 
-func TestChatModel_NewChat(t *testing.T) {
+func TestTUIModel_NewChat(t *testing.T) {
 	model := newTestModel(t)
 	model.threadID = "old-thread-id"
 	model.chatHistory = "previous conversation"
@@ -242,7 +242,7 @@ func TestChatModel_NewChat(t *testing.T) {
 	model.mode = ModeCommand
 
 	result, cmd := model.newChat()
-	got := result.(ChatModel)
+	got := result.(TUIModel)
 
 	if cmd != nil {
 		t.Errorf("expected no command, got %v", cmd)

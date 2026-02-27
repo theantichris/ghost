@@ -1,4 +1,4 @@
-package tui
+package ui
 
 import (
 	"fmt"
@@ -11,7 +11,7 @@ import (
 
 // startLLMStream starts the LLM call in a go routine.
 // It returns the first listenForChunk command to start receiving.
-func (model *ChatModel) startLLMStream() tea.Cmd {
+func (model *TUIModel) startLLMStream() tea.Cmd {
 	model.logger.Debug("transmitting to neural network", "model", model.chatLLM, "messages", len(model.messages))
 
 	model.responseCh = make(chan tea.Msg)
@@ -48,7 +48,7 @@ func (model *ChatModel) startLLMStream() tea.Cmd {
 	return listenForChunk(model.responseCh)
 }
 
-func (model ChatModel) handleLLMResponseMsg(msg LLMResponseMsg) (tea.Model, tea.Cmd) {
+func (model TUIModel) handleLLMResponseMsg(msg LLMResponseMsg) (tea.Model, tea.Cmd) {
 	model.chatHistory += string(msg)
 	model.currentResponse += string(msg)
 	model.viewport.SetContent(model.renderHistory())
@@ -57,7 +57,7 @@ func (model ChatModel) handleLLMResponseMsg(msg LLMResponseMsg) (tea.Model, tea.
 	return model, listenForChunk(model.responseCh)
 }
 
-func (model ChatModel) handleLLMDoneMsg() (tea.Model, tea.Cmd) {
+func (model TUIModel) handleLLMDoneMsg() (tea.Model, tea.Cmd) {
 	model.logger.Debug("transmission complete", "response_length", len(model.currentResponse))
 
 	model.chatHistory += "\n\n"
@@ -71,7 +71,7 @@ func (model ChatModel) handleLLMDoneMsg() (tea.Model, tea.Cmd) {
 	return model, nil
 }
 
-func (model ChatModel) handleLLMErrorMsg(msg LLMErrorMsg) (tea.Model, tea.Cmd) {
+func (model TUIModel) handleLLMErrorMsg(msg LLMErrorMsg) (tea.Model, tea.Cmd) {
 	model.logger.Error("neural link disrupted", "error", msg.Err)
 
 	model.chatHistory += fmt.Sprintf("\n[%s error: %v]\n", style.GlyphInfo, msg.Err)
