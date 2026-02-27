@@ -4,15 +4,43 @@ import (
 	"fmt"
 	"strings"
 
+	"charm.land/bubbles/v2/key"
 	tea "charm.land/bubbletea/v2"
 	"github.com/theantichris/ghost/v3/internal/agent"
 	"github.com/theantichris/ghost/v3/internal/llm"
 	"github.com/theantichris/ghost/v3/style"
 )
 
+var commandKeyMap = keyMap{
+	enter: key.NewBinding(
+		key.WithKeys("enter"),
+		key.WithHelp("enter", "submit command"),
+	),
+	new: key.NewBinding(
+		key.WithKeys("n"),
+		key.WithHelp("n", "new chat"),
+	),
+	quit: key.NewBinding(
+		key.WithKeys("q"),
+		key.WithHelp("q", "quit"),
+	),
+	readFile: key.NewBinding(
+		key.WithKeys("r"),
+		key.WithHelp("r", "read file"),
+	),
+	threadList: key.NewBinding(
+		key.WithKeys("t"),
+		key.WithHelp("t", "open thread list"),
+	),
+	esc: key.NewBinding(
+		key.WithKeys("esc"),
+		key.WithHelp("esc", "normal mode"),
+	),
+}
+
 func (model TUIModel) handleCommandMode(msg tea.KeyPressMsg) (tea.Model, tea.Cmd) {
-	switch msg.Key().Code {
-	case tea.KeyEnter:
+	switch {
+	case key.Matches(msg, commandKeyMap.enter):
 		parts := strings.SplitN(model.cmdInput.Value(), " ", 2)
 		cmd := parts[0]
 		var arg string
@@ -20,19 +48,19 @@ func (model TUIModel) handleCommandMode(msg tea.KeyPressMsg) (tea.Model, tea.Cmd
 			arg = strings.TrimSpace(parts[1])
 		}
 
-		switch cmd {
-		case "n":
+		switch {
+		case matchesCommand(cmd, commandKeyMap.new):
 			return model.newChat()
 
-		case "q":
+		case matchesCommand(cmd, commandKeyMap.quit):
 			model.logger.Info("disconnecting from ghost")
 
 			return model, tea.Quit
 
-		case "r":
+		case matchesCommand(cmd, commandKeyMap.readFile):
 			return model.readFile(arg)
 
-		case "t":
+		case matchesCommand(cmd, commandKeyMap.threadList):
 			return model.createThreadList()
 		}
 
@@ -40,7 +68,7 @@ func (model TUIModel) handleCommandMode(msg tea.KeyPressMsg) (tea.Model, tea.Cmd
 		model.mode = ModeNormal
 		model.cmdInput.Reset()
 
-	case tea.KeyEscape:
+	case key.Matches(msg, commandKeyMap.esc):
 		model.mode = ModeNormal
 		model.cmdInput.Reset()
 
