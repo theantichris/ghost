@@ -13,7 +13,7 @@ import (
 	"github.com/theantichris/ghost/v3/internal/agent"
 	"github.com/theantichris/ghost/v3/internal/storage"
 	"github.com/theantichris/ghost/v3/internal/tool"
-	"github.com/theantichris/ghost/v3/internal/tui"
+	"github.com/theantichris/ghost/v3/internal/ui"
 )
 
 var ErrHomeDir = errors.New("failed to retrieve user home directory")
@@ -59,7 +59,7 @@ func runChat(cmd *cobra.Command, args []string) error {
 
 	prompts := cmd.Context().Value(promptKey{}).(agent.Prompt)
 
-	config := tui.ModelConfig{
+	config := ui.ModelConfig{
 		Context:   cmd.Context(),
 		Logger:    logger,
 		URL:       viper.GetString("url"),
@@ -70,7 +70,7 @@ func runChat(cmd *cobra.Command, args []string) error {
 		Store:     store,
 	}
 
-	chatModel := tui.NewChatModel(config)
+	chatModel := ui.NewChatModel(config)
 
 	logger.Info("entering chat", "ollama_url", config.URL, "chat_model", config.ChatLLM, "vision_model", config.VisionLLM)
 	program := tea.NewProgram(chatModel)

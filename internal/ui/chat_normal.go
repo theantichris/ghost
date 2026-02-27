@@ -1,4 +1,4 @@
-package tui
+package ui
 
 import (
 	"charm.land/bubbles/v2/textinput"
