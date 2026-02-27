@@ -21,7 +21,7 @@ var normalKeyMap = keyMap{
 	),
 	up: key.NewBinding(
 		key.WithKeys("k", "up"),
-		key.WithHelp("k/up", "scroll down"),
+		key.WithHelp("k/up", "scroll up"),
 	),
 	pageDown: key.NewBinding(
 		key.WithKeys("ctrl+d"),
