@@ -32,7 +32,6 @@ func (item threadItem) FilterValue() string {
 // ThreadListModel holds the state for the thread list.
 type ThreadListModel struct {
 	list          list.Model
-	store         *storage.Store
 	width, height int
 	logger        *log.Logger
 }
@@ -56,7 +55,6 @@ func NewThreadListModel(store *storage.Store, width, height int, logger *log.Log
 
 	model := ThreadListModel{
 		list:   list,
-		store:  store,
 		width:  width,
 		height: height,
 		logger: logger,
