@@ -13,7 +13,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/theantichris/ghost/v3/internal/agent"
-	"github.com/theantichris/ghost/v3/internal/llm"
 	"github.com/theantichris/ghost/v3/internal/tool"
 	"github.com/theantichris/ghost/v3/internal/tui"
 	"github.com/theantichris/ghost/v3/style"
@@ -21,6 +20,8 @@ import (
 
 const Version = "dev"
 
+// Cobra context keys
+type loggerKey struct{}
 type promptKey struct{}
 
 var (
@@ -87,50 +88,34 @@ func NewRootCmd() (*cobra.Command, func() error, error) {
 // the response.
 func run(cmd *cobra.Command, args []string) error {
 	logger := cmd.Context().Value(loggerKey{}).(*log.Logger)
+	prompts := cmd.Context().Value(promptKey{}).(agent.Prompt)
 
 	format := strings.ToLower(viper.GetString("format"))
-	prompts := cmd.Context().Value(promptKey{}).(agent.Prompt)
-	messages := llm.NewMessageHistory(prompts.System, prompts.JSON, prompts.Markdown, format)
-
-	pipedInput, err := agent.GetPipedInput(os.Stdin, logger)
-	if err != nil {
-		return fmt.Errorf("%w: %w", agent.ErrPipedInput, err)
-	}
-
-	if pipedInput != "" {
-		pipedMessage := llm.ChatMessage{
-			Role:    llm.RoleUser,
-			Content: fmt.Sprintf("[PIPED INPUT]:\n%s", pipedInput),
-		}
-
-		messages = append(messages, pipedMessage)
-	}
-
-	// Append user message.
-	messages = append(messages, llm.ChatMessage{Role: llm.RoleUser, Content: args[0]})
-
 	images, err := cmd.Flags().GetStringArray("image")
 	if err != nil {
 		return err
 	}
 
-	tavilyAPIKey := viper.GetString("search.api-key")
-	maxResults := viper.GetInt("search.max-results")
-	registry := tool.NewRegistry(tavilyAPIKey, maxResults, logger)
-
-	config := tui.ModelConfig{
+	modelConfig := tui.ModelConfig{
 		Context:   cmd.Context(),
-		Prompts:   cmd.Context().Value(promptKey{}).(agent.Prompt),
+		Prompts:   prompts,
 		Logger:    logger,
 		URL:       viper.GetString("url"),
 		ChatLLM:   viper.GetString("model"),
 		VisionLLM: viper.GetString("vision.model"),
 		Format:    format,
-		Messages:  messages,
 		Images:    images,
-		Registry:  registry,
+		Registry: tool.NewRegistry(
+			viper.GetString("search.api-key"),
+			viper.GetInt("search.max-results"),
+			logger,
+		),
 	}
-	streamModel := tui.NewStreamModel(config)
+
+	streamModel, err := tui.NewStreamModel(modelConfig, args[0])
+	if err != nil {
+		return err
+	}
 
 	var programOpts []tea.ProgramOption
 	if ttyIn, ttyOut, err := tea.OpenTTY(); err == nil {
@@ -148,6 +133,8 @@ func run(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("%w: %w", ErrStreamDisplay, err)
 	}
 
+	// Bubble Tea clears the output once it exits so rerender the content to
+	// Stdout.
 	finalModel := returnedModel.(tui.StreamModel)
 	if finalModel.Err != nil {
 		return finalModel.Err

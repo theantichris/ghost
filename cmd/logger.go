@@ -9,8 +9,6 @@ import (
 	"github.com/charmbracelet/log"
 )
 
-type loggerKey struct{}
-
 var ErrLogger = errors.New("logging subsystem failure")
 
 // initLogger creates and configures the application logger with JSON formatting
