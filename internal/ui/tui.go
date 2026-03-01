@@ -61,7 +61,7 @@ type TUIModel struct {
 func NewTUIModel(config ModelConfig) TUIModel {
 	userInput := textarea.New()
 	userInput.ShowLineNumbers = false
-	userInput.SetHeight(2)
+	userInput.SetHeight(inputHeight)
 	userInput.SetStyles(textAreaStyles)
 
 	cmdInput := textinput.New()
