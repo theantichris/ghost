@@ -6,7 +6,11 @@ import (
 	"github.com/theantichris/ghost/v3/style"
 )
 
+// horizontalChrome is the size of horizontal borders, margin, and padding.
 const horizontalChrome = 2
+
+// verticalChrome is the size of vertical borders, margin, and padding.
+const verticalChrome = 6
 
 var baseBackground lipgloss.Style = lipgloss.NewStyle().Background(style.Bg3)
 
@@ -26,3 +30,5 @@ var inputStyle lipgloss.Style = lipgloss.NewStyle().
 var statusBarStyle lipgloss.Style = lipgloss.NewStyle().
 	Background(style.Bg3).
 	Border(lipgloss.NormalBorder(), true)
+
+	// height - input height - status bar height = viewport height

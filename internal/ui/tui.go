@@ -27,6 +27,7 @@ const (
 )
 
 const inputHeight = 3
+const statusHeight = 1
 
 // TUIModel holds the TUI state.
 type TUIModel struct {
@@ -204,12 +205,12 @@ func (model TUIModel) handleWindowSize(msg tea.WindowSizeMsg) (tea.Model, tea.Cm
 	model.userInput.SetWidth(model.width - len(model.userInput.Prompt))
 
 	if !model.ready {
-		model.viewport = viewport.New(viewport.WithWidth(model.width), viewport.WithHeight(model.height-inputHeight))
+		model.viewport = viewport.New(viewport.WithWidth(model.width), viewport.WithHeight(model.viewportHeight()))
 
 		model.ready = true
 	} else {
 		model.viewport.SetWidth(msg.Width)
-		model.viewport.SetHeight(msg.Height - inputHeight)
+		model.viewport.SetHeight(msg.Height - model.viewportHeight())
 	}
 
 	return model, nil
@@ -217,6 +218,10 @@ func (model TUIModel) handleWindowSize(msg tea.WindowSizeMsg) (tea.Model, tea.Cm
 
 func (model TUIModel) panelWidth() int {
 	return model.width - horizontalChrome
+}
+
+func (model TUIModel) viewportHeight() int {
+	return model.height - inputHeight - statusHeight - verticalChrome
 }
 
 // renderHistory returns the model history word wrapped to the width of the viewport.
