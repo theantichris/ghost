@@ -210,7 +210,7 @@ func (model TUIModel) handleWindowSize(msg tea.WindowSizeMsg) (tea.Model, tea.Cm
 		model.ready = true
 	} else {
 		model.viewport.SetWidth(msg.Width)
-		model.viewport.SetHeight(msg.Height - model.viewportHeight())
+		model.viewport.SetHeight(model.viewportHeight())
 	}
 
 	return model, nil
