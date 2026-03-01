@@ -180,9 +180,9 @@ func (model TUIModel) View() tea.View {
 func (model TUIModel) renderTUI(statusBar string) string {
 	return lipgloss.JoinVertical(
 		lipgloss.Left,
-		viewportStyle.Width(model.width).Render(model.viewport.View()),
-		inputStyle.Width(model.width).Render(model.userInput.View()),
-		statusBarStyle.Width(model.width).Render(statusBar),
+		panelStyle.Width(model.width).Render(model.viewport.View()),
+		panelStyle.Width(model.width).Render(model.userInput.View()),
+		panelStyle.Width(model.width).Render(statusBar),
 	)
 }
 
@@ -190,7 +190,7 @@ func (model TUIModel) handleWindowSize(msg tea.WindowSizeMsg) (tea.Model, tea.Cm
 	model.width = msg.Width
 	model.height = msg.Height
 
-	viewportWidth := viewportStyle.GetHorizontalFrameSize()
+	viewportWidth := panelStyle.GetHorizontalFrameSize()
 	contentWidth := model.width - viewportWidth
 
 	model.userInput.SetWidth(contentWidth - len(model.userInput.Prompt))
@@ -207,7 +207,7 @@ func (model TUIModel) handleWindowSize(msg tea.WindowSizeMsg) (tea.Model, tea.Cm
 }
 
 func (model TUIModel) viewportHeight() int {
-	return model.height - inputHeight - inputStyle.GetVerticalFrameSize() - statusHeight - statusBarStyle.GetVerticalFrameSize() - viewportStyle.GetVerticalFrameSize()
+	return model.height - inputHeight - panelStyle.GetVerticalFrameSize() - statusHeight - panelStyle.GetVerticalFrameSize() - panelStyle.GetVerticalFrameSize()
 }
 
 // renderHistory returns the model history word wrapped to the width of the viewport.
