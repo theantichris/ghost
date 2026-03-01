@@ -7,14 +7,14 @@ import (
 )
 
 var (
-	baseBackground lipgloss.Style  = lipgloss.NewStyle().Background(style.Bg3)
+	baseBackground lipgloss.Style  = lipgloss.NewStyle().Background(style.Bg2)
 	textAreaStyles textarea.Styles = textarea.Styles{
 		Focused: textarea.StyleState{Base: baseBackground},
 		Blurred: textarea.StyleState{Base: baseBackground},
 	}
 
 	panelStyle lipgloss.Style = lipgloss.NewStyle().
-			Background(style.Bg3).
+			Background(style.Bg2).
 			Border(lipgloss.NormalBorder(), true).
 			BorderForeground(style.Accent0)
 )
