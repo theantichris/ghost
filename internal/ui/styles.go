@@ -14,7 +14,8 @@ var (
 	}
 
 	panelStyle lipgloss.Style = lipgloss.NewStyle().
-			Background(style.Bg2).
+			Margin(0, 1).
 			Border(lipgloss.NormalBorder(), true).
+			Background(style.Bg2).
 			BorderForeground(style.Accent0)
 )

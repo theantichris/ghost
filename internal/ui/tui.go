@@ -178,12 +178,25 @@ func (model TUIModel) View() tea.View {
 }
 
 func (model TUIModel) renderTUI(statusBar string) string {
-	return lipgloss.JoinVertical(
-		lipgloss.Left,
-		panelStyle.Width(model.width).Render(model.viewport.View()),
-		panelStyle.Width(model.width).Render(model.userInput.View()),
-		panelStyle.Width(model.width).Render(statusBar),
+	width := model.width - panelStyle.GetHorizontalFrameSize()
+
+	str := lipgloss.JoinVertical(
+		lipgloss.Center,
+		panelStyle.Width(width).Render(model.viewport.View()),
+		panelStyle.Width(width).Render(model.userInput.View()),
+		panelStyle.Width(width).Render(statusBar),
 	)
+
+	str = lipgloss.Place(
+		model.width,
+		model.height,
+		lipgloss.Center,
+		lipgloss.Top,
+		str,
+		lipgloss.WithWhitespaceStyle(lipgloss.NewStyle().Background(style.Bg3)),
+	)
+
+	return str
 }
 
 func (model TUIModel) handleWindowSize(msg tea.WindowSizeMsg) (tea.Model, tea.Cmd) {
