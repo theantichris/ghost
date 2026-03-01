@@ -163,32 +163,11 @@ func (model TUIModel) View() tea.View {
 
 	switch model.mode {
 	case ModeNormal:
-		view = tea.NewView(
-			lipgloss.JoinVertical(
-				lipgloss.Left,
-				viewportStyle.Width(model.width).Render(model.viewport.View()),
-				inputStyle.Width(model.width).Render(model.userInput.View()),
-				statusBarStyle.Width(model.width).Render("[NOR]"),
-			),
-		)
+		view = tea.NewView(model.renderTUI("[NOR]"))
 	case ModeCommand:
-		view = tea.NewView(
-			lipgloss.JoinVertical(
-				lipgloss.Left,
-				viewportStyle.Width(model.width).Render(model.viewport.View()),
-				inputStyle.Width(model.width).Render(model.userInput.View()),
-				statusBarStyle.Width(model.width).Render(model.cmdInput.View()),
-			),
-		)
+		view = tea.NewView(model.renderTUI(model.cmdInput.View()))
 	case ModeInsert:
-		view = tea.NewView(
-			lipgloss.JoinVertical(
-				lipgloss.Left,
-				viewportStyle.Width(model.width).Render(model.viewport.View()),
-				inputStyle.Width(model.width).Render(model.userInput.View()),
-				statusBarStyle.Width(model.width).Render("[INS]"),
-			),
-		)
+		view = tea.NewView(model.renderTUI("[INS]"))
 	case ModeThreadList:
 		view = model.threadList.View()
 	}
@@ -196,6 +175,15 @@ func (model TUIModel) View() tea.View {
 	view.AltScreen = true
 
 	return view
+}
+
+func (model TUIModel) renderTUI(statusBar string) string {
+	return lipgloss.JoinVertical(
+		lipgloss.Left,
+		viewportStyle.Width(model.width).Render(model.viewport.View()),
+		inputStyle.Width(model.width).Render(model.userInput.View()),
+		statusBarStyle.Width(model.width).Render(statusBar),
+	)
 }
 
 func (model TUIModel) handleWindowSize(msg tea.WindowSizeMsg) (tea.Model, tea.Cmd) {
