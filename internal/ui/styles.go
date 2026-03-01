@@ -6,9 +6,6 @@ import (
 	"github.com/theantichris/ghost/v3/style"
 )
 
-// horizontalChrome is the size of horizontal borders, margin, and padding.
-const horizontalChrome = 2
-
 // verticalChrome is the size of vertical borders, margin, and padding.
 const verticalChrome = 6
 

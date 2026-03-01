@@ -166,27 +166,27 @@ func (model TUIModel) View() tea.View {
 		view = tea.NewView(
 			lipgloss.JoinVertical(
 				lipgloss.Left,
-				viewportStyle.Width(model.panelWidth()).Render(model.viewport.View()),
-				inputStyle.Width(model.panelWidth()).Render(model.userInput.View()),
-				statusBarStyle.Width(model.panelWidth()).Render("[NOR]"),
+				viewportStyle.Width(model.width).Render(model.viewport.View()),
+				inputStyle.Width(model.width).Render(model.userInput.View()),
+				statusBarStyle.Width(model.width).Render("[NOR]"),
 			),
 		)
 	case ModeCommand:
 		view = tea.NewView(
 			lipgloss.JoinVertical(
 				lipgloss.Left,
-				viewportStyle.Width(model.panelWidth()).Render(model.viewport.View()),
-				inputStyle.Width(model.panelWidth()).Render(model.userInput.View()),
-				statusBarStyle.Width(model.panelWidth()).Render(model.cmdInput.View()),
+				viewportStyle.Width(model.width).Render(model.viewport.View()),
+				inputStyle.Width(model.width).Render(model.userInput.View()),
+				statusBarStyle.Width(model.width).Render(model.cmdInput.View()),
 			),
 		)
 	case ModeInsert:
 		view = tea.NewView(
 			lipgloss.JoinVertical(
 				lipgloss.Left,
-				viewportStyle.Width(model.panelWidth()).Render(model.viewport.View()),
-				inputStyle.Width(model.panelWidth()).Render(model.userInput.View()),
-				statusBarStyle.Width(model.panelWidth()).Render("[INS]"),
+				viewportStyle.Width(model.width).Render(model.viewport.View()),
+				inputStyle.Width(model.width).Render(model.userInput.View()),
+				statusBarStyle.Width(model.width).Render("[INS]"),
 			),
 		)
 	case ModeThreadList:
@@ -214,10 +214,6 @@ func (model TUIModel) handleWindowSize(msg tea.WindowSizeMsg) (tea.Model, tea.Cm
 	}
 
 	return model, nil
-}
-
-func (model TUIModel) panelWidth() int {
-	return model.width - horizontalChrome
 }
 
 func (model TUIModel) viewportHeight() int {
