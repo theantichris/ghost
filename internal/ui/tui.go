@@ -2,7 +2,6 @@ package ui
 
 import (
 	"context"
-	"fmt"
 
 	"charm.land/bubbles/v2/textarea"
 	"charm.land/bubbles/v2/textinput"
@@ -59,15 +58,10 @@ type TUIModel struct {
 
 // NewTUIModel creates the chat model and initializes the text input.
 func NewTUIModel(config ModelConfig) TUIModel {
-	taStyles := textarea.Styles{
-		Focused: textarea.StyleState{Base: baseBackground},
-		Blurred: textarea.StyleState{Base: baseBackground},
-	}
-
 	userInput := textarea.New()
 	userInput.ShowLineNumbers = false
 	userInput.SetHeight(2)
-	userInput.SetStyles(taStyles)
+	userInput.SetStyles(textAreaStyles)
 
 	cmdInput := textinput.New()
 	cmdInput.Prompt = ":"
@@ -168,17 +162,32 @@ func (model TUIModel) View() tea.View {
 
 	switch model.mode {
 	case ModeNormal:
-		str := fmt.Sprintf("%s\n%s\n%s", model.viewport.View(), model.userInput.View(), "[NOR]")
-		str = baseBackground.Render(str)
-		view = tea.NewView(str)
+		view = tea.NewView(
+			lipgloss.JoinVertical(
+				lipgloss.Left,
+				viewportStyle.Width(model.panelWidth()).Render(model.viewport.View()),
+				inputStyle.Width(model.panelWidth()).Render(model.userInput.View()),
+				statusBarStyle.Width(model.panelWidth()).Render("[NOR]"),
+			),
+		)
 	case ModeCommand:
-		str := fmt.Sprintf("%s\n%s\n%s", model.viewport.View(), model.userInput.View(), model.cmdInput.View())
-		str = baseBackground.Render(str)
-		view = tea.NewView(str)
+		view = tea.NewView(
+			lipgloss.JoinVertical(
+				lipgloss.Left,
+				viewportStyle.Width(model.panelWidth()).Render(model.viewport.View()),
+				inputStyle.Width(model.panelWidth()).Render(model.userInput.View()),
+				statusBarStyle.Width(model.panelWidth()).Render(model.cmdInput.View()),
+			),
+		)
 	case ModeInsert:
-		str := fmt.Sprintf("%s\n%s\n%s", model.viewport.View(), model.userInput.View(), "[INS]")
-		str = baseBackground.Render(str)
-		view = tea.NewView(str)
+		view = tea.NewView(
+			lipgloss.JoinVertical(
+				lipgloss.Left,
+				viewportStyle.Width(model.panelWidth()).Render(model.viewport.View()),
+				inputStyle.Width(model.panelWidth()).Render(model.userInput.View()),
+				statusBarStyle.Width(model.panelWidth()).Render("[INS]"),
+			),
+		)
 	case ModeThreadList:
 		view = model.threadList.View()
 	}
@@ -204,6 +213,10 @@ func (model TUIModel) handleWindowSize(msg tea.WindowSizeMsg) (tea.Model, tea.Cm
 	}
 
 	return model, nil
+}
+
+func (model TUIModel) panelWidth() int {
+	return model.width - horizontalChrome
 }
 
 // renderHistory returns the model history word wrapped to the width of the viewport.
