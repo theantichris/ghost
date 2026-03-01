@@ -190,14 +190,16 @@ func (model TUIModel) handleWindowSize(msg tea.WindowSizeMsg) (tea.Model, tea.Cm
 	model.width = msg.Width
 	model.height = msg.Height
 
-	model.userInput.SetWidth(model.width - len(model.userInput.Prompt))
+	viewportWidth := viewportStyle.GetHorizontalFrameSize()
+	contentWidth := model.width - viewportWidth
+
+	model.userInput.SetWidth(contentWidth - len(model.userInput.Prompt))
 
 	if !model.ready {
-		model.viewport = viewport.New(viewport.WithWidth(model.width), viewport.WithHeight(model.viewportHeight()))
-
+		model.viewport = viewport.New(viewport.WithWidth(contentWidth), viewport.WithHeight(model.viewportHeight()))
 		model.ready = true
 	} else {
-		model.viewport.SetWidth(msg.Width)
+		model.viewport.SetWidth(contentWidth)
 		model.viewport.SetHeight(model.viewportHeight())
 	}
 
