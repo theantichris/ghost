@@ -6,9 +6,6 @@ import (
 	"github.com/theantichris/ghost/v3/style"
 )
 
-// verticalChrome is the size of vertical borders, margin, and padding.
-const verticalChrome = 6
-
 var textAreaStyles textarea.Styles = textarea.Styles{
 	Focused: textarea.StyleState{Base: baseBackground},
 	Blurred: textarea.StyleState{Base: baseBackground},

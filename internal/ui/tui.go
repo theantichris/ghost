@@ -207,7 +207,7 @@ func (model TUIModel) handleWindowSize(msg tea.WindowSizeMsg) (tea.Model, tea.Cm
 }
 
 func (model TUIModel) viewportHeight() int {
-	return model.height - inputHeight - statusHeight - verticalChrome
+	return model.height - inputHeight - inputStyle.GetVerticalFrameSize() - statusHeight - statusBarStyle.GetVerticalFrameSize() - viewportStyle.GetVerticalFrameSize()
 }
 
 // renderHistory returns the model history word wrapped to the width of the viewport.
