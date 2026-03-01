@@ -2,6 +2,7 @@ package ui
 
 import (
 	"context"
+	"fmt"
 
 	"charm.land/bubbles/v2/textarea"
 	"charm.land/bubbles/v2/textinput"
@@ -58,9 +59,15 @@ type TUIModel struct {
 
 // NewTUIModel creates the chat model and initializes the text input.
 func NewTUIModel(config ModelConfig) TUIModel {
+	taStyles := textarea.Styles{
+		Focused: textarea.StyleState{Base: baseBackground},
+		Blurred: textarea.StyleState{Base: baseBackground},
+	}
+
 	userInput := textarea.New()
 	userInput.ShowLineNumbers = false
 	userInput.SetHeight(2)
+	userInput.SetStyles(taStyles)
 
 	cmdInput := textinput.New()
 	cmdInput.Prompt = ":"
@@ -153,7 +160,7 @@ func (model TUIModel) View() tea.View {
 	var view tea.View
 
 	if !model.ready {
-		view = tea.NewView(style.GlyphInfo + " initializing...")
+		view = tea.NewView(baseBackground.Render(style.GlyphInfo + " initializing..."))
 		view.AltScreen = true
 
 		return view
@@ -161,17 +168,17 @@ func (model TUIModel) View() tea.View {
 
 	switch model.mode {
 	case ModeNormal:
-		view = tea.NewView(
-			lipgloss.JoinVertical(lipgloss.Left, model.viewport.View(), model.userInput.View(), "[NOR]"),
-		)
+		str := fmt.Sprintf("%s\n%s\n%s", model.viewport.View(), model.userInput.View(), "[NOR]")
+		str = baseBackground.Render(str)
+		view = tea.NewView(str)
 	case ModeCommand:
-		view = tea.NewView(
-			lipgloss.JoinVertical(lipgloss.Left, model.viewport.View(), model.userInput.View(), model.cmdInput.View()),
-		)
+		str := fmt.Sprintf("%s\n%s\n%s", model.viewport.View(), model.userInput.View(), model.cmdInput.View())
+		str = baseBackground.Render(str)
+		view = tea.NewView(str)
 	case ModeInsert:
-		view = tea.NewView(
-			lipgloss.JoinVertical(lipgloss.Left, model.viewport.View(), model.userInput.View(), "[INS]"),
-		)
+		str := fmt.Sprintf("%s\n%s\n%s", model.viewport.View(), model.userInput.View(), "[INS]")
+		str = baseBackground.Render(str)
+		view = tea.NewView(str)
 	case ModeThreadList:
 		view = model.threadList.View()
 	}
