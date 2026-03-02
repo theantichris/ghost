@@ -193,7 +193,6 @@ func (model TUIModel) renderTUI(statusBar string) string {
 		lipgloss.Center,
 		lipgloss.Top,
 		str,
-		lipgloss.WithWhitespaceStyle(lipgloss.NewStyle().Background(style.Bg3)),
 	)
 
 	return str
