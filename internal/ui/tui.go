@@ -27,6 +27,7 @@ const (
 )
 
 const inputHeight = 3
+const statusHeight = 1
 
 // TUIModel holds the TUI state.
 type TUIModel struct {
@@ -60,7 +61,7 @@ type TUIModel struct {
 func NewTUIModel(config ModelConfig) TUIModel {
 	userInput := textarea.New()
 	userInput.ShowLineNumbers = false
-	userInput.SetHeight(2)
+	userInput.SetHeight(inputHeight)
 
 	cmdInput := textinput.New()
 	cmdInput.Prompt = ":"
@@ -161,17 +162,11 @@ func (model TUIModel) View() tea.View {
 
 	switch model.mode {
 	case ModeNormal:
-		view = tea.NewView(
-			lipgloss.JoinVertical(lipgloss.Left, model.viewport.View(), model.userInput.View(), "[NOR]"),
-		)
+		view = tea.NewView(model.renderTUI("[NOR]"))
 	case ModeCommand:
-		view = tea.NewView(
-			lipgloss.JoinVertical(lipgloss.Left, model.viewport.View(), model.userInput.View(), model.cmdInput.View()),
-		)
+		view = tea.NewView(model.renderTUI(model.cmdInput.View()))
 	case ModeInsert:
-		view = tea.NewView(
-			lipgloss.JoinVertical(lipgloss.Left, model.viewport.View(), model.userInput.View(), "[INS]"),
-		)
+		view = tea.NewView(model.renderTUI("[INS]"))
 	case ModeThreadList:
 		view = model.threadList.View()
 	}
@@ -181,22 +176,53 @@ func (model TUIModel) View() tea.View {
 	return view
 }
 
+func (model TUIModel) renderTUI(statusBar string) string {
+	width := model.width - panelStyle.GetHorizontalFrameSize()
+	panel := panelStyle.Width(width)
+
+	str := lipgloss.JoinVertical(
+		lipgloss.Center,
+		panel.Render(model.viewport.View()),
+		panel.Render(model.userInput.View()),
+		panel.Render(statusBar),
+	)
+
+	str = lipgloss.Place(
+		model.width,
+		model.height,
+		lipgloss.Center,
+		lipgloss.Top,
+		str,
+	)
+
+	return str
+}
+
 func (model TUIModel) handleWindowSize(msg tea.WindowSizeMsg) (tea.Model, tea.Cmd) {
 	model.width = msg.Width
 	model.height = msg.Height
 
-	model.userInput.SetWidth(model.width - len(model.userInput.Prompt))
+	viewportWidth := panelStyle.GetHorizontalFrameSize()
+	contentWidth := model.width - viewportWidth
+
+	model.userInput.SetWidth(contentWidth - len(model.userInput.Prompt))
 
 	if !model.ready {
-		model.viewport = viewport.New(viewport.WithWidth(model.width), viewport.WithHeight(model.height-inputHeight))
-
+		model.viewport = viewport.New(viewport.WithWidth(contentWidth), viewport.WithHeight(model.viewportHeight()))
 		model.ready = true
 	} else {
-		model.viewport.SetWidth(msg.Width)
-		model.viewport.SetHeight(msg.Height - inputHeight)
+		model.viewport.SetWidth(contentWidth)
+		model.viewport.SetHeight(model.viewportHeight())
 	}
 
 	return model, nil
+}
+
+func (model TUIModel) viewportHeight() int {
+	panelCount := 3 // viewport, input, status bar
+	frameHeight := panelStyle.GetVerticalFrameSize()
+
+	return model.height - inputHeight - statusHeight - panelCount*frameHeight
 }
 
 // renderHistory returns the model history word wrapped to the width of the viewport.
