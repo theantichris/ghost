@@ -178,12 +178,13 @@ func (model TUIModel) View() tea.View {
 
 func (model TUIModel) renderTUI(statusBar string) string {
 	width := model.width - panelStyle.GetHorizontalFrameSize()
+	panel := panelStyle.Width(width)
 
 	str := lipgloss.JoinVertical(
 		lipgloss.Center,
-		panelStyle.Width(width).Render(model.viewport.View()),
-		panelStyle.Width(width).Render(model.userInput.View()),
-		panelStyle.Width(width).Render(statusBar),
+		panel.Render(model.viewport.View()),
+		panel.Render(model.userInput.View()),
+		panel.Render(statusBar),
 	)
 
 	str = lipgloss.Place(
