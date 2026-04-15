@@ -7,6 +7,6 @@ import (
 
 var (
 	panelStyle lipgloss.Style = lipgloss.NewStyle().
-		Border(lipgloss.ASCIIBorder(), true).
+		Border(lipgloss.DoubleBorder(), true).
 		BorderForeground(style.Accent0)
 )
