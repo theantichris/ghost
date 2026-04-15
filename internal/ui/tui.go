@@ -62,7 +62,6 @@ func NewTUIModel(config ModelConfig) TUIModel {
 	userInput := textarea.New()
 	userInput.ShowLineNumbers = false
 	userInput.SetHeight(inputHeight)
-	userInput.SetStyles(textAreaStyles)
 
 	cmdInput := textinput.New()
 	cmdInput.Prompt = ":"
@@ -155,7 +154,7 @@ func (model TUIModel) View() tea.View {
 	var view tea.View
 
 	if !model.ready {
-		view = tea.NewView(baseBackground.Render(style.GlyphInfo + " initializing..."))
+		view = tea.NewView(style.GlyphInfo + " initializing...")
 		view.AltScreen = true
 
 		return view
