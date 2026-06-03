@@ -34,7 +34,9 @@
       "mcp__github__get_me",
       "mcp__github__add_issue_comment",
       "Bash(go mod graph:*)",
-      "Skill(reflect)"
+      "Skill(reflect)",
+      "Bash(go list:*)",
+      "Bash(ls:*)"
     ]
   },
   "outputStyle": "Learning",
