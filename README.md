@@ -164,8 +164,8 @@ Ghost's personality and behavior are driven by editable prompt files stored at
 `~/.config/ghost/prompts/`. On first run, Ghost writes sensible defaults to each
 file — crack them open and reprogram your AI to suit the mission.
 
-| File                | Controls                                      |
-|---------------------|-----------------------------------------------|
+| File                | Controls                                       |
+|---------------------|------------------------------------------------|
 | `system.md`         | Core system personality and behavior           |
 | `vision_system.md`  | Vision model system instructions               |
 | `vision.md`         | Vision analysis user prompt                    |
