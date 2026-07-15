@@ -24,9 +24,9 @@ var commandKeyMap = keyMap{
 		key.WithKeys("q"),
 		key.WithHelp("q", "quit"),
 	),
-	readFile: key.NewBinding(
-		key.WithKeys("r"),
-		key.WithHelp("r", "read file"),
+	attachFile: key.NewBinding(
+		key.WithKeys("a"),
+		key.WithHelp("a", "attach file"),
 	),
 	threadList: key.NewBinding(
 		key.WithKeys("t"),
@@ -57,8 +57,8 @@ func (model TUIModel) handleCommandMode(msg tea.KeyPressMsg) (tea.Model, tea.Cmd
 
 			return model, tea.Quit
 
-		case matchesCommand(cmd, commandKeyMap.readFile):
-			return model.readFile(arg)
+		case matchesCommand(cmd, commandKeyMap.attachFile):
+			return model.attachFile(arg)
 
 		case matchesCommand(cmd, commandKeyMap.threadList):
 			return model.createThreadList()
@@ -101,7 +101,7 @@ func (model TUIModel) createThreadList() (tea.Model, tea.Cmd) {
 	return model, nil
 }
 
-func (model TUIModel) readFile(arg string) (tea.Model, tea.Cmd) {
+func (model TUIModel) attachFile(arg string) (tea.Model, tea.Cmd) {
 	if arg == "" {
 		model.chatHistory += fmt.Sprintf("\n[%s error: no file path provided]\n", style.GlyphError)
 		model.viewport.SetContent(model.renderHistory())
