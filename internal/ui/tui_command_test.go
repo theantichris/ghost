@@ -71,8 +71,8 @@ func TestTUIModel_HandleCommandMode(t *testing.T) {
 			wantCmd:        true, // textinput returns cursor blink command
 		},
 		{
-			name:                 "r without path shows error",
-			inputValue:           "r",
+			name:                 "a without path shows error",
+			inputValue:           "a",
 			msg:                  tea.KeyPressMsg{Code: tea.KeyEnter},
 			wantMode:             ModeNormal,
 			wantInputValue:       "",
@@ -80,8 +80,8 @@ func TestTUIModel_HandleCommandMode(t *testing.T) {
 			wantMessageCount:     1,
 		},
 		{
-			name:                 "r with whitespace-only path shows error",
-			inputValue:           "r   ",
+			name:                 "a with whitespace-only path shows error",
+			inputValue:           "a   ",
 			msg:                  tea.KeyPressMsg{Code: tea.KeyEnter},
 			wantMode:             ModeNormal,
 			wantInputValue:       "",
@@ -89,8 +89,8 @@ func TestTUIModel_HandleCommandMode(t *testing.T) {
 			wantMessageCount:     1,
 		},
 		{
-			name:                 "r with nonexistent file shows error",
-			inputValue:           "r /nonexistent/file/path.txt",
+			name:                 "a with nonexistent file shows error",
+			inputValue:           "a /nonexistent/file/path.txt",
 			msg:                  tea.KeyPressMsg{Code: tea.KeyEnter},
 			wantMode:             ModeNormal,
 			wantInputValue:       "",
@@ -98,8 +98,8 @@ func TestTUIModel_HandleCommandMode(t *testing.T) {
 			wantMessageCount:     1,
 		},
 		{
-			name:                 "r with valid file loads content",
-			inputValue:           "r ",
+			name:                 "a with valid file loads content",
+			inputValue:           "a ",
 			setupFile:            createTempFile,
 			msg:                  tea.KeyPressMsg{Code: tea.KeyEnter},
 			wantMode:             ModeNormal,
@@ -109,8 +109,8 @@ func TestTUIModel_HandleCommandMode(t *testing.T) {
 			wantLastRole:         llm.RoleUser,
 		},
 		{
-			name:       "r with directory shows error",
-			inputValue: "r ",
+			name:       "a with directory shows error",
+			inputValue: "a ",
 			setupFile: func(t *testing.T) string {
 				return t.TempDir()
 			},
@@ -121,8 +121,8 @@ func TestTUIModel_HandleCommandMode(t *testing.T) {
 			wantMessageCount:     1,
 		},
 		{
-			name:       "r with GIF file shows unsupported error",
-			inputValue: "r ",
+			name:       "a with GIF file shows unsupported error",
+			inputValue: "a ",
 			setupFile: func(t *testing.T) string {
 				dir := t.TempDir()
 				path := filepath.Join(dir, "test.gif")
@@ -141,8 +141,8 @@ func TestTUIModel_HandleCommandMode(t *testing.T) {
 			wantMessageCount:     1,
 		},
 		{
-			name:       "r with binary file shows unsupported error",
-			inputValue: "r ",
+			name:       "a with binary file shows unsupported error",
+			inputValue: "a ",
 			setupFile: func(t *testing.T) string {
 				dir := t.TempDir()
 				path := filepath.Join(dir, "test.exe")

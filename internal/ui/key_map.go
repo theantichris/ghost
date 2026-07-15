@@ -20,7 +20,7 @@ type keyMap struct {
 	goToBottom key.Binding
 	new        key.Binding
 	quit       key.Binding
-	readFile   key.Binding
+	attachFile key.Binding
 	threadList key.Binding
 }
 

@@ -100,25 +100,25 @@ ghost chat --model llama3
 
 **Vim-style keybindings:**
 
-| Key            | Action                                                       |
-|----------------|--------------------------------------------------------------|
-| `i`            | Enter insert mode (start typing)                             |
-| `Esc`          | Return to normal mode                                        |
-| `Enter`        | Send message (in insert mode)                                |
-| `Shift+Enter`  | Insert newline (requires terminal support)                   |
-| `Ctrl+j`       | Insert newline                                               |
-| `j`/`down`     | Scroll down one line                                         |
-| `k`/`up`       | Scroll up one line                                           |
-| `Ctrl+d`       | Scroll down half page                                        |
-| `Ctrl+u`       | Scroll up half page                                          |
-| `gg`           | Go to top                                                    |
-| `G`            | Go to bottom                                                 |
-| `up`           | Go back in input history                                     |
-| `down`         | Go forward in input history                                  |
-| `:n`           | Start a new chat thread                                      |
-| `:r <path>`    | Read file into conversation context, requires absolute path  |
-| `:t`           | View thread history                                          |
-| `:q`           | Disconnect from Ghost                                        |
+| Key            | Action                                                        |
+|----------------|---------------------------------------------------------------|
+| `i`            | Enter insert mode (start typing)                              |
+| `Esc`          | Return to normal mode                                         |
+| `Enter`        | Send message (in insert mode)                                 |
+| `Shift+Enter`  | Insert newline (requires terminal support)                    |
+| `Ctrl+j`       | Insert newline                                                |
+| `j`/`down`     | Scroll down one line                                          |
+| `k`/`up`       | Scroll up one line                                            |
+| `Ctrl+d`       | Scroll down half page                                         |
+| `Ctrl+u`       | Scroll up half page                                           |
+| `gg`           | Go to top                                                     |
+| `G`            | Go to bottom                                                  |
+| `up`           | Go back in input history                                      |
+| `down`         | Go forward in input history                                   |
+| `:n`           | Start a new chat thread                                       |
+| `:a <path>`    | Attach file into conversation context, requires absolute path |
+| `:t`           | View thread history                                           |
+| `:q`           | Disconnect from Ghost                                         |
 
 ## System Configuration
 
@@ -164,8 +164,8 @@ Ghost's personality and behavior are driven by editable prompt files stored at
 `~/.config/ghost/prompts/`. On first run, Ghost writes sensible defaults to each
 file — crack them open and reprogram your AI to suit the mission.
 
-| File                | Controls                                      |
-|---------------------|-----------------------------------------------|
+| File                | Controls                                       |
+|---------------------|------------------------------------------------|
 | `system.md`         | Core system personality and behavior           |
 | `vision_system.md`  | Vision model system instructions               |
 | `vision.md`         | Vision analysis user prompt                    |
