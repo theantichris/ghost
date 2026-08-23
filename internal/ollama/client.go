@@ -14,7 +14,7 @@ import (
 const DefaultURL = "http://localhost:11434/api"
 const maxErrBodySize = 64 << 10
 
-// Message on message in an Ollama chat conversation.
+// Message represents one message in an Ollama chat conversation.
 type Message struct {
 	Role    string `json:"role"`
 	Content string `json:"content"`
