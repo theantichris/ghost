@@ -84,7 +84,7 @@ func TestClientChat(t *testing.T) {
 				}
 
 				if request.URL.Path != "/api/chat" {
-					t.Errorf("request path = %q, want %q", request.URL.Path, "/ap/chat")
+					t.Errorf("request path = %q, want %q", request.URL.Path, "/api/chat")
 				}
 
 				if got := request.Header.Get("Content-Type"); got != "application/json" {
@@ -99,7 +99,7 @@ func TestClientChat(t *testing.T) {
 				}
 
 				if gotRequest.Model != "qwen3:8b" {
-					t.Errorf("request model = %q, want %q", gotRequest.Model, "qwen:8b")
+					t.Errorf("request model = %q, want %q", gotRequest.Model, "qwen3:8b")
 				}
 
 				if gotRequest.Stream {
