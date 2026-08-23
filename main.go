@@ -9,10 +9,8 @@ import (
 const bootstrapMsg = "ghost // bootstrap online"
 
 func main() {
-	err := run(os.Stdout)
-
-	if err != nil {
-		fmt.Fprint(os.Stderr, err.Error())
+	if err := run(os.Stdout); err != nil {
+		fmt.Fprintf(os.Stderr, "ghost // bootstrap failure: %v\n", err)
 		os.Exit(1)
 	}
 }
