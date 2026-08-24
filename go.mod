@@ -4,7 +4,7 @@ go 1.25.5
 
 require (
 	charm.land/bubbles/v2 v2.1.1
-	charm.land/bubbletea/v2 v2.0.8
+	charm.land/bubbletea/v2 v2.0.9
 	charm.land/lipgloss/v2 v2.0.5
 	github.com/carlmjohnson/requests v0.25.1
 	github.com/charmbracelet/fang v1.0.0
