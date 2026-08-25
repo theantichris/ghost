@@ -14,9 +14,17 @@ import (
 const DefaultURL = "http://localhost:11434/api"
 const maxErrBodySize = 64 << 10
 
+// Role identifies a participant in an Ollama chat conversation.
+type Role string
+
+const (
+	RoleUser      Role = "user"
+	RoleAssistant Role = "assistant"
+)
+
 // Message represents one message in an Ollama chat conversation.
 type Message struct {
-	Role    string `json:"role"`
+	Role    Role   `json:"role"`
 	Content string `json:"content"`
 }
 
