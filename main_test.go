@@ -109,6 +109,22 @@ func TestRun(t *testing.T) {
 			wantMessages: promptMessages,
 			wantOutput:   "Ghost online.\n",
 		},
+		{
+			name:            "requires nonblank model",
+			args:            []string{"--model", "  ", "Identify yourself."},
+			output:          &bytes.Buffer{},
+			wantErr:         true,
+			wantErrIs:       errModelRequired,
+			wantErrContains: "model is required",
+		},
+		{
+			name:            "requires nonblank prompt",
+			args:            []string{"--model", "qwen3:8b", "  "},
+			output:          &bytes.Buffer{},
+			wantErr:         true,
+			wantErrIs:       errPromptRequired,
+			wantErrContains: "prompt is required",
+		},
 	}
 
 	for _, test := range tests {
