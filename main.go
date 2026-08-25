@@ -12,8 +12,6 @@ import (
 	"github.com/theantichris/ghost/v4/internal/ollama"
 )
 
-const bootstrapMsg = "ghost // bootstrap online"
-
 var (
 	errModelRequired  = errors.New("model is required: use --model <name>")
 	errPromptRequired = errors.New("prompt is required")

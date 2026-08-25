@@ -14,6 +14,7 @@ import (
 const DefaultURL = "http://localhost:11434/api"
 const maxErrBodySize = 64 << 10
 
+// Role identifies a participant in an Ollama chat conversation.
 type Role string
 
 const (
