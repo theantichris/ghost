@@ -2,33 +2,66 @@ package main
 
 import (
 	"context"
+	"errors"
+	"flag"
+	"fmt"
+	"io"
 	"os"
+	"strings"
 
-	"github.com/charmbracelet/fang"
-	"github.com/theantichris/ghost/v3/cmd"
-	"github.com/theantichris/ghost/v3/style"
+	"github.com/theantichris/ghost/v4/internal/ollama"
 )
 
+var (
+	errModelRequired  = errors.New("model is required: use --model <name>")
+	errPromptRequired = errors.New("prompt is required")
+)
+
+type chatFunc func(context.Context, string, []ollama.Message) (ollama.Message, error)
+
 func main() {
-	rootCmd, loggerCleanup, err := cmd.NewRootCmd()
-
+	client, err := ollama.NewClient(ollama.DefaultURL, nil)
 	if err != nil {
-		style.FangErrorHandler(os.Stderr, fang.Styles{}, err)
+		_, _ = fmt.Fprintf(os.Stderr, "ghost // uplink initialization failed: %v\n", err)
 		os.Exit(1)
 	}
 
-	defer func() {
-		_ = loggerCleanup()
-	}()
-
-	if err := fang.Execute(
-		context.Background(),
-		rootCmd,
-		fang.WithVersion(rootCmd.Version),
-		fang.WithColorSchemeFunc(style.GetFangColorScheme),
-		fang.WithErrorHandler(style.FangErrorHandler),
-		fang.WithNotifySignal(os.Interrupt),
-	); err != nil {
+	if err := run(context.Background(), os.Args[1:], os.Stdout, client.Chat); err != nil {
+		_, _ = fmt.Fprintf(os.Stderr, "ghost // uplink failure: %v\n", err)
 		os.Exit(1)
 	}
+}
+
+func run(ctx context.Context, args []string, output io.Writer, chat chatFunc) error {
+	flags := flag.NewFlagSet("ghost", flag.ContinueOnError)
+	flags.SetOutput(io.Discard)
+
+	model := flags.String("model", "", "Ollama model")
+
+	if err := flags.Parse(args); err != nil {
+		return fmt.Errorf("parse command arguments: %w", err)
+	}
+
+	modelName := strings.TrimSpace(*model)
+	if modelName == "" {
+		return errModelRequired
+	}
+
+	prompt := strings.TrimSpace(strings.Join(flags.Args(), " "))
+	if prompt == "" {
+		return errPromptRequired
+	}
+
+	response, err := chat(ctx, modelName, []ollama.Message{{Role: ollama.RoleUser, Content: prompt}})
+	if err != nil {
+		return fmt.Errorf("request Ollama chat response: %w", err)
+	}
+
+	content := strings.TrimSuffix(response.Content, "\n")
+
+	if _, err := fmt.Fprintln(output, content); err != nil {
+		return fmt.Errorf("write assistant response: %w", err)
+	}
+
+	return nil
 }

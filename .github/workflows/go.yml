@@ -2,23 +2,33 @@ name: Go
 
 on:
   push:
-    branches: ["main"]
+    branches:
+      - main
+
   pull_request:
-    branches: ["main"]
+    branches:
+      - main
+
+permissions:
+  contents: read
 
 jobs:
-  build:
+  build-and-test:
+    name: Build and test
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
 
-      - name: Set up Go
-        uses: actions/setup-go@v4
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Setup Go
+        uses: actions/setup-go@v7
         with:
-          go-version: "1.24"
+          go-version-file: go.mod
+          cache: false
 
       - name: Build
-        run: go build -v ./...
+        run: go build ./...
 
       - name: Test
-        run: go test -v ./...
+        run: go test ./...
