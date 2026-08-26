@@ -1,20 +1,32 @@
 # Ghost
 
+  ▄████  ██░ ██  ▒█████   ██████  ████████
+  ██▒ ▀█▒▓██░ ██▒▒██▒  ██▒ ██    ▒    ██
+ ▒██░▄▄▄░▒██▀▀██░▒██░  ██▒ ▓██▄       ██
+ ░▓█  ██▓░▓█ ░██ ▒██   ██░  ▒   ██▒   ██
+ ░▒▓███▀▒░▓█▒░██▓░ ████▓▒░▒██████▒▒   ██
+  ░▒   ▒   ▒ ░░▒░▒░ ▒░▒░▒░ ▒ ▒▓▒ ▒ ░   ░
+   ░   ░   ▒ ░▒░ ░  ░ ▒ ▒░ ░ ░▒  ░ ░
+ ░ ░   ░   ░  ░░ ░░ ░ ░ ▒  ░  ░  ░
+       ░   ░  ░  ░    ░ ░        ░
+
+> **One prompt enters the wire. One local response comes back.**
+
 Ghost is a local-first terminal AI companion powered by Ollama.
 
-The project is being rebuilt from first principles with a TUI-first experience and a cyberpunk presentation.
+The project is being rebuilt from first principals as a TUI-first cyberdeck: local inference, precise terminal behavior, and a cyberpunk interface designed for the glow of the command line.
 
-## Prerequisites
+## Boot Sequence
+
+Before opening the uplink, install:
 
 - Go 1.26.5
-- Ollama installed and running locally
+- Ollama, running locally
 - An Ollama chat model
 
-Ghost currently connects to Ollama at:
+Ghost currently expects the Ollama API at: `http://localhost:11434/api`
 
-`http://localhost:11434/api`
-
-## Model setup
+## Load a Construct
 
 Pull the small model used by the documented examples:
 
@@ -22,13 +34,13 @@ Pull the small model used by the documented examples:
 ollama pull qwen3:0.6b
 ```
 
-Confirm that it is installed
+Confirm that it is available in local model storage:
 
 ```bash
 ollama ls
 ```
 
-## One-shot usage
+## Open the uplink
 
 From the repository root:
 
@@ -36,13 +48,17 @@ From the repository root:
 go run . --model qwen3:0.6b "Reply with one short sentence confirming Ghost is online."
 ```
 
-Ghost prints one model-generated response to standard output followed by a newline. The exact response varies between models and invocations.
+On a successful connection, Ghost prints one model-generated response to standard output followed by a newline.
 
-## Validation
+The exact response varies between models and invocations. The signal is nondeterministic; the pathway is not.
 
-### Normal repository checks
+## System Diagnostics
 
-These checks do not require Ollama or network access:
+Ghost has two validation circuits: isolated repository checks and an explicit live connection test.
+
+### Offline checks
+
+These commands do not require Ollama or network access:
 
 ```bash
 go build ./...
@@ -50,25 +66,25 @@ go test ./...
 golangci-lint run
 ```
 
-### Local end-to-end test
+### Live uplink check
 
-The tagged end-to-end test requires Ollama to be running and the selected model to be installed:
+The tagged end-to-end test connects to a real local Ollama instance. Ollama must be running, and the selected model must already be installed
 
 ```bash
 go test -tags=e2e -v .
 ```
 
-To test with another installed model:
+To validate another installed model:
 
 ```bash
 GHOST_E2E_MODEL=<model-name> go test -tags=e2e -v .
 ```
 
-The end-to-end test is intentionally excluded from the normal test suite.
+The end-to-end test is intentionally excluded from the normal test suite and continuous integration. Nothing reaches the live wire unless explicitly requested.
 
-## Troubleshooting
+## Signal Recovery
 
-### Ollama is unavailable
+### Ollama node unavailable
 
 Start the Ollama server:
 
@@ -76,16 +92,18 @@ Start the Ollama server:
 ollama serve
 ```
 
-When Ghost cannot connect, the error begins with:
+When Ghost cannot establish a connection, the error chain begins with:
 
 ```text
 ghost // uplink failure: request Ollama chat response:
 send Ollama chat request:
 ```
 
-### The requested model is missing
+The remaining text comes from the operating system and may differ between platforms.
 
-List the locally installed models:
+### Requested model missing
+
+Inspect the models available in local storage:
 
 ```bash
 ollama ls
@@ -97,13 +115,13 @@ Pull the requested model when necessary:
 ollama pull <model-name>
 ```
 
-A missing model error includes:
+A missing-model failure includes:
 
 ```text
 ghost // uplink failure: request Ollama chat response:
 Ollama chat request failed: 404 Not Found:
 ```
 
-## Previous version
+## Archived Construct
 
-The previous v3 implementation is preserved on the `archive/v3` branch at the `archive-v3-2026-08-22` tag.
+The previous v3 implementation is preserved on the `archive/v3` branch and at the `archive-v3-2026-08-22` tag.
