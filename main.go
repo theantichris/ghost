@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/theantichris/ghost/v4/internal/conversation"
 	"github.com/theantichris/ghost/v4/internal/ollama"
 )
 
@@ -52,7 +53,7 @@ func run(ctx context.Context, args []string, output io.Writer, chat chatFunc) er
 		return errPromptRequired
 	}
 
-	response, err := chat(ctx, modelName, []ollama.Message{{Role: ollama.RoleUser, Content: prompt}})
+	response, err := chat(ctx, modelName, []ollama.Message{{Role: conversation.RoleUser, Content: prompt}})
 	if err != nil {
 		return fmt.Errorf("request Ollama chat response: %w", err)
 	}

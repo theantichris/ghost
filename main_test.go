@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/theantichris/ghost/v4/internal/conversation"
 	"github.com/theantichris/ghost/v4/internal/ollama"
 )
 
@@ -25,7 +26,7 @@ func TestRun(t *testing.T) {
 	writeErr := errors.New("output unavailable")
 
 	promptMessages := []ollama.Message{
-		{Role: ollama.RoleUser, Content: "Identify yourself."},
+		{Role: conversation.RoleUser, Content: "Identify yourself."},
 	}
 
 	tests := []struct {
@@ -46,7 +47,7 @@ func TestRun(t *testing.T) {
 			name:         "prints assistant response",
 			args:         []string{"--model", "qwen3:8b", "Identify", "yourself."},
 			output:       &bytes.Buffer{},
-			response:     ollama.Message{Role: ollama.RoleAssistant, Content: "Ghost online."},
+			response:     ollama.Message{Role: conversation.RoleAssistant, Content: "Ghost online."},
 			wantChat:     true,
 			wantModel:    "qwen3:8b",
 			wantMessages: promptMessages,
@@ -91,7 +92,7 @@ func TestRun(t *testing.T) {
 			name:            "wraps output error",
 			args:            []string{"--model", "qwen3:8b", "Identify yourself."},
 			output:          errorWriter{err: writeErr},
-			response:        ollama.Message{Role: ollama.RoleAssistant, Content: "Ghost online."},
+			response:        ollama.Message{Role: conversation.RoleAssistant, Content: "Ghost online."},
 			wantChat:        true,
 			wantModel:       "qwen3:8b",
 			wantMessages:    promptMessages,
@@ -103,7 +104,7 @@ func TestRun(t *testing.T) {
 			name:         "does not duplicate final newline",
 			args:         []string{"--model", "qwen3:8b", "Identify yourself."},
 			output:       &bytes.Buffer{},
-			response:     ollama.Message{Role: ollama.RoleAssistant, Content: "Ghost online.\n"},
+			response:     ollama.Message{Role: conversation.RoleAssistant, Content: "Ghost online.\n"},
 			wantChat:     true,
 			wantModel:    "qwen3:8b",
 			wantMessages: promptMessages,

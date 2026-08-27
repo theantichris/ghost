@@ -9,23 +9,17 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/theantichris/ghost/v4/internal/conversation"
 )
 
 const DefaultURL = "http://localhost:11434/api"
 const maxErrBodySize = 64 << 10
 
-// Role identifies a participant in an Ollama chat conversation.
-type Role string
-
-const (
-	RoleUser      Role = "user"
-	RoleAssistant Role = "assistant"
-)
-
 // Message represents one message in an Ollama chat conversation.
 type Message struct {
-	Role    Role   `json:"role"`
-	Content string `json:"content"`
+	Role    conversation.Role `json:"role"`
+	Content string            `json:"content"`
 }
 
 // Client communicates with the Ollama HTTP API.
