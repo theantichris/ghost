@@ -92,17 +92,20 @@ func (client *Client) Chat(ctx context.Context, model string, messages []Message
 	if err != nil {
 		return Message{}, fmt.Errorf("send Ollama chat request: %w", err)
 	}
-	defer response.Body.Close()
+
+	defer func() {
+		_ = response.Body.Close()
+	}()
 
 	if response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices {
 		var apiError errorResponse
 		decodeErr := json.NewDecoder(io.LimitReader(response.Body, maxErrBodySize)).Decode(&apiError)
 
 		if decodeErr != nil || strings.TrimSpace(apiError.Error) == "" {
-			return Message{}, fmt.Errorf("Ollama chat request failed: %s", response.Status)
+			return Message{}, fmt.Errorf("ollama chat request failed: %s", response.Status)
 		}
 
-		return Message{}, fmt.Errorf("Ollama chat request failed: %s: %s", response.Status, apiError.Error)
+		return Message{}, fmt.Errorf("ollama chat request failed: %s: %s", response.Status, apiError.Error)
 	}
 
 	var result chatResponse
