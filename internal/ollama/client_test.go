@@ -7,6 +7,8 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/theantichris/ghost/v4/internal/conversation"
 )
 
 func TestNewClient(t *testing.T) {
@@ -55,14 +57,14 @@ func TestNewClient(t *testing.T) {
 }
 
 func TestClientChat(t *testing.T) {
-	messages := []Message{
+	messages := []conversation.Message{
 		{
 			Role:    "user",
 			Content: "Identify yourself.",
 		},
 	}
 
-	wantMessage := Message{
+	wantMessage := conversation.Message{
 		Role:    "assistant",
 		Content: "Ghost online.",
 	}
@@ -70,7 +72,7 @@ func TestClientChat(t *testing.T) {
 	tests := []struct {
 		name            string
 		handler         http.HandlerFunc
-		wantMessage     Message
+		wantMessage     conversation.Message
 		wantErrContains string
 	}{
 		{

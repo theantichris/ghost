@@ -16,12 +16,6 @@ import (
 const DefaultURL = "http://localhost:11434/api"
 const maxErrBodySize = 64 << 10
 
-// Message represents one message in an Ollama chat conversation.
-type Message struct {
-	Role    conversation.Role `json:"role"`
-	Content string            `json:"content"`
-}
-
 // Client communicates with the Ollama HTTP API.
 type Client struct {
 	baseURL    *url.URL
@@ -29,13 +23,13 @@ type Client struct {
 }
 
 type chatRequest struct {
-	Model    string    `json:"model"`
-	Messages []Message `json:"messages"`
-	Stream   bool      `json:"stream"`
+	Model    string                 `json:"model"`
+	Messages []conversation.Message `json:"messages"`
+	Stream   bool                   `json:"stream"`
 }
 
 type chatResponse struct {
-	Message Message `json:"message"`
+	Message conversation.Message `json:"message"`
 }
 
 type errorResponse struct {
@@ -64,14 +58,14 @@ func NewClient(baseURL string, httpClient *http.Client) (*Client, error) {
 }
 
 // Chat sends a non-streaming chat request to Ollama.
-func (client *Client) Chat(ctx context.Context, model string, messages []Message) (Message, error) {
+func (client *Client) Chat(ctx context.Context, model string, messages []conversation.Message) (conversation.Message, error) {
 	payload, err := json.Marshal(chatRequest{
 		Model:    model,
 		Messages: messages,
 		Stream:   false,
 	})
 	if err != nil {
-		return Message{}, fmt.Errorf("encode Ollama chat request: %w", err)
+		return conversation.Message{}, fmt.Errorf("encode Ollama chat request: %w", err)
 	}
 
 	endpoint := client.baseURL.JoinPath("chat")
@@ -83,14 +77,14 @@ func (client *Client) Chat(ctx context.Context, model string, messages []Message
 		bytes.NewReader(payload),
 	)
 	if err != nil {
-		return Message{}, fmt.Errorf("create Ollama chat request: %w", err)
+		return conversation.Message{}, fmt.Errorf("create Ollama chat request: %w", err)
 	}
 
 	request.Header.Set("Content-Type", "application/json")
 
 	response, err := client.httpClient.Do(request)
 	if err != nil {
-		return Message{}, fmt.Errorf("send Ollama chat request: %w", err)
+		return conversation.Message{}, fmt.Errorf("send Ollama chat request: %w", err)
 	}
 
 	defer func() {
@@ -102,16 +96,16 @@ func (client *Client) Chat(ctx context.Context, model string, messages []Message
 		decodeErr := json.NewDecoder(io.LimitReader(response.Body, maxErrBodySize)).Decode(&apiError)
 
 		if decodeErr != nil || strings.TrimSpace(apiError.Error) == "" {
-			return Message{}, fmt.Errorf("ollama chat request failed: %s", response.Status)
+			return conversation.Message{}, fmt.Errorf("ollama chat request failed: %s", response.Status)
 		}
 
-		return Message{}, fmt.Errorf("ollama chat request failed: %s: %s", response.Status, apiError.Error)
+		return conversation.Message{}, fmt.Errorf("ollama chat request failed: %s: %s", response.Status, apiError.Error)
 	}
 
 	var result chatResponse
 
 	if err := json.NewDecoder(response.Body).Decode(&result); err != nil {
-		return Message{}, fmt.Errorf("decode Ollama chat response: %w", err)
+		return conversation.Message{}, fmt.Errorf("decode Ollama chat response: %w", err)
 	}
 
 	return result.Message, nil
