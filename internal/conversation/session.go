@@ -11,10 +11,10 @@ const (
 	RoleAssistant Role = "assistant"
 )
 
-// Message represents one entry in a conversationone entry in a conversation
+// Message represents one entry in a conversation.
 type Message struct {
-	Role    Role   `json:"role"`
-	Content string `json:"content"`
+	Role    Role
+	Content string
 }
 
 // Session owns the ordered history for one conversation.
