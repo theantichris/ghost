@@ -59,13 +59,23 @@ func TestNewClient(t *testing.T) {
 func TestClientChat(t *testing.T) {
 	messages := []conversation.Message{
 		{
-			Role:    "user",
+			Role:    conversation.RoleUser,
 			Content: "Identify yourself.",
 		},
 	}
 
-	wantMessage := conversation.Message{
+	wantRequestMessage := chatMessage{
+		Role:    "user",
+		Content: "Identify yourself.",
+	}
+
+	responseMessage := chatMessage{
 		Role:    "assistant",
+		Content: "Ghost online.",
+	}
+
+	wantMessage := conversation.Message{
+		Role:    conversation.RoleAssistant,
 		Content: "Ghost online.",
 	}
 
@@ -108,13 +118,13 @@ func TestClientChat(t *testing.T) {
 					t.Error("request stream = true, want false")
 				}
 
-				if len(gotRequest.Messages) != 1 || gotRequest.Messages[0] != messages[0] {
+				if len(gotRequest.Messages) != 1 || gotRequest.Messages[0] != wantRequestMessage {
 					t.Errorf("request messages = %#v, want %#v", gotRequest.Messages, messages)
 				}
 
 				writer.Header().Set("Content-Type", "application/json")
 
-				if err := json.NewEncoder(writer).Encode(chatResponse{Message: wantMessage}); err != nil {
+				if err := json.NewEncoder(writer).Encode(chatResponse{Message: responseMessage}); err != nil {
 					t.Errorf("encode response: %v", err)
 				}
 			},

@@ -22,14 +22,19 @@ type Client struct {
 	httpClient *http.Client
 }
 
+type chatMessage struct {
+	Role    string `json:"role"`
+	Content string `json:"content"`
+}
+
 type chatRequest struct {
-	Model    string                 `json:"model"`
-	Messages []conversation.Message `json:"messages"`
-	Stream   bool                   `json:"stream"`
+	Model    string        `json:"model"`
+	Messages []chatMessage `json:"messages"`
+	Stream   bool          `json:"stream"`
 }
 
 type chatResponse struct {
-	Message conversation.Message `json:"message"`
+	Message chatMessage `json:"message"`
 }
 
 type errorResponse struct {
@@ -61,7 +66,7 @@ func NewClient(baseURL string, httpClient *http.Client) (*Client, error) {
 func (client *Client) Chat(ctx context.Context, model string, messages []conversation.Message) (conversation.Message, error) {
 	payload, err := json.Marshal(chatRequest{
 		Model:    model,
-		Messages: messages,
+		Messages: toChatMessage(messages),
 		Stream:   false,
 	})
 	if err != nil {
@@ -108,5 +113,19 @@ func (client *Client) Chat(ctx context.Context, model string, messages []convers
 		return conversation.Message{}, fmt.Errorf("decode Ollama chat response: %w", err)
 	}
 
-	return result.Message, nil
+	return fromChatMessage(result.Message), nil
+}
+
+func toChatMessage(messages []conversation.Message) []chatMessage {
+	result := make([]chatMessage, len(messages))
+
+	for index, message := range messages {
+		result[index] = chatMessage{Role: string(message.Role), Content: message.Content}
+	}
+
+	return result
+}
+
+func fromChatMessage(message chatMessage) conversation.Message {
+	return conversation.Message{Role: conversation.Role(message.Role), Content: message.Content}
 }

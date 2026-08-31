@@ -53,7 +53,10 @@ func run(ctx context.Context, args []string, output io.Writer, chat chatFunc) er
 		return errPromptRequired
 	}
 
-	response, err := chat(ctx, modelName, []conversation.Message{{Role: conversation.RoleUser, Content: prompt}})
+	session := conversation.NewSession()
+	session.AppendUser(prompt)
+
+	response, err := chat(ctx, modelName, session.Messages())
 	if err != nil {
 		return fmt.Errorf("request Ollama chat response: %w", err)
 	}
