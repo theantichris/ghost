@@ -18,8 +18,6 @@ var (
 	errPromptRequired = errors.New("prompt is required")
 )
 
-type chatFunc func(context.Context, string, []conversation.Message) (conversation.Message, error)
-
 func main() {
 	client, err := ollama.NewClient(ollama.DefaultURL, nil)
 	if err != nil {
@@ -33,7 +31,7 @@ func main() {
 	}
 }
 
-func run(ctx context.Context, args []string, output io.Writer, chat chatFunc) error {
+func run(ctx context.Context, args []string, output io.Writer, chat conversation.ChatFunc) error {
 	flags := flag.NewFlagSet("ghost", flag.ContinueOnError)
 	flags.SetOutput(io.Discard)
 
@@ -54,9 +52,8 @@ func run(ctx context.Context, args []string, output io.Writer, chat chatFunc) er
 	}
 
 	session := conversation.NewSession()
-	session.AppendUser(prompt)
 
-	response, err := chat(ctx, modelName, session.Messages())
+	response, err := conversation.RunTurn(ctx, session, modelName, prompt, chat)
 	if err != nil {
 		return fmt.Errorf("request Ollama chat response: %w", err)
 	}
