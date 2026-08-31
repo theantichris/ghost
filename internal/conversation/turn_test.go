@@ -193,7 +193,7 @@ func TestRunTurn(t *testing.T) {
 		}
 
 		if response != (Message{}) {
-			t.Errorf("RunTurn() response = %#v, want zero-value Messages", response)
+			t.Errorf("RunTurn() response = %#v, want zero-value Message", response)
 		}
 
 		if got := session.Messages(); !slices.Equal(got, initial) {
