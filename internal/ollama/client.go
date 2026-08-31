@@ -9,24 +9,12 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/theantichris/ghost/v4/internal/conversation"
 )
 
 const DefaultURL = "http://localhost:11434/api"
 const maxErrBodySize = 64 << 10
-
-// Role identifies a participant in an Ollama chat conversation.
-type Role string
-
-const (
-	RoleUser      Role = "user"
-	RoleAssistant Role = "assistant"
-)
-
-// Message represents one message in an Ollama chat conversation.
-type Message struct {
-	Role    Role   `json:"role"`
-	Content string `json:"content"`
-}
 
 // Client communicates with the Ollama HTTP API.
 type Client struct {
@@ -34,14 +22,19 @@ type Client struct {
 	httpClient *http.Client
 }
 
+type chatMessage struct {
+	Role    string `json:"role"`
+	Content string `json:"content"`
+}
+
 type chatRequest struct {
-	Model    string    `json:"model"`
-	Messages []Message `json:"messages"`
-	Stream   bool      `json:"stream"`
+	Model    string        `json:"model"`
+	Messages []chatMessage `json:"messages"`
+	Stream   bool          `json:"stream"`
 }
 
 type chatResponse struct {
-	Message Message `json:"message"`
+	Message chatMessage `json:"message"`
 }
 
 type errorResponse struct {
@@ -70,14 +63,14 @@ func NewClient(baseURL string, httpClient *http.Client) (*Client, error) {
 }
 
 // Chat sends a non-streaming chat request to Ollama.
-func (client *Client) Chat(ctx context.Context, model string, messages []Message) (Message, error) {
+func (client *Client) Chat(ctx context.Context, model string, messages []conversation.Message) (conversation.Message, error) {
 	payload, err := json.Marshal(chatRequest{
 		Model:    model,
-		Messages: messages,
+		Messages: toChatMessages(messages),
 		Stream:   false,
 	})
 	if err != nil {
-		return Message{}, fmt.Errorf("encode Ollama chat request: %w", err)
+		return conversation.Message{}, fmt.Errorf("encode Ollama chat request: %w", err)
 	}
 
 	endpoint := client.baseURL.JoinPath("chat")
@@ -89,33 +82,50 @@ func (client *Client) Chat(ctx context.Context, model string, messages []Message
 		bytes.NewReader(payload),
 	)
 	if err != nil {
-		return Message{}, fmt.Errorf("create Ollama chat request: %w", err)
+		return conversation.Message{}, fmt.Errorf("create Ollama chat request: %w", err)
 	}
 
 	request.Header.Set("Content-Type", "application/json")
 
 	response, err := client.httpClient.Do(request)
 	if err != nil {
-		return Message{}, fmt.Errorf("send Ollama chat request: %w", err)
+		return conversation.Message{}, fmt.Errorf("send Ollama chat request: %w", err)
 	}
-	defer response.Body.Close()
+
+	defer func() {
+		_ = response.Body.Close()
+	}()
 
 	if response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices {
 		var apiError errorResponse
 		decodeErr := json.NewDecoder(io.LimitReader(response.Body, maxErrBodySize)).Decode(&apiError)
 
 		if decodeErr != nil || strings.TrimSpace(apiError.Error) == "" {
-			return Message{}, fmt.Errorf("Ollama chat request failed: %s", response.Status)
+			return conversation.Message{}, fmt.Errorf("ollama chat request failed: %s", response.Status)
 		}
 
-		return Message{}, fmt.Errorf("Ollama chat request failed: %s: %s", response.Status, apiError.Error)
+		return conversation.Message{}, fmt.Errorf("ollama chat request failed: %s: %s", response.Status, apiError.Error)
 	}
 
 	var result chatResponse
 
 	if err := json.NewDecoder(response.Body).Decode(&result); err != nil {
-		return Message{}, fmt.Errorf("decode Ollama chat response: %w", err)
+		return conversation.Message{}, fmt.Errorf("decode Ollama chat response: %w", err)
 	}
 
-	return result.Message, nil
+	return fromChatMessage(result.Message), nil
+}
+
+func toChatMessages(messages []conversation.Message) []chatMessage {
+	result := make([]chatMessage, len(messages))
+
+	for index, message := range messages {
+		result[index] = chatMessage{Role: string(message.Role), Content: message.Content}
+	}
+
+	return result
+}
+
+func fromChatMessage(message chatMessage) conversation.Message {
+	return conversation.Message{Role: conversation.Role(message.Role), Content: message.Content}
 }

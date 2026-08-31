@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/theantichris/ghost/v4/internal/ollama"
+	"github.com/theantichris/ghost/v4/internal/conversation"
 )
 
 type errorWriter struct {
@@ -24,19 +24,19 @@ func TestRun(t *testing.T) {
 	chatErr := errors.New("Ollama unavailable")
 	writeErr := errors.New("output unavailable")
 
-	promptMessages := []ollama.Message{
-		{Role: ollama.RoleUser, Content: "Identify yourself."},
+	promptMessages := []conversation.Message{
+		{Role: conversation.RoleUser, Content: "Identify yourself."},
 	}
 
 	tests := []struct {
 		name            string
 		args            []string
 		output          io.Writer
-		response        ollama.Message
+		response        conversation.Message
 		chatErr         error
 		wantChat        bool
 		wantModel       string
-		wantMessages    []ollama.Message
+		wantMessages    []conversation.Message
 		wantOutput      string
 		wantErr         bool
 		wantErrIs       error
@@ -46,7 +46,7 @@ func TestRun(t *testing.T) {
 			name:         "prints assistant response",
 			args:         []string{"--model", "qwen3:8b", "Identify", "yourself."},
 			output:       &bytes.Buffer{},
-			response:     ollama.Message{Role: ollama.RoleAssistant, Content: "Ghost online."},
+			response:     conversation.Message{Role: conversation.RoleAssistant, Content: "Ghost online."},
 			wantChat:     true,
 			wantModel:    "qwen3:8b",
 			wantMessages: promptMessages,
@@ -91,7 +91,7 @@ func TestRun(t *testing.T) {
 			name:            "wraps output error",
 			args:            []string{"--model", "qwen3:8b", "Identify yourself."},
 			output:          errorWriter{err: writeErr},
-			response:        ollama.Message{Role: ollama.RoleAssistant, Content: "Ghost online."},
+			response:        conversation.Message{Role: conversation.RoleAssistant, Content: "Ghost online."},
 			wantChat:        true,
 			wantModel:       "qwen3:8b",
 			wantMessages:    promptMessages,
@@ -103,7 +103,7 @@ func TestRun(t *testing.T) {
 			name:         "does not duplicate final newline",
 			args:         []string{"--model", "qwen3:8b", "Identify yourself."},
 			output:       &bytes.Buffer{},
-			response:     ollama.Message{Role: ollama.RoleAssistant, Content: "Ghost online.\n"},
+			response:     conversation.Message{Role: conversation.RoleAssistant, Content: "Ghost online.\n"},
 			wantChat:     true,
 			wantModel:    "qwen3:8b",
 			wantMessages: promptMessages,
@@ -132,12 +132,12 @@ func TestRun(t *testing.T) {
 			chatCalled := false
 
 			var gotModel string
-			var gotMessages []ollama.Message
+			var gotMessages []conversation.Message
 
-			chat := func(_ context.Context, model string, messages []ollama.Message) (ollama.Message, error) {
+			chat := func(_ context.Context, model string, messages []conversation.Message) (conversation.Message, error) {
 				chatCalled = true
 				gotModel = model
-				gotMessages = append([]ollama.Message(nil), messages...)
+				gotMessages = append([]conversation.Message(nil), messages...)
 
 				return test.response, test.chatErr
 			}

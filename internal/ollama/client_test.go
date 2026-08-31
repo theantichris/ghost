@@ -7,6 +7,8 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/theantichris/ghost/v4/internal/conversation"
 )
 
 func TestNewClient(t *testing.T) {
@@ -55,22 +57,32 @@ func TestNewClient(t *testing.T) {
 }
 
 func TestClientChat(t *testing.T) {
-	messages := []Message{
+	messages := []conversation.Message{
 		{
-			Role:    "user",
+			Role:    conversation.RoleUser,
 			Content: "Identify yourself.",
 		},
 	}
 
-	wantMessage := Message{
+	wantRequestMessage := chatMessage{
+		Role:    "user",
+		Content: "Identify yourself.",
+	}
+
+	responseMessage := chatMessage{
 		Role:    "assistant",
+		Content: "Ghost online.",
+	}
+
+	wantMessage := conversation.Message{
+		Role:    conversation.RoleAssistant,
 		Content: "Ghost online.",
 	}
 
 	tests := []struct {
 		name            string
 		handler         http.HandlerFunc
-		wantMessage     Message
+		wantMessage     conversation.Message
 		wantErrContains string
 	}{
 		{
@@ -106,13 +118,13 @@ func TestClientChat(t *testing.T) {
 					t.Error("request stream = true, want false")
 				}
 
-				if len(gotRequest.Messages) != 1 || gotRequest.Messages[0] != messages[0] {
-					t.Errorf("request messages = %#v, want %#v", gotRequest.Messages, messages)
+				if len(gotRequest.Messages) != 1 || gotRequest.Messages[0] != wantRequestMessage {
+					t.Errorf("request messages = %#v, want %#v", gotRequest.Messages, []chatMessage{wantRequestMessage})
 				}
 
 				writer.Header().Set("Content-Type", "application/json")
 
-				if err := json.NewEncoder(writer).Encode(chatResponse{Message: wantMessage}); err != nil {
+				if err := json.NewEncoder(writer).Encode(chatResponse{Message: responseMessage}); err != nil {
 					t.Errorf("encode response: %v", err)
 				}
 			},
