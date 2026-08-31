@@ -2,7 +2,7 @@ package conversation
 
 import "slices"
 
-// Role identifies a participant in an chat conversation.
+// Role identifies a participant in a conversation.
 type Role string
 
 const (
@@ -11,7 +11,7 @@ const (
 	RoleAssistant Role = "assistant"
 )
 
-// Message represents one message in an Ollama chat conversation.
+// Message represents one entry in a conversationone entry in a conversation
 type Message struct {
 	Role    Role   `json:"role"`
 	Content string `json:"content"`

@@ -119,7 +119,7 @@ func TestClientChat(t *testing.T) {
 				}
 
 				if len(gotRequest.Messages) != 1 || gotRequest.Messages[0] != wantRequestMessage {
-					t.Errorf("request messages = %#v, want %#v", gotRequest.Messages, messages)
+					t.Errorf("request messages = %#v, want %#v", gotRequest.Messages, []chatMessage{wantRequestMessage})
 				}
 
 				writer.Header().Set("Content-Type", "application/json")

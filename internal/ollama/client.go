@@ -66,7 +66,7 @@ func NewClient(baseURL string, httpClient *http.Client) (*Client, error) {
 func (client *Client) Chat(ctx context.Context, model string, messages []conversation.Message) (conversation.Message, error) {
 	payload, err := json.Marshal(chatRequest{
 		Model:    model,
-		Messages: toChatMessage(messages),
+		Messages: toChatMessages(messages),
 		Stream:   false,
 	})
 	if err != nil {
@@ -116,7 +116,7 @@ func (client *Client) Chat(ctx context.Context, model string, messages []convers
 	return fromChatMessage(result.Message), nil
 }
 
-func toChatMessage(messages []conversation.Message) []chatMessage {
+func toChatMessages(messages []conversation.Message) []chatMessage {
 	result := make([]chatMessage, len(messages))
 
 	for index, message := range messages {
