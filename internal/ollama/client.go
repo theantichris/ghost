@@ -116,6 +116,12 @@ func (client *Client) Chat(ctx context.Context, model string, messages []convers
 }
 
 // ChatStream sends a streaming chat request to Ollama.
+//
+// onContent runs synchronously for each nonempty chunk, preserving whitespace.
+// A callback error stops consumption.
+//
+// ChatStream returns nil only when Ollama explicitly completes the stream.
+// Failure or cancellation can occur after content has already been delivered.
 func (client *Client) ChatStream(ctx context.Context, model string, messages []conversation.Message, onContent func(string) error) error {
 	payload, err := json.Marshal(chatRequest{
 		Model:    model,
