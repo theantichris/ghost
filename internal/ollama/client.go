@@ -35,6 +35,8 @@ type chatRequest struct {
 
 type chatResponse struct {
 	Message chatMessage `json:"message"`
+	Done    bool        `json:"done"`
+	Error   string      `json:"error"`
 }
 
 type errorResponse struct {
@@ -84,14 +86,12 @@ func (client *Client) Chat(ctx context.Context, model string, messages []convers
 	if err != nil {
 		return conversation.Message{}, fmt.Errorf("create Ollama chat request: %w", err)
 	}
-
 	request.Header.Set("Content-Type", "application/json")
 
 	response, err := client.httpClient.Do(request)
 	if err != nil {
 		return conversation.Message{}, fmt.Errorf("send Ollama chat request: %w", err)
 	}
-
 	defer func() {
 		_ = response.Body.Close()
 	}()
@@ -99,8 +99,10 @@ func (client *Client) Chat(ctx context.Context, model string, messages []convers
 	if response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices {
 		var apiError errorResponse
 		decodeErr := json.NewDecoder(io.LimitReader(response.Body, maxErrBodySize)).Decode(&apiError)
-
-		if decodeErr != nil || strings.TrimSpace(apiError.Error) == "" {
+		if decodeErr != nil {
+			return conversation.Message{}, fmt.Errorf("ollama chat request failed: %s: decode error response: %w", response.Status, decodeErr)
+		}
+		if strings.TrimSpace(apiError.Error) == "" {
 			return conversation.Message{}, fmt.Errorf("ollama chat request failed: %s", response.Status)
 		}
 
@@ -114,6 +116,93 @@ func (client *Client) Chat(ctx context.Context, model string, messages []convers
 	}
 
 	return fromChatMessage(result.Message), nil
+}
+
+// ChatStream sends a streaming chat request to Ollama.
+//
+// onContent runs synchronously for each nonempty chunk, preserving whitespace.
+// A callback error stops consumption.
+//
+// ChatStream returns nil only when Ollama explicitly completes the stream.
+// Failure or cancellation can occur after content has already been delivered.
+func (client *Client) ChatStream(ctx context.Context, model string, messages []conversation.Message, onContent func(string) error) error {
+	payload, err := json.Marshal(chatRequest{
+		Model:    model,
+		Messages: toChatMessages(messages),
+		Stream:   true,
+	})
+	if err != nil {
+		return fmt.Errorf("encode Ollama chat request: %w", err)
+	}
+
+	endpoint := client.baseURL.JoinPath("chat")
+
+	request, err := http.NewRequestWithContext(
+		ctx,
+		http.MethodPost,
+		endpoint.String(),
+		bytes.NewReader(payload),
+	)
+	if err != nil {
+		return fmt.Errorf("create Ollama chat request: %w", err)
+	}
+	request.Header.Set("Content-Type", "application/json")
+
+	response, err := client.httpClient.Do(request)
+	if err != nil {
+		return fmt.Errorf("send Ollama chat request: %w", err)
+	}
+	defer func() {
+		_ = response.Body.Close()
+	}()
+
+	if response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices {
+		var apiError errorResponse
+		decodeErr := json.NewDecoder(io.LimitReader(response.Body, maxErrBodySize)).Decode(&apiError)
+		if decodeErr != nil {
+			return fmt.Errorf("ollama chat request failed: %s: decode error response: %w", response.Status, decodeErr)
+		}
+		if strings.TrimSpace(apiError.Error) == "" {
+			return fmt.Errorf("ollama chat request failed: %s", response.Status)
+		}
+
+		return fmt.Errorf("ollama chat request failed: %s: %s", response.Status, apiError.Error)
+	}
+
+	decoder := json.NewDecoder(response.Body)
+	for {
+		if ctx.Err() != nil {
+			return fmt.Errorf("consume Ollama chat stream: %w", ctx.Err())
+		}
+
+		var frame chatResponse
+		if err := decoder.Decode(&frame); err != nil {
+			return fmt.Errorf("decode Ollama chat stream: %w", err)
+		}
+
+		if ctx.Err() != nil {
+			return fmt.Errorf("consume Ollama chat stream: %w", ctx.Err())
+		}
+
+		if frame.Error != "" {
+			return fmt.Errorf("Ollama chat stream failed: %s", frame.Error)
+		}
+
+		if frame.Message.Content != "" {
+			err := onContent(frame.Message.Content)
+			if err != nil {
+				return fmt.Errorf("deliver Ollama chat content: %w", err)
+			}
+		}
+
+		if ctx.Err() != nil {
+			return fmt.Errorf("consume Ollama chat stream: %w", ctx.Err())
+		}
+
+		if frame.Done {
+			return nil
+		}
+	}
 }
 
 func toChatMessages(messages []conversation.Message) []chatMessage {
