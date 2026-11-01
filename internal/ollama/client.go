@@ -159,6 +159,10 @@ func (client *Client) ChatStream(ctx context.Context, model string, messages []c
 
 	decoder := json.NewDecoder(response.Body)
 	for {
+		if ctx.Err() != nil {
+			return fmt.Errorf("consume Ollama chat stream: %w", ctx.Err())
+		}
+
 		var frame chatResponse
 		if err := decoder.Decode(&frame); err != nil {
 			return fmt.Errorf("decode Ollama chat stream: %w", err)
@@ -173,6 +177,10 @@ func (client *Client) ChatStream(ctx context.Context, model string, messages []c
 			if err != nil {
 				return fmt.Errorf("deliver Ollama chat content: %w", err)
 			}
+		}
+
+		if ctx.Err() != nil {
+			return fmt.Errorf("consume Ollama chat stream: %w", ctx.Err())
 		}
 
 		if frame.Done {
