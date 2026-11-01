@@ -180,6 +180,10 @@ func (client *Client) ChatStream(ctx context.Context, model string, messages []c
 			return fmt.Errorf("decode Ollama chat stream: %w", err)
 		}
 
+		if ctx.Err() != nil {
+			return fmt.Errorf("consume Ollama chat stream: %w", ctx.Err())
+		}
+
 		if frame.Error != "" {
 			return fmt.Errorf("Ollama chat stream failed: %s", frame.Error)
 		}
