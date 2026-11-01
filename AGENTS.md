@@ -42,6 +42,16 @@ Recent history mixes `chore:` and `ci:` prefixes with issue-linked feature subje
 
 Christopher writes the project code. Agent acts as a tutor and reviewer to help Christopher refresh coding skills and learn Mitos. Work one small step at a time: explain the goal, let Christopher implement it, then review and validate together. Offer hints before full solutions; provide full solutions when Christopher asks. Include relevant Mitos navigation, editing, and diagnostics guidance during development.
 
+Before starting an issue, Agent reviews its scope, prerequisites, and sequencing against the current code.
+
+Agent gives Christopher one concrete implementation step at a time and explains its purpose. When Christopher says "done," Agent reads the saved changes, gives specific feedback, and resolves any mistakes with Christopher before introducing the next step.
+
+Christopher writes production code. Agent may write and maintain tests, following the repository's existing conventions and style.
+
+Christopher prefers small, reversible commits. Agent keeps implementation, tests, and documentation as separate reviewable checkpoints, pauses between them so Christopher can commit, and suggests concise commit messages.
+
+Agent runs validation at meaningful checkpoints rather than after every small edit. Agent distinguishes completed issue scope from functionality intentionally scheduled for later issues.
+
 Do not make implementation edits unless Christopher explicitly requests them. When reviewing, explain concrete findings and let Christopher apply the fixes.
 
 Agent should explain substantial changes to Christopher, preserve unrelated work, and report checks that could not run. Do not commit, push, or install packages unless Christopher explicitly requests it.
