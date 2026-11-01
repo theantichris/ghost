@@ -345,6 +345,70 @@ func TestClientChatStreamReadError(t *testing.T) {
 	}
 }
 
+func TestClientChatStreamBufferedCancellation(t *testing.T) {
+	tests := []struct {
+		name               string
+		body               string
+		cancelBeforeStream bool
+		wantChunks         []string
+	}{
+		{
+			name:               "stops before consuming a cancelled response",
+			body:               `{"message":{"content":"obsolete"},"done":true}`,
+			cancelBeforeStream: true,
+		},
+		{
+			name: "does not deliver buffered content after callback cancels",
+			body: `{"message":{"content":"Partial"},"done":false}
+{"message":{"content":"obsolete"},"done":true}`,
+			wantChunks: []string{"Partial"},
+		},
+		{
+			name:       "does not report completion when final callback cancels",
+			body:       `{"message":{"content":"Final"},"done":true}`,
+			wantChunks: []string{"Final"},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+
+			body := &trackedResponseBody{ReadCloser: io.NopCloser(strings.NewReader(test.body))}
+			httpClient := &http.Client{Transport: roundTripFunc(func(request *http.Request) (*http.Response, error) {
+				if request.Context() != ctx {
+					t.Error("request context differs from supplied context")
+				}
+				if test.cancelBeforeStream {
+					cancel()
+				}
+				return &http.Response{StatusCode: http.StatusOK, Body: body}, nil
+			})}
+			client, err := NewClient(DefaultURL, httpClient)
+			if err != nil {
+				t.Fatalf("NewClient() error = %v, want nil", err)
+			}
+
+			var gotChunks []string
+			err = client.ChatStream(ctx, "qwen3:8b", nil, func(content string) error {
+				gotChunks = append(gotChunks, content)
+				cancel()
+				return nil
+			})
+			if !errors.Is(err, context.Canceled) {
+				t.Errorf("ChatStream() error = %v, want context.Canceled", err)
+			}
+			if !slices.Equal(gotChunks, test.wantChunks) {
+				t.Errorf("ChatStream() chunks = %#v, want %#v", gotChunks, test.wantChunks)
+			}
+			if !body.closed {
+				t.Error("ChatStream() response body was not closed after cancellation")
+			}
+		})
+	}
+}
+
 func TestClientChatStreamCancellation(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
