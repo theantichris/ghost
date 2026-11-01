@@ -99,7 +99,10 @@ func (client *Client) Chat(ctx context.Context, model string, messages []convers
 	if response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices {
 		var apiError errorResponse
 		decodeErr := json.NewDecoder(io.LimitReader(response.Body, maxErrBodySize)).Decode(&apiError)
-		if decodeErr != nil || strings.TrimSpace(apiError.Error) == "" {
+		if decodeErr != nil {
+			return conversation.Message{}, fmt.Errorf("ollama chat request failed: %s: decode error response: %w", response.Status, decodeErr)
+		}
+		if strings.TrimSpace(apiError.Error) == "" {
 			return conversation.Message{}, fmt.Errorf("ollama chat request failed: %s", response.Status)
 		}
 
@@ -156,7 +159,10 @@ func (client *Client) ChatStream(ctx context.Context, model string, messages []c
 	if response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices {
 		var apiError errorResponse
 		decodeErr := json.NewDecoder(io.LimitReader(response.Body, maxErrBodySize)).Decode(&apiError)
-		if decodeErr != nil || strings.TrimSpace(apiError.Error) == "" {
+		if decodeErr != nil {
+			return fmt.Errorf("ollama chat request failed: %s: decode error response: %w", response.Status, decodeErr)
+		}
+		if strings.TrimSpace(apiError.Error) == "" {
 			return fmt.Errorf("ollama chat request failed: %s", response.Status)
 		}
 
