@@ -7,6 +7,109 @@ import (
 	"testing"
 )
 
+func TestNewTurn(t *testing.T) {
+	tests := []struct {
+		name    string
+		history []Message
+		prompt  string
+		want    []Message
+	}{
+		{
+			name:   "starts with a user prompt",
+			prompt: "Identify yourself.",
+			want: []Message{
+				{Role: RoleUser, Content: "Identify yourself."},
+			},
+		},
+		{
+			name: "preserves history order before the new prompt",
+			history: []Message{
+				{Role: RoleSystem, Content: "You are Ghost."},
+				{Role: RoleUser, Content: "First signal."},
+				{Role: RoleAssistant, Content: "First response."},
+			},
+			prompt: "Second signal.",
+			want: []Message{
+				{Role: RoleSystem, Content: "You are Ghost."},
+				{Role: RoleUser, Content: "First signal."},
+				{Role: RoleAssistant, Content: "First response."},
+				{Role: RoleUser, Content: "Second signal."},
+			},
+		},
+		{
+			name:    "preserves prompt whitespace with empty history",
+			history: []Message{},
+			prompt:  "  signal\n",
+			want: []Message{
+				{Role: RoleUser, Content: "  signal\n"},
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			turn := NewTurn(42, "qwen3:8b", test.history, test.prompt)
+
+			if turn.id != 42 {
+				t.Errorf("NewTurn() ID = %d, want 42", turn.id)
+			}
+			if turn.model != "qwen3:8b" {
+				t.Errorf("NewTurn() model = %q, want %q", turn.model, "qwen3:8b")
+			}
+			if turn.prompt != test.prompt {
+				t.Errorf("NewTurn() prompt = %q, want %q", turn.prompt, test.prompt)
+			}
+			if !slices.Equal(turn.messages, test.want) {
+				t.Errorf("NewTurn() messages = %#v, want %#v", turn.messages, test.want)
+			}
+		})
+	}
+}
+
+func TestNewTurnHistoryIsolation(t *testing.T) {
+	tests := []struct {
+		name     string
+		capacity int
+	}{
+		{name: "history at capacity", capacity: 1},
+		{name: "history with spare capacity", capacity: 4},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			backing := make([]Message, test.capacity)
+			backing[0] = Message{Role: RoleSystem, Content: "You are Ghost."}
+			history := backing[:1]
+			before := slices.Clone(backing)
+
+			first := NewTurn(1, "qwen3:8b", history, "First signal.")
+			second := NewTurn(2, "qwen3:8b", history, "Second signal.")
+
+			if !slices.Equal(backing, before) {
+				t.Errorf("NewTurn() changed caller backing array = %#v, want %#v", backing, before)
+			}
+
+			history[0].Content = "Changed outside the turn."
+
+			wantFirst := []Message{
+				{Role: RoleSystem, Content: "You are Ghost."},
+				{Role: RoleUser, Content: "First signal."},
+			}
+			wantSecond := []Message{
+				{Role: RoleSystem, Content: "You are Ghost."},
+				{Role: RoleUser, Content: "Second signal."},
+			}
+
+			if !slices.Equal(first.messages, wantFirst) {
+				t.Errorf("first turn after caller mutation = %#v, want %#v", first.messages, wantFirst)
+			}
+			if !slices.Equal(second.messages, wantSecond) {
+				t.Errorf("second turn after caller mutation = %#v, want %#v", second.messages, wantSecond)
+			}
+		})
+	}
+}
+
 func TestRunTurn(t *testing.T) {
 	session := NewSession(Message{Role: RoleSystem, Content: "You are Ghost."})
 
