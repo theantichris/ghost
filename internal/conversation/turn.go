@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"slices"
+	"strings"
 )
 
 // ChatFunc requests one assistant response for an ordered message history.
@@ -23,6 +24,24 @@ type Turn struct {
 	messages []Message
 }
 
+// TurnEventKind defines the type of a turn event.
+type TurnEventKind string
+
+const (
+	// TurnEventContent carries one incremental content chunk.
+	TurnEventContent TurnEventKind = "content"
+
+	// TurnEventCompleted carries the full response after successful completion.
+	TurnEventCompleted TurnEventKind = "completed"
+)
+
+// TurnEvent holds the data for a single event in a chat turn.
+type TurnEvent struct {
+	TurnID  TurnID
+	Kind    TurnEventKind
+	Content string
+}
+
 // NewTurn creates a new chat turn with a snapshot of chat history with the new
 // prompt.
 func NewTurn(id TurnID, model string, history []Message, prompt string) Turn {
@@ -37,6 +56,55 @@ func NewTurn(id TurnID, model string, history []Message, prompt string) Turn {
 	}
 
 	return turn
+}
+
+// Stream emits content chunks synchronously followed by a completion event
+// containing the assembled response.
+// chat must call its content callback synchronously and stop when it returns an
+// error.
+// Errors or cancellation can follow partial delivery, callers must require a nil
+// return before committing.
+// Never changes session history.
+func (turn Turn) Stream(ctx context.Context, chat ChatStreamFunc, emit func(TurnEvent) error) error {
+	if err := ctx.Err(); err != nil {
+		return fmt.Errorf("stream conversation turn: %w", err)
+	}
+
+	var response strings.Builder
+
+	err := chat(ctx, turn.model, slices.Clone(turn.messages), func(content string) error {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+
+		err := emit(TurnEvent{TurnID: turn.id, Kind: TurnEventContent, Content: content})
+		if err != nil {
+			return err
+		}
+
+		response.WriteString(content)
+
+		return ctx.Err()
+	})
+
+	if err != nil {
+		return fmt.Errorf("stream conversation turn: %w", err)
+	}
+
+	if err := ctx.Err(); err != nil {
+		return fmt.Errorf("stream conversation turn: %w", err)
+	}
+
+	err = emit(TurnEvent{TurnID: turn.id, Kind: TurnEventCompleted, Content: response.String()})
+	if err != nil {
+		return fmt.Errorf("stream conversation turn: %w", err)
+	}
+
+	if err := ctx.Err(); err != nil {
+		return fmt.Errorf("stream conversation turn: %w", err)
+	}
+
+	return nil
 }
 
 // RunTurn sends a user prompt with the session history and commits the
