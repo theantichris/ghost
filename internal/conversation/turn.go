@@ -107,6 +107,40 @@ func (turn Turn) Stream(ctx context.Context, chat ChatStreamFunc, emit func(Turn
 	return nil
 }
 
+// RunTurnStream forwards turn events and commits the user/assistant exchange
+// only after streaming succeeds.
+// Any returned error leaves session history unchanged.
+// The caller must serialize access to the session, callbacks must not modify it.
+// The caller supplies a distinct ID for each new turn so consumers can identify
+// obsolete events.
+func RunTurnStream(ctx context.Context, session *Session, id TurnID, model string, prompt string, chat ChatStreamFunc, emit func(TurnEvent) error) (Message, error) {
+	if err := ctx.Err(); err != nil {
+		return Message{}, fmt.Errorf("run streaming conversation turn: %w", err)
+	}
+
+	turn := NewTurn(id, model, session.Messages(), prompt)
+	var response Message
+	err := turn.Stream(ctx, chat, func(event TurnEvent) error {
+		if event.Kind == TurnEventCompleted {
+			response = Message{Role: RoleAssistant, Content: event.Content}
+		}
+
+		return emit(event)
+	})
+	if err != nil {
+		return Message{}, fmt.Errorf("run streaming conversation turn: %w", err)
+	}
+
+	if err := ctx.Err(); err != nil {
+		return Message{}, fmt.Errorf("run streaming conversation turn: %w", err)
+	}
+
+	session.AppendUser(prompt)
+	session.AppendAssistant(response.Content)
+
+	return response, nil
+}
+
 // RunTurn sends a user prompt with the session history and commits the
 // user-assistant exchange only when chat succeeds. Any returned error leaves
 // the session unchanged.
