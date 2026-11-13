@@ -18,6 +18,7 @@ Use the Go version declared in `go.mod` (currently 1.26.5).
 
 - `go build ./...`: compile every package.
 - `go test ./...`: run offline tests without a live Ollama instance.
+- `go test -race ./...`: check concurrency and cancellation behavior for data races.
 - `golangci-lint run`: run Go static analysis.
 - `go run . --model qwen3:0.6b "Hello"`: send a prompt to local Ollama at `http://localhost:11434/api`.
 - `go test -tags=e2e -v .`: run the live workflow test with an installed model. Set `GHOST_E2E_MODEL` to select another model.
@@ -33,6 +34,8 @@ The pre-commit configuration includes Go checks, Markdown linting, spelling, and
 ## Testing Guidelines
 
 Use Go's standard `testing` package, `TestXxx` names, and descriptive table-driven subtests. Inject chat functions and use `httptest` for isolated HTTP behavior. Cover changed behavior and failure paths; no numeric coverage threshold is configured. Keep live inference tests behind the `e2e` build tag.
+
+Agent runs `go test -race ./...` when Christopher changes turn execution, cancellation, or session ownership.
 
 ## Commit & Pull Request Guidelines
 
