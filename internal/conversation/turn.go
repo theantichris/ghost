@@ -145,11 +145,19 @@ func RunTurnStream(ctx context.Context, session *Session, id TurnID, model strin
 // user-assistant exchange only when chat succeeds. Any returned error leaves
 // the session unchanged.
 func RunTurn(ctx context.Context, session *Session, model string, prompt string, chat ChatFunc) (Message, error) {
+	if err := ctx.Err(); err != nil {
+		return Message{}, fmt.Errorf("run conversation turn: %w", err)
+	}
+
 	messages := session.Messages()
 	messages = append(messages, Message{Role: RoleUser, Content: prompt})
 
 	response, err := chat(ctx, model, messages)
 	if err != nil {
+		return Message{}, fmt.Errorf("run conversation turn: %w", err)
+	}
+
+	if err := ctx.Err(); err != nil {
 		return Message{}, fmt.Errorf("run conversation turn: %w", err)
 	}
 
