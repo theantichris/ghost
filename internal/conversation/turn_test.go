@@ -279,9 +279,10 @@ func TestRunTurn(t *testing.T) {
 		session := NewSession(initial...)
 
 		ctx, cancel := context.WithCancel(context.Background())
-		cancel()
+		defer cancel()
 
 		chat := func(ctx context.Context, _ string, _ []Message) (Message, error) {
+			cancel()
 			if !errors.Is(ctx.Err(), context.Canceled) {
 				t.Fatalf("Chat() context error = %v, want context.Canceled", ctx.Err())
 			}
@@ -303,4 +304,61 @@ func TestRunTurn(t *testing.T) {
 			t.Errorf("Messages() = %#v, want unchanged history %#v", got, initial)
 		}
 	})
+}
+
+func TestRunTurnCancellationGuards(t *testing.T) {
+	tests := []struct {
+		name         string
+		cancelBefore bool
+		wantCalls    int
+	}{
+		{
+			name:         "does not call chat for an already cancelled turn",
+			cancelBefore: true,
+			wantCalls:    0,
+		},
+		{
+			name:      "discards a successful response when chat cancels",
+			wantCalls: 1,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			initial := []Message{
+				{Role: RoleSystem, Content: "You are Ghost."},
+				{Role: RoleUser, Content: "Previous signal."},
+				{Role: RoleAssistant, Content: "Previous response."},
+			}
+			session := NewSession(initial...)
+			ctx, cancel := context.WithCancel(t.Context())
+			defer cancel()
+			if test.cancelBefore {
+				cancel()
+			}
+			calls := 0
+			chat := func(gotCtx context.Context, _ string, _ []Message) (Message, error) {
+				calls++
+				if gotCtx != ctx {
+					t.Error("chat context differs from supplied context")
+				}
+				cancel()
+				return Message{Role: RoleAssistant, Content: "Obsolete response."}, nil
+			}
+
+			response, err := RunTurn(ctx, session, "qwen3:8b", "Cancelled signal.", chat)
+			if !errors.Is(err, context.Canceled) {
+				t.Errorf("RunTurn() error = %v, want context.Canceled", err)
+			}
+			if response != (Message{}) {
+				t.Errorf("RunTurn() response = %#v, want zero-value Message", response)
+			}
+			if calls != test.wantCalls {
+				t.Errorf("chat calls = %d, want %d", calls, test.wantCalls)
+			}
+			if got := session.Messages(); !slices.Equal(got, initial) {
+				t.Errorf("history after cancellation = %#v, want unchanged history %#v", got, initial)
+			}
+		})
+	}
 }
