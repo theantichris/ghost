@@ -48,9 +48,9 @@ From the repository root:
 go run . --model qwen3:0.6b "Reply with one short sentence confirming Ghost is online."
 ```
 
-On a successful connection, Ghost prints one model-generated response to standard output followed by a newline.
+Ghost streams its response to standard output as content arrives.
 
-The exact response varies between models and invocations. The signal is nondeterministic; the pathway is not.
+Press CTRL+C to cancel the request. Cancellation or failure exits with a nonzero status and leaves any partial response visible. Diagnostics go to standard error.
 
 ## System Diagnostics
 
