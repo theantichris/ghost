@@ -31,7 +31,7 @@ func TestOneShotWorkflow(t *testing.T) {
 
 	var output bytes.Buffer
 
-	err = run(ctx, []string{"--model", model, "Reply with one short sentence confirming Ghost is online."}, &output, client.Chat)
+	err = run(ctx, []string{"--model", model, "Reply with one short sentence confirming Ghost is online."}, &output, client.ChatStream)
 	if err != nil {
 		t.Fatalf("run() error = %v, want nil", err)
 	}
